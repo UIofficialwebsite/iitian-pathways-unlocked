@@ -1,17 +1,4 @@
-
 import React from "react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { Star, Quote, Users, GraduationCap, Network } from "lucide-react";
-import { TestimonialsColumn } from "@/components/ui/testimonials-columns-1";
-
-type Testimonial = {
-  content: string;
-  name: string;
-  course: string;
-  rating?: number;
-  achievement?: string;
-};
 
 const testimonialsData = [
   {
@@ -40,7 +27,7 @@ const testimonialsData = [
     role: "JEE & NEET Preparation",
   },
   {
-    text: "I come from a non-maths background, so the thought of even attempting the qualifier gave me anxiety. But once I joined the classes, things actually started making sense. The way they explained every small step made me feel included, not behind. I genuinely didn't think I'd pass, but I did.",
+    text: "I come from a non-maths background, so the thought of even attempting the qualifier gave me anxiety. But once I joined the classes, things actually started making sense. The way they explained every small step made me feel included, not behind.",
     name: "Aanya",
     role: "IITM BS - Qualifier",
   },
@@ -91,29 +78,55 @@ const testimonialsData = [
   },
 ];
 
-const firstColumn = testimonialsData.slice(0, 5);
-const secondColumn = testimonialsData.slice(5, 10);
-const thirdColumn = testimonialsData.slice(10, 15);
-
 const TestimonialsSection = () => {
   return (
     <section className="bg-background my-20 relative">
-      <div className="container z-10 mx-auto">
-        <div className="flex flex-col items-center justify-center max-w-[540px] mx-auto">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col items-center justify-center max-w-[540px] mx-auto mb-10">
           <div className="flex justify-center">
             <div className="border py-1 px-4 rounded-lg font-semibold text-royal">Testimonials</div>
           </div>
           <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5 text-center">
-            What our users say
+            What our students say
           </h2>
           <p className="text-center mt-5 opacity-75">
-            See what our community has to say about Unknown IITians.
+            See what our course students have to say about their learning journey.
           </p>
         </div>
-        <div className="flex justify-center gap-6 mt-10 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
-          <TestimonialsColumn testimonials={firstColumn} duration={16} />
-          <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={20} />
-          <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={18} />
+        
+        <div className="w-full max-w-6xl mx-auto">
+          <div 
+            className="flex gap-6 overflow-x-auto pb-4" 
+            style={{ 
+              scrollbarWidth: 'thin', 
+              scrollbarColor: '#cbd5e1 #f1f5f9',
+              WebkitOverflowScrolling: 'touch'
+            }}
+          >
+            {testimonialsData.map((testimonial, index) => (
+              <div
+                key={index}
+                className="flex-shrink-0 w-80 max-w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="flex flex-col h-full">
+                  <p className="text-gray-700 text-sm leading-relaxed mb-4 flex-grow">
+                    {testimonial.text}
+                  </p>
+                  <div className="flex items-center space-x-3 pt-4 border-t border-gray-100">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      {testimonial.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-semibold text-gray-900 text-sm">
+                        @{testimonial.name.toLowerCase()}_{testimonial.role.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')}
+                      </div>
+                      <div className="text-xs text-gray-600">{testimonial.role}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
