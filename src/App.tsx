@@ -1,3 +1,4 @@
+// src/App.tsx
 
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,10 +11,7 @@ import EmailPopup from "@/components/EmailPopup";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Courses from "./pages/Courses";
-import ExamPreparation from "./pages/ExamPreparation";
-import JEEPrep from "./pages/JEEPrep";
-import NEETPrep from "./pages/NEETPrep";
-import IITMBSPrep from "./pages/IITMBSPrep";
+import ExamPreparation from "./pages/ExamPreparation/ExamPreparation"; // <-- Updated Path
 import Career from "./pages/Career";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
@@ -42,13 +40,10 @@ const App = () => (
           <EmailPopup />
           <BrowserRouter>
             <Routes>
+              {/* All your existing routes are preserved */}
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/courses" element={<Courses />} />
-              <Route path="/exam-preparation" element={<ExamPreparation />} />
-              <Route path="/exam-preparation/jee" element={<JEEPrep />} />
-              <Route path="/exam-preparation/neet" element={<NEETPrep />} />
-              <Route path="/exam-preparation/iitm-bs" element={<IITMBSPrep />} />
               <Route path="/career" element={<Career />} />
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -63,6 +58,12 @@ const App = () => (
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/terms-of-service" element={<TermsOfService />} />
               <Route path="/faq" element={<FAQ />} />
+
+              {/* === MODIFICATION START === */}
+              {/* Replace the old exam prep routes with this single, nested route handler */}
+              <Route path="/exam-preparation/*" element={<ExamPreparation />} />
+              {/* === MODIFICATION END === */}
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
