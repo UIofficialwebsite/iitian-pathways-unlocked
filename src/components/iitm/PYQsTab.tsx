@@ -1,31 +1,17 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIITMBranchPyqs } from "./hooks/useIITMBranchPyqs";
 import SubjectPyqs from "../SubjectPyqs";
 
 const PYQsTab = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const pathParts = location.pathname.split('/').filter(Boolean);
-  const branch = pathParts[3] || "data-science";
-  const level = pathParts[4] || "foundation";
-
-  const { loading, error, groupedPyqs } = useIITMBranchPyqs(branch, level);
-
-  const handleBranchChange = (newBranch: string) => {
-    navigate(`/exam-preparation/iitm-bs/pyqs/${newBranch}/${level}`);
-  };
-
-  const handleLevelChange = (newLevel: string) => {
-    navigate(`/exam-preparation/iitm-bs/pyqs/${branch}/${newLevel}`);
-  };
+  const [branch, setBranch] = useState("data-science");
+  const [level, setLevel] = useState("foundation");
+  const { subjects, loading, error } = useIITMBranchPyqs(branch, level);
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select value={branch} onValueChange={handleBranchChange}>
+        <Select value={branch} onValueChange={setBranch}>
           <SelectTrigger>
             <SelectValue placeholder="Select Branch" />
           </SelectTrigger>
@@ -34,7 +20,7 @@ const PYQsTab = () => {
             <SelectItem value="electronic-systems">BS Electronic Systems</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={level} onValueChange={handleLevelChange}>
+        <Select value={level} onValueChange={setLevel}>
           <SelectTrigger>
             <SelectValue placeholder="Select Level" />
           </SelectTrigger>
@@ -50,16 +36,12 @@ const PYQsTab = () => {
         {loading ? (
           <p>Loading...</p>
         ) : error ? (
-          <p className="text-red-500">{error.toString()}</p>
+          <p className="text-red-500">{error}</p>
         ) : (
           <div className="space-y-4">
-            {Object.keys(groupedPyqs).length > 0 ? (
-              Object.entries(groupedPyqs).map(([subject, pyqList]) => (
-                <SubjectPyqs key={subject} subject={subject} pyqs={pyqList} />
-              ))
-            ) : (
-              <p className="text-center text-gray-500 mt-8">No PYQs found for the selected criteria.</p>
-            )}
+            {subjects.map((subject, index) => (
+              <SubjectPyqs key={index} subject={subject.name} pyqs={subject.pyqs} />
+            ))}
           </div>
         )}
       </div>
