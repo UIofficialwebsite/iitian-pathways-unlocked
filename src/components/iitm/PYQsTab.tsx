@@ -8,11 +8,13 @@ const PYQsTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Read state from URL
   const pathParts = location.pathname.split('/').filter(Boolean);
   const branch = pathParts[3] || "data-science";
   const level = pathParts[4] || "foundation";
 
-  const { subjects, loading, error } = useIITMBranchPyqs(branch, level);
+  // Use your original data hook
+  const { pyqs, loading, error, groupedPyqs } = useIITMBranchPyqs(branch, level);
 
   const handleBranchChange = (newBranch: string) => {
     navigate(`/exam-preparation/iitm-bs/pyqs/${newBranch}/${level}`);
@@ -50,13 +52,12 @@ const PYQsTab = () => {
         {loading ? (
           <p>Loading...</p>
         ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500">{error.toString()}</p>
         ) : (
           <div className="space-y-4">
-            {/* Safely render only when subjects is a valid array with content */}
-            {subjects && subjects.length > 0 ? (
-              subjects.map((subject, index) => (
-                <SubjectPyqs key={index} subject={subject.name} pyqs={subject.pyqs} />
+            {Object.keys(groupedPyqs).length > 0 ? (
+              Object.entries(groupedPyqs).map(([subject, pyqList]) => (
+                <SubjectPyqs key={subject} subject={subject} pyqs={pyqList} />
               ))
             ) : (
               <p className="text-center text-gray-500 mt-8">No PYQs found for the selected criteria.</p>
