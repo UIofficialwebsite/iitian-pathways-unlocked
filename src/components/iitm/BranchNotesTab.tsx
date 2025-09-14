@@ -57,7 +57,12 @@ const BranchNotesTab = () => {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : (
-          <BranchNotesAccordion subjects={subjects} />
+           // THIS IS THE FIX: Check if subjects is a valid array before passing to the component
+          subjects && subjects.length > 0 ? (
+            <BranchNotesAccordion subjects={subjects} />
+          ) : (
+            <p>No notes found for the selected criteria.</p>
+          )
         )}
       </div>
     </div>
