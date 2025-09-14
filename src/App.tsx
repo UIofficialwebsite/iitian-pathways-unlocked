@@ -13,7 +13,6 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
-import IITMBSTools from "./pages/IITMBSTools";
 import Career from "./pages/Career";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
@@ -48,9 +47,7 @@ const App = () => (
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet" element={<NEETPrep />} />
-              {/* This allows detailed URLs like /iitm-bs/notes or /iitm-bs/pyqs */}
-              <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
-              <Route path="/iitm-bs-tools" element={<IITMBSTools />} />
+              <Route path="/exam-preparation/iitm-bs" element={<IITMBSPrep />} />
               <Route path="/career" element={<Career />} />
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
