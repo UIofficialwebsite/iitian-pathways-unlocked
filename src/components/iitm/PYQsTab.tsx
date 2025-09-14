@@ -6,7 +6,7 @@ import SubjectPyqs from "../SubjectPyqs";
 const PYQsTab = () => {
   const [branch, setBranch] = useState("data-science");
   const [level, setLevel] = useState("foundation");
-  const { subjects, loading, error } = useIITMBranchPyqs(branch, level);
+  const { groupedPyqs, loading, error } = useIITMBranchPyqs(branch, level);
 
   return (
     <div className="space-y-6">
@@ -36,11 +36,11 @@ const PYQsTab = () => {
         {loading ? (
           <p>Loading...</p>
         ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500">{error.toString()}</p>
         ) : (
           <div className="space-y-4">
-            {subjects.map((subject, index) => (
-              <SubjectPyqs key={index} subject={subject.name} pyqs={subject.pyqs} />
+            {Object.entries(groupedPyqs).map(([subject, pyqs]) => (
+              <SubjectPyqs key={subject} subject={subject} pyqs={pyqs} />
             ))}
           </div>
         )}
