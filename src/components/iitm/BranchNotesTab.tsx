@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIITMBranchNotes } from "./hooks/useIITMBranchNotes";
@@ -9,13 +9,11 @@ const BranchNotesTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read state from URL
   const pathParts = location.pathname.split('/').filter(Boolean);
   const branch = pathParts[3] || "data-science";
   const level = pathParts[4] || "foundation";
   const specialization = pathParts[5] || "all";
 
-  // Use your original data hook
   const { loading, error, groupedNotes, getAvailableSpecializations, getCurrentSubjects } = useIITMBranchNotes(branch, level);
 
   const availableSpecializations = getAvailableSpecializations();
