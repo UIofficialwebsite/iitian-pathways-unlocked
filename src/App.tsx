@@ -13,7 +13,7 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
-import IITMBSTools from "./pages/IITMBSTools";
+import IITMBSTools from "@/pages/IITMBSTools"; // <--- THIS IS THE CORRECTED LINE
 import Career from "./pages/Career";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
