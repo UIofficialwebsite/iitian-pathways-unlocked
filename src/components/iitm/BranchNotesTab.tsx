@@ -7,7 +7,24 @@ import { Skeleton } from "@/components/ui/skeleton";
 const BranchNotesTab = () => {
   const [branch, setBranch] = useState("data-science");
   const [level, setLevel] = useState("foundation");
-  const { subjects, loading, error } = useIITMBranchNotes(branch, level);
+  const { notes, loading, groupedNotes, getCurrentSubjects, getAvailableSpecializations } = useIITMBranchNotes(branch, level);
+  const [specialization, setSpecialization] = useState<string | null>('all');
+  
+  const availableSpecializations = getAvailableSpecializations();
+  const subjectsInTab = getCurrentSubjects(specialization);
+
+  const relevantNotes = () => {
+    if (level === 'diploma' && specialization && specialization !== 'all') {
+        const filteredSubjects: Record<string, any[]> = {};
+        subjectsInTab.forEach(subject => {
+            if (groupedNotes[subject]) {
+                filteredSubjects[subject] = groupedNotes[subject];
+            }
+        });
+        return filteredSubjects;
+    }
+    return groupedNotes;
+  };
 
   return (
     <div className="space-y-6">
@@ -21,7 +38,10 @@ const BranchNotesTab = () => {
             <SelectItem value="electronic-systems">BS Electronic Systems</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={level} onValueChange={setLevel}>
+        <Select value={level} onValueChange={(value) => {
+          setLevel(value);
+          setSpecialization('all');
+        }}>
           <SelectTrigger>
             <SelectValue placeholder="Select Level" />
           </SelectTrigger>
@@ -33,6 +53,22 @@ const BranchNotesTab = () => {
         </Select>
       </div>
 
+      {level === 'diploma' && availableSpecializations.length > 0 && (
+        <div className="mt-4">
+            <Select value={specialization ?? 'all'} onValueChange={setSpecialization}>
+                <SelectTrigger>
+                    <SelectValue placeholder="Select Specialization" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">All Specializations</SelectItem>
+                    {availableSpecializations.map(spec => (
+                        <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+      )}
+
       <div>
         {loading ? (
           <div className="space-y-2">
@@ -40,10 +76,8 @@ const BranchNotesTab = () => {
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
           </div>
-        ) : error ? (
-          <p className="text-red-500">{error}</p>
         ) : (
-          <BranchNotesAccordion subjects={subjects} />
+          <BranchNotesAccordion subjects={relevantNotes()} />
         )}
       </div>
     </div>
