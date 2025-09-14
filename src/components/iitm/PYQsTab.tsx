@@ -8,13 +8,11 @@ const PYQsTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read state from URL
   const pathParts = location.pathname.split('/').filter(Boolean);
   const branch = pathParts[3] || "data-science";
   const level = pathParts[4] || "foundation";
 
-  // Use your original data hook
-  const { pyqs, loading, error, groupedPyqs } = useIITMBranchPyqs(branch, level);
+  const { loading, error, groupedPyqs } = useIITMBranchPyqs(branch, level);
 
   const handleBranchChange = (newBranch: string) => {
     navigate(`/exam-preparation/iitm-bs/pyqs/${newBranch}/${level}`);
