@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-// THIS IS THE CORRECTED IMPORT PATH TO FIX THE BUILD
-import { supabase } from "../../../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface IITMPYQ {
   id: string;
@@ -45,8 +44,10 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
           .eq("branch", branch)
           .eq("level", level);
 
+        // Add exam type filter if provided (for non-qualifier levels)
         if (level !== 'qualifier' && examType) {
-          // Future-proofing for exam type filtering
+          // For IITM BS, we might use a different field structure
+          // Adjust this based on how exam types are stored for IITM BS
         }
 
         const { data, error } = await query.order("year", { ascending: false });
@@ -86,7 +87,8 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'pyqs' },
-        () => {
+        (payload) => {
+          console.log('Real-time change detected in pyqs (IITM hook):', payload);
           reloadPyqs();
         }
       )
@@ -99,8 +101,10 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
 
   const getAvailableSpecializations = () => {
     if (level !== 'diploma') return [];
-    // This can be extended if PYQs get specializations
-    return [];
+    const specializations = new Set<string>();
+    // For PYQs, we might not have diploma specializations like notes
+    // This can be extended based on requirements
+    return Array.from(specializations).sort();
   };
 
   const groupedPyqs = pyqs.reduce((acc: Record<string, IITMPYQ[]>, pyq) => {
@@ -112,7 +116,7 @@ export function useIITMBranchPyqs(branch: string, level: string, examType?: stri
     return acc;
   }, {});
 
-  const getCurrentSubjects = () => {
+  const getCurrentSubjects = (specialization?: string | null) => {
     const subjects = new Set<string>();
     pyqs.forEach(pyq => {
       if (pyq.subject) {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-// THIS IS THE CORRECTED IMPORT PATH TO FIX THE BUILD
-import { supabase } from "../../../integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Note {
   id: string;
@@ -69,7 +68,8 @@ export function useIITMBranchNotes(branch: string, level: string): UseIITMBranch
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'iitm_branch_notes' },
-        () => {
+        (payload) => {
+          console.log('Real-time change detected in iitm_branch_notes:', payload);
           reloadNotes();
         }
       )
