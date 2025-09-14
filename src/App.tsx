@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,6 +13,7 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
+import IITMBSTools from "./pages/IITMBSTools";
 import Career from "./pages/Career";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
@@ -49,6 +49,7 @@ const App = () => (
               <Route path="/exam-preparation/jee" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet" element={<NEETPrep />} />
               <Route path="/exam-preparation/iitm-bs" element={<IITMBSPrep />} />
+              <Route path="/iitm-bs-tools" element={<IITMBSTools />} />
               <Route path="/career" element={<Career />} />
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
