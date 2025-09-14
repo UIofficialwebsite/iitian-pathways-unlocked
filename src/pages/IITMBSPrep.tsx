@@ -1,5 +1,4 @@
-import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,18 +10,7 @@ import SyllabusTab from "@/components/iitm/SyllabusTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 
 const IITMBSPrep = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Determine the active tab from the URL, default to 'notes'
-  const pathParts = location.pathname.split('/').filter(Boolean);
-  const activeTab = pathParts[2] || 'notes';
-
-  const handleTabChange = (tab: string) => {
-    // When a tab is clicked, update the URL
-    // The sub-selections will be preserved or reset by the tab components
-    navigate(`/exam-preparation/iitm-bs/${tab}`);
-  };
+  const [activeTab, setActiveTab] = useState("notes");
 
   return (
     <>
@@ -34,7 +22,7 @@ const IITMBSPrep = () => {
             <p className="text-xl text-gray-600">Comprehensive resources for IITM BS Data Science & Electronic Systems</p>
           </div>
           
-          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="overflow-x-auto">
               <TabsList className="inline-flex w-max min-w-full">
                 <TabsTrigger value="notes" className="whitespace-nowrap">Notes</TabsTrigger>
