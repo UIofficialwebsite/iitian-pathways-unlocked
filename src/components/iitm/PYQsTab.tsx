@@ -53,9 +53,14 @@ const PYQsTab = () => {
           <p className="text-red-500">{error}</p>
         ) : (
           <div className="space-y-4">
-            {subjects.map((subject, index) => (
-              <SubjectPyqs key={index} subject={subject.name} pyqs={subject.pyqs} />
-            ))}
+            {/* THIS IS THE FIX: Check if subjects is a valid array before mapping */}
+            {subjects && subjects.length > 0 ? (
+              subjects.map((subject, index) => (
+                <SubjectPyqs key={index} subject={subject.name} pyqs={subject.pyqs} />
+              ))
+            ) : (
+              <p>No PYQs found for the selected criteria.</p>
+            )}
           </div>
         )}
       </div>
