@@ -1,8 +1,10 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EmailPopup from "@/components/EmailPopup";
+import { AnimatedTabs } from "@/components/ui/animated-tabs";
 import BranchNotesTab from "@/components/iitm/BranchNotesTab";
 import PYQsTab from "@/components/iitm/PYQsTab";
 import NewsTab from "@/components/iitm/NewsTab";
@@ -12,7 +14,37 @@ import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 
 const IITMBSPrep = () => {
-  const [activeTab, setActiveTab] = useState("notes");
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState(tab || "notes");
+
+  const tabs = [
+    { id: "notes", label: "Notes" },
+    { id: "pyqs", label: "PYQs" },
+    { id: "syllabus", label: "Syllabus" },
+    { id: "tools", label: "Tools" },
+    { id: "courses", label: "Courses" },
+    { id: "news", label: "News" },
+    { id: "important-dates", label: "Important Dates" },
+  ];
+
+  // Update URL when tab changes
+  useEffect(() => {
+    if (tab !== activeTab) {
+      if (activeTab === "notes") {
+        navigate("/exam-preparation/iitm-bs", { replace: true });
+      } else {
+        navigate(`/exam-preparation/iitm-bs/${activeTab}`, { replace: true });
+      }
+    }
+  }, [activeTab, tab, navigate]);
+
+  // Update activeTab when URL changes
+  useEffect(() => {
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    }
+  }, [tab]);
 
   return (
     <>
@@ -24,55 +56,27 @@ const IITMBSPrep = () => {
             <p className="text-xl text-gray-600">Comprehensive resources for IITM BS Data Science & Electronic Systems</p>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <div className="overflow-x-auto">
-              <TabsList className="inline-flex w-max min-w-full">
-                <TabsTrigger value="notes" className="whitespace-nowrap">Notes</TabsTrigger>
-                <TabsTrigger value="pyqs" className="whitespace-nowrap">PYQs</TabsTrigger>
-                <TabsTrigger value="syllabus" className="whitespace-nowrap">Syllabus</TabsTrigger>
-                <TabsTrigger value="tools" className="whitespace-nowrap">Tools</TabsTrigger>
-                <TabsTrigger 
-                  value="courses" 
-                  className="whitespace-nowrap bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 text-white hover:from-yellow-500 hover:via-yellow-600 hover:to-yellow-700 data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-500 data-[state=active]:via-yellow-600 data-[state=active]:to-yellow-700 shadow-lg border-2 border-yellow-400"
-                >
-                  ✨ Courses
-                </TabsTrigger>
-                <TabsTrigger value="news" className="whitespace-nowrap">News</TabsTrigger>
-                <TabsTrigger value="dates" className="whitespace-nowrap">Important Dates</TabsTrigger>
-              </TabsList>
-            </div>
-            
-            <TabsContent value="notes" className="mt-6">
-              <BranchNotesTab />
-            </TabsContent>
-            
-            <TabsContent value="pyqs" className="mt-6">
-              <PYQsTab />
-            </TabsContent>
-            
-            <TabsContent value="syllabus" className="mt-6">
-              <SyllabusTab />
-            </TabsContent>
-            
-            <TabsContent value="tools" className="mt-6">
-              <IITMToolsTab />
-            </TabsContent>
-            
-            <TabsContent value="courses" className="mt-6">
-              <PaidCoursesTab />
-            </TabsContent>
-            
-            <TabsContent value="news" className="mt-6">
-              <NewsTab />
-            </TabsContent>
-            
-            <TabsContent value="dates" className="mt-6">
-              <ImportantDatesTab />
-            </TabsContent>
-          </Tabs>
+          <div className="mb-6 md:mb-8">
+            <AnimatedTabs
+              tabs={tabs}
+              defaultTab={activeTab}
+              onChange={setActiveTab}
+            />
+          </div>
+          
+          <div className="mt-6 md:mt-8">
+            {activeTab === "notes" && <BranchNotesTab />}
+            {activeTab === "pyqs" && <PYQsTab />}
+            {activeTab === "syllabus" && <SyllabusTab />}
+            {activeTab === "tools" && <IITMToolsTab />}
+            {activeTab === "courses" && <PaidCoursesTab />}
+            {activeTab === "news" && <NewsTab />}
+            {activeTab === "important-dates" && <ImportantDatesTab />}
+          </div>
         </div>
       </div>
       <Footer />
+      <EmailPopup />
     </>
   );
 };

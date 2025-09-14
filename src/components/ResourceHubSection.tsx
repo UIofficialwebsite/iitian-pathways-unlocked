@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { BentoCard, BentoGrid } from "@/components/ui/bento-grid";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AnimatedTabs } from "@/components/ui/animated-tabs";
+import { TabsContent } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const tabsData = [
@@ -257,30 +258,18 @@ const ResourceHubSection = () => {
           </p>
         </div>
 
-        {/* Responsive Tabs */}
-        <div className="mb-6 md:mb-8">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 lg:w-auto lg:inline-flex lg:h-auto lg:p-1 bg-white rounded-xl shadow-sm border">
-              {tabsData.map((tab) => (
-                <TabsTrigger
-                  key={tab.id}
-                  value={tab.id}
-                  className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-3 py-3 sm:px-6 sm:py-4 text-xs sm:text-sm font-medium transition-all duration-200 data-[state=active]:bg-royal data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg"
-                >
-                  <tab.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  <div className="text-center sm:text-left">
-                    <div className="font-medium">{tab.label}</div>
-                    <div className="hidden lg:block text-xs opacity-70 mt-0.5">
-                      {tab.description}
-                    </div>
-                  </div>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        {/* Animated Tabs */}
+        <div className="mb-6 md:mb-8 flex justify-center">
+          <AnimatedTabs
+            tabs={tabsData.map(tab => ({ id: tab.id, label: tab.label }))}
+            defaultTab={activeTab}
+            onChange={setActiveTab}
+          />
 
-            {/* Tab Content */}
-            <div className="mt-6 md:mt-8">
-              <TabsContent value="notes" className="mt-0">
+          {/* Tab Content */}
+          <div className="mt-6 md:mt-8">
+            {activeTab === "notes" && (
+              <div className="mt-0">
                 {loading ? (
                   <LoadingSkeleton />
                 ) : (
@@ -296,9 +285,11 @@ const ResourceHubSection = () => {
                       ))}
                   </BentoGrid>
                 )}
-              </TabsContent>
+              </div>
+            )}
 
-              <TabsContent value="lectures" className="mt-0">
+            {activeTab === "lectures" && (
+              <div className="mt-0">
                 {loading ? (
                   <LoadingSkeleton />
                 ) : (
@@ -308,29 +299,29 @@ const ResourceHubSection = () => {
                     ))}
                   </BentoGrid>
                 )}
-              </TabsContent>
+              </div>
+            )}
 
-              <TabsContent value="skill" className="mt-0">
-                <div className="text-center py-12 md:py-16">
-                  <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 md:p-12 border-none shadow-md">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full opacity-20 animate-pulse"></div>
-                      <Code className="relative h-12 w-12 md:h-16 md:w-16 mx-auto text-royal mb-6" />
-                    </div>
-                    <h3 className="text-xl md:text-2xl font-bold mb-4">Skill Enhancement Coming Soon!</h3>
-                    <p className="text-gray-600 text-sm md:text-base max-w-xl mx-auto mb-8">
-                      We're currently developing an exciting range of skill enhancement courses including web development, 
-                      UI/UX design, data science, and mobile app development. Check back soon for updates!
-                    </p>
-                    <Button variant="outline" className="border-royal text-royal hover:bg-royal hover:text-white transition-all duration-200">
-                      <Users className="h-4 w-4 mr-2" />
-                      Get Notified When Available
-                    </Button>
+            {activeTab === "skill" && (
+              <div className="text-center py-12 md:py-16">
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl p-8 md:p-12 border-none shadow-md">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-200 to-purple-200 rounded-full opacity-20 animate-pulse"></div>
+                    <Code className="relative h-12 w-12 md:h-16 md:w-16 mx-auto text-royal mb-6" />
                   </div>
+                  <h3 className="text-xl md:text-2xl font-bold mb-4">Skill Enhancement Coming Soon!</h3>
+                  <p className="text-gray-600 text-sm md:text-base max-w-xl mx-auto mb-8">
+                    We're currently developing an exciting range of skill enhancement courses including web development, 
+                    UI/UX design, data science, and mobile app development. Check back soon for updates!
+                  </p>
+                  <Button variant="outline" className="border-royal text-royal hover:bg-royal hover:text-white transition-all duration-200">
+                    <Users className="h-4 w-4 mr-2" />
+                    Get Notified When Available
+                  </Button>
                 </div>
-              </TabsContent>
-            </div>
-          </Tabs>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </section>

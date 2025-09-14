@@ -47,8 +47,11 @@ const App = () => (
               <Route path="/courses" element={<Courses />} />
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee" element={<JEEPrep />} />
+              <Route path="/exam-preparation/jee/:tab" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet" element={<NEETPrep />} />
+              <Route path="/exam-preparation/neet/:tab" element={<NEETPrep />} />
               <Route path="/exam-preparation/iitm-bs" element={<IITMBSPrep />} />
+              <Route path="/exam-preparation/iitm-bs/:tab" element={<IITMBSPrep />} />
               <Route path="/career" element={<Career />} />
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
