@@ -170,7 +170,7 @@ const About = () => {
         {/* Journey Timeline */}
         <Timeline data={timelineData} />
 
-        <PartnershipsSection />
+        
 
       </main>
 
