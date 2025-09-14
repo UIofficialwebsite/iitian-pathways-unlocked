@@ -48,7 +48,7 @@ const App = () => (
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet" element={<NEETPrep />} />
-              {/* This is the key change for the routing feature */}
+              {/* This allows detailed URLs like /iitm-bs/notes or /iitm-bs/pyqs */}
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
               <Route path="/iitm-bs-tools" element={<IITMBSTools />} />
               <Route path="/career" element={<Career />} />
