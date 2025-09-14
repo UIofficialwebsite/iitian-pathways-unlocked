@@ -13,8 +13,8 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
-// Using the project's standard path alias and the full filename
-import IITMBSTools from "@/pages/IITMBSPrepTools.tsx"; 
+// This now correctly points to the file we just created
+import IITMBSTools from "./pages/IITMBSTools";
 import Career from "./pages/Career";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
