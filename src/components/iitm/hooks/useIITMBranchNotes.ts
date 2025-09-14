@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-// This is the corrected import path
-import { supabase } from "@/integrations/supabase/client";
+// THIS IS THE CORRECTED IMPORT PATH TO FIX THE BUILD
+import { supabase } from "../../../integrations/supabase/client";
 
 export interface Note {
   id: string;
