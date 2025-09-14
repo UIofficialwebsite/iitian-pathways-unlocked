@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase';
 
-// Define the structure of a note and a subject
 interface Note {
   week: number;
   topic: string;
@@ -14,7 +13,7 @@ interface Subject {
 }
 
 export const useIITMBranchNotes = (branch: string, level: string) => {
-  const [subjects, setSubjects] = useState<Subject[]>([]); // Initialize with empty array
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,9 +28,12 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
         .eq('branch', branch)
         .eq('level', level);
 
+      // DEBUG LINE: This will show us the raw data from the database
+      console.log(`Notes data for ${branch}/${level}:`, data);
+
       if (error) {
         setError(error.message);
-        setSubjects([]); // Ensure subjects is an empty array on error
+        setSubjects([]);
       } else if (data) {
         const groupedSubjects: { [key: string]: Subject } = {};
 
@@ -51,7 +53,7 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
 
         setSubjects(Object.values(groupedSubjects));
       } else {
-        setSubjects([]); // Ensure subjects is an empty array if no data
+        setSubjects([]);
       }
       
       setLoading(false);
