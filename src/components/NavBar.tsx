@@ -158,7 +158,7 @@ const NavBar = () => {
               <Link to="/exam-preparation/iitm-bs" className="block px-3 py-2 text-gray-700 hover:text-royal ml-4">
                 IITM BS Prep
               </Link>
-               <Link to="/iitm-bs-tools" className="block px-3 py-2 text-gray-700 hover:text-royal">
+              <Link to="/iitm-bs-tools" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 IITM BS Tools
               </Link>
               <Link to="/career" className="block px-3 py-2 text-gray-700 hover:text-royal">
