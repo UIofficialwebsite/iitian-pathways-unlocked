@@ -30,8 +30,8 @@ const NavBar = () => {
           <div className="flex items-center absolute left-0">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img
-                src="/lovable-uploads/UI_logo.png"
-                alt="Unknown IITians Logo"
+                src="/lovable-uploads/UI_logo.png" 
+                alt="Unknown IITians Logo" 
                 className="h-10 w-auto"
               />
             </Link>
@@ -48,7 +48,7 @@ const NavBar = () => {
             <Link to="/courses" className="text-gray-700 hover:text-royal transition-colors">
               Courses
             </Link>
-
+            
             {/* Exam Prep Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -73,10 +73,7 @@ const NavBar = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-
-            <Link to="/iitm-bs-tools" className="text-gray-700 hover:text-royal transition-colors">
-              IITM BS Tools
-            </Link>
+            
             <Link to="/career" className="text-gray-700 hover:text-royal transition-colors">
               Career
             </Link>
@@ -158,13 +155,10 @@ const NavBar = () => {
               <Link to="/exam-preparation/iitm-bs" className="block px-3 py-2 text-gray-700 hover:text-royal ml-4">
                 IITM BS Prep
               </Link>
-              <Link to="/iitm-bs-tools" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                IITM BS Tools
-              </Link>
               <Link to="/career" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 Career
               </Link>
-
+              
               {user ? (
                 <>
                   <Link to="/dashboard" className="block px-3 py-2 text-gray-700 hover:text-royal">
