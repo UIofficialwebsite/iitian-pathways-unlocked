@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useIITMBranchNotes } from "./hooks/useIITMBranchNotes";
@@ -9,11 +9,17 @@ const BranchNotesTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Read state from URL
   const pathParts = location.pathname.split('/').filter(Boolean);
   const branch = pathParts[3] || "data-science";
   const level = pathParts[4] || "foundation";
+  const specialization = pathParts[5] || "all";
 
-  const { subjects, loading, error } = useIITMBranchNotes(branch, level);
+  // Use your original data hook
+  const { loading, error, groupedNotes, getAvailableSpecializations, getCurrentSubjects } = useIITMBranchNotes(branch, level);
+
+  const availableSpecializations = getAvailableSpecializations();
+  const subjectsInTab = getCurrentSubjects(specialization);
 
   const handleBranchChange = (newBranch: string) => {
     navigate(`/exam-preparation/iitm-bs/notes/${newBranch}/${level}`);
@@ -21,6 +27,23 @@ const BranchNotesTab = () => {
 
   const handleLevelChange = (newLevel: string) => {
     navigate(`/exam-preparation/iitm-bs/notes/${branch}/${newLevel}`);
+  };
+  
+  const handleSpecializationChange = (newSpecialization: string) => {
+    navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${newSpecialization}`);
+  };
+
+  const relevantNotes = () => {
+    if (level === 'diploma' && specialization && specialization !== 'all') {
+      const filteredSubjects: Record<string, any[]> = {};
+      subjectsInTab.forEach(subject => {
+        if (groupedNotes[subject]) {
+          filteredSubjects[subject] = groupedNotes[subject];
+        }
+      });
+      return filteredSubjects;
+    }
+    return groupedNotes;
   };
 
   return (
@@ -47,6 +70,22 @@ const BranchNotesTab = () => {
         </Select>
       </div>
 
+      {level === 'diploma' && availableSpecializations.length > 0 && (
+        <div className="mt-4">
+          <Select value={specialization} onValueChange={handleSpecializationChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Specialization" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Specializations</SelectItem>
+              {availableSpecializations.map(spec => (
+                <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
       <div>
         {loading ? (
           <div className="space-y-2">
@@ -55,11 +94,10 @@ const BranchNotesTab = () => {
             <Skeleton className="h-12 w-full" />
           </div>
         ) : error ? (
-          <p className="text-red-500">{error}</p>
+          <p className="text-red-500">{error.toString()}</p>
         ) : (
-           // Safely render only when subjects is a valid array with content
-          subjects && subjects.length > 0 ? (
-            <BranchNotesAccordion subjects={subjects} />
+          Object.keys(relevantNotes()).length > 0 ? (
+            <BranchNotesAccordion subjects={relevantNotes()} />
           ) : (
             <p className="text-center text-gray-500 mt-8">No notes found for the selected criteria.</p>
           )
