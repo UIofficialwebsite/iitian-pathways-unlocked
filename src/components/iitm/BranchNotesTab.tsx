@@ -9,19 +9,16 @@ const BranchNotesTab = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Read the branch and level from the URL
   const pathParts = location.pathname.split('/').filter(Boolean);
   const branch = pathParts[3] || "data-science";
   const level = pathParts[4] || "foundation";
 
   const { subjects, loading, error } = useIITMBranchNotes(branch, level);
 
-  // Update URL when branch selection changes
   const handleBranchChange = (newBranch: string) => {
     navigate(`/exam-preparation/iitm-bs/notes/${newBranch}/${level}`);
   };
 
-  // Update URL when level selection changes
   const handleLevelChange = (newLevel: string) => {
     navigate(`/exam-preparation/iitm-bs/notes/${branch}/${newLevel}`);
   };
