@@ -1,7 +1,6 @@
 
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { AnimatedTabs } from "@/components/ui/animated-tabs";
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
 import NEETNotesTab from "./NEETNotesTab";
 import NEETPYQTab from "@/components/NEETPYQTab";
@@ -10,92 +9,68 @@ import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
 
 const NEETTabs = () => {
-  const { tab } = useParams<{ tab?: string }>();
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(tab || "notes");
-
-  const tabs = [
-    { id: "notes", label: "Notes" },
-    { id: "pyqs", label: "Previous Year Papers" },
-    { id: "study-groups", label: "Study Groups" },
-    { id: "news-updates", label: "News & Updates" },
-    { id: "important-dates", label: "Important Dates" },
-  ];
-
-  // Update URL when tab changes
-  useEffect(() => {
-    if (tab !== activeTab) {
-      if (activeTab === "notes") {
-        navigate("/exam-preparation/neet", { replace: true });
-      } else {
-        navigate(`/exam-preparation/neet/${activeTab}`, { replace: true });
-      }
-    }
-  }, [activeTab, tab, navigate]);
-
-  // Update activeTab when URL changes
-  useEffect(() => {
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab);
-    }
-  }, [tab]);
+  const [activeTab, setActiveTab] = useState("notes");
 
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 md:mb-8">
-          <AnimatedTabs
-            tabs={tabs}
-            defaultTab={activeTab}
-            onChange={setActiveTab}
-          />
-        </div>
+        <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="w-full min-w-fit">
+              <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
+                Notes
+              </TabsTrigger>
+              <TabsTrigger value="pyqs" className="rounded-md flex-shrink-0">
+                Previous Year Papers
+              </TabsTrigger>
+              <TabsTrigger value="study-groups" className="rounded-md flex-shrink-0">
+                Study Groups
+              </TabsTrigger>
+              <TabsTrigger value="news-updates" className="rounded-md flex-shrink-0">
+                News & Updates
+              </TabsTrigger>
+              <TabsTrigger value="important-dates" className="rounded-md flex-shrink-0">
+                Important Dates
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-        <div className="mt-6 md:mt-8">
-          {activeTab === "notes" && (
+          <TabsContent value="notes">
             <NEETNotesTab />
-          )}
+          </TabsContent>
 
-          {activeTab === "pyqs" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">Previous Year Questions</h2>
-              </div>
-              <OptimizedAuthWrapper>
-                <NEETPYQTab />
-              </OptimizedAuthWrapper>
+          <TabsContent value="pyqs">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Previous Year Questions</h2>
             </div>
-          )}
+            <OptimizedAuthWrapper>
+              <NEETPYQTab />
+            </OptimizedAuthWrapper>
+          </TabsContent>
 
-          {activeTab === "study-groups" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
+          <TabsContent value="study-groups">
+             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Study Groups</h2>
-              </div>
-              <OptimizedAuthWrapper>
+            </div>
+            <OptimizedAuthWrapper>
                 <StudyGroupsTab examType="NEET" />
-              </OptimizedAuthWrapper>
-            </div>
-          )}
+            </OptimizedAuthWrapper>
+          </TabsContent>
           
-          {activeTab === "news-updates" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
+          <TabsContent value="news-updates">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">News & Updates</h2>
-              </div>
-              <NewsUpdatesTab examType="NEET" />
             </div>
-          )}
+            <NewsUpdatesTab examType="NEET" />
+          </TabsContent>
 
-          {activeTab === "important-dates" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
+          <TabsContent value="important-dates">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">Important Dates</h2>
-              </div>
-              <ImportantDatesTab examType="NEET" />
             </div>
-          )}
-        </div>
+            <ImportantDatesTab examType="NEET" />
+          </TabsContent>
+        </Tabs>
       </div>
     </section>
   );

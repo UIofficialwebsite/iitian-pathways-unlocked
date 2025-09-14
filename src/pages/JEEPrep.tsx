@@ -1,10 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
-import { AnimatedTabs } from "@/components/ui/animated-tabs";
-import { TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectBlock from "@/components/SubjectBlock";
 import JEEPYQTab from "@/components/JEEPYQTab";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
@@ -14,36 +12,8 @@ import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
 
 const JEEPrep = () => {
-  const { tab } = useParams<{ tab?: string }>();
-  const navigate = useNavigate();
   const { notes, contentLoading } = useBackend();
-  const [activeTab, setActiveTab] = useState(tab || "notes");
-
-  const tabs = [
-    { id: "notes", label: "Notes" },
-    { id: "pyqs", label: "PYQs" },
-    { id: "study-groups", label: "Study Groups" },
-    { id: "news-updates", label: "News & Updates" },
-    { id: "important-dates", label: "Important Dates" },
-  ];
-
-  // Update URL when tab changes
-  useEffect(() => {
-    if (tab !== activeTab) {
-      if (activeTab === "notes") {
-        navigate("/exam-preparation/jee", { replace: true });
-      } else {
-        navigate(`/exam-preparation/jee/${activeTab}`, { replace: true });
-      }
-    }
-  }, [activeTab, tab, navigate]);
-
-  // Update activeTab when URL changes
-  useEffect(() => {
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab);
-    }
-  }, [tab]);
+  const [activeTab, setActiveTab] = useState("notes");
 
   const jeeNotes = useMemo(() => notes.filter(note => note.exam_type === 'JEE'), [notes]);
 
@@ -113,81 +83,95 @@ const JEEPrep = () => {
         {/* Main Content */}
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-6 md:mb-8">
-              <AnimatedTabs
-                tabs={tabs}
-                defaultTab={activeTab}
-                onChange={setActiveTab}
-              />
-            </div>
+            <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="overflow-x-auto pb-2">
+                <TabsList className="w-full min-w-fit">
+                  <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
+                    Notes
+                  </TabsTrigger>
+                  <TabsTrigger value="pyqs" className="rounded-md flex-shrink-0">
+                    Previous Year Papers
+                  </TabsTrigger>
+                  <TabsTrigger value="study-groups" className="rounded-md flex-shrink-0">
+                    Study Groups
+                  </TabsTrigger>
+                  <TabsTrigger value="news-updates" className="rounded-md flex-shrink-0">
+                    News & Updates
+                  </TabsTrigger>
+                  <TabsTrigger value="important-dates" className="rounded-md flex-shrink-0">
+                    Important Dates
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-            <div className="mt-6 md:mt-8">
-              {activeTab === "notes" && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">Subject-wise Notes</h2>
-                  
-                  {/* Subject Filter Tabs */}
-                  <div className="mb-6">
-                    {contentLoading && subjects.length === 0 ? (
-                       <div className="flex justify-center items-center py-4">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
-                       </div>
-                    ) : (
-                      <AnimatedTabs 
-                        tabs={subjects.map(s => ({ id: s, label: s }))}
-                        defaultTab={activeSubject}
-                        onChange={setActiveSubject}
-                      />
-                    )}
-                  </div>
-
-                  {/* Class Filter */}
-                  <div className="mb-6">
-                    <AnimatedTabs 
-                      tabs={classes.map(c => ({ id: c.value, label: c.label }))}
-                      defaultTab={activeClass}
-                      onChange={setActiveClass}
-                    />
-                  </div>
-
-                  {renderTabContent("notes", 
-                    <SubjectBlock 
-                      subject={activeSubject} 
-                      selectedClass={activeClass}
-                      examType="JEE"
-                    />
+              <TabsContent value="notes">
+                <h2 className="text-2xl font-bold mb-4">Subject-wise Notes</h2>
+                
+                {/* Subject Filter Tabs */}
+                <div className="mb-6">
+                  {contentLoading && subjects.length === 0 ? (
+                     <div className="flex justify-center items-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
+                     </div>
+                  ) : (
+                    <Tabs value={activeSubject} onValueChange={setActiveSubject}>
+                      <div className="overflow-x-auto pb-2">
+                        <TabsList className="w-full min-w-fit">
+                          {subjects.map((subject) => (
+                            <TabsTrigger key={subject} value={subject} className="rounded-md flex-shrink-0">
+                              {subject}
+                            </TabsTrigger>
+                          ))}
+                        </TabsList>
+                      </div>
+                    </Tabs>
                   )}
                 </div>
-              )}
 
-              {activeTab === "pyqs" && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">Previous Year Questions</h2>
-                  {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} />)}
+                {/* Class Filter */}
+                <div className="mb-6">
+                  <Tabs value={activeClass} onValueChange={setActiveClass}>
+                    <div className="overflow-x-auto pb-2">
+                      <TabsList className="w-full min-w-fit">
+                        {classes.map((classItem) => (
+                          <TabsTrigger key={classItem.value} value={classItem.value} className="rounded-md flex-shrink-0">
+                            {classItem.label}
+                          </TabsTrigger>
+                        ))}
+                      </TabsList>
+                    </div>
+                  </Tabs>
                 </div>
-              )}
 
-              {activeTab === "study-groups" && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">Study Groups</h2>
-                  {renderTabContent("study-groups", <StudyGroupsTab examType="JEE" />)}
-                </div>
-              )}
+                {renderTabContent("notes", 
+                  <SubjectBlock 
+                    subject={activeSubject} 
+                    selectedClass={activeClass}
+                    examType="JEE"
+                  />
+                )}
+              </TabsContent>
 
-              {activeTab === "news-updates" && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">News & Updates</h2>
-                  {renderTabContent("news-updates", <NewsUpdatesTab examType="JEE" />)}
-                </div>
-              )}
+              <TabsContent value="pyqs">
+                <h2 className="text-2xl font-bold mb-4">Previous Year Questions</h2>
+                {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} />)}
+              </TabsContent>
 
-              {activeTab === "important-dates" && (
-                <div>
-                  <h2 className="text-2xl font-bold mb-4">Important Dates</h2>
-                  {renderTabContent("important-dates", <ImportantDatesTab examType="JEE" />)}
-                </div>
-              )}
-            </div>
+              <TabsContent value="study-groups">
+                <h2 className="text-2xl font-bold mb-4">Study Groups</h2>
+                {renderTabContent("study-groups", <StudyGroupsTab examType="JEE" />)}
+              </TabsContent>
+
+              <TabsContent value="news-updates">
+                <h2 className="text-2xl font-bold mb-4">News & Updates</h2>
+                {renderTabContent("news-updates", <NewsUpdatesTab examType="JEE" />)}
+              </TabsContent>
+
+              <TabsContent value="important-dates">
+                <h2 className="text-2xl font-bold mb-4">Important Dates</h2>
+                {renderTabContent("important-dates", <ImportantDatesTab examType="JEE" />)}
+              </TabsContent>
+            </Tabs>
           </div>
         </section>
       </main>
