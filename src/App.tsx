@@ -13,7 +13,6 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
-// This now correctly points to the file we just created
 import IITMBSTools from "./pages/IITMBSTools";
 import Career from "./pages/Career";
 import About from "./pages/About";
@@ -49,7 +48,8 @@ const App = () => (
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet" element={<NEETPrep />} />
-              <Route path="/exam-preparation/iitm-bs" element={<IITMBSPrep />} />
+              {/* This is the updated line for detailed routing */}
+              <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
               <Route path="/iitm-bs-tools" element={<IITMBSTools />} />
               <Route path="/career" element={<Career />} />
               <Route path="/about" element={<About />} />
