@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,9 +11,40 @@ import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
 import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
+import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
 
 const IITMBSPrep = () => {
-  const [activeTab, setActiveTab] = useState("notes");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Initialize state from URL
+  const initialTab = getTabFromUrl(location.pathname);
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Update URL when tab changes
+  const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string) => {
+    const params: Record<string, string | undefined> = {};
+    
+    if (tab === 'notes' || tab === 'tools' || tab === 'courses' || tab === 'news' || tab === 'dates') {
+      if (branch) params.branch = branch;
+      if (level) params.level = level;
+    } else if (tab === 'pyqs') {
+      if (branch) params.branch = branch;
+      if (level) params.level = level;
+      if (examType) params.examType = examType;
+      if (year) params.year = year;
+    } else if (tab === 'syllabus') {
+      if (branch) params.branch = branch;
+    }
+    
+    const newUrl = buildExamUrl('iitm-bs', tab, params);
+    navigate(newUrl, { replace: true });
+  };
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    updateUrl(newTab);
+  };
 
   return (
     <>
@@ -24,7 +56,7 @@ const IITMBSPrep = () => {
             <p className="text-xl text-gray-600">Comprehensive resources for IITM BS Data Science & Electronic Systems</p>
           </div>
           
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
             <div className="overflow-x-auto">
               <TabsList className="inline-flex w-max min-w-full">
                 <TabsTrigger value="notes" className="whitespace-nowrap">Notes</TabsTrigger>
@@ -43,15 +75,15 @@ const IITMBSPrep = () => {
             </div>
             
             <TabsContent value="notes" className="mt-6">
-              <BranchNotesTab />
+              <BranchNotesTab onFilterChange={updateUrl} />
             </TabsContent>
             
             <TabsContent value="pyqs" className="mt-6">
-              <PYQsTab />
+              <PYQsTab onFilterChange={updateUrl} />
             </TabsContent>
             
             <TabsContent value="syllabus" className="mt-6">
-              <SyllabusTab />
+              <SyllabusTab onFilterChange={updateUrl} />
             </TabsContent>
             
             <TabsContent value="tools" className="mt-6">

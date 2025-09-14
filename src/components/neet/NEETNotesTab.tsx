@@ -4,7 +4,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectBlock from "@/components/SubjectBlock";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 
-const NEETNotesTab = () => {
+interface NEETNotesTabProps {
+  onFilterChange?: (tab: string, subject?: string, classLevel?: string) => void;
+}
+
+const NEETNotesTab = ({ onFilterChange }: NEETNotesTabProps) => {
   const { notes, contentLoading } = useBackend();
   const [activeSubject, setActiveSubject] = useState("Physics");
   const [activeClass, setActiveClass] = useState("class11");
@@ -28,9 +32,23 @@ const NEETNotesTab = () => {
   
   useEffect(() => {
     if (!contentLoading && subjects.length > 0 && !subjects.includes(activeSubject)) {
-      setActiveSubject(subjects[0]);
+      const newSubject = subjects[0];
+      setActiveSubject(newSubject);
+      onFilterChange?.('notes', newSubject, activeClass);
     }
   }, [contentLoading, subjects, activeSubject]);
+
+  // Handle subject changes
+  const handleSubjectChange = (newSubject: string) => {
+    setActiveSubject(newSubject);
+    onFilterChange?.('notes', newSubject, activeClass);
+  };
+
+  // Handle class changes
+  const handleClassChange = (newClass: string) => {
+    setActiveClass(newClass);
+    onFilterChange?.('notes', activeSubject, newClass);
+  };
 
 
   const classes = [
@@ -46,7 +64,7 @@ const NEETNotesTab = () => {
 
       {/* Subject Filter Tabs */}
       <div className="mb-6">
-        <Tabs value={activeSubject} onValueChange={setActiveSubject}>
+        <Tabs value={activeSubject} onValueChange={handleSubjectChange}>
           <div className="overflow-x-auto pb-2">
             {contentLoading && subjects.length === 0 ? (
                <div className="flex justify-center items-center py-4">
@@ -66,7 +84,7 @@ const NEETNotesTab = () => {
       </div>
 
       <div className="mb-6">
-        <Tabs value={activeClass} onValueChange={setActiveClass}>
+        <Tabs value={activeClass} onValueChange={handleClassChange}>
           <div className="overflow-x-auto pb-2">
             <TabsList className="w-full min-w-fit">
               {classes.map((classItem) => (

@@ -7,7 +7,11 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import AuthWrapper from "@/components/AuthWrapper";
 import { ShimmerButton } from "./ui/shimmer-button";
 
-const NEETPYQTab = () => {
+interface NEETPYQTabProps {
+  onFilterChange?: (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => void;
+}
+
+const NEETPYQTab = ({ onFilterChange }: NEETPYQTabProps) => {
   const [year, setYear] = useState("2024");
   const { 
     isAdmin, 
@@ -21,6 +25,12 @@ const NEETPYQTab = () => {
   } = useBackend();
   
   const years = ["2024", "2023", "2022", "2021", "2020"];
+  
+  // Handle year changes
+  const handleYearChange = (newYear: string) => {
+    setYear(newYear);
+    onFilterChange?.('pyqs', undefined, undefined, newYear);
+  };
   
   // Filter pyqs by year and exam type
   const filteredPyqs = pyqs.filter(pyq => 
@@ -55,7 +65,7 @@ const NEETPYQTab = () => {
         <div className="grid grid-cols-1 gap-4 max-w-xs">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-            <Select value={year} onValueChange={setYear}>
+            <Select value={year} onValueChange={handleYearChange}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>

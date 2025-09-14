@@ -7,14 +7,45 @@ import NEETPYQTab from "@/components/NEETPYQTab";
 import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
+import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
 
-const NEETTabs = () => {
-  const [activeTab, setActiveTab] = useState("notes");
+interface NEETTabsProps {
+  navigate: any;
+  location: any;
+}
+
+const NEETTabs = ({ navigate, location }: NEETTabsProps) => {
+  // Initialize state from URL
+  const initialTab = getTabFromUrl(location.pathname);
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  // Update URL when filters change
+  const updateUrl = (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => {
+    const params: Record<string, string | undefined> = {};
+    
+    if (tab === 'notes' || tab === 'syllabus') {
+      if (subject) params.subject = subject;
+      if (classLevel) params.class = classLevel;
+    } else if (tab === 'pyqs') {
+      if (subject) params.subject = subject;
+      if (classLevel) params.class = classLevel;
+      if (year) params.year = year;
+      if (session) params.session = session;
+    }
+    
+    const newUrl = buildExamUrl('neet', tab, params);
+    navigate(newUrl, { replace: true });
+  };
+
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    updateUrl(newTab);
+  };
 
   return (
     <section className="py-12 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue="notes" value={activeTab} onValueChange={handleTabChange} className="w-full">
           <div className="overflow-x-auto pb-2">
             <TabsList className="w-full min-w-fit">
               <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
@@ -36,7 +67,7 @@ const NEETTabs = () => {
           </div>
 
           <TabsContent value="notes">
-            <NEETNotesTab />
+            <NEETNotesTab onFilterChange={updateUrl} />
           </TabsContent>
 
           <TabsContent value="pyqs">
@@ -44,7 +75,7 @@ const NEETTabs = () => {
               <h2 className="text-2xl font-bold">Previous Year Questions</h2>
             </div>
             <OptimizedAuthWrapper>
-              <NEETPYQTab />
+              <NEETPYQTab onFilterChange={updateUrl} />
             </OptimizedAuthWrapper>
           </TabsContent>
 

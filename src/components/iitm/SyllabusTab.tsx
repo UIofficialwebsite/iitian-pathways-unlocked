@@ -113,12 +113,17 @@ const SyllabusCard: React.FC<{ branchKey: 'data-science' | 'electronic-systems',
   );
 };
 
-const SyllabusTab = () => {
+const SyllabusTab = ({ onFilterChange }: { onFilterChange?: (tab: string, branch?: string) => void }) => {
   const [branch, setBranch] = useState<keyof typeof syllabusData>("data-science");
   const [downloads, setDownloads] = useState({
     "data-science-syllabus": 482,
     "electronic-systems-syllabus": 315,
   });
+  
+  const handleBranchChange = (value: keyof typeof syllabusData) => {
+    setBranch(value);
+    onFilterChange?.('syllabus', value);
+  };
   
   const handleDownload = (id: string) => {
     setDownloads(prev => ({
@@ -130,7 +135,7 @@ const SyllabusTab = () => {
   
   return (
     <div className="space-y-6">
-      <Tabs value={branch} onValueChange={(value) => setBranch(value as keyof typeof syllabusData)} className="w-full">
+      <Tabs value={branch} onValueChange={handleBranchChange} className="w-full">
         <TabsList className="mb-6 w-full grid grid-cols-2">
           <TabsTrigger value="data-science">Data Science</TabsTrigger>
           <TabsTrigger value="electronic-systems">Electronic Systems</TabsTrigger>

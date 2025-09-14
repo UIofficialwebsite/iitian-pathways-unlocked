@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
@@ -10,10 +11,18 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
+import { buildExamUrl, getTabFromUrl, getParamsFromUrl, slugify } from "@/utils/urlHelpers";
+import { generateSEOTitle, generateSEODescription, generateCanonicalUrl } from "@/utils/seoHelpers";
 
 const JEEPrep = () => {
   const { notes, contentLoading } = useBackend();
-  const [activeTab, setActiveTab] = useState("notes");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Initialize state from URL
+  const initialTab = getTabFromUrl(location.pathname);
+  const urlParams = getParamsFromUrl(location.pathname);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   const jeeNotes = useMemo(() => notes.filter(note => note.exam_type === 'JEE'), [notes]);
 
@@ -31,15 +40,54 @@ const JEEPrep = () => {
     return sortedSubjects;
   }, [jeeNotes]);
 
-  const [activeSubject, setActiveSubject] = useState("Physics");
-  const [activeClass, setActiveClass] = useState("class11");
+  // Initialize filters from URL params
+  const [activeSubject, setActiveSubject] = useState(urlParams[0] || "Physics");
+  const [activeClass, setActiveClass] = useState(urlParams[1] || "class11");
   const [downloads, setDownloads] = useState<Record<string, number>>({});
+
+  // Update URL when filters change
+  const updateUrl = (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => {
+    const params: Record<string, string | undefined> = {};
+    
+    if (tab === 'notes' || tab === 'syllabus') {
+      if (subject) params.subject = subject;
+      if (classLevel) params.class = classLevel;
+    } else if (tab === 'pyqs') {
+      if (subject) params.subject = subject;
+      if (classLevel) params.class = classLevel;
+      if (year) params.year = year;
+      if (session) params.session = session;
+    }
+    
+    const newUrl = buildExamUrl('jee', tab, params);
+    navigate(newUrl, { replace: true });
+  };
 
   useEffect(() => {
     if (!contentLoading && subjects.length > 0 && !subjects.includes(activeSubject)) {
-      setActiveSubject(subjects[0]);
+      const newSubject = subjects[0];
+      setActiveSubject(newSubject);
+      updateUrl(activeTab, newSubject, activeClass);
     }
   }, [contentLoading, subjects, activeSubject]);
+
+  // Handle tab changes
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    updateUrl(newTab, activeSubject, activeClass);
+  };
+
+  // Handle subject changes
+  const handleSubjectChange = (newSubject: string) => {
+    setActiveSubject(newSubject);
+    updateUrl(activeTab, newSubject, activeClass);
+  };
+
+  // Handle class changes
+  const handleClassChange = (newClass: string) => {
+    setActiveClass(newClass);
+    updateUrl(activeTab, activeSubject, newClass);
+  };
 
   const handleDownload = (id: string) => {
     setDownloads(prev => ({
@@ -65,6 +113,35 @@ const JEEPrep = () => {
     { value: "class12", label: "Class 12" }
   ];
 
+  // SEO Meta Tags
+  const currentParams = [activeSubject, activeClass === 'class11' ? 'Class 11' : 'Class 12'];
+  const pageTitle = generateSEOTitle('jee', activeTab, currentParams);
+  const pageDescription = generateSEODescription('jee', activeTab, currentParams);
+  const canonicalUrl = generateCanonicalUrl(location.pathname);
+
+  // Update document head for SEO
+  useEffect(() => {
+    document.title = pageTitle;
+    
+    // Update meta description
+    let metaDescription = document.querySelector('meta[name="description"]');
+    if (!metaDescription) {
+      metaDescription = document.createElement('meta');
+      metaDescription.setAttribute('name', 'description');
+      document.head.appendChild(metaDescription);
+    }
+    metaDescription.setAttribute('content', pageDescription);
+
+    // Update canonical URL
+    let canonicalLink = document.querySelector('link[rel="canonical"]');
+    if (!canonicalLink) {
+      canonicalLink = document.createElement('link');
+      canonicalLink.setAttribute('rel', 'canonical');
+      document.head.appendChild(canonicalLink);
+    }
+    canonicalLink.setAttribute('href', canonicalUrl);
+  }, [pageTitle, pageDescription, canonicalUrl]);
+
   return (
     <>
       <NavBar />
@@ -83,7 +160,7 @@ const JEEPrep = () => {
         {/* Main Content */}
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Tabs defaultValue="notes" value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs defaultValue="notes" value={activeTab} onValueChange={handleTabChange} className="w-full">
               <div className="overflow-x-auto pb-2">
                 <TabsList className="w-full min-w-fit">
                   <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
@@ -114,7 +191,7 @@ const JEEPrep = () => {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
                      </div>
                   ) : (
-                    <Tabs value={activeSubject} onValueChange={setActiveSubject}>
+                    <Tabs value={activeSubject} onValueChange={handleSubjectChange}>
                       <div className="overflow-x-auto pb-2">
                         <TabsList className="w-full min-w-fit">
                           {subjects.map((subject) => (
@@ -130,7 +207,7 @@ const JEEPrep = () => {
 
                 {/* Class Filter */}
                 <div className="mb-6">
-                  <Tabs value={activeClass} onValueChange={setActiveClass}>
+                  <Tabs value={activeClass} onValueChange={handleClassChange}>
                     <div className="overflow-x-auto pb-2">
                       <TabsList className="w-full min-w-fit">
                         {classes.map((classItem) => (
@@ -154,7 +231,7 @@ const JEEPrep = () => {
 
               <TabsContent value="pyqs">
                 <h2 className="text-2xl font-bold mb-4">Previous Year Questions</h2>
-                {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} />)}
+                {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} onFilterChange={updateUrl} />)}
               </TabsContent>
 
               <TabsContent value="study-groups">

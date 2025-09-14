@@ -5,7 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import BranchNotesAccordion from "./BranchNotesAccordion";
 import { useIITMBranchNotes, Note } from "./hooks/useIITMBranchNotes";
 
-const BranchNotesTab = () => {
+interface BranchNotesTabProps {
+  onFilterChange?: (tab: string, branch?: string, level?: string) => void;
+}
+
+const BranchNotesTab = ({ onFilterChange }: BranchNotesTabProps) => {
   const [branch, setBranch] = useState("data-science");
   const [level, setLevel] = useState("foundation");
   const [specialization, setSpecialization] = useState("all");
@@ -20,7 +24,21 @@ const BranchNotesTab = () => {
 
   useEffect(() => {
     setSpecialization("all");
+    onFilterChange?.('notes', branch, level);
   }, [branch, level]);
+
+  // Handle branch changes
+  const handleBranchChange = (newBranch: string) => {
+    setBranch(newBranch);
+    onFilterChange?.('notes', newBranch, level);
+  };
+
+  // Handle level changes
+  const handleLevelChange = (newLevel: string) => {
+    setLevel(newLevel);
+    setSpecialization('all');
+    onFilterChange?.('notes', branch, newLevel);
+  };
 
   const availableSpecializations = getAvailableSpecializations();
   const currentSubjects = getCurrentSubjects(specialization);
@@ -30,7 +48,7 @@ const BranchNotesTab = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-          <Tabs value={branch} onValueChange={setBranch} className="w-full">
+          <Tabs value={branch} onValueChange={handleBranchChange} className="w-full">
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="data-science">Data Science</TabsTrigger>
               <TabsTrigger value="electronic-systems">Electronic Systems</TabsTrigger>
@@ -39,7 +57,7 @@ const BranchNotesTab = () => {
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
-          <Select value={level} onValueChange={(value) => { setLevel(value); setSpecialization('all'); }}>
+          <Select value={level} onValueChange={handleLevelChange}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Level" />
             </SelectTrigger>

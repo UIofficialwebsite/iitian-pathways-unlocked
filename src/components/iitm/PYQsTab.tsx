@@ -8,7 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 
-const PYQsTab = () => {
+interface PYQsTabProps {
+  onFilterChange?: (tab: string, branch?: string, level?: string, examType?: string, year?: string) => void;
+}
+
+const PYQsTab = ({ onFilterChange }: PYQsTabProps) => {
   const [branch, setBranch] = useState("data-science");
   const [level, setLevel] = useState("foundation");
   const [examType, setExamType] = useState("quiz1");
@@ -39,9 +43,32 @@ const PYQsTab = () => {
   // Set default year if available years change
   useEffect(() => {
     if (availableYears.length > 0 && !availableYears.includes(year)) {
-      setYear(availableYears[0]);
+      const newYear = availableYears[0];
+      setYear(newYear);
+      onFilterChange?.('pyqs', branch, level, examType, newYear);
     }
   }, [availableYears, year]);
+
+  // Handle filter changes
+  const handleBranchChange = (newBranch: string) => {
+    setBranch(newBranch);
+    onFilterChange?.('pyqs', newBranch, level, examType, year);
+  };
+
+  const handleLevelChange = (newLevel: string) => {
+    setLevel(newLevel);
+    onFilterChange?.('pyqs', branch, newLevel, examType, year);
+  };
+
+  const handleExamTypeChange = (newExamType: string) => {
+    setExamType(newExamType);
+    onFilterChange?.('pyqs', branch, level, newExamType, year);
+  };
+
+  const handleYearChange = (newYear: string) => {
+    setYear(newYear);
+    onFilterChange?.('pyqs', branch, level, examType, newYear);
+  };
 
   const handleDownloadClick = async (pyqId: string, fileUrl?: string) => {
     await handleDownload(pyqId, 'pyqs', fileUrl);
@@ -53,7 +80,7 @@ const PYQsTab = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-          <Tabs value={branch} onValueChange={setBranch}>
+          <Tabs value={branch} onValueChange={handleBranchChange}>
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="data-science">Data Science</TabsTrigger>
               <TabsTrigger value="electronic-systems">Electronic Systems</TabsTrigger>
@@ -63,7 +90,7 @@ const PYQsTab = () => {
         
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
-          <Tabs value={level} onValueChange={setLevel}>
+          <Tabs value={level} onValueChange={handleLevelChange}>
             <TabsList className="w-full grid grid-cols-4">
               <TabsTrigger value="foundation">Foundation</TabsTrigger>
               <TabsTrigger value="diploma">Diploma</TabsTrigger>
@@ -81,7 +108,7 @@ const PYQsTab = () => {
           {level !== "qualifier" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Exam Type</label>
-              <Tabs value={examType} onValueChange={setExamType}>
+              <Tabs value={examType} onValueChange={handleExamTypeChange}>
                 <TabsList className="w-full grid grid-cols-3">
                   <TabsTrigger value="quiz1">Quiz 1</TabsTrigger>
                   <TabsTrigger value="quiz2">Quiz 2</TabsTrigger>
@@ -92,7 +119,7 @@ const PYQsTab = () => {
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-            <Select value={year} onValueChange={setYear} disabled={availableYears.length === 0}>
+            <Select value={year} onValueChange={handleYearChange} disabled={availableYears.length === 0}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Year" />
               </SelectTrigger>

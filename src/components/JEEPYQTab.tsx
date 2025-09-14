@@ -11,9 +11,10 @@ import { ShimmerButton } from "./ui/shimmer-button";
 interface JEEPYQTabProps {
   downloads: Record<string, number>;
   onDownload: (id: string) => void;
+  onFilterChange?: (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => void;
 }
 
-const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload }: JEEPYQTabProps) => {
+const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload, onFilterChange }: JEEPYQTabProps) => {
   const { pyqs, handleDownload, downloadCounts, contentLoading } = useBackend();
   const [activeSubject, setActiveSubject] = useState("Physics");
   const [year, setYear] = useState("2024");
@@ -33,11 +34,29 @@ const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload }: JEE
     setAvailableSessions(sessionsForYearAndSubject);
     
     if (!sessionsForYearAndSubject.includes(session) && sessionsForYearAndSubject.length > 0) {
-      setSession(sessionsForYearAndSubject[0]);
+      const newSession = sessionsForYearAndSubject[0];
+      setSession(newSession);
+      onFilterChange?.('pyqs', activeSubject, undefined, year, newSession);
     } else if (sessionsForYearAndSubject.length === 0) {
       setSession("");
     }
   }, [year, activeSubject, jeePyqs, session]);
+
+  // Handle filter changes with URL updates
+  const handleSubjectChange = (newSubject: string) => {
+    setActiveSubject(newSubject);
+    onFilterChange?.('pyqs', newSubject, undefined, year, session);
+  };
+
+  const handleYearChange = (newYear: string) => {
+    setYear(newYear);
+    onFilterChange?.('pyqs', activeSubject, undefined, newYear, session);
+  };
+
+  const handleSessionChange = (newSession: string) => {
+    setSession(newSession);
+    onFilterChange?.('pyqs', activeSubject, undefined, year, newSession);
+  };
   
   const filteredPapers = jeePyqs.filter(
     pyq => pyq.year?.toString() === year && pyq.session === session && pyq.subject === activeSubject
@@ -54,7 +73,7 @@ const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload }: JEE
       <div className="space-y-6">
         {/* Subject Tabs */}
         <div className="mb-6">
-          <Tabs value={activeSubject} onValueChange={setActiveSubject}>
+          <Tabs value={activeSubject} onValueChange={handleSubjectChange}>
             <div className="overflow-x-auto pb-2">
               <TabsList className="w-full min-w-fit">
                 {subjects.map((subject) => (
@@ -72,7 +91,7 @@ const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload }: JEE
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-              <Select value={year} onValueChange={setYear}>
+              <Select value={year} onValueChange={handleYearChange}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select Year" />
                 </SelectTrigger>
@@ -88,7 +107,7 @@ const JEEPYQTab = ({ downloads: propDownloads, onDownload: propOnDownload }: JEE
             
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Session</label>
-              <Select value={session} onValueChange={setSession} disabled={availableSessions.length === 0}>
+              <Select value={session} onValueChange={handleSessionChange} disabled={availableSessions.length === 0}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select Session" />
                 </SelectTrigger>
