@@ -903,50 +903,25 @@ export type Database = {
       }
     }
     Views: {
-      public_testimonials: {
-        Row: {
-          company: string | null
-          created_at: string | null
-          id: string | null
-          is_approved: boolean | null
-          is_featured: boolean | null
-          name: string | null
-          position: string | null
-          rating: number | null
-          testimonial_text: string | null
-          updated_at: string | null
-          user_id: string | null
-        }
-        Insert: {
-          company?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_approved?: boolean | null
-          is_featured?: boolean | null
-          name?: string | null
-          position?: string | null
-          rating?: number | null
-          testimonial_text?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          company?: string | null
-          created_at?: string | null
-          id?: string | null
-          is_approved?: boolean | null
-          is_featured?: boolean | null
-          name?: string | null
-          position?: string | null
-          rating?: number | null
-          testimonial_text?: string | null
-          updated_at?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
+      get_public_testimonials: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          company: string
+          created_at: string
+          id: string
+          is_approved: boolean
+          is_featured: boolean
+          name: string
+          position: string
+          rating: number
+          testimonial_text: string
+          updated_at: string
+          user_id: string
+        }[]
+      }
       increment_download_count: {
         Args: { content_id: string; table_name: string; user_email?: string }
         Returns: undefined
