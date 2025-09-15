@@ -7,13 +7,55 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_email: string
+          admin_user_id: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          new_values: Json | null
+          old_values: Json | null
+          record_id: string | null
+          table_name: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action: string
+          admin_email: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          new_values?: Json | null
+          old_values?: Json | null
+          record_id?: string | null
+          table_name?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -861,11 +903,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      public_testimonials: {
+        Row: {
+          company: string | null
+          created_at: string | null
+          id: string | null
+          is_approved: boolean | null
+          is_featured: boolean | null
+          name: string | null
+          position: string | null
+          rating: number | null
+          testimonial_text: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          name?: string | null
+          position?: string | null
+          rating?: number | null
+          testimonial_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company?: string | null
+          created_at?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          name?: string | null
+          position?: string | null
+          rating?: number | null
+          testimonial_text?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       increment_download_count: {
-        Args: { table_name: string; content_id: string; user_email?: string }
+        Args: { content_id: string; table_name: string; user_email?: string }
         Returns: undefined
       }
       is_admin: {
