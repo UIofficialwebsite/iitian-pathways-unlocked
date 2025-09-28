@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +16,8 @@ import {
   Settings,
   Clock,
   Newspaper,
-  FileText
+  FileText,
+  ExternalLink
 } from "lucide-react";
 import ProfileEditModal from "./ProfileEditModal";
 import { Link } from "react-router-dom";
@@ -182,8 +182,8 @@ const ModernDashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Overview */}
-          <div className="lg:col-span-2">
+          {/* Profile Overview and SSP Portal */}
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
             <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -262,6 +262,28 @@ const ModernDashboard = () => {
                     </Button>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-gradient-to-r from-green-500 to-teal-600 rounded-lg">
+                        <ExternalLink className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                        <CardTitle className="text-gray-900">SSP Portal</CardTitle>
+                        <CardDescription className="text-gray-600">Student Support</CardDescription>
+                    </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <p className="text-gray-600">Access the Student Support Portal for assistance and resources.</p>
+                <a href="https://ssp.iitm.ac.in/" target="_blank" rel="noopener noreferrer">
+                  <Button className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
+                    Go to SSP Portal
+                  </Button>
+                </a>
               </CardContent>
             </Card>
           </div>
