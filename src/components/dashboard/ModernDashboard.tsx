@@ -278,8 +278,8 @@ const ModernDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <p className="text-gray-600">Access the Student Support Portal for assistance and resources.</p>
-                <a href="https://ssp.iitm.ac.in/" target="_blank" rel="noopener noreferrer">
+                <p className="text-gray-600">Access the Dashboard and find your premium course access.</p>
+                <a href="https://ssp.unknowniitians.live/" target="_blank" rel="noopener noreferrer">
                   <Button className="w-full bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700">
                     Go to SSP Portal
                   </Button>
