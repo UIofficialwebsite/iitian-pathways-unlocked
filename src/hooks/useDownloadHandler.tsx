@@ -14,8 +14,6 @@ export const useDownloadHandler = () => {
   useEffect(() => {
     const loadDownloadCounts = async () => {
       try {
-        console.log('Loading initial download counts...');
-        
         // Load notes download counts
         const { data: notesData, error: notesError } = await supabase
           .from('notes')
@@ -47,13 +45,12 @@ export const useDownloadHandler = () => {
         
         if (pyqsData) {
           pyqsData.forEach(pyq => {
-            combinedCounts[pyq.id] = pyq.download_count || 0;
-          });
-        }
+          combinedCounts[pyq.id] = pyq.download_count || 0;
+        });
+      }
 
-        console.log('Loaded download counts:', combinedCounts);
-        setDownloadCounts(combinedCounts);
-        setIsInitialized(true);
+      setDownloadCounts(combinedCounts);
+      setIsInitialized(true);
       } catch (error) {
         console.error('Error loading download counts:', error);
         setIsInitialized(true);

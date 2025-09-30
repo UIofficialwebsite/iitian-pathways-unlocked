@@ -86,14 +86,6 @@ export const BackendIntegratedWrapper: React.FC<BackendIntegratedWrapperProps> =
     refreshPyqs
   } = useContentManagement();
 
-  console.log('BackendIntegratedWrapper - Admin status:', { isAdmin, isSuperAdmin, isAdminLoading });
-  console.log('BackendIntegratedWrapper - Content loaded:', { 
-    notes: notes.length, 
-    pyqs: pyqs.length, 
-    courses: courses.length,
-    jobs: jobs.length
-  });
-
   const contextValue: BackendContextType = {
     isAdmin,
     isSuperAdmin,

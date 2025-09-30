@@ -26,19 +26,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAdminStatus = async (currentUser: User | null) => {
     if (!currentUser?.email) {
-      console.log('useAuth: No user or email found, resetting admin status');
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setUserRole(null);
       return;
     }
 
-    console.log('useAuth: Checking admin status for:', currentUser.email);
-
     try {
       // First check the hardcoded super admin
       if (currentUser.email === 'uiwebsite638@gmail.com') {
-        console.log('useAuth: User is hardcoded super admin');
         setIsAdmin(true);
         setIsSuperAdmin(true);
         setUserRole('super_admin');
@@ -57,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (adminUser) {
-        console.log('useAuth: Admin user found:', adminUser);
         setIsAdmin(true);
         setIsSuperAdmin(adminUser.is_super_admin);
         setUserRole(adminUser.is_super_admin ? 'super_admin' : 'admin');
@@ -76,7 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       const role = profile?.role || 'student';
-      console.log('useAuth: Profile role found:', role);
       setUserRole(role);
       setIsAdmin(role === 'admin' || role === 'super_admin');
       setIsSuperAdmin(role === 'super_admin');
@@ -103,14 +97,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    console.log('useAuth: Setting up auth listener');
     setIsLoading(true);
 
     // Get initial session
     const getInitialSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        console.log('useAuth: Initial session user:', session?.user?.email || 'No session user');
         setSession(session);
         setUser(session?.user ?? null);
       } catch (error) {
@@ -125,7 +117,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log('useAuth: Auth state changed:', event, session?.user?.email || 'No user');
         setSession(session);
         setUser(session?.user ?? null);
         if (event === 'SIGNED_OUT') {
@@ -137,7 +128,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => {
-      console.log('useAuth: Cleaning up auth listener');
       subscription.unsubscribe();
     };
   }, []);
@@ -149,14 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       checkAdminStatus(user);
     }
   }, [user, isLoading]);
-
-  console.log('useAuth: Current state:', {
-    userEmail: user?.email,
-    isAdmin,
-    isSuperAdmin,
-    userRole,
-    isLoading
-  });
 
   return (
     <AuthContext.Provider value={{
