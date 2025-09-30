@@ -13,6 +13,7 @@ interface BackendContextType {
   courses: Content[];
   notes: Content[];
   pyqs: Content[];
+  jobs: Content[];
   contentLoading: boolean;
   getFilteredContent: (profile: any) => { 
     notes: Content[], 
@@ -39,10 +40,11 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     courses,
     notes,
     pyqs,
+    jobs,
     importantDates,
     newsUpdates,
     loading: contentLoading,
-    refetch,
+    refreshAll,
   } = useRealtimeContentManagement();
 
   const getFilteredContent = (profile: any) => {
@@ -84,9 +86,10 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     courses,
     notes,
     pyqs,
+    jobs,
     contentLoading: authLoading || contentLoading,
     getFilteredContent,
-    refetch,
+    refetch: refreshAll,
   }), [
     user,
     isAdmin,
@@ -94,9 +97,10 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     courses,
     notes,
     pyqs,
+    jobs,
     authLoading,
     contentLoading,
-    refetch,
+    refreshAll,
   ]);
 
   return (
