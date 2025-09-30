@@ -24,20 +24,23 @@ import {
   Loader2
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import type { Job } from "@/hooks/useRealtimeContentManagement";
 
 const Career = () => {
   const { jobs, contentLoading } = useBackend();
 
   // Filter active jobs with real-time updates - Fix JSON handling
-  const openings = jobs.filter(job => job.is_active).map(job => ({
-    ...job,
-    // Ensure requirements is always an array
-    requirements: Array.isArray(job.requirements) ? job.requirements : 
-                 typeof job.requirements === 'string' ? [job.requirements] : [],
-    // Ensure skills is always an array  
-    skills: Array.isArray(job.skills) ? job.skills :
-           typeof job.skills === 'string' ? [job.skills] : []
-  }));
+  const openings = jobs
+    .filter(job => job.is_active)
+    .map(job => ({
+      ...job,
+      // Ensure requirements is always an array
+      requirements: Array.isArray(job.requirements) ? job.requirements : 
+                   typeof job.requirements === 'string' ? [job.requirements] : [],
+      // Ensure skills is always an array  
+      skills: Array.isArray(job.skills) ? job.skills :
+             typeof job.skills === 'string' ? [job.skills] : []
+    }));
 
   // Career email subscription form
   const [email, setEmail] = useState("");

@@ -1,6 +1,8 @@
 import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRealtimeContentManagement } from '@/hooks/useRealtimeContentManagement';
+import { useRealtimeContentManagement, type Job, type Community, type StudyGroup } from '@/hooks/useRealtimeContentManagement';
+import { useDownloadHandler } from '@/hooks/useDownloadHandler';
+import { Course } from '@/components/admin/courses/types';
 
 // Define the shape of the content
 interface Content {
@@ -10,17 +12,26 @@ interface Content {
 
 // Define the shape of the backend context
 interface BackendContextType {
-  courses: Content[];
+  courses: Course[];
   notes: Content[];
   pyqs: Content[];
-  jobs: Content[];
+  jobs: Job[];
+  importantDates: Content[];
+  newsUpdates: Content[];
+  communities: Community[];
+  studyGroups: StudyGroup[];
   contentLoading: boolean;
+  downloadCounts: Record<string, number>;
+  isDownloadCountsInitialized: boolean;
+  handleDownload: (contentId: string, tableName: 'notes' | 'pyqs', fileUrl?: string) => Promise<void>;
+  updateDownloadCount: (contentId: string, count: number) => void;
   getFilteredContent: (profile: any) => { 
     notes: Content[], 
     pyqs: Content[],
-    courses: Content[],
+    courses: Course[],
     importantDates: Content[],
-    newsUpdates: Content[]
+    newsUpdates: Content[],
+    communities: Community[]
   };
   refetch: () => void;
   // Other potential values
@@ -43,13 +54,23 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     jobs,
     importantDates,
     newsUpdates,
+    communities,
+    studyGroups,
     loading: contentLoading,
     refreshAll,
   } = useRealtimeContentManagement();
 
+  const {
+    handleDownload,
+    downloadCounts,
+    updateDownloadCount,
+    isInitialized: isDownloadCountsInitialized
+  } = useDownloadHandler();
+
+
   const getFilteredContent = (profile: any) => {
     if (!profile) {
-      return { notes, pyqs, courses, importantDates, newsUpdates };
+      return { notes, pyqs, courses, importantDates, newsUpdates, communities };
     }
 
     const filterByProfile = (content: any[]) => {
@@ -75,6 +96,7 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
       courses: filterByProfile(courses),
       importantDates: filterByProfile(importantDates),
       newsUpdates: filterByProfile(newsUpdates),
+      communities: filterByProfile(communities),
     };
   };
 
@@ -87,7 +109,15 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     notes,
     pyqs,
     jobs,
+    importantDates,
+    newsUpdates,
+    communities,
+    studyGroups,
     contentLoading: authLoading || contentLoading,
+    downloadCounts,
+    isDownloadCountsInitialized,
+    handleDownload,
+    updateDownloadCount,
     getFilteredContent,
     refetch: refreshAll,
   }), [
@@ -98,8 +128,16 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     notes,
     pyqs,
     jobs,
+    importantDates,
+    newsUpdates,
+    communities,
+    studyGroups,
     authLoading,
     contentLoading,
+    downloadCounts,
+    isDownloadCountsInitialized,
+    handleDownload,
+    updateDownloadCount,
     refreshAll,
   ]);
 
