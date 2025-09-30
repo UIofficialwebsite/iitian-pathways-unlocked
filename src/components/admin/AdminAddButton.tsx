@@ -1,34 +1,35 @@
-import React, { useState, ReactNode } from 'react';
+
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useBackend } from '@/components/BackendIntegratedWrapper';
 import AdminContentDialog from './AdminContentDialog';
 
-type ContentType = 'notes' | 'pyqs' | 'news' | 'dates' | 'communities' | 'courses' | 'syllabus';
-
 interface AdminAddButtonProps {
-  contentType: ContentType;
-  children: ReactNode;
+  contentType: 'notes' | 'pyqs' | 'news' | 'dates' | 'communities' | 'courses' | 'syllabus';
   examType?: string;
+  children: React.ReactNode;
   prefilledSubject?: string;
   branch?: string;
   level?: string;
   classLevel?: string;
 }
 
-const AdminAddButton: React.FC<AdminAddButtonProps> = ({ 
-  contentType, 
-  children, 
+const AdminAddButton: React.FC<AdminAddButtonProps> = ({
+  contentType,
   examType,
+  children,
   prefilledSubject,
   branch,
   level,
   classLevel
 }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin } = useBackend();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  console.log('AdminAddButton - isAdmin:', isAdmin);
+
   if (!isAdmin) {
+    console.log('AdminAddButton: User is not admin, hiding button');
     return null;
   }
 
@@ -36,11 +37,11 @@ const AdminAddButton: React.FC<AdminAddButtonProps> = ({
     <>
       <Button 
         onClick={() => setIsDialogOpen(true)}
-        className="bg-gray-800 text-white hover:bg-gray-700"
+        className="bg-royal hover:bg-royal-dark text-white"
       >
-        <PlusCircle className="mr-2 h-4 w-4" />
         {children}
       </Button>
+      
       <AdminContentDialog
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}

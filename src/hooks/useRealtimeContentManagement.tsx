@@ -63,7 +63,6 @@ export interface Job {
   stipend?: string;
   description: string;
   requirements: string[];
-  skills?: string[];
   application_url?: string;
   deadline?: string;
   is_featured: boolean;

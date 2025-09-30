@@ -1,212 +1,135 @@
-import React, { createContext, useContext, ReactNode, useMemo } from 'react';
+
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useRealtimeContentManagement, type Job, type Community, type StudyGroup } from '@/hooks/useRealtimeContentManagement';
 import { useDownloadHandler } from '@/hooks/useDownloadHandler';
+import { useRealtimeContentManagement } from '@/hooks/useRealtimeContentManagement';
 import { useContentManagement } from '@/hooks/useContentManagement';
 import { Course } from '@/components/admin/courses/types';
 
-// Define the shape of the content
-interface Content {
-  id: string;
-  title: string;
-  [key: string]: any;
-}
-
-// Define the shape of the backend context
 interface BackendContextType {
-  courses: Course[];
-  notes: Content[];
-  pyqs: Content[];
-  jobs: Job[];
-  importantDates: Content[];
-  newsUpdates: Content[];
-  communities: Community[];
-  studyGroups: StudyGroup[];
-  contentLoading: boolean;
-  downloadCounts: Record<string, number>;
-  isDownloadCountsInitialized: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isAdminLoading: boolean;
   handleDownload: (contentId: string, tableName: 'notes' | 'pyqs', fileUrl?: string) => Promise<void>;
+  downloadCounts: Record<string, number>;
   updateDownloadCount: (contentId: string, count: number) => void;
-  // CRUD operations
-  addNote: (note: any) => Promise<boolean | void>;
-  addPyq: (pyq: any) => Promise<boolean | void>;
-  deleteNote: (noteId: string) => Promise<boolean | void>;
-  deletePyq: (pyqId: string) => Promise<boolean | void>;
-  updateNote: (noteId: string, updates: any) => Promise<boolean | void>;
-  updatePyq: (pyqId: string, updates: any) => Promise<boolean | void>;
+  isDownloadCountsInitialized: boolean;
+  notes: any[];
+  pyqs: any[];
+  courses: Course[];
+  importantDates: any[];
+  newsUpdates: any[];
+  studyGroups: any[];
+  jobs: any[];
+  communities: any[];
+  contentLoading: boolean;
+  getFilteredContent: (profile: any) => any;
+  refreshAll: () => Promise<void>;
+  // CRUD operations - Updated to match actual hook return types
+  addNote: (data: any) => Promise<boolean>;
+  addPyq: (data: any) => Promise<boolean>;
+  deleteNote: (id: string) => Promise<boolean>;
+  deletePyq: (id: string) => Promise<boolean>;
+  updateNote: (id: string, data: any) => Promise<boolean>;
+  updatePyq: (id: string, data: any) => Promise<boolean>;
+  createCourse: (data: any) => Promise<void>;
+  updateCourse: (id: string, data: any) => Promise<void>;
+  deleteCourse: (id: string) => Promise<void>;
   refreshNotes: () => Promise<void>;
   refreshPyqs: () => Promise<void>;
-  createCourse: (course: any) => Promise<boolean | void>;
-  updateCourse: (courseId: string, updates: any) => Promise<boolean | void>;
-  deleteCourse: (courseId: string) => Promise<boolean | void>;
-  refreshCourses: () => Promise<void>;
-  getFilteredContent: (profile: any) => { 
-    notes: Content[], 
-    pyqs: Content[],
-    courses: Course[],
-    importantDates: Content[],
-    newsUpdates: Content[],
-    communities: Community[]
-  };
-  refetch: () => void;
-  // Other potential values
-  isAdmin?: boolean;
-  isSuperAdmin?: boolean;
-  user?: any;
 }
 
-// Create the context
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
 
-// BackendIntegratedWrapper component
-export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, isAdmin, isSuperAdmin, loading: authLoading } = useAuth();
-  
-  const {
-    courses,
-    notes,
-    pyqs,
-    jobs,
-    importantDates,
-    newsUpdates,
-    communities,
-    studyGroups,
-    loading: contentLoading,
-    refreshAll,
-  } = useRealtimeContentManagement();
-
-  const {
-    handleDownload,
-    downloadCounts,
-    updateDownloadCount,
-    isInitialized: isDownloadCountsInitialized
-  } = useDownloadHandler();
-
-  const {
-    addNote,
-    addPyq,
-    deleteNote,
-    deletePyq,
-    updateNote,
-    updatePyq,
-    refreshNotes,
-    refreshPyqs,
-    createCourse,
-    updateCourse,
-    deleteCourse,
-    refreshCourses,
-  } = useContentManagement();
-
-
-  const getFilteredContent = (profile: any) => {
-    if (!profile) {
-      return { notes, pyqs, courses, importantDates, newsUpdates, communities };
-    }
-
-    const filterByProfile = (content: any[]) => {
-      return content.filter(item => {
-        if (item.program_type && item.program_type !== profile.program_type) {
-          return false;
-        }
-
-        if (profile.program_type === 'IITM_BS') {
-          if (item.branch && item.branch !== 'all' && item.branch !== profile.branch) return false;
-          if (item.level && item.level !== 'all' && item.level !== profile.level) return false;
-        } else if (profile.program_type === 'COMPETITIVE_EXAM') {
-          if (item.exam_type && item.exam_type !== 'all' && item.exam_type !== profile.exam_type) return false;
-        }
-
-        return true;
-      });
-    };
-
-    return {
-      notes: filterByProfile(notes),
-      pyqs: filterByProfile(pyqs),
-      courses: filterByProfile(courses),
-      importantDates: filterByProfile(importantDates),
-      newsUpdates: filterByProfile(newsUpdates),
-      communities: filterByProfile(communities),
-    };
-  };
-
-  // Memoize the context value to prevent unnecessary re-renders
-  const value = useMemo(() => ({
-    user,
-    isAdmin,
-    isSuperAdmin,
-    courses,
-    notes,
-    pyqs,
-    jobs,
-    importantDates,
-    newsUpdates,
-    communities,
-    studyGroups,
-    contentLoading: authLoading || contentLoading,
-    downloadCounts,
-    isDownloadCountsInitialized,
-    handleDownload,
-    updateDownloadCount,
-    addNote,
-    addPyq,
-    deleteNote,
-    deletePyq,
-    updateNote,
-    updatePyq,
-    refreshNotes,
-    refreshPyqs,
-    createCourse,
-    updateCourse,
-    deleteCourse,
-    refreshCourses,
-    getFilteredContent,
-    refetch: refreshAll,
-  }), [
-    user,
-    isAdmin,
-    isSuperAdmin,
-    courses,
-    notes,
-    pyqs,
-    jobs,
-    importantDates,
-    newsUpdates,
-    communities,
-    studyGroups,
-    authLoading,
-    contentLoading,
-    downloadCounts,
-    isDownloadCountsInitialized,
-    handleDownload,
-    updateDownloadCount,
-    addNote,
-    addPyq,
-    deleteNote,
-    deletePyq,
-    updateNote,
-    updatePyq,
-    refreshNotes,
-    refreshPyqs,
-    createCourse,
-    updateCourse,
-    deleteCourse,
-    refreshCourses,
-    refreshAll,
-  ]);
-
-  return (
-    <BackendContext.Provider value={value}>
-      {children}
-    </BackendContext.Provider>
-  );
-};
-
-// Custom hook to use the backend context
-export const useBackend = (): BackendContextType => {
+export const useBackend = () => {
   const context = useContext(BackendContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useBackend must be used within a BackendIntegratedWrapper');
   }
   return context;
+};
+
+interface BackendIntegratedWrapperProps {
+  children: ReactNode;
+}
+
+export const BackendIntegratedWrapper: React.FC<BackendIntegratedWrapperProps> = ({ children }) => {
+  const { isAdmin, isSuperAdmin, isLoading: isAdminLoading } = useAuth();
+  const { handleDownload, downloadCounts, updateDownloadCount, isInitialized: isDownloadCountsInitialized } = useDownloadHandler();
+  
+  const {
+    notes,
+    pyqs,
+    courses,
+    importantDates,
+    newsUpdates,
+    studyGroups,
+    jobs,
+    communities,
+    loading: contentLoading,
+    getFilteredContent,
+    refreshAll
+  } = useRealtimeContentManagement();
+
+  // Get CRUD operations from content management hook
+  const {
+    addNote,
+    addPyq,
+    deleteNote,
+    deletePyq,
+    updateNote,
+    updatePyq,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    refreshNotes,
+    refreshPyqs
+  } = useContentManagement();
+
+  console.log('BackendIntegratedWrapper - Admin status:', { isAdmin, isSuperAdmin, isAdminLoading });
+  console.log('BackendIntegratedWrapper - Content loaded:', { 
+    notes: notes.length, 
+    pyqs: pyqs.length, 
+    courses: courses.length,
+    jobs: jobs.length
+  });
+
+  const contextValue: BackendContextType = {
+    isAdmin,
+    isSuperAdmin,
+    isAdminLoading,
+    handleDownload,
+    downloadCounts,
+    updateDownloadCount,
+    isDownloadCountsInitialized,
+    notes,
+    pyqs,
+    courses,
+    importantDates,
+    newsUpdates,
+    studyGroups,
+    jobs,
+    communities,
+    contentLoading,
+    getFilteredContent,
+    refreshAll,
+    // CRUD operations
+    addNote,
+    addPyq,
+    deleteNote,
+    deletePyq,
+    updateNote,
+    updatePyq,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    refreshNotes,
+    refreshPyqs
+  };
+
+  return (
+    <BackendContext.Provider value={contextValue}>
+      {children}
+    </BackendContext.Provider>
+  );
 };

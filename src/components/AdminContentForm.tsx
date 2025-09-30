@@ -30,24 +30,24 @@ const AdminContentForm: React.FC<AdminContentFormProps> = ({ type, onClose }) =>
     setIsSubmitting(true);
 
     try {
-      let success: boolean;
+      let success = false;
       
       if (type === 'note') {
-        success = (await addNote({
+        success = await addNote({
           title: formData.title,
           subject: formData.subject,
           file_link: formData.file_link,
           description: formData.description
-        })) ?? false;
+        });
       } else {
-        success = (await addPyq({
+        success = await addPyq({
           title: formData.title,
           subject: formData.subject,
           year: formData.year ? parseInt(formData.year) : null,
           exam_type: formData.exam_type,
           file_link: formData.file_link,
           description: formData.description
-        })) ?? false;
+        });
       }
 
       if (success) {
