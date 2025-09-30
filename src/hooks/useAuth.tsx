@@ -16,6 +16,8 @@ interface AuthContextType {
   isAdmin: boolean;
   isSuperAdmin: boolean;
   loading: boolean;
+  isLoading: boolean; // Alias for compatibility
+  signOut: () => Promise<void>;
   checkAdminStatus: (user: User | null) => Promise<void>;
 }
 
@@ -62,17 +64,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Fallback to database check
+    // Fallback to database check - use admin_users table
     try {
       const { data, error } = await supabase
-        .from("admins")
-        .select("user_email, is_super_admin")
-        .eq("user_email", userEmail)
-        .single();
+        .from("admin_users")
+        .select("email, is_super_admin")
+        .eq("email", userEmail)
+        .maybeSingle();
 
       if (error && error.code !== "PGRST116") {
         // 'PGRST116' means no rows found, which is not an error here.
-        throw error;
+        console.error("Error checking admin status:", error);
       }
 
       if (data) {
@@ -86,6 +88,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Error checking admin status from DB:", error);
       setIsAdmin(false);
       setIsSuperAdmin(false);
+    }
+  }, []);
+
+
+  const signOut = useCallback(async () => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+      setIsSuperAdmin(false);
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
   }, []);
 
@@ -135,6 +150,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAdmin,
     isSuperAdmin,
     loading,
+    isLoading: loading, // Alias for compatibility
+    signOut,
     checkAdminStatus,
   };
 

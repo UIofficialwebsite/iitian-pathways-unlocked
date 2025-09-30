@@ -2,6 +2,7 @@ import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealtimeContentManagement, type Job, type Community, type StudyGroup } from '@/hooks/useRealtimeContentManagement';
 import { useDownloadHandler } from '@/hooks/useDownloadHandler';
+import { useContentManagement } from '@/hooks/useContentManagement';
 import { Course } from '@/components/admin/courses/types';
 
 // Define the shape of the content
@@ -25,6 +26,19 @@ interface BackendContextType {
   isDownloadCountsInitialized: boolean;
   handleDownload: (contentId: string, tableName: 'notes' | 'pyqs', fileUrl?: string) => Promise<void>;
   updateDownloadCount: (contentId: string, count: number) => void;
+  // CRUD operations
+  addNote: (note: any) => Promise<boolean | void>;
+  addPyq: (pyq: any) => Promise<boolean | void>;
+  deleteNote: (noteId: string) => Promise<boolean | void>;
+  deletePyq: (pyqId: string) => Promise<boolean | void>;
+  updateNote: (noteId: string, updates: any) => Promise<boolean | void>;
+  updatePyq: (pyqId: string, updates: any) => Promise<boolean | void>;
+  refreshNotes: () => Promise<void>;
+  refreshPyqs: () => Promise<void>;
+  createCourse: (course: any) => Promise<boolean | void>;
+  updateCourse: (courseId: string, updates: any) => Promise<boolean | void>;
+  deleteCourse: (courseId: string) => Promise<boolean | void>;
+  refreshCourses: () => Promise<void>;
   getFilteredContent: (profile: any) => { 
     notes: Content[], 
     pyqs: Content[],
@@ -66,6 +80,21 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     updateDownloadCount,
     isInitialized: isDownloadCountsInitialized
   } = useDownloadHandler();
+
+  const {
+    addNote,
+    addPyq,
+    deleteNote,
+    deletePyq,
+    updateNote,
+    updatePyq,
+    refreshNotes,
+    refreshPyqs,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    refreshCourses,
+  } = useContentManagement();
 
 
   const getFilteredContent = (profile: any) => {
@@ -118,6 +147,18 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     isDownloadCountsInitialized,
     handleDownload,
     updateDownloadCount,
+    addNote,
+    addPyq,
+    deleteNote,
+    deletePyq,
+    updateNote,
+    updatePyq,
+    refreshNotes,
+    refreshPyqs,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    refreshCourses,
     getFilteredContent,
     refetch: refreshAll,
   }), [
@@ -138,6 +179,18 @@ export const BackendIntegratedWrapper: React.FC<{ children: ReactNode }> = ({ ch
     isDownloadCountsInitialized,
     handleDownload,
     updateDownloadCount,
+    addNote,
+    addPyq,
+    deleteNote,
+    deletePyq,
+    updateNote,
+    updatePyq,
+    refreshNotes,
+    refreshPyqs,
+    createCourse,
+    updateCourse,
+    deleteCourse,
+    refreshCourses,
     refreshAll,
   ]);
 
