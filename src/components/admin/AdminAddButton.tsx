@@ -26,10 +26,7 @@ const AdminAddButton: React.FC<AdminAddButtonProps> = ({
   const { isAdmin } = useBackend();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  console.log('AdminAddButton - isAdmin:', isAdmin);
-
   if (!isAdmin) {
-    console.log('AdminAddButton: User is not admin, hiding button');
     return null;
   }
 
