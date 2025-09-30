@@ -8,6 +8,7 @@ import { Course } from '@/components/admin/courses/types';
 // Define the shape of the content
 interface Content {
   id: string;
+  title: string;
   [key: string]: any;
 }
 
