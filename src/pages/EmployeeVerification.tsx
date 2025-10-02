@@ -49,9 +49,9 @@ const EmployeeVerification = () => {
         .from('employees')
         .select('*')
         .eq('employee_code', employeeCode.trim())
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         throw error;
       }
 
