@@ -1,12 +1,11 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Star, 
-  Calendar, 
-  Users, 
+import {
+  Star,
+  Calendar,
+  Users,
   CheckCircle
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
@@ -42,9 +41,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         <CardHeader className="pb-2">
           <CardTitle>{course.title}</CardTitle>
           <div className="flex items-center text-sm text-gray-500">
-            <Calendar className="h-4 w-4 mr-1" /> 
+            <Calendar className="h-4 w-4 mr-1" />
             {course.duration}
-            <Users className="h-4 w-4 ml-4 mr-1" /> 
+            <Users className="h-4 w-4 ml-4 mr-1" />
             {course.students_enrolled || 0} students
           </div>
         </CardHeader>
@@ -53,7 +52,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           <div className="grid grid-cols-2 gap-2">
             {course.features?.map((feature, i) => (
               <div key={i} className="flex items-center text-sm">
-                <CheckCircle className="h-3 w-3 mr-1 text-green-500" /> 
+                <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
                 {feature}
               </div>
             ))}
@@ -70,7 +69,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
               <span className="text-xl font-bold text-royal">₹{course.price}</span>
             )}
           </div>
-          <EnrollButton 
+          <EnrollButton
             courseId={course.id}
             enrollmentLink={course.enroll_now_link || undefined}
             className={`${course.bestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white px-5 py-2`}
