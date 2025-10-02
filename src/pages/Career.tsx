@@ -24,6 +24,8 @@ import {
   Loader2
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Career = () => {
   const { jobs, contentLoading } = useBackend();
@@ -76,20 +78,101 @@ const Career = () => {
   const [empId, setEmpId] = useState("");
   const [empName, setEmpName] = useState("");
   const [verifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<null | "success" | "failure">(null);
+  const [verificationResult, setVerificationResult] = useState<null | { verified: boolean, message: string, details?: any }>(null);
+  const { toast } = useToast();
 
-  const handleVerify = (e: React.FormEvent) => {
+  const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setVerifying(true);
-    
-    setTimeout(() => {
-      if (empId === "UI12345" && empName.toLowerCase() === "john doe") {
-        setVerificationResult("success");
-      } else {
-        setVerificationResult("failure");
-      }
+
+    if (!empId || !empName) {
+      setVerificationResult({
+        verified: false,
+        message: "Please enter both employee ID and name."
+      });
+      toast({
+        title: "Incomplete Information",
+        description: "Please enter both employee ID and name.",
+        variant: "destructive",
+      });
       setVerifying(false);
-    }, 1500);
+      return;
+    }
+
+    try {
+      // Query employee by code and full name
+      const { data, error } = await supabase
+        .from("employees")
+        .select("*")
+        .eq("employee_code", empId)
+        .eq("full_name", empName)
+        .maybeSingle();
+
+      if (error) {
+        setVerificationResult({
+          verified: false,
+          message: "Error occurred. Please try again later."
+        });
+        toast({ title: "Verification Error", description: error.message, variant: "destructive" });
+      } else if (!data) {
+        setVerificationResult({
+          verified: false,
+          message: "No records found for the provided ID and name combination."
+        });
+        toast({
+          title: "Verification Failed",
+          description: "We couldn't find a match for your credentials.",
+          variant: "destructive",
+        });
+      } else {
+        // Show current status and details
+        let statusText = "";
+        if (data.status === 'active') {
+          statusText = "Active";
+        } else if (data.status === 'completed') {
+          statusText = "Completed";
+        } else {
+          statusText = "Terminated";
+        }
+
+        setVerificationResult({
+          verified: true,
+          message: data.status === 'active' 
+            ? `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} is currently ACTIVE.` 
+            : `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} status is ${statusText.toUpperCase()}.`,
+          details: {
+            name: data.full_name,
+            employeeId: data.employee_code,
+            position: data.position,
+            department: data.department,
+            employeeType: data.employee_type,
+            startDate: data.start_date ? new Date(data.start_date).toLocaleDateString() : "N/A",
+            endDate: data.end_date ? new Date(data.end_date).toLocaleDateString() : "N/A",
+            status: statusText,
+            isActive: data.is_active,
+            verificationCertificateUrl: data.verification_certificate_url
+          }
+        });
+        toast({
+          title: "Verification Successful",
+          description: "Record matched in employee database.",
+          variant: "default",
+        });
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      setVerificationResult({
+        verified: false,
+        message: "An unexpected error occurred. Please try again."
+      });
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred.",
+        variant: "destructive",
+      });
+    }
+    
+    setVerifying(false);
   };
 
   return (
@@ -446,37 +529,82 @@ const Career = () => {
                         </Button>
                       </form>
                       
-                      {verificationResult === "success" && (
-                        <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-md">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0">
-                              <Check className="h-5 w-5 text-green-500" />
-                            </div>
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-green-800">Verification Successful</h3>
-                              <div className="mt-2 text-sm text-green-700">
-                                <p>We confirm that John Doe worked with Unknown IITians as Content Developer from January 2024 to April 2024.</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      
-                      {verificationResult === "failure" && (
-                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
-                          <div className="flex">
-                            <div className="flex-shrink-0">
-                              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                      {verificationResult && (
+                        <div className={`mt-6 p-4 rounded-md ${
+                          verificationResult.verified 
+                            ? 'bg-green-50 border border-green-200' 
+                            : 'bg-red-50 border border-red-200'
+                        }`}>
+                          <div className="flex items-center mb-3">
+                            {verificationResult.verified ? (
+                              <Check className="h-5 w-5 text-green-500 mr-2" />
+                            ) : (
+                              <svg className="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                               </svg>
-                            </div>
-                            <div className="ml-3">
-                              <h3 className="text-sm font-medium text-red-800">Verification Failed</h3>
-                              <div className="mt-2 text-sm text-red-700">
-                                <p>We couldn't verify the provided credentials. Please check your Employee ID and Full Name and try again.</p>
+                            )}
+                            <h3 className={`text-sm font-medium ${
+                              verificationResult.verified ? 'text-green-800' : 'text-red-800'
+                            }`}>
+                              {verificationResult.verified ? 'Verification Successful' : 'Verification Failed'}
+                            </h3>
+                          </div>
+                          
+                          <p className={`text-sm ${
+                            verificationResult.verified ? 'text-green-700' : 'text-red-700'
+                          }`}>
+                            {verificationResult.message}
+                          </p>
+                          
+                          {verificationResult.verified && verificationResult.details && (
+                            <div className="mt-4 space-y-3">
+                              <h4 className="font-semibold text-gray-900 text-sm">Employment Details:</h4>
+                              <div className="bg-white rounded-md p-3 border border-gray-200">
+                                <div className="space-y-2 text-sm">
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Name:</span>
+                                    <span className="text-gray-900">{verificationResult.details.name}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Employee ID:</span>
+                                    <span className="text-gray-900">{verificationResult.details.employeeId}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Position:</span>
+                                    <span className="text-gray-900">{verificationResult.details.position}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Department:</span>
+                                    <span className="text-gray-900">{verificationResult.details.department}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Type:</span>
+                                    <span className="text-gray-900 capitalize">{verificationResult.details.employeeType}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">Start Date:</span>
+                                    <span className="text-gray-900">{verificationResult.details.startDate}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="font-medium text-gray-700">End Date:</span>
+                                    <span className="text-gray-900">{verificationResult.details.endDate}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center">
+                                    <span className="font-medium text-gray-700">Status:</span>
+                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      verificationResult.details.status === 'Active'
+                                        ? 'bg-green-100 text-green-800'
+                                        : verificationResult.details.status === 'Completed'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
+                                      {verificationResult.details.status}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       )}
                     </TabsContent>
