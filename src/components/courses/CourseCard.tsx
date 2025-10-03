@@ -29,7 +29,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       animate="visible"
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Card className="h-full overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+      <Card className="h-full flex flex-col overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300">
         {course.bestseller && (
           <div className="absolute top-0 right-0 z-10">
             <Badge className="m-2 bg-amber-500 hover:bg-amber-600">
@@ -47,18 +47,22 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
             {course.students_enrolled || 0} students
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-grow">
           <CardDescription className="text-gray-600 mb-4">{course.description}</CardDescription>
-          <div className="grid grid-cols-2 gap-2">
+          
+          {/* === DESIGN IMPROVEMENT START === */}
+          <div className="flex flex-col space-y-2">
             {course.features?.map((feature, i) => (
-              <div key={i} className="flex items-center text-sm">
-                <CheckCircle className="h-3 w-3 mr-1 text-green-500" />
-                {feature}
+              <div key={i} className="flex items-start text-sm">
+                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-green-500" />
+                <span>{feature}</span>
               </div>
             ))}
           </div>
+          {/* === DESIGN IMPROVEMENT END === */}
+
         </CardContent>
-        <CardFooter className="border-t pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+        <CardFooter className="border-t pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center mt-auto">
           <div className="mb-3 sm:mb-0">
             {course.discounted_price && course.discounted_price < course.price ? (
               <>
