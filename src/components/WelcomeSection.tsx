@@ -30,13 +30,13 @@ const WelcomeSection = () => {
 
           {/* Right Image */}
           <div className="relative animate-float">
-            {/* Soft gradient behind image */}
-            <div className="absolute -z-10 inset-0 bg-gradient-to-tr from-royal/30 to-purple-200 rounded-full blur-3xl"></div>
+            {/* The soft gradient background div has been removed. */}
             
             <img
               src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
-              className="w-full h-auto max-h-96 object-cover rounded-2xl shadow-xl transform hover:scale-105 transition-all duration-500"
+              className="w-full h-auto max-h-96 object-cover transform hover:scale-105 transition-all duration-500"
+              // Removed: rounded-2xl, shadow-xl
             />
           </div>
         </div>
