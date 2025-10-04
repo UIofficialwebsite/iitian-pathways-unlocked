@@ -6,7 +6,8 @@ const WelcomeSection = () => {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        {/* CHANGE: Removed 'items-center' to ensure the grid items stretch to equal height. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           <div className="animate-fade-in">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               <span className="text-gray-900">Student's Most </span>
@@ -23,13 +24,13 @@ const WelcomeSection = () => {
             </div>
           </div>
 
-          {/* CHANGES: Removed 'rounded-xl', 'overflow-hidden', and 'shadow-premium' from the div for a seamless look. */}
-          <div className="animate-scale-in">
+          {/* CHANGE: Added 'h-full' to ensure the container stretches to the height of the text column. */}
+          <div className="animate-scale-in h-full">
             <img
               src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
-              {/* CHANGES: Removed 'rounded-xl' from the image for a seamless look. */}
-              className="w-full h-auto max-h-96 object-cover"
+              {/* CHANGE: Replaced 'h-auto max-h-96' with 'h-full' to force the image to fill the container, eliminating the perceived frame of empty space. */}
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
