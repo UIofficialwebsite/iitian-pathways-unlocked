@@ -36,7 +36,7 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
           
           {/* About Section */}
           <div className="space-y-4">
@@ -118,6 +118,126 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* Learning Resources */}
+          <div className="space-y-4 lg:col-span-2">
+            <h3 className="text-lg font-semibold">Learning Resources</h3>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* IITM BS Notes */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-200">IITM BS Notes</h4>
+                <ul className="space-y-1.5">
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/data-science/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      DS Foundation
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/data-science/diploma" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      DS Diploma
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/data-science/degree" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      DS Degree
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      ES Foundation
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/diploma" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      ES Diploma
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/degree" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      ES Degree
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+
+              {/* JEE & NEET Notes */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-gray-200">JEE & NEET Notes</h4>
+                <ul className="space-y-1.5">
+                  <li>
+                    <Link to="/exam-preparation/jee/notes" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      JEE Notes
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/neet/notes" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      NEET Notes
+                    </Link>
+                  </li>
+                </ul>
+
+                <h4 className="text-sm font-medium text-gray-200 mt-3">PYQs</h4>
+                <ul className="space-y-1.5">
+                  <li>
+                    <Link to="/exam-preparation/iitm-bs/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      IITM BS - All PYQs
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/jee/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      JEE - Jan Session
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/jee/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      JEE - April Session
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/exam-preparation/neet/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
+                      NEET PYQs
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Tools */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-200">IITM Tools</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                <Link to="/iitm-tools/cgpa-calculator" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  CGPA Calculator
+                </Link>
+                <Link to="/iitm-tools/grade-calculator/data-science/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  Grade Calculator
+                </Link>
+                <Link to="/iitm-tools/marks-predictor/data-science/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  Marks Predictor
+                </Link>
+              </div>
+            </div>
+
+            {/* Courses */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-gray-200">Courses</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+                <Link to="/courses?category=iitm-bs" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  IITM BS Courses
+                </Link>
+                <Link to="/courses?category=jee" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  JEE Courses
+                </Link>
+                <Link to="/courses?category=neet" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  NEET Courses
+                </Link>
+                <Link to="/courses" className="text-gray-300 hover:text-white transition-colors text-xs">
+                  All Courses
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Links */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Quick Links</h3>
@@ -128,13 +248,18 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/courses" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  Courses
+                <Link to="/exam-preparation/iitm-bs" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  IITM BS Prep
                 </Link>
               </li>
               <li>
-                <Link to="/exam-preparation" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  Exam Preparation
+                <Link to="/exam-preparation/jee/notes" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  JEE Prep
+                </Link>
+              </li>
+              <li>
+                <Link to="/exam-preparation/neet/notes" className="text-gray-300 hover:text-white transition-colors text-sm">
+                  NEET Prep
                 </Link>
               </li>
               <li>
@@ -144,7 +269,7 @@ const Footer = () => {
               </li>
               <li>
                 <Link to="/intern-verification" className="text-gray-300 hover:text-white transition-colors text-sm">
-                  Intern Verification
+                  Verification
                 </Link>
               </li>
             </ul>
@@ -192,118 +317,6 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Learning Resources */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Learning Resources</h3>
-            
-            {/* Notes Section */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-200">Notes</h4>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/data-science/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    DS Foundation Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/data-science/diploma" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    DS Diploma Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/data-science/degree" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    DS Degree Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/foundation" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    ES Foundation Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/diploma" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    ES Diploma Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/degree" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    ES Degree Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/jee/notes" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    JEE Notes
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/neet/notes" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    NEET Notes
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* PYQs Section */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-200">PYQs</h4>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link to="/exam-preparation/iitm-bs/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    IITM BS PYQs
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/jee/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    JEE PYQs
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/neet/pyqs" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    NEET PYQs
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Tools Section */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-200">Tools</h4>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link to="/iitm-tools/cgpa-calculator" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    CGPA Calculator
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/iitm-tools/grade-calculator" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    Grade Calculator
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/iitm-tools/marks-predictor" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    Marks Predictor
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* Other Resources */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-gray-200">More</h4>
-              <ul className="space-y-1.5">
-                <li>
-                  <Link to="/courses" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    Video Lectures
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/exam-preparation/iitm-bs" className="text-gray-300 hover:text-white transition-colors text-xs">
-                    IITM BS Prep
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
 
           {/* Legal & Support */}
           <div className="space-y-4">
