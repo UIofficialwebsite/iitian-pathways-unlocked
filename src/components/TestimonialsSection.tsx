@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -91,10 +90,12 @@ const TestimonialsSection = () => {
     fetchTestimonials();
   }, []);
 
-  // Split testimonials into columns for the display
-  const firstColumn = testimonials.slice(0, Math.ceil(testimonials.length / 3));
-  const secondColumn = testimonials.slice(Math.ceil(testimonials.length / 3), Math.ceil((testimonials.length * 2) / 3));
-  const thirdColumn = testimonials.slice(Math.ceil((testimonials.length * 2) / 3));
+  // Split testimonials into columns for a more balanced display
+  const columns: Testimonial[][] = [[], [], []];
+  testimonials.forEach((testimonial, index) => {
+    columns[index % 3].push(testimonial);
+  });
+  const [firstColumn, secondColumn, thirdColumn] = columns;
 
   if (isLoading) {
     return (
