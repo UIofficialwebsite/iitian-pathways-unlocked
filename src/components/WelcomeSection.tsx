@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -24,11 +23,13 @@ const WelcomeSection = () => {
             </div>
           </div>
 
-          <div className="rounded-xl overflow-hidden shadow-premium animate-scale-in">
+          {/* CHANGES: Removed 'rounded-xl', 'overflow-hidden', and 'shadow-premium' from the div for a seamless look. */}
+          <div className="animate-scale-in">
             <img
               src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
-              className="w-full h-auto max-h-96 object-cover rounded-xl"
+              {/* CHANGES: Removed 'rounded-xl' from the image for a seamless look. */}
+              className="w-full h-auto max-h-96 object-cover"
             />
           </div>
         </div>
