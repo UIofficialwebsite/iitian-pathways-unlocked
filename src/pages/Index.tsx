@@ -7,7 +7,7 @@ import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 // Removed: import PartnershipsSection from "@/components/PartnershipsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
-import NewsletterSection from "@/components/NewsletterSection";
+// import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 
@@ -22,7 +22,7 @@ const Index = () => {
       <ResourceHubSection />
       {/* Removed: <PartnershipsSection /> */}
       <TestimonialsSection />
-      <NewsletterSection />
+      {/* <NewsletterSection /> */}
       <Footer />
       <EmailPopup />
     </>
