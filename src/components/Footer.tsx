@@ -75,7 +75,7 @@ const Footer = () => {
                   <img 
                     src="https://upload.wikimedia.org/wikipedia/commons/c/ca/LinkedIn_logo_initials.png" 
                     alt="LinkedIn" 
-                    className="w-7 h-7object-contain"
+                    className="w-7 h-7 object-contain"
                   />
                 </a>
                 <a 
