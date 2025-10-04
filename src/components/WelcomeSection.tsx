@@ -26,7 +26,7 @@ const WelcomeSection = () => {
 
           <div className="rounded-xl overflow-hidden shadow-premium animate-scale-in">
             <img
-              src="/lovable-uploads/95898053-4686-4b17-a361-9edb89a0e93d.png"
+              src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
               className="w-full h-auto max-h-96 object-cover rounded-xl"
             />
