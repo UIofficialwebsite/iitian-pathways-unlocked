@@ -51,7 +51,7 @@ img {
 }
 
 /* Optimize animations */
-@media (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: reduce) {
   * {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -173,4 +173,12 @@ img {
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.animate-marq {
+  animation: marq var(--duration, 16s) linear infinite;
+}
+
+.group:hover .animate-marq {
+  animation-duration: calc(var(--duration, 16s) * 0.75);
 }
