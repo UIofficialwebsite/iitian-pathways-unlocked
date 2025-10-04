@@ -1,4 +1,3 @@
-
 import React from "react";
 import NavBar from "@/components/NavBar";
 import HeroCarousel from "@/components/HeroCarousel";
@@ -6,7 +5,7 @@ import WelcomeSection from "@/components/WelcomeSection";
 import CategoriesSection from "@/components/CategoriesSection";
 import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
-import PartnershipsSection from "@/components/PartnershipsSection";
+// Removed: import PartnershipsSection from "@/components/PartnershipsSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
@@ -21,7 +20,7 @@ const Index = () => {
       <CategoriesSection />
       <WhyChooseUsSection />
       <ResourceHubSection />
-      <PartnershipsSection />
+      {/* Removed: <PartnershipsSection /> */}
       <TestimonialsSection />
       <NewsletterSection />
       <Footer />
