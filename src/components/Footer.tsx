@@ -224,7 +224,7 @@ const Footer = () => {
 
         {/* Learning Resources Section - Separate Row */}
         <div className="border-t border-gray-700 mt-12 pt-12">
-          <h3 className="text-2xl font-bold mb-8 text-center">Learning Resources</h3>
+          <h3 className="text-2xl font-bold mb-8 text-left">Learning Resources</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {/* IITM BS Notes */}
