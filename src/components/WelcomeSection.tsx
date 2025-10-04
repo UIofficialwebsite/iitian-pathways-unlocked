@@ -6,7 +6,10 @@ const WelcomeSection = () => {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* CHANGE: Added 'items-stretch' to ensure both columns have equal height. */}
+        {/*
+          ACTION: Re-enabling 'items-stretch'. This is crucial as it forces the image column
+          to match the height of the text column, eliminating unwanted whitespace (the "frame") above or below.
+        */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           <div className="animate-fade-in">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
@@ -24,13 +27,20 @@ const WelcomeSection = () => {
             </div>
           </div>
 
-          {/* Ensured container fills all height and hides overflow */}
+          {/*
+            ACTION: Ensure the image container fills its height and hides any minor overflow.
+          */}
           <div className="animate-scale-in h-full overflow-hidden">
             <img
               src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
-              {/* FINAL FIX: Removed 'object-cover'. The image is now forced to fill 100% of the available width and height (w-full h-full block), eliminating all frame/background remnants. */}
-              className="w-full h-full block"
+              {/*
+                ACTION: The most aggressive image fill properties.
+                - w-full h-full: Ensures it occupies 100% of the space.
+                - object-cover: Maintains aspect ratio while guaranteeing the space is COVERED.
+                - block: Removes any residual browser-default inline spacing below the image.
+              */}
+              className="w-full h-full object-cover block"
             />
           </div>
         </div>
