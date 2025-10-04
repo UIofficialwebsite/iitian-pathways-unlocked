@@ -1,25 +1,39 @@
-// Remove the imports for Card and CardContent
-// import { Card, CardContent } from "@/components/ui/card"; 
-import { useAuth } from "@/hooks/useAuth";
+
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const WelcomeSection = () => {
-  const { user } = useAuth();
-
   return (
-    // Replaced <Card> with a <div>.
-    // Removed all card-specific classes like 'shadow-lg', 'bg-white/90', 'backdrop-blur-sm', and 'max-w-4xl'.
-    // The 'w-full' and 'mx-auto' keeps it centered and full-width in its container.
-    // The 'p-6' provides the necessary internal padding for the content.
-    <div className="w-full mx-auto p-6">
-      {/* The content that was inside CardContent */}
-      {/* <CardContent className="p-6"> is effectively replaced by "p-6" on the main div */}
-        <h1 className="text-3xl font-bold mb-4 text-gray-800">
-          Welcome to IITian Pathways Unlocked, {user?.user_metadata.full_name || "Trailblazer"}!
-        </h1>
-        <p className="text-lg text-gray-600">
-          Your journey to success in JEE, NEET, and the IIT Madras BS Degree is just beginning. Dive into our curated resources, courses, and tools.
-        </p>
-    </div>
+    <section className="py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="animate-fade-in">
+            <h2 className="text-4xl sm:text-5xl font-bold mb-6">
+              <span className="text-gray-900">Student's Most </span>
+              <span className="text-royal">Trusted</span><br />
+              <span className="text-gray-900">Educational Platform</span>
+            </h2>
+            <p className="text-lg text-gray-600 mb-8">
+              Ignite Your Passion, Shape Your Future with Education!
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Button className="bg-royal hover:bg-royal-dark text-white px-8 py-2 rounded-full">
+                Get Started
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-xl overflow-hidden shadow-premium animate-scale-in">
+            <img
+              src="/lovable-uploads/uibanner.png"
+              alt="Unknown IITians Team"
+              className="w-full h-auto max-h-96 object-cover rounded-xl"
+            />
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
