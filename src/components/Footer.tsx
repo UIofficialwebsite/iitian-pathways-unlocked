@@ -36,10 +36,10 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 items-start">
           
           {/* About Section */}
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-3">
               <img
                 src="/lovable-uploads/UI_logo.png"
@@ -119,7 +119,7 @@ const Footer = () => {
           </div>
 
           {/* Learning Resources */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
             <h3 className="text-lg font-semibold">Learning Resources</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
