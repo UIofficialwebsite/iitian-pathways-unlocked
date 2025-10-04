@@ -6,8 +6,8 @@ const WelcomeSection = () => {
   return (
     <section className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* The outer grid allows columns to stretch to the height of the tallest content (text or image) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12"> 
+        {/* CHANGE: Added 'items-stretch' to ensure both columns have equal height. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-stretch">
           <div className="animate-fade-in">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
               <span className="text-gray-900">Student's Most </span>
@@ -24,13 +24,13 @@ const WelcomeSection = () => {
             </div>
           </div>
 
-          {/* ADDED: 'overflow-hidden' to ensure no container boundaries are visible. */}
+          {/* Ensured container fills all height and hides overflow */}
           <div className="animate-scale-in h-full overflow-hidden">
             <img
               src="/lovable-uploads/uibanner.png"
               alt="Unknown IITians Team"
-              {/* ENSURED: w-full and h-full for maximum fill, object-cover for scaling, and ADDED 'block' for clean rendering. */}
-              className="w-full h-full object-cover block"
+              {/* FINAL FIX: Removed 'object-cover'. The image is now forced to fill 100% of the available width and height (w-full h-full block), eliminating all frame/background remnants. */}
+              className="w-full h-full block"
             />
           </div>
         </div>
