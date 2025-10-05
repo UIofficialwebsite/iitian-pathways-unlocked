@@ -6,24 +6,43 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Determine the environment and set the correct Cashfree URL
+const isProduction = Deno.env.get("CASHFREE_PROD") === "true";
+const cashfreeApiUrl = isProduction
+  ? "https://api.cashfree.com/pg/orders"
+  : "https://sandbox.cashfree.com/pg/orders";
+
+
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { orderId } = await req.json();
-    
+    // Extract orderId from the URL query parameters for GET requests
+    const url = new URL(req.url);
+    const orderId = url.searchParams.get("order_id");
+
+    if (!orderId) {
+        // Fallback for POST requests (webhooks)
+        const body = await req.json();
+        const postOrderId = body.orderId;
+        if (!postOrderId) {
+            throw new Error("Order ID is missing");
+        }
+    }
+
+
     const cashfreeKey = Deno.env.get("Cashfree_Key");
     const cashfreeSecret = Deno.env.get("Cashfree_Secret");
-    
+
     if (!cashfreeKey || !cashfreeSecret) {
       throw new Error("Cashfree credentials not configured");
     }
 
     // Verify payment with Cashfree
     const verifyResponse = await fetch(
-      `https://sandbox.cashfree.com/pg/orders/${orderId}`,
+      `${cashfreeApiUrl}/${orderId}`,
       {
         method: "GET",
         headers: {
@@ -39,7 +58,7 @@ serve(async (req: Request) => {
     }
 
     const paymentData = await verifyResponse.json();
-    
+
     // Update enrollment status in database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -47,7 +66,7 @@ serve(async (req: Request) => {
     );
 
     const status = paymentData.order_status === "PAID" ? "completed" : "failed";
-    
+
     const { error: updateError } = await supabase
       .from("enrollments")
       .update({
