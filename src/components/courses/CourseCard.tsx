@@ -9,7 +9,7 @@ import {
   Calendar,
   Users,
   CheckCircle,
-  Clock // Added Clock icon for duration
+  Clock // Added Clock icon for improved semantics in the full-feature layout
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
 import { Course } from '@/components/admin/courses/types';
@@ -39,6 +39,61 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     }
   };
 
+  const hasImage = !!course.image_url;
+
+  const fullFeatureHeader = (
+    <CardHeader className="pb-2">
+        {/* Title with Rating */}
+        <div className="flex justify-between items-start">
+            <CardTitle className="text-xl font-semibold pr-4">{course.title}</CardTitle>
+            {course.rating && (
+                <div className="flex items-center text-base font-bold text-amber-600 space-x-1 flex-shrink-0">
+                    <Star className="h-4 w-4 fill-amber-500 stroke-amber-500" />
+                    <span>{course.rating.toFixed(1)}</span>
+                </div>
+            )}
+        </div>
+        
+        {/* Subject Badge */}
+        {course.subject && (
+            <Badge className="w-fit bg-royal-light text-royal hover:bg-royal-light/80 mt-2">
+                {course.subject}
+            </Badge>
+        )}
+
+        {/* Detail Row (Duration, Students, Start Date) - Uses Clock for Duration */}
+        <div className="flex flex-wrap items-center text-sm text-gray-500 space-x-4 pt-2">
+            <div className="flex items-center">
+                <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>{course.duration}</span>
+            </div>
+            <div className="flex items-center">
+                <Users className="h-4 w-4 mr-1 flex-shrink-0" />
+                <span>{course.students_enrolled || 0} students</span>
+            </div>
+            {course.start_date && (
+                <div className="flex items-center">
+                    <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
+                    <span>Starts: {formatDate(course.start_date)}</span>
+                </div>
+            )}
+        </div>
+    </CardHeader>
+  );
+
+  const originalHeader = (
+    <CardHeader className="pb-2">
+      <CardTitle>{course.title}</CardTitle>
+      {/* Original Detail Row (Duration with Calendar, Students) */}
+      <div className="flex items-center text-sm text-gray-500">
+        <Calendar className="h-4 w-4 mr-1" />
+        {course.duration}
+        <Users className="h-4 w-4 ml-4 mr-1" />
+        {course.students_enrolled || 0} students
+      </div>
+    </CardHeader>
+  );
+
   return (
     <motion.div
       variants={fadeInUp}
@@ -60,10 +115,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         {/* Top Gradient Bar (Keep existing) */}
         <div className={`h-2 ${course.bestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-royal to-royal-dark'}`}></div>
         
-        {/* === CONDITIONAL IMAGE DISPLAY === 
-          The entire image container is only rendered if course.image_url is a truthy value.
-        */}
-        {course.image_url && (
+        {/* === CONDITIONAL IMAGE DISPLAY === */}
+        {hasImage && (
             <div className="relative aspect-video w-full overflow-hidden">
                 <img 
                     src={course.image_url} 
@@ -74,47 +127,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         )}
         {/* === END: CONDITIONAL IMAGE DISPLAY === */}
 
-        <CardHeader className="pb-2">
-            {/* === START: ADDED RATING TO TITLE ROW === */}
-            <div className="flex justify-between items-start">
-                <CardTitle className="text-xl font-semibold pr-4">{course.title}</CardTitle>
-                {course.rating && (
-                    <div className="flex items-center text-base font-bold text-amber-600 space-x-1 flex-shrink-0">
-                        <Star className="h-4 w-4 fill-amber-500 stroke-amber-500" />
-                        <span>{course.rating.toFixed(1)}</span>
-                    </div>
-                )}
-            </div>
-            {/* === END: ADDED RATING TO TITLE ROW === */}
-            
-            {/* === START: ADDED SUBJECT BADGE === */}
-            {course.subject && (
-                <Badge className="w-fit bg-royal-light text-royal hover:bg-royal-light/80 mt-2">
-                    {course.subject}
-                </Badge>
-            )}
-            {/* === END: ADDED SUBJECT BADGE === */}
-
-            {/* === START: RESTRUCTURED DETAIL ROW (Duration, Students, Start Date) === */}
-            <div className="flex flex-wrap items-center text-sm text-gray-500 space-x-4 pt-2">
-                <div className="flex items-center">
-                    <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>{course.duration}</span>
-                </div>
-                <div className="flex items-center">
-                    <Users className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>{course.students_enrolled || 0} students</span>
-                </div>
-                {course.start_date && (
-                    <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                        <span>Starts: {formatDate(course.start_date)}</span>
-                    </div>
-                )}
-            </div>
-            {/* === END: RESTRUCTURED DETAIL ROW === */}
-
-        </CardHeader>
+        {/* === CONDITIONAL HEADER CONTENT === */}
+        {hasImage ? fullFeatureHeader : originalHeader}
+        {/* === END: CONDITIONAL HEADER CONTENT === */}
+        
         <CardContent className="flex-grow">
           <CardDescription className="text-gray-600 mb-4">{course.description}</CardDescription>
           
