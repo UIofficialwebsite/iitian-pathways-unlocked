@@ -46,7 +46,7 @@ const courseFormSchema = z.object({
   enroll_now_link: z.string().url().nullable().or(z.literal('')),
 });
 
-type CourseFormData = z.infer<typeof courseFormSchema>;
+export type CourseFormData = z.infer<typeof courseFormSchema>;
 
 interface CourseFormProps {
   initialData?: Course;

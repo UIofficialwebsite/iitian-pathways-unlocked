@@ -1,1 +1,10 @@
 project_id = "qzrvctpwefhmcduariuw"
+
+[functions.contact-us]
+verify_jwt = false
+
+[functions.create-cashfree-order]
+verify_jwt = true
+
+[functions.verify-cashfree-payment]
+verify_jwt = false

@@ -68,6 +68,7 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
         <EnrollButton 
           courseId={course.id}
           enrollmentLink={course.enroll_now_link || undefined}
+          coursePrice={course.discounted_price || course.price}
           className={isPremium ? 
             "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" : 
             "bg-royal hover:bg-royal-dark text-white"}

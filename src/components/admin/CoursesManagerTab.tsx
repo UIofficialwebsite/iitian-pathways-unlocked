@@ -4,95 +4,39 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Plus } from "lucide-react";
 import { Course } from "./courses/types";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import CourseForm, { CourseFormData } from "./courses/CourseForm";
+import CourseForm from "./courses/CourseForm";
 import CourseList from "./courses/CourseList";
-
-const examCategories = ['IITM BS', 'JEE', 'NEET'];
-const courseTypes = ['Regular', 'Gold'];
-const iitmBranches = ['Data Science', 'Electronic System'];
-const iitmLevels = ['Qualifier', 'Foundation', 'Diploma', 'Degree'];
-
-const initialFormData: CourseFormData = {
-  title: '',
-  description: '',
-  exam_category: '',
-  price: '',
-  discounted_price: '',
-  duration: '',
-  features: '',
-  image_url: '',
-  bestseller: false,
-  subject: '',
-  start_date: '',
-  course_type: '',
-  branch: '',
-  level: '',
-  enroll_now_link: '',
-  students_enrolled: '',
-};
 
 const CoursesManagerTab = () => {
   const { courses, contentLoading: isLoading, createCourse, updateCourse, deleteCourse } = useBackend();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<Course | null>(null);
-  const [formData, setFormData] = useState<CourseFormData>(initialFormData);
+  const [isSaving, setIsSaving] = useState(false);
 
   const resetForm = () => {
-    setFormData(initialFormData);
     setEditingCourse(null);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const payload = {
-      title: formData.title,
-      description: formData.description,
-      exam_category: formData.exam_category || null,
-      price: parseFloat(formData.price),
-      discounted_price: formData.discounted_price ? parseFloat(formData.discounted_price) : null,
-      duration: formData.duration,
-      features: formData.features.split('\n').filter(f => f.trim()),
-      image_url: formData.image_url || null,
-      bestseller: formData.bestseller,
-      subject: formData.subject || null,
-      start_date: formData.start_date || null,
-      course_type: formData.course_type || null,
-      branch: formData.exam_category === 'IITM BS' ? (formData.branch || null) : null,
-      level: formData.exam_category === 'IITM BS' ? (formData.level || null) : null,
-      enroll_now_link: formData.enroll_now_link || null,
-      students_enrolled: formData.students_enrolled ? parseInt(formData.students_enrolled) : 0,
-    } as any;
-
-    if (editingCourse) {
-      await updateCourse(editingCourse.id, payload);
-    } else {
-      await createCourse(payload);
+  const handleSave = async (courseData: Course) => {
+    setIsSaving(true);
+    try {
+      if (editingCourse) {
+        await updateCourse(editingCourse.id, courseData);
+      } else {
+        await createCourse(courseData);
+      }
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error("Error saving course:", error);
+      throw error;
+    } finally {
+      setIsSaving(false);
     }
-
-    resetForm();
-    setIsDialogOpen(false);
   };
 
   const handleEdit = (course: Course) => {
     setEditingCourse(course);
-    setFormData({
-      title: course.title,
-      description: course.description,
-      exam_category: course.exam_category || '',
-      price: course.price.toString(),
-      discounted_price: course.discounted_price?.toString() || '',
-      duration: course.duration,
-      features: course.features?.join('\n') || '',
-      image_url: course.image_url || '',
-      bestseller: course.bestseller || false,
-      subject: course.subject || '',
-      start_date: course.start_date ? course.start_date.split('T')[0] : '',
-      course_type: course.course_type || '',
-      branch: course.branch || '',
-      level: course.level || '',
-      enroll_now_link: course.enroll_now_link || '',
-      students_enrolled: course.students_enrolled?.toString() || '0',
-    });
     setIsDialogOpen(true);
   };
 
@@ -119,16 +63,13 @@ const CoursesManagerTab = () => {
               </DialogDescription>
             </DialogHeader>
             <CourseForm
-              formData={formData}
-              setFormData={setFormData}
-              handleSubmit={handleSubmit}
-              isLoading={isLoading}
-              editingCourse={editingCourse}
-              examCategories={examCategories}
-              courseTypes={courseTypes}
-              iitmBranches={iitmBranches}
-              iitmLevels={iitmLevels}
-              setIsDialogOpen={setIsDialogOpen}
+              initialData={editingCourse || undefined}
+              onSave={handleSave}
+              onClose={() => {
+                setIsDialogOpen(false);
+                resetForm();
+              }}
+              isSaving={isSaving}
             />
           </DialogContent>
         </Dialog>

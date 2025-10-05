@@ -198,6 +198,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           <EnrollButton
             courseId={course.id}
             enrollmentLink={course.enroll_now_link || undefined}
+            coursePrice={course.discounted_price || course.price}
             className={`${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white px-5 py-2 font-semibold transition-all duration-200`}
           />
         </CardFooter>
