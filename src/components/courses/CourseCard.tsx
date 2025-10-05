@@ -8,7 +8,9 @@ import {
   Users,
   CheckCircle,
   Clock,
-  ImageOff // <=== FIX: ImageOff is now correctly imported
+  ImageOff,
+  Monitor,
+  GitBranch // <=== ADDED GitBranch ICON for course branch
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
 import { Course } from '@/components/admin/courses/types';
@@ -80,7 +82,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
         <CardHeader className="pb-3">
             
-            {/* Row 1: Title and Rating (More prominent) */}
+            {/* Row 1: Title and Rating */}
             <div className="flex justify-between items-start mb-1">
                 <CardTitle className="text-xl font-extrabold text-foreground pr-4 leading-snug">
                     {course.title}
@@ -110,22 +112,45 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         </CardHeader>
         
         <CardContent className="flex-grow">
-          {/* Detail Block (Duration, Students, Start Date) */}
-          <div className="flex flex-wrap items-center text-sm text-gray-600 space-x-4 mb-3 p-2 border rounded-lg bg-gray-50">
+          {/* Detail Block (Duration, Students, Start Date, Course Type, and Branch) */}
+          <div className="flex flex-wrap items-center text-sm text-gray-600 gap-x-4 gap-y-2 mb-3 p-2 border rounded-lg bg-gray-50">
+              
+              {/* Duration */}
               <div className="flex items-center">
                   <Clock className="h-4 w-4 mr-1 flex-shrink-0 text-blue-600" />
                   <span className="font-medium">{course.duration}</span>
               </div>
+              
+              {/* Students Enrolled */}
               <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1 flex-shrink-0 text-green-600" />
                   <span>{course.students_enrolled || 0} students</span>
               </div>
+              
+              {/* Start Date */}
               {course.start_date && (
                   <div className="flex items-center">
                       <Calendar className="h-4 w-4 mr-1 flex-shrink-0 text-red-600" />
                       <span>Starts: {formatDate(course.start_date)}</span>
                   </div>
               )}
+              
+              {/* Course Type */}
+              {course.course_type && (
+                  <div className="flex items-center">
+                      <Monitor className="h-4 w-4 mr-1 flex-shrink-0 text-purple-600" />
+                      <span>{course.course_type}</span>
+                  </div>
+              )}
+              
+              {/* === ADDED BRANCH HERE === */}
+              {course.branch && (
+                  <div className="flex items-center">
+                      <GitBranch className="h-4 w-4 mr-1 flex-shrink-0 text-orange-600" />
+                      <span>{course.branch}</span>
+                  </div>
+              )}
+              {/* === END ADDED BRANCH === */}
           </div>
           
           <CardDescription className="text-gray-600 mb-4 line-clamp-3">
