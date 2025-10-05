@@ -1,5 +1,3 @@
-// uiofficialwebsite/iitian-pathways-unlocked/iitian-pathways-unlocked-b9e0dbed5caaa215f6a0d2f926b21c6bb717330b/src/components/courses/CourseCard.tsx
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +7,7 @@ import {
   Calendar,
   Users,
   CheckCircle,
-  Clock // Added Clock icon for improved semantics in the full-feature layout
+  Clock // Use Clock for duration
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
 import { Course } from '@/components/admin/courses/types';
@@ -25,7 +23,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     visible: { opacity: 1, y: 0 }
   };
   
-  // Helper to format date from string (e.g., 'YYYY-MM-DD')
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
     try {
@@ -35,65 +32,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         year: 'numeric'
       });
     } catch {
-      return dateString; // Fallback
+      return dateString;
     }
   };
 
   const hasImage = !!course.image_url;
-
-  const fullFeatureHeader = (
-    <CardHeader className="pb-2">
-        {/* Title with Rating */}
-        <div className="flex justify-between items-start">
-            <CardTitle className="text-xl font-semibold pr-4">{course.title}</CardTitle>
-            {course.rating && (
-                <div className="flex items-center text-base font-bold text-amber-600 space-x-1 flex-shrink-0">
-                    <Star className="h-4 w-4 fill-amber-500 stroke-amber-500" />
-                    <span>{course.rating.toFixed(1)}</span>
-                </div>
-            )}
-        </div>
-        
-        {/* Subject Badge */}
-        {course.subject && (
-            <Badge className="w-fit bg-royal-light text-royal hover:bg-royal-light/80 mt-2">
-                {course.subject}
-            </Badge>
-        )}
-
-        {/* Detail Row (Duration, Students, Start Date) - Uses Clock for Duration */}
-        <div className="flex flex-wrap items-center text-sm text-gray-500 space-x-4 pt-2">
-            <div className="flex items-center">
-                <Clock className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>{course.duration}</span>
-            </div>
-            <div className="flex items-center">
-                <Users className="h-4 w-4 mr-1 flex-shrink-0" />
-                <span>{course.students_enrolled || 0} students</span>
-            </div>
-            {course.start_date && (
-                <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-1 flex-shrink-0" />
-                    <span>Starts: {formatDate(course.start_date)}</span>
-                </div>
-            )}
-        </div>
-    </CardHeader>
-  );
-
-  const originalHeader = (
-    <CardHeader className="pb-2">
-      <CardTitle>{course.title}</CardTitle>
-      {/* Original Detail Row (Duration with Calendar, Students) */}
-      <div className="flex items-center text-sm text-gray-500">
-        <Calendar className="h-4 w-4 mr-1" />
-        {course.duration}
-        <Users className="h-4 w-4 ml-4 mr-1" />
-        {course.students_enrolled || 0} students
-      </div>
-    </CardHeader>
-  );
-
+  const isBestseller = !!course.bestseller;
+  const showDiscount = course.discounted_price && course.discounted_price < course.price;
+  
   return (
     <motion.div
       variants={fadeInUp}
@@ -103,20 +49,20 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     >
       <Card className="h-full flex flex-col overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300">
         
-        {/* Bestseller Badge (Keep existing) */}
-        {course.bestseller && (
+        {/* Bestseller Badge (Absolute Top Right) */}
+        {isBestseller && (
           <div className="absolute top-0 right-0 z-10">
-            <Badge className="m-2 bg-amber-500 hover:bg-amber-600">
+            <Badge className="m-2 bg-amber-500 hover:bg-amber-600 font-semibold text-white">
               <Star className="h-3 w-3 mr-1 fill-current" /> Bestseller
             </Badge>
           </div>
         )}
         
-        {/* Top Gradient Bar (Keep existing) */}
-        <div className={`h-2 ${course.bestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-royal to-royal-dark'}`}></div>
+        {/* Top Gradient Bar */}
+        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-royal to-royal-dark'}`}></div>
         
-        {/* === CONDITIONAL IMAGE DISPLAY === */}
-        {hasImage && (
+        {/* === START: IMAGE OR PLACEHOLDER === */}
+        {hasImage ? (
             <div className="relative aspect-video w-full overflow-hidden">
                 <img 
                     src={course.image_url} 
@@ -124,43 +70,109 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                     className="w-full h-full object-cover"
                 />
             </div>
+        ) : (
+             <div className="relative aspect-video w-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                 <ImageOff className="h-10 w-10 text-gray-400" />
+             </div>
         )}
-        {/* === END: CONDITIONAL IMAGE DISPLAY === */}
+        {/* === END: IMAGE OR PLACEHOLDER === */}
 
-        {/* === CONDITIONAL HEADER CONTENT === */}
-        {hasImage ? fullFeatureHeader : originalHeader}
-        {/* === END: CONDITIONAL HEADER CONTENT === */}
+        <CardHeader className="pb-3">
+            
+            {/* Row 1: Title and Rating (More prominent) */}
+            <div className="flex justify-between items-start mb-1">
+                <CardTitle className="text-xl font-extrabold text-foreground pr-4 leading-snug">
+                    {course.title}
+                </CardTitle>
+                {course.rating && (
+                    <div className="flex items-center text-lg font-bold text-amber-600 space-x-1 flex-shrink-0 pt-1">
+                        <Star className="h-4 w-4 fill-amber-500 stroke-amber-500" />
+                        <span>{course.rating.toFixed(1)}</span>
+                    </div>
+                )}
+            </div>
+            
+            {/* Row 2: Exam Category and Subject Badges */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+                {course.exam_category && (
+                    <Badge className="bg-royal text-white hover:bg-royal-dark font-medium">
+                        {course.exam_category}
+                    </Badge>
+                )}
+                {course.subject && (
+                    <Badge variant="secondary" className="bg-gray-200 text-gray-700 font-medium">
+                        {course.subject}
+                    </Badge>
+                )}
+            </div>
+
+        </CardHeader>
         
         <CardContent className="flex-grow">
-          <CardDescription className="text-gray-600 mb-4">{course.description}</CardDescription>
+          {/* Detail Block (Duration, Students, Start Date) */}
+          <div className="flex flex-wrap items-center text-sm text-gray-600 space-x-4 mb-3 p-2 border rounded-lg bg-gray-50">
+              <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1 flex-shrink-0 text-blue-600" />
+                  <span className="font-medium">{course.duration}</span>
+              </div>
+              <div className="flex items-center">
+                  <Users className="h-4 w-4 mr-1 flex-shrink-0 text-green-600" />
+                  <span>{course.students_enrolled || 0} students</span>
+              </div>
+              {course.start_date && (
+                  <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1 flex-shrink-0 text-red-600" />
+                      <span>Starts: {formatDate(course.start_date)}</span>
+                  </div>
+              )}
+          </div>
           
-          {/* === DESIGN IMPROVEMENT START (Keep existing feature list) === */}
-          <div className="flex flex-col space-y-2">
-            {course.features?.map((feature, i) => (
-              <div key={i} className="flex items-start text-sm">
-                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-green-500" />
-                <span>{feature}</span>
+          <CardDescription className="text-gray-600 mb-4 line-clamp-3">
+              {course.description}
+          </CardDescription>
+          
+          {/* Feature List (Professional checklist) */}
+          <div className="flex flex-col space-y-1">
+            {course.features?.slice(0, 3).map((feature, i) => ( // Show max 3 features
+              <div key={i} className="flex items-start text-sm text-gray-700">
+                <CheckCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0 text-green-500 fill-green-100" />
+                <span className="leading-tight">{feature}</span>
               </div>
             ))}
-          </div>
-          {/* === DESIGN IMPROVEMENT END === */}
-
-        </CardContent>
-        <CardFooter className="border-t pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center mt-auto">
-          <div className="mb-3 sm:mb-0">
-            {course.discounted_price && course.discounted_price < course.price ? (
-              <>
-                <span className="text-xl font-bold text-royal">₹{course.discounted_price}</span>
-                <span className="ml-2 text-gray-500 line-through">₹{course.price}</span>
-              </>
-            ) : (
-              <span className="text-xl font-bold text-royal">₹{course.price}</span>
+            {course.features && course.features.length > 3 && (
+                <div className="text-sm text-gray-500 mt-1">...and {course.features.length - 3} more features</div>
             )}
           </div>
+
+        </CardContent>
+        
+        <CardFooter className="border-t pt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center mt-auto">
+          {/* Pricing Block */}
+          <div className="mb-3 sm:mb-0 flex items-baseline">
+            {showDiscount ? (
+              <>
+                <span className="text-3xl font-bold text-royal">
+                    ₹{course.discounted_price}
+                </span>
+                <span className="ml-2 text-base text-gray-500 line-through">
+                    ₹{course.price}
+                </span>
+                <span className="ml-3 text-sm font-semibold text-green-600">
+                    {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
+                </span>
+              </>
+            ) : (
+              <span className="text-3xl font-bold text-royal">
+                  ₹{course.price}
+              </span>
+            )}
+          </div>
+          
+          {/* Enroll Button */}
           <EnrollButton
             courseId={course.id}
             enrollmentLink={course.enroll_now_link || undefined}
-            className={`${course.bestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white px-5 py-2`}
+            className={`${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white px-5 py-2 font-semibold transition-all duration-200`}
           />
         </CardFooter>
       </Card>
