@@ -1,7 +1,16 @@
-// src/utils/storageHelpers.ts
-import { supabase } from '@/integrations/supabase/client';
-// Use a constant for your bucket name (e.g., 'course-images')
+// === Mockup for src/utils/storageHelpers.ts ===
+// NOTE: You must replace the import with your actual Supabase client.
+import { createClient } from '@supabase/supabase-js'; 
+
+// This is a dummy client/bucket for context. Replace with your actual implementation.
+const SUPABASE_URL = 'https://qzrvctpwefhmcduariuw.supabase.co'; 
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF6cnZjdHB3ZWZobWNkdWFyaXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1MTAxNDYsImV4cCI6MjA2MjA4NjE0Nn0.VK1JfGf1zhXbiOc_1N03HQnA0xlpGoynjXRkb_k2NJ0';
 const COURSE_IMAGES_BUCKET = 'course_images'; 
+
+// Assuming you have a real Supabase client instance imported from '@/integrations/supabase/client'
+// For example: import { supabase } from '@/integrations/supabase/client'; 
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 
 /**
  * Uploads a file to Supabase Storage and returns the public URL.
@@ -12,32 +21,35 @@ const COURSE_IMAGES_BUCKET = 'course_images';
 export async function uploadImageAndGetUrl(file: File, fileName: string): Promise<string | null> {
   if (!file) return null;
 
-  // 1. Define a unique path to prevent conflicts
-  // Using a sanitized title, a unique ID (Date.now()), and the file extension
-  const fileExtension = file.name.split('.').pop();
-  const sanitizedName = fileName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-  const path = `${sanitizedName}-${Date.now()}.${fileExtension}`;
+  try {
+    const fileExtension = file.name.split('.').pop();
+    const sanitizedName = fileName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const path = `${sanitizedName}-${Date.now()}.${fileExtension}`;
 
-  // 2. Execute the upload
-  const { data, error: uploadError } = await supabase.storage
-    .from(COURSE_IMAGES_BUCKET)
-    .upload(path, file, {
-      cacheControl: '3600', // Cache file for 1 hour (3600 seconds)
-      upsert: false,
-    });
+    // Execute the upload
+    const { data, error: uploadError } = await supabase.storage
+      .from(COURSE_IMAGES_BUCKET)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
 
-  if (uploadError) {
-    console.error('Supabase upload error:', uploadError);
-    // You should handle errors here (e.g., show a toast notification)
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError.message);
+      return null;
+    }
+
+    // Get the Public URL
+    const { data: publicUrlData } = supabase.storage
+      .from(COURSE_IMAGES_BUCKET)
+      .getPublicUrl(data!.path);
+      
+    return publicUrlData.publicUrl;
+
+  } catch (e) {
+    console.error('Critical upload failure:', e);
     return null;
   }
-
-  // 3. Get the Public URL
-  // The 'data.path' contains the unique path used for upload
-  const { data: publicUrlData } = supabase.storage
-    .from(COURSE_IMAGES_BUCKET)
-    .getPublicUrl(data.path);
-    
-  // This is the direct photo link you need for the image_url column.
-  return publicUrlData.publicUrl;
 }
+
+// === End of Mockup ===
