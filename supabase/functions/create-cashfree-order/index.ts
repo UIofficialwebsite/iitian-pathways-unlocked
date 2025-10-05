@@ -10,7 +10,14 @@ interface OrderRequest {
   courseId: string;
   amount: number;
   userId: string;
+  customerPhone: string; // Added to receive customer's phone number
 }
+
+// Determine the environment and set the correct Cashfree URL
+const isProduction = Deno.env.get("CASHFREE_PROD") === "true";
+const cashfreeApiUrl = isProduction
+  ? "https://api.cashfree.com/pg/orders"
+  : "https://sandbox.cashfree.com/pg/orders";
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
@@ -18,26 +25,26 @@ serve(async (req: Request) => {
   }
 
   try {
-    const { courseId, amount, userId }: OrderRequest = await req.json();
-    
+    const { courseId, amount, userId, customerPhone }: OrderRequest = await req.json();
+
     const cashfreeKey = Deno.env.get("Cashfree_Key");
     const cashfreeSecret = Deno.env.get("Cashfree_Secret");
-    
+
     if (!cashfreeKey || !cashfreeSecret) {
       throw new Error("Cashfree credentials not configured");
     }
 
     // Generate unique order ID
     const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    
+
     // Create Cashfree order
-    const cashfreeResponse = await fetch("https://sandbox.cashfree.com/pg/orders", {
+    const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-client-id": cashfreeKey,
         "x-client-secret": cashfreeSecret,
-        "x-api-version": "2023-08-01",
+        "x-api-version": "2023-08-01", // It's a good practice to keep this in an environment variable as well
       },
       body: JSON.stringify({
         order_id: orderId,
@@ -45,10 +52,10 @@ serve(async (req: Request) => {
         order_currency: "INR",
         customer_details: {
           customer_id: userId,
-          customer_phone: "9999999999", // Should be from user profile
+          customer_phone: customerPhone, // Use the phone number from the request
         },
         order_meta: {
-          return_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verify-cashfree-payment`,
+          return_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verify-cashfree-payment?order_id={order_id}`,
           notify_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/verify-cashfree-payment`,
         },
       }),
@@ -61,7 +68,7 @@ serve(async (req: Request) => {
     }
 
     const orderData = await cashfreeResponse.json();
-    
+
     // Store order in database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
