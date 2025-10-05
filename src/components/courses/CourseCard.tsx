@@ -7,7 +7,8 @@ import {
   Calendar,
   Users,
   CheckCircle,
-  Clock // Use Clock for duration
+  Clock,
+  ImageOff // <=== FIX: ImageOff is now correctly imported
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
 import { Course } from '@/components/admin/courses/types';
