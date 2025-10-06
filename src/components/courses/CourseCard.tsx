@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Star,
   Calendar,
   Users,
   GitBranch,
@@ -89,7 +88,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
         {/* Bestseller Running Text */}
         {isBestseller && (
-          <div className="bg-green-600 text-white py-0.5 overflow-hidden">
+          <div className="bg-amber-100 text-amber-800 py-0.5 overflow-hidden">
             <motion.div
               className="whitespace-nowrap text-xs font-semibold"
               animate={{ x: ['100%', '-100%'] }}
@@ -97,15 +96,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                 x: {
                   repeat: Infinity,
                   repeatType: "loop",
-                  duration: 10,
+                  duration: 15,
                   ease: "linear",
                 },
               }}
             >
-             <Star className="h-3 w-3 inline-block mx-2 fill-current" />
-              BESTSELLER
-             <Star className="h-3 w-3 inline-block mx-2 fill-current" />
-              BESTSELLER
+              <span className="mx-4">❤️ Trusted by hundreds of Learners</span>
+              <span className="mx-4">❤️ Trusted by hundreds of Learners</span>
             </motion.div>
           </div>
         )}
@@ -144,7 +141,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
               <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-500" />
                   <span className="font-semibold mr-1">Batch Starts:</span>
-                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'To be announced soon'}</span>
+                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'TBA'}</span>
               </div>
 
               <div className="flex items-center">
