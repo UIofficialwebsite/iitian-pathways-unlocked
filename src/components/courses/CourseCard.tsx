@@ -7,8 +7,8 @@ import {
   Calendar,
   Users,
   GitBranch,
-  Layers, // for level
-  Languages, // for language
+  Layers, 
+  Languages, 
   ImageOff,
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
@@ -42,6 +42,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const hasImage = !!course.image_url;
   const isBestseller = !!course.bestseller;
   const showDiscount = course.discounted_price && course.discounted_price < course.price;
+  const discountPercentage = showDiscount ? Math.round(((course.price - course.discounted_price!) / course.price) * 100) : 0;
   
   return (
     <motion.div
@@ -50,17 +51,31 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       animate="visible"
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
-      <Card className="h-full flex flex-col overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-300">
+      <Card className="h-full flex flex-col overflow-hidden relative border-none shadow-xl hover:shadow-2xl transition-all duration-300">
         
+        {showDiscount && (
+            <div className="absolute top-[-5px] right-[-5px] z-10 w-[75px] h-[75px] overflow-hidden text-right">
+                <span 
+                    className="text-xs font-bold text-white uppercase text-center leading-5 transform rotate-45 w-[100px] block bg-red-500 shadow-lg absolute top-[19px] right-[-21px]"
+                    style={{
+                        "background": "#ef4444",
+                        "boxShadow": "0 3px 10px -5px rgba(0, 0, 0, 1)"
+                    }}
+                >
+                    {discountPercentage}% OFF
+                </span>
+            </div>
+        )}
+
         {isBestseller && (
-          <div className="absolute top-0 right-0 z-10">
+          <div className="absolute top-0 left-0 z-10">
             <Badge className="m-2 bg-amber-500 hover:bg-amber-600 font-semibold text-white">
               <Star className="h-3 w-3 mr-1 fill-current" /> Bestseller
             </Badge>
           </div>
         )}
         
-        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-royal to-royal-dark'}`}></div>
+        <div className={`h-2 bg-gradient-to-r from-teal-400 to-cyan-500`}></div>
         
         {hasImage ? (
             <div className="relative aspect-video w-full overflow-hidden">
@@ -77,28 +92,28 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         )}
 
         <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-extrabold text-foreground pr-4 leading-snug">
+            <CardTitle className="text-xl font-extrabold text-gray-800 pr-4 leading-snug">
                 {course.title}
             </CardTitle>
             
             <div className="flex flex-wrap items-center gap-2 pt-1">
                 {course.exam_category && (
-                    <Badge className="bg-royal text-white hover:bg-royal-dark font-medium">
+                    <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200 font-medium">
                         {course.exam_category}
                     </Badge>
                 )}
                 {course.branch && (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
                       <GitBranch className="h-3 w-3 mr-1" /> {course.branch}
                   </Badge>
                 )}
                 {course.level && (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
                      <Layers className="h-3 w-3 mr-1" /> {course.level}
                   </Badge>
                 )}
                  {course.language && (
-                  <Badge variant="secondary">
+                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
                      <Languages className="h-3 w-3 mr-1" /> {course.language}
                   </Badge>
                 )}
@@ -108,45 +123,38 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         <CardContent className="flex-grow">
           <div className="flex flex-col space-y-2 text-sm text-gray-600 mb-3">
               <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-600" />
+                  <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-500" />
                   <span className="font-semibold mr-1">Batch Starts:</span> 
-                  <span>{course.start_date ? formatDate(course.start_date) : 'TBA'}</span>
+                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'TBA'}</span>
               </div>
               
               <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 flex-shrink-0 text-green-600" />
+                  <Users className="h-4 w-4 mr-2 flex-shrink-0 text-green-500" />
                   <span className="font-semibold mr-1">Enrolled:</span> 
-                  <span>{course.students_enrolled || 0} students</span>
+                  <span className="font-medium">{course.students_enrolled || 0} students</span>
               </div>
           </div>
         </CardContent>
         
         <CardFooter className="border-t pt-4 flex flex-col mt-auto">
-          {showDiscount && (
-             <div className="w-full text-center mb-3">
-                <Badge className="bg-green-100 text-green-700 hover:bg-green-200 text-sm font-semibold py-1 px-3">
-                    {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF! Price dropped to ₹{course.discounted_price}
-                </Badge>
-            </div>
-          )}
            <div className="w-full flex items-baseline justify-center mb-4">
-             <span className="text-3xl font-bold text-royal">
+             <span className="text-4xl font-bold text-teal-600">
                   ₹{showDiscount ? course.discounted_price : course.price}
               </span>
               {showDiscount && (
-                <span className="ml-2 text-base text-gray-500 line-through">
+                <span className="ml-2 text-xl text-gray-400 line-through">
                     ₹{course.price}
                 </span>
               )}
            </div>
 
           <div className="w-full grid grid-cols-2 gap-3">
-             <Button variant="outline" className="w-full">Explore</Button>
+             <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold">Explore</Button>
              <EnrollButton
                 courseId={course.id}
                 enrollmentLink={course.enroll_now_link || undefined}
                 coursePrice={course.discounted_price || course.price}
-                className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white font-semibold transition-all duration-200`}
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold transition-all duration-200"
               />
           </div>
         </CardFooter>
