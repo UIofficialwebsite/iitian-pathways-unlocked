@@ -53,8 +53,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     >
       <Card className="h-full flex flex-col overflow-hidden relative border-none shadow-xl hover:shadow-2xl transition-all duration-300">
         
+        {/* Discount Ribbon */}
         {showDiscount && (
-            <div className="absolute top-[-5px] right-[-5px] z-10 w-[75px] h-[75px] overflow-hidden text-right">
+            <div className="absolute top-[-5px] right-[-5px] z-20 w-[75px] h-[75px] overflow-hidden text-right">
                 <span 
                     className="text-xs font-bold text-white uppercase text-center leading-5 transform rotate-45 w-[100px] block bg-red-500 shadow-lg absolute top-[19px] right-[-21px]"
                     style={{
@@ -67,6 +68,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
             </div>
         )}
 
+        {/* Bestseller Badge */}
         {isBestseller && (
           <div className="absolute top-0 left-0 z-10">
             <Badge className="m-2 bg-amber-500 hover:bg-amber-600 font-semibold text-white">
@@ -75,7 +77,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           </div>
         )}
         
-        <div className={`h-2 bg-gradient-to-r from-teal-400 to-cyan-500`}></div>
+        {/* Top Color Bar */}
+        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-slate-500 to-slate-700'}`}></div>
         
         {hasImage ? (
             <div className="relative aspect-video w-full overflow-hidden">
@@ -98,7 +101,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
             
             <div className="flex flex-wrap items-center gap-2 pt-1">
                 {course.exam_category && (
-                    <Badge className="bg-cyan-100 text-cyan-800 hover:bg-cyan-200 font-medium">
+                    <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-200 font-medium">
                         {course.exam_category}
                     </Badge>
                 )}
@@ -138,7 +141,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         
         <CardFooter className="border-t pt-4 flex flex-col mt-auto">
            <div className="w-full flex items-baseline justify-center mb-4">
-             <span className="text-4xl font-bold text-teal-600">
+             <span className="text-4xl font-bold text-gray-800">
                   ₹{showDiscount ? course.discounted_price : course.price}
               </span>
               {showDiscount && (
@@ -154,7 +157,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                 courseId={course.id}
                 enrollmentLink={course.enroll_now_link || undefined}
                 coursePrice={course.discounted_price || course.price}
-                className="w-full bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold transition-all duration-200"
+                className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-slate-800 hover:bg-slate-900'} text-white font-semibold transition-all duration-200`}
               />
           </div>
         </CardFooter>
