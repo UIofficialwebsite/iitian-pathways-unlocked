@@ -2,16 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
-import CourseHeader from '@/components/courses/detail/CourseHeader';
-import CourseTabs from '@/components/courses/detail/CourseTabs';
-import FaqSection from '@/components/courses/detail/FaqSection';
-import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, AlertCircle } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import StickyTabNav from '@/components/courses/detail/StickyTabNav';
+import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
+import FeaturesSection from '@/components/courses/detail/FeaturesSection';
+import AboutSection from '@/components/courses/detail/AboutSection';
+import ScheduleSection from '@/components/courses/detail/ScheduleSection';
+import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
+import FAQSection from '@/components/courses/detail/FAQSection';
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -81,6 +85,19 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'TBA';
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
   if (error || !course) {
     return (
       <>
@@ -106,24 +123,89 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  const tabs = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'schedule', label: 'Schedule & Subjects' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'faqs', label: 'FAQs' }
+  ];
+
   return (
     <>
       <NavBar />
-      <main className="min-h-screen pt-20">
-        <div className="container mx-auto px-4 py-6">
+      <main className="min-h-screen pt-20 bg-background">
+        {/* Back Button */}
+        <div className="container mx-auto px-4 py-4">
           <Button 
             onClick={() => navigate('/courses')} 
             variant="ghost" 
-            className="mb-4"
+            size="sm"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Courses
           </Button>
         </div>
-        <CourseHeader course={course} />
-        <CourseTabs course={course} />
-        <MoreDetailsSection />
-        <FaqSection />
+
+        {/* Header Section */}
+        <div className="bg-gradient-to-br from-primary/5 to-primary/10 border-b">
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-4xl">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {course.exam_category && (
+                  <Badge variant="secondary">{course.exam_category}</Badge>
+                )}
+                {course.level && (
+                  <Badge variant="outline">{course.level}</Badge>
+                )}
+                {course.bestseller && (
+                  <Badge className="bg-amber-500">⭐ Best Seller</Badge>
+                )}
+              </div>
+              <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
+              <p className="text-lg text-muted-foreground mb-6">{course.description}</p>
+              
+              <div className="flex flex-wrap items-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                  <span className="font-semibold">{course.rating || 4.0}</span>
+                  <span className="text-muted-foreground">rating</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-primary" />
+                  <span className="font-semibold">{course.students_enrolled || 0}</span>
+                  <span className="text-muted-foreground">students enrolled</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span className="text-muted-foreground">Starts: {formatDate(course.start_date)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sticky Tab Navigation */}
+        <StickyTabNav tabs={tabs} />
+
+        {/* Two Column Layout */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Content (Left) */}
+            <div className="lg:col-span-2 space-y-12">
+              <FeaturesSection />
+              <AboutSection course={course} />
+              <ScheduleSection course={course} />
+              <SSPPortalSection />
+              <FAQSection />
+            </div>
+
+            {/* Enrollment Card (Right - Sticky) */}
+            <div className="lg:col-span-1">
+              <EnrollmentCard course={course} />
+            </div>
+          </div>
+        </div>
       </main>
       <Footer />
     </>
