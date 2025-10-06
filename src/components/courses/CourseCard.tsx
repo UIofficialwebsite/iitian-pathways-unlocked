@@ -7,8 +7,8 @@ import {
   Calendar,
   Users,
   GitBranch,
-  Layers, 
-  Languages, 
+  Layers,
+  Languages,
   ImageOff,
 } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
@@ -25,7 +25,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
   };
-  
+
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
     try {
@@ -43,7 +43,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const isBestseller = !!course.bestseller;
   const showDiscount = course.discounted_price && course.discounted_price < course.price;
   const discountPercentage = showDiscount ? Math.round(((course.price - course.discounted_price!) / course.price) * 100) : 0;
-  
+
   return (
     <motion.div
       variants={fadeInUp}
@@ -52,11 +52,20 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       transition={{ duration: 0.3, delay: index * 0.1 }}
     >
       <Card className="h-full flex flex-col overflow-hidden relative border-none shadow-xl hover:shadow-2xl transition-all duration-300">
-        
+
+        {/* Bestseller Badge */}
+        {isBestseller && (
+          <div className="absolute top-0 left-0 z-20">
+            <Badge className="m-2 bg-amber-500 hover:bg-amber-600 font-semibold text-white">
+              <Star className="h-3 w-3 mr-1 fill-current" /> Bestseller
+            </Badge>
+          </div>
+        )}
+
         {/* Discount Ribbon */}
         {showDiscount && (
-            <div className="absolute top-[-5px] right-[-5px] z-20 w-[75px] h-[75px] overflow-hidden text-right">
-                <span 
+            <div className="absolute top-[-5px] right-[-5px] z-10 w-[75px] h-[75px] overflow-hidden text-right">
+                <span
                     className="text-xs font-bold text-white uppercase text-center leading-5 transform rotate-45 w-[100px] block bg-red-500 shadow-lg absolute top-[19px] right-[-21px]"
                     style={{
                         "background": "#ef4444",
@@ -68,23 +77,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
             </div>
         )}
 
-        {/* Bestseller Badge */}
-        {isBestseller && (
-          <div className="absolute top-0 left-0 z-10">
-            <Badge className="m-2 bg-amber-500 hover:bg-amber-600 font-semibold text-white">
-              <Star className="h-3 w-3 mr-1 fill-current" /> Bestseller
-            </Badge>
-          </div>
-        )}
-        
         {/* Top Color Bar */}
-        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-slate-500 to-slate-700'}`}></div>
-        
+        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-royal to-royal-dark'}`}></div>
+
         {hasImage ? (
             <div className="relative aspect-video w-full overflow-hidden">
-                <img 
-                    src={course.image_url} 
-                    alt={course.title} 
+                <img
+                    src={course.image_url}
+                    alt={course.title}
                     className="w-full h-full object-cover"
                 />
             </div>
@@ -98,10 +98,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
             <CardTitle className="text-xl font-extrabold text-gray-800 pr-4 leading-snug">
                 {course.title}
             </CardTitle>
-            
+
             <div className="flex flex-wrap items-center gap-2 pt-1">
                 {course.exam_category && (
-                    <Badge className="bg-slate-100 text-slate-800 hover:bg-slate-200 font-medium">
+                    <Badge className="bg-royal-light text-royal-dark hover:bg-royal-dark/20 font-medium">
                         {course.exam_category}
                     </Badge>
                 )}
@@ -122,26 +122,26 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                 )}
             </div>
         </CardHeader>
-        
+
         <CardContent className="flex-grow">
           <div className="flex flex-col space-y-2 text-sm text-gray-600 mb-3">
               <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-500" />
-                  <span className="font-semibold mr-1">Batch Starts:</span> 
+                  <span className="font-semibold mr-1">Batch Starts:</span>
                   <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'TBA'}</span>
               </div>
-              
+
               <div className="flex items-center">
                   <Users className="h-4 w-4 mr-2 flex-shrink-0 text-green-500" />
-                  <span className="font-semibold mr-1">Enrolled:</span> 
+                  <span className="font-semibold mr-1">Enrolled:</span>
                   <span className="font-medium">{course.students_enrolled || 0} students</span>
               </div>
           </div>
         </CardContent>
-        
+
         <CardFooter className="border-t pt-4 flex flex-col mt-auto">
            <div className="w-full flex items-baseline justify-center mb-4">
-             <span className="text-4xl font-bold text-gray-800">
+             <span className="text-4xl font-bold text-royal">
                   ₹{showDiscount ? course.discounted_price : course.price}
               </span>
               {showDiscount && (
@@ -157,7 +157,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                 courseId={course.id}
                 enrollmentLink={course.enroll_now_link || undefined}
                 coursePrice={course.discounted_price || course.price}
-                className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-slate-800 hover:bg-slate-900'} text-white font-semibold transition-all duration-200`}
+                className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-royal hover:bg-royal-dark'} text-white font-semibold transition-all duration-200`}
               />
           </div>
         </CardFooter>
