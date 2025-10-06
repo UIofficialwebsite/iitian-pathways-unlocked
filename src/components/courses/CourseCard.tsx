@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -20,6 +21,7 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
+  const navigate = useNavigate();
   const fadeInUp = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
@@ -164,9 +166,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
               )}
            </div>
 
-          <div className="w-full grid grid-cols-2 gap-3">
-             <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold">Explore</Button>
-             <EnrollButton
+           <div className="w-full grid grid-cols-2 gap-3">
+              <Button 
+                variant="outline" 
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                onClick={() => navigate(`/courses/${course.id}`)}
+              >
+                Explore
+              </Button>
+              <EnrollButton
                 courseId={course.id}
                 enrollmentLink={course.enroll_now_link || undefined}
                 coursePrice={course.discounted_price || course.price}

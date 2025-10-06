@@ -122,7 +122,7 @@ export const useRealtimeContentManagement = () => {
       console.error('Error fetching courses:', error);
       return;
     }
-    setCourses(data || []);
+    setCourses((data || []) as unknown as Course[]);
   }, []);
 
   const fetchImportantDates = useCallback(async () => {

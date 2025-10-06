@@ -16,6 +16,7 @@ import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
 import Career from "./pages/Career";
 import About from "./pages/About";
+import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ProfileComplete from "./pages/ProfileComplete";
@@ -48,6 +49,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/courses/:courseId" element={<CourseDetail />} />
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />

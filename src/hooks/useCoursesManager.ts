@@ -23,7 +23,7 @@ export const useCoursesManager = (props?: UseCoursesManagerProps) => {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      setCourses(data || []);
+      setCourses((data || []) as unknown as Course[]);
     } catch (error: any) {
       toast({
         title: "Error",

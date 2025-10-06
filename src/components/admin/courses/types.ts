@@ -19,4 +19,5 @@ export interface Course {
   branch: string | null;
   level: string | null;
   enroll_now_link: string | null;
+  language: string | null;
 }

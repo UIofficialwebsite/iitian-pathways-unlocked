@@ -148,7 +148,7 @@ const CourseForm: React.FC<CourseFormProps> = ({ initialData, onSave, onClose, i
       // created_at and updated_at are handled by the database
       created_at: initialData?.created_at || new Date().toISOString(),
       updated_at: new Date().toISOString(),
-    } as Course;
+    } as unknown as Course;
     
     // 3. Save the course
     try {
