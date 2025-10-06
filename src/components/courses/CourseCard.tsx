@@ -89,9 +89,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
         {/* Bestseller Running Text */}
         {isBestseller && (
-          <div className="bg-green-600 text-white py-1 overflow-hidden">
+          <div className="bg-green-600 text-white py-0.5 overflow-hidden">
             <motion.div
-              className="whitespace-nowrap"
+              className="whitespace-nowrap text-xs font-semibold"
               animate={{ x: ['100%', '-100%'] }}
               transition={{
                 x: {
@@ -102,14 +102,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
                 },
               }}
             >
-             <Star className="h-4 w-4 inline-block mx-2 fill-current" />
-              BESTSELLER COURSE
-             <Star className="h-4 w-4 inline-block mx-2 fill-current" />
-              BESTSELLER COURSE
+             <Star className="h-3 w-3 inline-block mx-2 fill-current" />
+              BESTSELLER
+             <Star className="h-3 w-3 inline-block mx-2 fill-current" />
+              BESTSELLER
             </motion.div>
           </div>
         )}
-
 
         <CardHeader className="pb-3">
             <CardTitle className="text-xl font-extrabold text-gray-800 pr-4 leading-snug">
