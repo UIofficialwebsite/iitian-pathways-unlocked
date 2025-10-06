@@ -141,7 +141,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
               <div className="flex items-center">
                   <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-500" />
                   <span className="font-semibold mr-1">Batch Starts:</span>
-                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'TBA'}</span>
+                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'To be announced soon'}</span>
               </div>
 
               <div className="flex items-center">
