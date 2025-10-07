@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
-// The default questions remain the same as you provided
+// Default questions remain the same
 const defaultFaqs = [
   {
     question: "Why should I join this course and how will this be helpful?",
@@ -29,7 +29,7 @@ const defaultFaqs = [
     answer: "You can ask your doubts directly during the live classes or through our dedicated Doubt Portal, where you can post questions anytime. Every query is reviewed and answered by our academic team within 24 hours, ensuring you never stay stuck."
   },
   {
-    question: "What is the Refund Policy",
+    question: "Refund Policy",
     answer: "Dear Students, Once a batch has been purchased, refunds are not applicable. This is because significant resources are already invested in providing the best possible learning experience — including our learning platform, technology infrastructure, academic team, and support staff. We kindly request you to make a well-informed and conscious decision before enrolling in any batch."
   }
 ];
@@ -42,24 +42,23 @@ const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
   return (
     <section>
       <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
-      {/* The main accordion container now has spacing between items */}
       <Accordion type="single" collapsible className="w-full space-y-4">
         {faqs.map((faq, index) => (
           <AccordionItem
             value={`item-${index}`}
             key={index}
-            // Each item is styled like a card with a subtle border and shadow
-            className="border border-blue-100 bg-white rounded-lg shadow-sm overflow-hidden"
+            // The entire item now has a light blue background and a matching border
+            className="bg-blue-50 border border-blue-200 rounded-lg shadow-sm"
           >
             <AccordionTrigger
-              // The question part has blue text and a light blue background on hover
-              className="text-lg text-left font-semibold text-blue-900 px-6 py-4 transition-colors duration-200 hover:bg-blue-50/60 hover:no-underline"
+              // Text color is a darker blue for contrast, and hover effects are removed for a solid look
+              className="text-lg text-left font-semibold text-blue-900 px-6 py-4 hover:no-underline"
             >
               {faq.question}
             </AccordionTrigger>
             <AccordionContent
-              // The answer part has appropriate padding
-              className="px-6 pt-0 pb-5 text-base text-muted-foreground"
+              // Answer text is adjusted for readability on the light blue background
+              className="px-6 pt-0 pb-5 text-base text-slate-700"
             >
               {faq.answer}
             </AccordionContent>
