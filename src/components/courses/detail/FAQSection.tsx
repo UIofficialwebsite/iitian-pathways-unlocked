@@ -6,7 +6,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
-// 👇 These are the new default questions you provided.
+// The default questions remain the same as you provided
 const defaultFaqs = [
   {
     question: "Why should I join this course and how will this be helpful?",
@@ -35,19 +35,32 @@ const defaultFaqs = [
 ];
 
 interface FAQSectionProps {
-  // This prop allows course-specific FAQs to override the defaults.
   faqs?: { question: string; answer: string }[]; 
 }
 
 const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
   return (
     <section>
-      <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
-      <Accordion type="single" collapsible className="w-full">
+      <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
+      {/* The main accordion container now has spacing between items */}
+      <Accordion type="single" collapsible className="w-full space-y-4">
         {faqs.map((faq, index) => (
-          <AccordionItem value={`item-${index}`} key={index}>
-            <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
-            <AccordionContent className="text-base text-muted-foreground">
+          <AccordionItem
+            value={`item-${index}`}
+            key={index}
+            // Each item is styled like a card with a subtle border and shadow
+            className="border border-blue-100 bg-white rounded-lg shadow-sm overflow-hidden"
+          >
+            <AccordionTrigger
+              // The question part has blue text and a light blue background on hover
+              className="text-lg text-left font-semibold text-blue-900 px-6 py-4 transition-colors duration-200 hover:bg-blue-50/60 hover:no-underline"
+            >
+              {faq.question}
+            </AccordionTrigger>
+            <AccordionContent
+              // The answer part has appropriate padding
+              className="px-6 pt-0 pb-5 text-base text-muted-foreground"
+            >
               {faq.answer}
             </AccordionContent>
           </AccordionItem>
