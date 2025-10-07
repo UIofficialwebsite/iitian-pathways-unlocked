@@ -1,5 +1,4 @@
 import React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Course } from '@/components/admin/courses/types';
 
 interface AboutSectionProps {
@@ -49,37 +48,6 @@ const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
           )}
         </ul>
       </div>
-
-      <Accordion type="single" collapsible className="w-full">
-        <AccordionItem value="details">
-          <AccordionTrigger className="text-lg font-semibold">
-            More Details
-          </AccordionTrigger>
-          <AccordionContent className="space-y-4 pt-4">
-            <div>
-              <h4 className="font-semibold mb-2">Prerequisites</h4>
-              <p className="text-muted-foreground">
-                Basic understanding of {course.subject || 'the subject'} is helpful but not mandatory. 
-                We cover fundamentals from scratch.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Target Audience</h4>
-              <p className="text-muted-foreground">
-                This course is designed for students preparing for {course.exam_category || 'competitive exams'}.
-                Whether you're a beginner or looking to strengthen your concepts, this course is for you.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-2">Course Instructor</h4>
-              <p className="text-muted-foreground">
-                Our experienced faculty members have years of teaching experience and deep subject expertise.
-                They are passionate about helping students achieve their goals.
-              </p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
     </section>
   );
 };
