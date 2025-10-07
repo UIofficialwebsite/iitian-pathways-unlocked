@@ -17,7 +17,7 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 
-// Interface for the schedule data
+// Define the types for the data we'll be fetching
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -25,16 +25,21 @@ interface BatchScheduleItem {
   subject_name: string;
   file_link: string;
 }
+interface CourseFaq {
+  question: string;
+  answer: string;
+}
 
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined); // Use undefined to handle the fallback correctly
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Create refs for each section to enable smooth scrolling
+  // Create refs for each section to handle smooth scrolling
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
@@ -55,25 +60,25 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch course and schedule data in parallel for efficiency
-        const [courseResult, scheduleResult] = await Promise.all([
+        // Fetch all course-related data in parallel for better performance
+        const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
         ]);
 
-        // Handle potential errors from the course data query
-        if (courseResult.error) {
-          throw new Error(`Backend Error: ${courseResult.error.message}`);
-        }
+        if (courseResult.error) throw new Error(`Backend Error: ${courseResult.error.message}`);
         
-        // Handle course not found
         if (!courseResult.data) {
-          setError(`Sorry, we couldn't find a course with the ID: ${courseId}. It may have been moved or deleted.`);
+          setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
         } else {
           setCourse(courseResult.data as Course);
-          // Handle schedule data, ensuring it's an array
-          if (scheduleResult.data && Array.isArray(scheduleResult.data)) {
-            setScheduleData(scheduleResult.data as BatchScheduleItem[]);
+
+          if (scheduleResult.data) setScheduleData(scheduleResult.data as BatchScheduleItem[]);
+          
+          // If course-specific FAQs are found, update the state
+          if (faqResult.data && faqResult.data.length > 0) {
+            setFaqs(faqResult.data as CourseFaq[]);
           }
         }
       } catch (err: any) {
@@ -87,7 +92,7 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
-  // Loading state with skeletons
+  // Loading state with placeholder skeletons
   if (loading) {
     return (
       <>
@@ -113,7 +118,7 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  // Formatting date utility
+  // Utility to format dates
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
     try {
@@ -123,7 +128,7 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  // Error state or if course is not found
+  // Error state or when a course is not found
   if (error || !course) {
     return (
       <>
@@ -187,20 +192,20 @@ const CourseDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Sticky Tab Navigation */}
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
-        {/* Main Content Layout */}
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-12">
             
-            {/* Left Column: Course Sections */}
+            {/* Left Column: Course Content */}
             <div className="lg:col-span-2 space-y-12">
               <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={course} /></div>
               <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={course} /></div>
               <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
               <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
-              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32"><FAQSection /></div>
+              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
+                <FAQSection faqs={faqs} />
+              </div>
             </div>
 
             {/* Right Column: Sticky Enrollment Card */}
