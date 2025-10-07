@@ -1,50 +1,33 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Users, Video, Briefcase } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CheckCircle } from 'lucide-react';
 
 const MoreDetailsSection: React.FC = () => {
-  const benefits = [
-    {
-      icon: Users,
-      title: "Community Access",
-      description: "Join our exclusive community of learners. Network, collaborate, and grow together with peers from around the world."
-    },
-    {
-      icon: Video,
-      title: "Live Q&A Sessions",
-      description: "Participate in regular live sessions with instructors. Get your doubts cleared in real-time and engage in interactive discussions."
-    },
-    {
-      icon: Briefcase,
-      title: "Career Guidance",
-      description: "Receive personalized career guidance, resume reviews, and interview preparation support to help you achieve your professional goals."
-    }
+  const details = [
+    "PDF Notes of each Class will be uploaded on SSP.",
+    "Daily Practice Problems will be uploaded on the SSP.",
+    "Peer to Peer doubt solving will be provided.",
+    "The complete course will be accessible to all the students until the End Sem Exam.",
+    "The registration fee is included in the price of the batch which is showing on the website. The breakup of registration fee will be mentioned on invoice. You may be provided with access to Notes, PYQ’s, Lectures & other materials, the access can vary depending on the batch you purchase, so that exact details might change from one batch to another.",
   ];
 
   return (
-    <section className="py-12 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold mb-2">Why Choose This Course?</h2>
-          <p className="text-gray-600">More than just lessons - a complete learning experience</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          {benefits.map((benefit, idx) => {
-            const Icon = benefit.icon;
-            return (
-              <Card key={idx} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 text-blue-600 mb-4">
-                    <Icon className="h-8 w-8" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-gray-600">{benefit.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
+    <section>
+      <Card>
+        <CardHeader>
+          <CardTitle>More Details</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ul className="space-y-2">
+            {details.map((detail, idx) => (
+              <li key={idx} className="flex items-start">
+                <CheckCircle className="h-5 w-5 text-green-500 mr-2 mt-1 flex-shrink-0" />
+                <span>{detail}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </section>
   );
 };
