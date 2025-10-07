@@ -1,9 +1,14 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Video, Users, Clock, Award, BookOpen, Headphones } from "lucide-react";
+import { Video, Users, Clock, Award, BookOpen, Headphones, CheckCircle } from "lucide-react";
+import { Course } from '@/components/admin/courses/types';
 
-const FeaturesSection: React.FC = () => {
-  const features = [
+interface FeaturesSectionProps {
+  course: Course;
+}
+
+const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
+  const defaultFeatures = [
     {
       icon: Video,
       title: "Live Classes",
@@ -36,29 +41,47 @@ const FeaturesSection: React.FC = () => {
     }
   ];
 
+  // Use course features if available, otherwise use default features
+  const hasCustomFeatures = course.features && course.features.length > 0;
+
   return (
     <section id="features" className="py-12 scroll-mt-24">
       <h2 className="text-3xl font-bold mb-8">Course Features</h2>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {features.map((feature, idx) => {
-          const Icon = feature.icon;
-          return (
+      {hasCustomFeatures ? (
+        <div className="grid md:grid-cols-2 gap-4">
+          {course.features!.map((feature, idx) => (
             <Card key={idx} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-2">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.description}</p>
-                  </div>
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">{feature}</p>
                 </div>
               </CardContent>
             </Card>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {defaultFeatures.map((feature, idx) => {
+            const Icon = feature.icon;
+            return (
+              <Card key={idx} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-2">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 };

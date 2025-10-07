@@ -24,8 +24,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
 
   return (
     <div className="sticky top-24">
-      <Card className="shadow-lg">
-        <CardHeader className="space-y-4 pb-4">
+      <Card className="shadow-lg relative overflow-hidden">
+        {/* Online Badge */}
+        <div className="absolute top-0 left-0 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1 text-sm font-semibold z-10">
+          Online
+        </div>
+        <CardHeader className="space-y-4 pb-4 pt-10">
           <div>
             <div className="flex items-baseline justify-between mb-2">
               <div>
@@ -53,7 +57,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
             enrollmentLink={course.enroll_now_link || undefined}
             coursePrice={finalPrice}
             className="w-full"
-          />
+          >
+            Continue with Enrollment
+          </EnrollButton>
         </CardHeader>
         <CardContent>
           <CardTitle className="text-lg mb-4">This course includes:</CardTitle>

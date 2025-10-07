@@ -17,15 +17,24 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 
+interface BatchScheduleItem {
+  id: string;
+  course_id: string;
+  batch_name: string;
+  subject_name: string;
+  file_link: string;
+}
+
 const CourseDetail: React.FC = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
+  const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCourse = async () => {
+    const fetchCourseData = async () => {
       if (!courseId) {
         setError('Course ID is missing');
         setLoading(false);
@@ -34,28 +43,40 @@ const CourseDetail: React.FC = () => {
 
       try {
         setLoading(true);
-        const { data, error: fetchError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
-          .maybeSingle();
+        
+        // Fetch course and schedule data in parallel
+        const [courseResult, scheduleResult] = await Promise.all([
+          supabase
+            .from('courses')
+            .select('*')
+            .eq('id', courseId)
+            .maybeSingle(),
+          supabase
+            .from('batch_schedule' as any)
+            .select('*')
+            .eq('course_id', courseId)
+        ]);
 
-        if (fetchError) throw fetchError;
+        if (courseResult.error) throw courseResult.error;
 
-        if (!data) {
+        if (!courseResult.data) {
           setError('Course not found');
         } else {
-          setCourse(data as unknown as Course);
+          setCourse(courseResult.data as unknown as Course);
+          // Safely handle schedule data
+          if (scheduleResult.data && Array.isArray(scheduleResult.data)) {
+            setScheduleData(scheduleResult.data as unknown as BatchScheduleItem[]);
+          }
         }
       } catch (err) {
-        console.error('Error fetching course:', err);
+        console.error('Error fetching course data:', err);
         setError('Failed to load course details. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCourse();
+    fetchCourseData();
   }, [courseId]);
 
   if (loading) {
@@ -126,7 +147,7 @@ const CourseDetail: React.FC = () => {
   const tabs = [
     { id: 'features', label: 'Features' },
     { id: 'about', label: 'About' },
-    { id: 'schedule', label: 'Schedule & Subjects' },
+    { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
     { id: 'faqs', label: 'FAQs' }
   ];
@@ -148,7 +169,7 @@ const CourseDetail: React.FC = () => {
         </div>
 
         {/* Header Section */}
-        <div className="bg-gradient-to-br from-primary/5 to-primary/10 border-b">
+        <div className="shiny-blue-bg border-b">
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl">
               <div className="flex flex-wrap gap-2 mb-4">
@@ -162,23 +183,23 @@ const CourseDetail: React.FC = () => {
                   <Badge className="bg-amber-500">⭐ Best Seller</Badge>
                 )}
               </div>
-              <h1 className="text-4xl font-bold mb-4">{course.title}</h1>
-              <p className="text-lg text-muted-foreground mb-6">{course.description}</p>
+              <h1 className="text-4xl font-bold mb-4 text-white">{course.title}</h1>
+              <p className="text-lg text-white/90 mb-6">{course.description}</p>
               
-              <div className="flex flex-wrap items-center gap-6 text-sm">
+              <div className="flex flex-wrap items-center gap-6 text-sm text-white">
                 <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-amber-500 fill-amber-500" />
+                  <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
                   <span className="font-semibold">{course.rating || 4.0}</span>
-                  <span className="text-muted-foreground">rating</span>
+                  <span className="text-white/80">rating</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-primary" />
+                  <Users className="h-5 w-5 text-white/80" />
                   <span className="font-semibold">{course.students_enrolled || 0}</span>
-                  <span className="text-muted-foreground">students enrolled</span>
+                  <span className="text-white/80">students enrolled</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-primary" />
-                  <span className="text-muted-foreground">Starts: {formatDate(course.start_date)}</span>
+                  <Calendar className="h-5 w-5 text-white/80" />
+                  <span className="text-white/80">Starts: {formatDate(course.start_date)}</span>
                 </div>
               </div>
             </div>
@@ -193,9 +214,9 @@ const CourseDetail: React.FC = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content (Left) */}
             <div className="lg:col-span-2 space-y-12">
-              <FeaturesSection />
+              <FeaturesSection course={course} />
               <AboutSection course={course} />
-              <ScheduleSection course={course} />
+              <ScheduleSection scheduleData={scheduleData} />
               <SSPPortalSection />
               <FAQSection />
             </div>

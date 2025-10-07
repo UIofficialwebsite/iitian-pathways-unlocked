@@ -1,95 +1,86 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Calendar, Clock } from "lucide-react";
-import { Course } from '@/components/admin/courses/types';
+import { Button } from "@/components/ui/button";
+import { Download, Calendar } from "lucide-react";
 
-interface ScheduleSectionProps {
-  course: Course;
+interface BatchScheduleItem {
+  id: string;
+  course_id: string;
+  batch_name: string;
+  subject_name: string;
+  file_link: string;
 }
 
-const ScheduleSection: React.FC<ScheduleSectionProps> = ({ course }) => {
-  const schedule = [
-    { day: "Monday", time: "6:00 PM - 8:00 PM", topic: "Core Concepts" },
-    { day: "Wednesday", time: "6:00 PM - 8:00 PM", topic: "Problem Solving" },
-    { day: "Friday", time: "6:00 PM - 8:00 PM", topic: "Practice & Revision" },
-    { day: "Sunday", time: "10:00 AM - 12:00 PM", topic: "Doubt Clearing Session" }
-  ];
+interface ScheduleSectionProps {
+  scheduleData: BatchScheduleItem[];
+}
 
-  const subjects = course.subject ? [course.subject] : [
-    "Mathematics",
-    "Physics", 
-    "Chemistry"
-  ];
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'To be announced';
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-    } catch {
-      return dateString;
+const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
+  // Group schedule by batch_name
+  const groupedSchedule = scheduleData.reduce((acc, item) => {
+    if (!acc[item.batch_name]) {
+      acc[item.batch_name] = [];
     }
+    acc[item.batch_name].push(item);
+    return acc;
+  }, {} as Record<string, BatchScheduleItem[]>);
+
+  const handleDownload = (fileLink: string, subjectName: string) => {
+    window.open(fileLink, '_blank');
   };
+
+  if (scheduleData.length === 0) {
+    return (
+      <section id="schedule" className="py-12 scroll-mt-24">
+        <h2 className="text-3xl font-bold mb-8">Schedule</h2>
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>Schedule information will be available soon.</p>
+          </CardContent>
+        </Card>
+      </section>
+    );
+  }
 
   return (
     <section id="schedule" className="py-12 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-8">Schedule & Subjects</h2>
+      <h2 className="text-3xl font-bold mb-8">Schedule</h2>
       
-      <div className="grid lg:grid-cols-2 gap-6 mb-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
-              Weekly Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-                <Clock className="h-4 w-4" />
-                <span>Course starts: {formatDate(course.start_date)}</span>
-              </div>
-              {schedule.map((slot, idx) => (
-                <div key={idx} className="flex justify-between items-start p-3 rounded-lg bg-muted/50">
-                  <div>
-                    <p className="font-semibold">{slot.day}</p>
-                    <p className="text-sm text-muted-foreground">{slot.topic}</p>
+      <div className="space-y-6">
+        {Object.entries(groupedSchedule).map(([batchName, items]) => (
+          <Card key={batchName}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-primary" />
+                {batchName}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {items.map((item) => (
+                  <div 
+                    key={item.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold">{item.subject_name}</p>
+                    </div>
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleDownload(item.file_link, item.subject_name)}
+                      className="ml-4"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
                   </div>
-                  <span className="text-sm font-medium">{slot.time}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Subjects Covered</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {subjects.map((subject, idx) => (
-                <AccordionItem key={idx} value={`subject-${idx}`}>
-                  <AccordionTrigger className="hover:no-underline">
-                    <span className="font-semibold">{subject}</span>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="space-y-2 pl-4">
-                      <li className="text-sm text-muted-foreground">• Complete theory coverage</li>
-                      <li className="text-sm text-muted-foreground">• Problem-solving techniques</li>
-                      <li className="text-sm text-muted-foreground">• Previous year questions</li>
-                      <li className="text-sm text-muted-foreground">• Practice worksheets</li>
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
     </section>
   );
