@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
@@ -16,9 +16,8 @@ import AboutSection from '@/components/courses/detail/AboutSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
-import { useAnimateOnScroll } from '@/hooks/useAnimateOnScroll';
-import { cn } from '@/lib/utils';
 
+// Interface for the schedule data
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -35,60 +34,51 @@ const CourseDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs for sections
+  // Create refs for each section to enable smooth scrolling
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
-    faq: useRef<HTMLDivElement>(null),
+    faqs: useRef<HTMLDivElement>(null),
   };
-
-  // Animation hooks for each section
-  const featuresInView = useAnimateOnScroll(sectionRefs.features);
-  const aboutInView = useAnimateOnScroll(sectionRefs.about);
-  const scheduleInView = useAnimateOnScroll(sectionRefs.schedule);
-  const sspInView = useAnimateOnScroll(sectionRefs.ssp);
-  const faqInView = useAnimateOnScroll(sectionRefs.faq);
 
   useEffect(() => {
     const fetchCourseData = async () => {
       if (!courseId) {
-        setError('Course ID is missing');
+        setError('Course ID is missing from the URL.');
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        
-        // Fetch course and schedule data in parallel
+        setError(null);
+
+        // Fetch course and schedule data in parallel for efficiency
         const [courseResult, scheduleResult] = await Promise.all([
-          supabase
-            .from('courses')
-            .select('*')
-            .eq('id', courseId)
-            .maybeSingle(),
-          supabase
-            .from('batch_schedule' as any)
-            .select('*')
-            .eq('course_id', courseId)
+          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
+          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
         ]);
 
-        if (courseResult.error) throw courseResult.error;
-
+        // Handle potential errors from the course data query
+        if (courseResult.error) {
+          throw new Error(`Backend Error: ${courseResult.error.message}`);
+        }
+        
+        // Handle course not found
         if (!courseResult.data) {
-          setError('Course not found');
+          setError(`Sorry, we couldn't find a course with the ID: ${courseId}. It may have been moved or deleted.`);
         } else {
-          setCourse(courseResult.data as unknown as Course);
-          // Safely handle schedule data
+          setCourse(courseResult.data as Course);
+          // Handle schedule data, ensuring it's an array
           if (scheduleResult.data && Array.isArray(scheduleResult.data)) {
-            setScheduleData(scheduleResult.data as unknown as BatchScheduleItem[]);
+            setScheduleData(scheduleResult.data as BatchScheduleItem[]);
           }
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error('Error fetching course data:', err);
-        setError('Failed to load course details. Please try again later.');
+        setError(err.message || 'An unexpected error occurred. Please try refreshing the page.');
       } finally {
         setLoading(false);
       }
@@ -97,6 +87,7 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
+  // Loading state with skeletons
   if (loading) {
     return (
       <>
@@ -104,17 +95,15 @@ const CourseDetail: React.FC = () => {
         <div className="min-h-screen bg-background pt-20">
           <div className="container mx-auto px-4 py-12">
             <Skeleton className="h-8 w-32 mb-8" />
-            <div className="grid lg:grid-cols-2 gap-8 mb-12">
-              <Skeleton className="h-[400px] rounded-2xl" />
-              <div className="space-y-4">
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-8">
                 <Skeleton className="h-12 w-3/4" />
                 <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-full" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-6 w-24" />
-                  <Skeleton className="h-6 w-24" />
-                </div>
-                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-6 w-5/6" />
+                <Skeleton className="h-48 w-full" />
+              </div>
+              <div className="lg:col-span-1">
+                <Skeleton className="h-96 w-full rounded-2xl" />
               </div>
             </div>
           </div>
@@ -124,37 +113,34 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  // Formatting date utility
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
     try {
-      return new Date(dateString).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
+      return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     } catch {
       return dateString;
     }
   };
 
+  // Error state or if course is not found
   if (error || !course) {
     return (
       <>
         <NavBar />
         <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-          <div className="container mx-auto px-4">
-            <Alert variant="destructive" className="max-w-md mx-auto">
+          <div className="container mx-auto px-4 text-center">
+            <Alert variant="destructive" className="max-w-lg mx-auto text-left">
               <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="ml-2">
-                {error || 'Course not found'}
+              <AlertTitle>Failed to Load Course</AlertTitle>
+              <AlertDescription>
+                {error || 'The course you are looking for could not be found.'}
               </AlertDescription>
             </Alert>
-            <div className="text-center mt-6">
-              <Button onClick={() => navigate('/courses')} variant="outline">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Courses
-              </Button>
-            </div>
+            <Button onClick={() => navigate('/courses')} variant="outline" className="mt-6">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Courses
+            </Button>
           </div>
         </div>
         <Footer />
@@ -162,18 +148,20 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  const tabs = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'faqs', label: 'FAQs' },
+  ];
 
   return (
     <>
       <NavBar />
       <main className="min-h-screen pt-20 bg-background">
-        {/* Back Button */}
         <div className="container mx-auto px-4 py-4">
-          <Button 
-            onClick={() => navigate('/courses')} 
-            variant="ghost" 
-            size="sm"
-          >
+          <Button onClick={() => navigate('/courses')} variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Courses
           </Button>
@@ -184,109 +172,44 @@ const CourseDetail: React.FC = () => {
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl">
               <div className="flex flex-wrap gap-2 mb-4">
-                {course.exam_category && (
-                  <Badge variant="secondary">{course.exam_category}</Badge>
-                )}
-                {course.level && (
-                  <Badge variant="outline">{course.level}</Badge>
-                )}
-                {course.bestseller && (
-                  <Badge className="bg-amber-500">⭐ Best Seller</Badge>
-                )}
+                {course.exam_category && <Badge variant="secondary">{course.exam_category}</Badge>}
+                {course.level && <Badge variant="outline">{course.level}</Badge>}
+                {course.bestseller && <Badge className="bg-amber-500 text-white">⭐ Best Seller</Badge>}
               </div>
               <h1 className="text-4xl font-bold mb-4 text-white">{course.title}</h1>
               <p className="text-lg text-white/90 mb-6">{course.description}</p>
-              
               <div className="flex flex-wrap items-center gap-6 text-sm text-white">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-                  <span className="font-semibold">{course.rating || 4.0}</span>
-                  <span className="text-white/80">rating</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-5 w-5 text-white/80" />
-                  <span className="font-semibold">{course.students_enrolled || 0}</span>
-                  <span className="text-white/80">students enrolled</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-white/80" />
-                  <span className="text-white/80">Starts: {formatDate(course.start_date)}</span>
-                </div>
+                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-white/80">rating</span></div>
+                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-white/80" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-white/80">students</span></div>
+                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-white/80" /><span className="text-white/80">Starts: {formatDate(course.start_date)}</span></div>
               </div>
             </div>
           </div>
         </div>
 
         {/* Sticky Tab Navigation */}
-        <StickyTabNav sectionRefs={sectionRefs} />
+        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
-        {/* Two Column Layout */}
+        {/* Main Content Layout */}
         <div className="container mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Main Content (Left) */}
+          <div className="grid lg:grid-cols-3 gap-12">
+            
+            {/* Left Column: Course Sections */}
             <div className="lg:col-span-2 space-y-12">
-              <div
-                id="features"
-                ref={sectionRefs.features}
-                className={cn(
-                  "transition-all duration-700 ease-out",
-                  featuresInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                )}
-              >
-                <FeaturesSection course={course} />
-              </div>
-
-              <div
-                id="about"
-                ref={sectionRefs.about}
-                className={cn(
-                  "transition-all duration-700 ease-out",
-                  aboutInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                )}
-              >
-                <AboutSection course={course} />
-              </div>
-
-              <div
-                id="schedule"
-                ref={sectionRefs.schedule}
-                className={cn(
-                  "transition-all duration-700 ease-out",
-                  scheduleInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                )}
-              >
-                <ScheduleSection scheduleData={scheduleData} />
-              </div>
-
-              <div
-                id="ssp"
-                ref={sectionRefs.ssp}
-                className={cn(
-                  "transition-all duration-700 ease-out",
-                  sspInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                )}
-              >
-                <SSPPortalSection />
-              </div>
-
-              <div
-                id="faq"
-                ref={sectionRefs.faq}
-                className={cn(
-                  "transition-all duration-700 ease-out",
-                  faqInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                )}
-              >
-                <FAQSection />
-              </div>
+              <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={course} /></div>
+              <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={course} /></div>
+              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
+              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32"><FAQSection /></div>
             </div>
 
-            {/* Enrollment Card (Right - Sticky, overlapping header) */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-0 -mt-32">
+            {/* Right Column: Sticky Enrollment Card */}
+            <div className="lg:col-span-1 relative">
+              <div className="sticky top-32">
                 <EnrollmentCard course={course} />
               </div>
             </div>
+
           </div>
         </div>
       </main>
