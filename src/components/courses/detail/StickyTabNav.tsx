@@ -18,8 +18,8 @@ const TABS = [
 const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
     const [isSticky, setSticky] = useState(false);
     const [activeTab, setActiveTab] = useState('features');
-
-    const navBarHeight = 64; // Corresponds to h-16 in Tailwind for your main navbar
+    
+    const navBarHeight = 64; // h-16 for main navbar
 
     useEffect(() => {
         const handleScroll = () => {
@@ -47,12 +47,13 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
         };
     }, [sectionRefs]);
 
-    const scrollToSection = (elementRef: RefObject<HTMLDivElement>) => {
-        if (elementRef.current) {
-            const topPos = elementRef.current.offsetTop - (navBarHeight * 2);
-            window.scrollTo({
-                top: topPos,
-                behavior: 'smooth'
+    // This function is now simplified and more robust
+    const scrollToSection = (sectionId: string) => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
             });
         }
     };
@@ -63,12 +64,12 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
             isSticky ? "sticky top-16 shadow-md" : "relative"
         )}>
             <div className="container mx-auto px-4">
-                {/* Changed justify-center to justify-start */}
                 <div className="flex justify-start space-x-2 md:space-x-8">
                     {TABS.map((tab) => (
                         <button
                             key={tab.id}
-                            onClick={() => scrollToSection(sectionRefs[tab.id])}
+                            // The onClick handler now calls the simplified function
+                            onClick={() => scrollToSection(tab.id)}
                             className={cn(
                                 "py-4 px-2 md:px-4 text-sm md:text-base font-semibold border-b-2 transition-colors duration-200",
                                 activeTab === tab.id
