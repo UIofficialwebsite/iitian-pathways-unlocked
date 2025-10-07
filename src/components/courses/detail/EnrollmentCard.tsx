@@ -1,80 +1,51 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
-import EnrollButton from "@/components/EnrollButton";
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CheckCircle } from 'lucide-react';
 import { Course } from '@/components/admin/courses/types';
 
 interface EnrollmentCardProps {
-  course: Course;
+    course: Course;
 }
 
-const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
-  const showDiscount = course.discounted_price && course.discounted_price < course.price;
-  const finalPrice = showDiscount ? course.discounted_price : course.price;
-
-  const benefits = [
+const INCLUSIONS = [
+    "Interactive Live Classes",
+    "24/7 Doubt Support",
     "SSP Portal Access",
-    "Live Classes",
-    "Study Materials",
-    "Doubt Resolution",
-    "Progress Tracking",
-    "Certificate on Completion"
-  ];
+    "Comprehensive Notes"
+];
 
-  return (
-    <div className="sticky top-24">
-      <Card className="shadow-lg relative overflow-hidden">
-        {/* Online Badge */}
-        <div className="absolute top-0 left-0 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-1 text-sm font-semibold z-10">
-          Online
+const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
+    return (
+        <div className="sticky top-24">
+            <Card className="overflow-hidden shadow-xl">
+                <CardHeader className="p-0">
+                    {/* This line displays the batch image from your database */}
+                    <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
+                </CardHeader>
+                <CardContent className="p-6">
+                    <div className="flex items-baseline mb-4">
+                        <span className="text-3xl font-bold text-gray-900">${course.discounted_price || course.price}</span>
+                        {course.discounted_price && (
+                            <span className="text-gray-500 line-through ml-2">${course.price}</span>
+                        )}
+                    </div>
+                    <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer">
+                        <Button size="lg" className="w-full text-lg">Enroll Now</Button>
+                    </a>
+                    <div className="mt-6 space-y-3">
+                        <h4 className="font-semibold text-gray-700">This course includes:</h4>
+                        {INCLUSIONS.map((item, index) => (
+                            <div key={index} className="flex items-center text-gray-600">
+                                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                                <span>{item}</span>
+                            </div>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
         </div>
-        <CardHeader className="space-y-4 pb-4 pt-10">
-          <div>
-            <div className="flex items-baseline justify-between mb-2">
-              <div>
-                <span className="text-4xl font-bold text-primary">
-                  ₹{finalPrice}
-                </span>
-                {showDiscount && (
-                  <span className="ml-3 text-xl text-muted-foreground line-through">
-                    ₹{course.price}
-                  </span>
-                )}
-              </div>
-              {showDiscount && (
-                <Badge variant="destructive">
-                  {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
-                </Badge>
-              )}
-            </div>
-            {course.bestseller && (
-              <Badge className="bg-amber-500">⭐ Best Seller</Badge>
-            )}
-          </div>
-          <EnrollButton
-            courseId={course.id}
-            enrollmentLink={course.enroll_now_link || undefined}
-            coursePrice={finalPrice}
-            className="w-full"
-          >
-            Continue with Enrollment
-          </EnrollButton>
-        </CardHeader>
-        <CardContent>
-          <CardTitle className="text-lg mb-4">This course includes:</CardTitle>
-          <ul className="space-y-3">
-            {benefits.map((benefit, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
-                <span className="text-sm">{benefit}</span>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
-  );
+    );
 };
 
 export default EnrollmentCard;
