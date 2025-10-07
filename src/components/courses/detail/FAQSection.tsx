@@ -29,7 +29,7 @@ const defaultFaqs = [
     answer: "You can ask your doubts directly during the live classes or through our dedicated Doubt Portal, where you can post questions anytime. Every query is reviewed and answered by our academic team within 24 hours, ensuring you never stay stuck."
   },
   {
-    question: "Refund Policy",
+    question: "What is the Refund Policy",
     answer: "Dear Students, Once a batch has been purchased, refunds are not applicable. This is because significant resources are already invested in providing the best possible learning experience — including our learning platform, technology infrastructure, academic team, and support staff. We kindly request you to make a well-informed and conscious decision before enrolling in any batch."
   }
 ];
