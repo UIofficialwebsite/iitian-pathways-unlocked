@@ -1,89 +1,83 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, Calendar } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Calendar, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-interface BatchScheduleItem {
-  id: string;
-  course_id: string;
-  batch_name: string;
-  subject_name: string;
-  file_link: string;
+export interface ScheduleData {
+    day: string;
+    classes: {
+        time: string;
+        subject: string;
+        topic: string;
+        file_link?: string;
+    }[];
 }
 
 interface ScheduleSectionProps {
-  scheduleData: BatchScheduleItem[];
+    schedule: ScheduleData[];
 }
 
-const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
-  // Group schedule by batch_name
-  const groupedSchedule = scheduleData.reduce((acc, item) => {
-    if (!acc[item.batch_name]) {
-      acc[item.batch_name] = [];
+const ScheduleSection: React.FC<ScheduleSectionProps> = ({ schedule }) => {
+    // This check prevents the "Cannot read properties of undefined (reading 'reduce')" error.
+    if (!schedule || schedule.length === 0) {
+        return (
+            <section>
+                <h2 className="text-3xl font-bold text-gray-900 mb-8">Class Schedule</h2>
+                <p className="text-gray-600">The schedule for this course is not yet available. Please check back soon.</p>
+            </section>
+        );
     }
-    acc[item.batch_name].push(item);
-    return acc;
-  }, {} as Record<string, BatchScheduleItem[]>);
+    
+    // This block will now only run when 'schedule' is a valid array.
+    const groupedSchedule = schedule.reduce((acc, current) => {
+        const day = current.day;
+        if (!acc[day]) {
+            acc[day] = [];
+        }
+        acc[day].push(...current.classes);
+        return acc;
+    }, {} as Record<string, ScheduleData['classes']>);
 
-  const handleDownload = (fileLink: string, subjectName: string) => {
-    window.open(fileLink, '_blank');
-  };
-
-  if (scheduleData.length === 0) {
     return (
-      <section id="schedule" className="py-12 scroll-mt-24">
-        <h2 className="text-3xl font-bold mb-8">Schedule</h2>
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Schedule information will be available soon.</p>
-          </CardContent>
-        </Card>
-      </section>
-    );
-  }
-
-  return (
-    <section id="schedule" className="py-12 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-8">Schedule</h2>
-      
-      <div className="space-y-6">
-        {Object.entries(groupedSchedule).map(([batchName, items]) => (
-          <Card key={batchName}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                {batchName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <div 
-                    key={item.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold">{item.subject_name}</p>
-                    </div>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleDownload(item.file_link, item.subject_name)}
-                      className="ml-4"
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
+        <section>
+            <h2 className="text-3xl font-bold text-gray-900 mb-8">Class Schedule</h2>
+            <div className="space-y-6">
+                {Object.entries(groupedSchedule).map(([day, classes]) => (
+                    <Card key={day} className="overflow-hidden">
+                        <CardHeader className="bg-gray-100 p-4">
+                            <CardTitle className="text-lg flex items-center">
+                                <Calendar className="w-5 h-5 mr-3 text-blue-600"/>
+                                {day}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                           <div className="divide-y">
+                                {classes.map((classItem, index) => (
+                                    <div key={index} className="grid grid-cols-2 md:grid-cols-3 gap-4 p-4 items-center">
+                                        <div className="font-semibold text-gray-900">{classItem.subject}</div>
+                                        <div className="text-gray-600">{classItem.topic}</div>
+                                        {classItem.file_link && (
+                                            <a 
+                                                href={classItem.file_link} 
+                                                target="_blank" 
+                                                rel="noopener noreferrer" 
+                                                className="md:col-start-3"
+                                            >
+                                                <Button variant="outline" size="sm" className="w-full md:w-auto">
+                                                    <Download className="w-4 h-4 mr-2" />
+                                                    View Notes
+                                                </Button>
+                                            </a>
+                                        )}
+                                    </div>
+                                ))}
+                           </div>
+                        </CardContent>
+                    </Card>
                 ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
-  );
+            </div>
+        </section>
+    );
 };
 
 export default ScheduleSection;
