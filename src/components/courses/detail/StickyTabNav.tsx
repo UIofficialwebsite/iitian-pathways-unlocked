@@ -1,80 +1,93 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, RefObject } from 'react';
 import { cn } from '@/lib/utils';
 
-interface Tab {
-  id: string;
-  label: string;
-}
-
 interface StickyTabNavProps {
-  tabs: Tab[];
+    sectionRefs: {
+        [key: string]: RefObject<HTMLDivElement>;
+    };
 }
 
-const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs }) => {
-  const [activeTab, setActiveTab] = useState(tabs[0].id);
-  const [isSticky, setIsSticky] = useState(false);
+const TABS = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'faq', label: 'FAQs' },
+];
 
-  useEffect(() => {
-    const handleScroll = () => {
-      // Check if navigation should be sticky
-      setIsSticky(window.scrollY > 400);
+const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
+    const [isSticky, setSticky] = useState(false);
+    const [activeTab, setActiveTab] = useState('features');
 
-      // Update active tab based on scroll position
-      const sections = tabs.map(tab => document.getElementById(tab.id));
-      const scrollPosition = window.scrollY + 150;
+    const navBarHeight = 64; // Corresponds to h-16 in Tailwind for your main navbar
 
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const section = sections[i];
-        if (section && section.offsetTop <= scrollPosition) {
-          setActiveTab(tabs[i].id);
-          break;
+    useEffect(() => {
+        const handleScroll = () => {
+            // Determine when the header is scrolled out of view
+            // Adjust the value '350' if your header height changes
+            if (window.scrollY > 350) { 
+                setSticky(true);
+            } else {
+                setSticky(false);
+            }
+
+            // Logic to highlight the active tab based on scroll position
+            let currentTab = '';
+            for (const sectionId in sectionRefs) {
+                const section = sectionRefs[sectionId].current;
+                // Offset by double the navbar height to trigger highlighting correctly
+                if (section && window.scrollY >= section.offsetTop - (navBarHeight * 2)) {
+                    currentTab = sectionId;
+                }
+            }
+            if (currentTab) {
+                setActiveTab(currentTab);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, [sectionRefs]);
+
+    const scrollToSection = (elementRef: RefObject<HTMLDivElement>) => {
+        if (elementRef.current) {
+            // Calculate the top position, offsetting for both the main navbar and this tab bar
+            const topPos = elementRef.current.offsetTop - (navBarHeight * 2);
+            window.scrollTo({
+                top: topPos,
+                behavior: 'smooth'
+            });
         }
-      }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [tabs]);
-
-  const scrollToSection = (id: string) => {
-    const element = document.getElementById(id);
-    if (element) {
-      const offset = 100;
-      const elementPosition = element.offsetTop - offset;
-      window.scrollTo({
-        top: elementPosition,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  return (
-    <nav
-      className={cn(
-        "bg-background border-b transition-all duration-300 z-40",
-        isSticky ? "fixed top-0 left-0 right-0 shadow-md" : "relative"
-      )}
-    >
-      <div className="container mx-auto px-4">
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => scrollToSection(tab.id)}
-              className={cn(
-                "px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors border-b-2",
-                activeTab === tab.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    </nav>
-  );
+    return (
+        <nav className={cn(
+            "bg-white/80 backdrop-blur-lg border-b border-gray-200 z-40 transition-all duration-300",
+            // This class makes the component sticky below the main navbar
+            isSticky ? "sticky top-16 shadow-md" : "relative"
+        )}>
+            <div className="container mx-auto px-4">
+                <div className="flex justify-center space-x-2 md:space-x-8">
+                    {TABS.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => scrollToSection(sectionRefs[tab.id])}
+                            className={cn(
+                                "py-4 px-2 md:px-4 text-sm md:text-base font-semibold border-b-2 transition-colors duration-200",
+                                activeTab === tab.id
+                                    ? "border-blue-600 text-blue-600"
+                                    : "border-transparent text-gray-600 hover:text-blue-600"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+        </nav>
+    );
 };
 
 export default StickyTabNav;
