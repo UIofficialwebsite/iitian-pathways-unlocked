@@ -1,34 +1,89 @@
 import React from 'react';
-import { CheckCircle } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Video, Users, Clock, Award, BookOpen, Headphones, CheckCircle } from "lucide-react";
+import { Course } from '@/components/admin/courses/types';
 
 interface FeaturesSectionProps {
-    features?: string[] | null;
+  course: Course;
 }
 
-const FeaturesSection: React.FC<FeaturesSectionProps> = ({ features }) => {
-    // This check prevents the "Cannot read properties of undefined (reading 'features')" error.
-    if (!features || features.length === 0) {
-        return (
-            <section>
-                <h2 className="text-3xl font-bold text-gray-900 mb-8">Features</h2>
-                <p className="text-gray-600">Key features of this course will be listed here soon.</p>
-            </section>
-        )
+const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
+  const defaultFeatures = [
+    {
+      icon: Video,
+      title: "Live Classes",
+      description: "Interactive live sessions with expert instructors"
+    },
+    {
+      icon: Users,
+      title: "Small Batch Size",
+      description: "Personalized attention with limited students per batch"
+    },
+    {
+      icon: Clock,
+      title: "Flexible Timing",
+      description: "Choose from multiple batch timings that suit your schedule"
+    },
+    {
+      icon: Award,
+      title: "Certification",
+      description: "Receive a recognized certificate upon course completion"
+    },
+    {
+      icon: BookOpen,
+      title: "Study Materials",
+      description: "Comprehensive notes, PDFs, and practice questions"
+    },
+    {
+      icon: Headphones,
+      title: "24/7 Support",
+      description: "Get your doubts resolved anytime through our portal"
     }
+  ];
 
-    return (
-        <section>
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Top Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {features.map((feature, index) => (
-                    <div key={index} className="flex items-start text-lg">
-                        <CheckCircle className="w-6 h-6 text-blue-600 mr-3 mt-1 flex-shrink-0" />
-                        <span className="text-gray-800">{feature}</span>
+  // Use course features if available, otherwise use default features
+  const hasCustomFeatures = course.features && course.features.length > 0;
+
+  return (
+    <section id="features" className="py-12 scroll-mt-24">
+      <h2 className="text-3xl font-bold mb-8">Course Features</h2>
+      {hasCustomFeatures ? (
+        <div className="grid md:grid-cols-2 gap-4">
+          {course.features!.map((feature, idx) => (
+            <Card key={idx} className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">{feature}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {defaultFeatures.map((feature, idx) => {
+            const Icon = feature.icon;
+            return (
+              <Card key={idx} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 rounded-lg bg-primary/10">
+                      <Icon className="h-6 w-6 text-primary" />
                     </div>
-                ))}
-            </div>
-        </section>
-    );
+                    <div>
+                      <h3 className="font-semibold mb-2">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 };
 
 export default FeaturesSection;

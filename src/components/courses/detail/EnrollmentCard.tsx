@@ -5,7 +5,7 @@ import { CheckCircle } from 'lucide-react';
 import { Course } from '@/components/admin/courses/types';
 
 interface EnrollmentCardProps {
-    course: Course | null;
+    course: Course;
 }
 
 const INCLUSIONS = [
@@ -16,15 +16,11 @@ const INCLUSIONS = [
 ];
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
-    // This check ensures the component never crashes.
-    if (!course) {
-        return null;
-    }
-
     return (
         <div className="sticky top-24">
             <Card className="overflow-hidden shadow-xl">
                 <CardHeader className="p-0">
+                    {/* This line displays the batch image from your database */}
                     <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                 </CardHeader>
                 <CardContent className="p-6">
