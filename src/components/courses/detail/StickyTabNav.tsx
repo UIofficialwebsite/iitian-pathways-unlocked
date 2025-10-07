@@ -23,19 +23,15 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
 
     useEffect(() => {
         const handleScroll = () => {
-            // Determine when the header is scrolled out of view
-            // Adjust the value '350' if your header height changes
             if (window.scrollY > 350) { 
                 setSticky(true);
             } else {
                 setSticky(false);
             }
 
-            // Logic to highlight the active tab based on scroll position
             let currentTab = '';
             for (const sectionId in sectionRefs) {
                 const section = sectionRefs[sectionId].current;
-                // Offset by double the navbar height to trigger highlighting correctly
                 if (section && window.scrollY >= section.offsetTop - (navBarHeight * 2)) {
                     currentTab = sectionId;
                 }
@@ -53,7 +49,6 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
 
     const scrollToSection = (elementRef: RefObject<HTMLDivElement>) => {
         if (elementRef.current) {
-            // Calculate the top position, offsetting for both the main navbar and this tab bar
             const topPos = elementRef.current.offsetTop - (navBarHeight * 2);
             window.scrollTo({
                 top: topPos,
@@ -65,11 +60,11 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
     return (
         <nav className={cn(
             "bg-white/80 backdrop-blur-lg border-b border-gray-200 z-40 transition-all duration-300",
-            // This class makes the component sticky below the main navbar
             isSticky ? "sticky top-16 shadow-md" : "relative"
         )}>
             <div className="container mx-auto px-4">
-                <div className="flex justify-center space-x-2 md:space-x-8">
+                {/* Changed justify-center to justify-start */}
+                <div className="flex justify-start space-x-2 md:space-x-8">
                     {TABS.map((tab) => (
                         <button
                             key={tab.id}
