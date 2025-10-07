@@ -6,28 +6,36 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 
-// 👇 These are the default questions that will appear on any page using this component.
+// 👇 These are the new default questions you provided.
 const defaultFaqs = [
   {
-    question: "What is the enrollment process for courses?",
-    answer: "You can enroll in any course by clicking the 'Enroll Now' button on the course's detail page. You will be prompted to create an account or log in, and then you can proceed with the payment."
+    question: "Why should I join this course and how will this be helpful?",
+    answer: "This course is thoughtfully designed to strengthen your understanding from the ground up. Through structured lessons, live interaction, and guided practice, you’ll gain the confidence to learn, apply, and excel. It will not only help you perform better in exams but also give you conceptual clarity that stays with you long term."
   },
   {
-    question: "Is there a refund policy?",
-    answer: "Yes, we have a 30-day money-back guarantee. If you are not satisfied with the course for any reason, you can request a full refund within 30 days of your purchase."
+    question: "How will the classes be conducted?",
+    answer: "All classes are conducted live and interactive, allowing you to engage directly with mentors and clarify your doubts in real time. In case you miss a session, recordings of all live classes are made available on your dashboard so you can learn at your own pace."
   },
   {
-    question: "Are the courses self-paced or live?",
-    answer: "Most of our courses are self-paced, allowing you to learn at your convenience. Some advanced courses or workshops may include live sessions, which will be clearly mentioned in the course schedule."
+    question: "Can the classes be downloaded?",
+    answer: "Class recordings cannot be downloaded due to content protection, but you’ll have unlimited access to all recorded sessions through your dashboard during your course period."
   },
   {
-    question: "Will I receive a certificate upon completion?",
-    answer: "Absolutely. Upon successful completion of any course, you will receive a verifiable certificate that you can add to your resume and share on professional platforms like LinkedIn."
+    question: "What are the class days and timings?",
+    answer: "You can check your class schedule anytime in the Schedule tab after enrollment. Sessions are generally conducted in the evenings or late evenings to ensure convenience for both students and working professionals."
+  },
+  {
+    question: "How will I get my doubts answered?",
+    answer: "You can ask your doubts directly during the live classes or through our dedicated Doubt Portal, where you can post questions anytime. Every query is reviewed and answered by our academic team within 24 hours, ensuring you never stay stuck."
+  },
+  {
+    question: "Refund Policy",
+    answer: "Dear Students, Once a batch has been purchased, refunds are not applicable. This is because significant resources are already invested in providing the best possible learning experience — including our learning platform, technology infrastructure, academic team, and support staff. We kindly request you to make a well-informed and conscious decision before enrolling in any batch."
   }
 ];
 
 interface FAQSectionProps {
-  // This allows you to pass a different set of questions if needed for a specific page.
+  // This prop allows course-specific FAQs to override the defaults.
   faqs?: { question: string; answer: string }[]; 
 }
 
