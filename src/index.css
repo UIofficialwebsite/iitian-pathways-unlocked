@@ -183,11 +183,7 @@ img {
   animation-duration: calc(var(--duration, 16s) * 0.75);
 }
 
-/* Shiny blue gradient background */
+/* ===== NEW STYLE FOR THE HEADER ===== */
 .shiny-blue-bg {
-  background-color: #4f46e5;
-  background-image: radial-gradient(at 20% 20%, hsla(212,80%,50%,1) 0px, transparent 50%),
-                    radial-gradient(at 80% 20%, hsla(280,75%,60%,1) 0px, transparent 50%),
-                    radial-gradient(at 20% 80%, hsla(190,85%,55%,1) 0px, transparent 50%),
-                    radial-gradient(at 80% 80%, hsla(320,70%,65%,1) 0px, transparent 50%);
+  background: linear-gradient(90deg, #D7E9FF 0%, #F3E5F5 100%);
 }
