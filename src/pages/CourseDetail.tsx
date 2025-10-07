@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
@@ -16,6 +16,8 @@ import AboutSection from '@/components/courses/detail/AboutSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
+import { useAnimateOnScroll } from '@/hooks/useAnimateOnScroll';
+import { cn } from '@/lib/utils';
 
 interface BatchScheduleItem {
   id: string;
@@ -32,6 +34,22 @@ const CourseDetail: React.FC = () => {
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Refs for sections
+  const sectionRefs = {
+    features: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null),
+    schedule: useRef<HTMLDivElement>(null),
+    ssp: useRef<HTMLDivElement>(null),
+    faq: useRef<HTMLDivElement>(null),
+  };
+
+  // Animation hooks for each section
+  const featuresInView = useAnimateOnScroll(sectionRefs.features);
+  const aboutInView = useAnimateOnScroll(sectionRefs.about);
+  const scheduleInView = useAnimateOnScroll(sectionRefs.schedule);
+  const sspInView = useAnimateOnScroll(sectionRefs.ssp);
+  const faqInView = useAnimateOnScroll(sectionRefs.faq);
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -144,13 +162,6 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  const tabs = [
-    { id: 'features', label: 'Features' },
-    { id: 'about', label: 'About' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'ssp', label: 'SSP Portal' },
-    { id: 'faqs', label: 'FAQs' }
-  ];
 
   return (
     <>
@@ -207,23 +218,74 @@ const CourseDetail: React.FC = () => {
         </div>
 
         {/* Sticky Tab Navigation */}
-        <StickyTabNav tabs={tabs} />
+        <StickyTabNav sectionRefs={sectionRefs} />
 
         {/* Two Column Layout */}
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Main Content (Left) */}
             <div className="lg:col-span-2 space-y-12">
-              <FeaturesSection course={course} />
-              <AboutSection course={course} />
-              <ScheduleSection scheduleData={scheduleData} />
-              <SSPPortalSection />
-              <FAQSection />
+              <div
+                id="features"
+                ref={sectionRefs.features}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  featuresInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}
+              >
+                <FeaturesSection course={course} />
+              </div>
+
+              <div
+                id="about"
+                ref={sectionRefs.about}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  aboutInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}
+              >
+                <AboutSection course={course} />
+              </div>
+
+              <div
+                id="schedule"
+                ref={sectionRefs.schedule}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  scheduleInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}
+              >
+                <ScheduleSection scheduleData={scheduleData} />
+              </div>
+
+              <div
+                id="ssp"
+                ref={sectionRefs.ssp}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  sspInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}
+              >
+                <SSPPortalSection />
+              </div>
+
+              <div
+                id="faq"
+                ref={sectionRefs.faq}
+                className={cn(
+                  "transition-all duration-700 ease-out",
+                  faqInView ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}
+              >
+                <FAQSection />
+              </div>
             </div>
 
-            {/* Enrollment Card (Right - Sticky) */}
+            {/* Enrollment Card (Right - Sticky, overlapping header) */}
             <div className="lg:col-span-1">
-              <EnrollmentCard course={course} />
+              <div className="sticky top-0 -mt-32">
+                <EnrollmentCard course={course} />
+              </div>
             </div>
           </div>
         </div>
