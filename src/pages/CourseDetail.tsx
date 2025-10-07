@@ -15,6 +15,7 @@ import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 
 // Define the types for the data we'll be fetching
@@ -35,7 +36,7 @@ const CourseDetail: React.FC = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
-  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined); // Use undefined to handle the fallback correctly
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -45,6 +46,7 @@ const CourseDetail: React.FC = () => {
     about: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
     faqs: useRef<HTMLDivElement>(null),
   };
 
@@ -76,7 +78,6 @@ const CourseDetail: React.FC = () => {
 
           if (scheduleResult.data) setScheduleData(scheduleResult.data as BatchScheduleItem[]);
           
-          // If course-specific FAQs are found, update the state
           if (faqResult.data && faqResult.data.length > 0) {
             setFaqs(faqResult.data as CourseFaq[]);
           }
@@ -118,18 +119,8 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  // Utility to format dates
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'TBA';
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Error state or when a course is not found
-  if (error || !course) {
+  // Error state
+  if (error) {
     return (
       <>
         <NavBar />
@@ -138,9 +129,7 @@ const CourseDetail: React.FC = () => {
             <Alert variant="destructive" className="max-w-lg mx-auto text-left">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Failed to Load Course</AlertTitle>
-              <AlertDescription>
-                {error || 'The course you are looking for could not be found.'}
-              </AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
             <Button onClick={() => navigate('/courses')} variant="outline" className="mt-6">
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -152,12 +141,39 @@ const CourseDetail: React.FC = () => {
       </>
     );
   }
+  
+  // This check prevents rendering with incomplete data, fixing the "cannot read 'title'" error
+  if (!course) {
+    return (
+      <>
+        <NavBar />
+        <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Course Not Found</AlertTitle>
+            <AlertDescription>The course data could not be loaded or the course does not exist.</AlertDescription>
+          </Alert>
+        </div>
+        <Footer />
+      </>
+    );
+  }
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'TBA';
+    try {
+      return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch {
+      return dateString;
+    }
+  };
 
   const tabs = [
     { id: 'features', label: 'Features' },
     { id: 'about', label: 'About' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
+    { id: 'moreDetails', label: 'More Details' },
     { id: 'faqs', label: 'FAQs' },
   ];
 
@@ -192,23 +208,22 @@ const CourseDetail: React.FC = () => {
           </div>
         </div>
 
-        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
+        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} course={course} />
 
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-12">
             
-            {/* Left Column: Course Content */}
             <div className="lg:col-span-2 space-y-12">
               <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={course} /></div>
               <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={course} /></div>
               <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
               <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
+              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
                 <FAQSection faqs={faqs} />
               </div>
             </div>
 
-            {/* Right Column: Sticky Enrollment Card */}
             <div className="lg:col-span-1 relative">
               <div className="sticky top-32">
                 <EnrollmentCard course={course} />
