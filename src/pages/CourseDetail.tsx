@@ -158,7 +158,7 @@ const CourseDetail: React.FC = () => {
   
   // This check prevents rendering with incomplete data
   if (!course) {
-    // This state should ideally not be reached due to the redirect logic,
+    // This state should not be reached due to the redirect logic,
     // but it's a good safeguard.
     return null;
   }
