@@ -23,17 +23,15 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
 
     useEffect(() => {
         const handleScroll = () => {
-            if (window.scrollY > 350) { 
-                setSticky(true);
-            } else {
-                setSticky(false);
-            }
+            // Determines if the nav should be sticky
+            setSticky(window.scrollY > 350);
 
+            // Logic for auto-highlighting the active tab on scroll
             let currentTab = '';
-            for (const sectionId in sectionRefs) {
-                const section = sectionRefs[sectionId].current;
+            for (const tab of tabs) {
+                const section = sectionRefs[tab.id]?.current;
                 if (section && window.scrollY >= section.offsetTop - totalOffset) {
-                    currentTab = sectionId;
+                    currentTab = tab.id;
                 }
             }
             if (currentTab) {
@@ -42,11 +40,10 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
-    }, [sectionRefs, totalOffset]);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [sectionRefs, tabs, totalOffset]);
 
+    // Scrolls to the correct section, accounting for the height of the nav bars
     const scrollToSection = (sectionId: string) => {
         const section = sectionRefs[sectionId]?.current;
         if (section) {
@@ -57,12 +54,12 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
 
     return (
         <nav className={cn(
-            "bg-white/80 backdrop-blur-lg border-b border-gray-200 z-40 transition-all duration-300",
+            "bg-white/80 backdrop-blur-lg border-b z-30 transition-all duration-300",
             isSticky ? "sticky top-16 shadow-md" : "relative"
         )}>
             <div className="container mx-auto px-4">
                 <div className="flex justify-start space-x-2 md:space-x-8 overflow-x-auto">
-                    {/* CHANGE: Now mapping over the 'tabs' prop instead of a hardcoded array */}
+                    {/* This now correctly maps over the 'tabs' prop, making it dynamic */}
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
