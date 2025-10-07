@@ -1,0 +1,67 @@
+import React from 'react';
+import { 
+  Clock, 
+  Globe, 
+  Video, 
+  ShieldCheck, 
+  Zap, 
+  HelpCircle,
+  FileText,
+  Repeat,
+  Users,
+  BookOpen,
+  Info
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// These details will be common for every batch
+const commonDetails = [
+  {
+    icon: <FileText className="h-6 w-6 text-blue-500" />,
+    title: 'PDF Notes',
+    description: 'PDF Notes of each Class will be uploaded on SSP.',
+  },
+  {
+    icon: <Repeat className="h-6 w-6 text-green-500" />,
+    title: 'Daily Practice Problems',
+    description: 'Daily Practice Problems will be uploaded on SSP.',
+  },
+  {
+    icon: <Users className="h-6 w-6 text-red-500" />,
+    title: 'Peer to Peer Doubt Solving',
+    description: 'Peer to Peer doubt solving will be provided.',
+  },
+  {
+    icon: <BookOpen className="h-6 w-6 text-indigo-500" />,
+    title: 'Course Access',
+    description: 'The complete course will be accessible to all the students until the End Semester.',
+  },
+   {
+    icon: <Info className="h-6 w-6 text-orange-500" />,
+    title: 'Registration and Access',
+    description: 'The registration fee is included in the price of the batch. Access to Notes, PYQ’s, Lectures & other materials can vary depending on the batch you purchase.',
+  },
+];
+
+const MoreDetailsSection: React.FC = () => {
+  return (
+    <section>
+      <h2 className="text-3xl font-bold mb-8">More Details</h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        {commonDetails.map((detail, index) => (
+          <Card key={index} className="bg-white shadow-sm hover:shadow-md transition-shadow duration-200">
+            <CardHeader className="flex flex-row items-center gap-4 pb-2">
+              {detail.icon}
+              <CardTitle className="text-lg font-semibold text-gray-800">{detail.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground ml-10">{detail.description}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+export default MoreDetailsSection;
