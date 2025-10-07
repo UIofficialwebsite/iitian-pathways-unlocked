@@ -29,7 +29,7 @@ const defaultFaqs = [
     answer: "You can ask your doubts directly during the live classes or through our dedicated Doubt Portal, where you can post questions anytime. Every query is reviewed and answered by our academic team within 24 hours, ensuring you never stay stuck."
   },
   {
-    question: "Refund Policy",
+    question: "What is the Refund Policy",
     answer: "Dear Students, Once a batch has been purchased, refunds are not applicable. This is because significant resources are already invested in providing the best possible learning experience — including our learning platform, technology infrastructure, academic team, and support staff. We kindly request you to make a well-informed and conscious decision before enrolling in any batch."
   }
 ];
@@ -47,17 +47,15 @@ const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
           <AccordionItem
             value={`item-${index}`}
             key={index}
-            // The entire item now has a light blue background and a matching border
-            className="bg-blue-50 border border-blue-200 rounded-lg shadow-sm"
+            // The border is now lighter (border-blue-100) for a softer look
+            className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
           >
             <AccordionTrigger
-              // Text color is a darker blue for contrast, and hover effects are removed for a solid look
               className="text-lg text-left font-semibold text-blue-900 px-6 py-4 hover:no-underline"
             >
               {faq.question}
             </AccordionTrigger>
             <AccordionContent
-              // Answer text is adjusted for readability on the light blue background
               className="px-6 pt-0 pb-5 text-base text-slate-700"
             >
               {faq.answer}
