@@ -1,67 +1,50 @@
 import React from 'react';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
-const FAQSection: React.FC = () => {
-  const faqs = [
-    {
-      question: "How long do I have access to the course?",
-      answer: "You get lifetime access to all course materials, including recorded lectures, notes, and practice questions. Even after the live classes end, you can revisit the content anytime through the SSP Portal."
-    },
-    {
-      question: "What if I miss a live class?",
-      answer: "No worries! All live classes are automatically recorded and uploaded to the SSP Portal within 24 hours. You can watch them at your convenience."
-    },
-    {
-      question: "How do I access the SSP Portal?",
-      answer: "After enrollment, you'll receive login credentials via email. Simply visit our SSP Portal website and log in to access all course materials and features."
-    },
-    {
-      question: "Can I get my doubts clarified?",
-      answer: "Absolutely! You can ask your doubts during live classes, post them in the discussion forum, or use the dedicated doubt-clearing sessions on Sundays."
-    },
-    {
-      question: "Will I receive a certificate?",
-      answer: "Yes! Upon successful completion of the course and assignments, you'll receive a certificate of completion that you can share on your resume and LinkedIn."
-    },
-    {
-      question: "What is the refund policy?",
-      answer: "We offer a 7-day money-back guarantee. If you're not satisfied with the course within the first week, you can request a full refund, no questions asked."
-    },
-    {
-      question: "Are the classes live or recorded?",
-      answer: "The classes are conducted live, allowing real-time interaction with instructors. However, all sessions are recorded and made available on the portal for revision."
-    },
-    {
-      question: "What is the batch size?",
-      answer: "We maintain small batch sizes to ensure personalized attention. Typically, each batch has 25-30 students for optimal learning experience."
-    }
-  ];
+// 👇 These are the default questions that will appear on any page using this component.
+const defaultFaqs = [
+  {
+    question: "What is the enrollment process for courses?",
+    answer: "You can enroll in any course by clicking the 'Enroll Now' button on the course's detail page. You will be prompted to create an account or log in, and then you can proceed with the payment."
+  },
+  {
+    question: "Is there a refund policy?",
+    answer: "Yes, we have a 30-day money-back guarantee. If you are not satisfied with the course for any reason, you can request a full refund within 30 days of your purchase."
+  },
+  {
+    question: "Are the courses self-paced or live?",
+    answer: "Most of our courses are self-paced, allowing you to learn at your convenience. Some advanced courses or workshops may include live sessions, which will be clearly mentioned in the course schedule."
+  },
+  {
+    question: "Will I receive a certificate upon completion?",
+    answer: "Absolutely. Upon successful completion of any course, you will receive a verifiable certificate that you can add to your resume and share on professional platforms like LinkedIn."
+  }
+];
 
+interface FAQSectionProps {
+  // This allows you to pass a different set of questions if needed for a specific page.
+  faqs?: { question: string; answer: string }[]; 
+}
+
+const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
   return (
-    <section id="faqs" className="py-12 scroll-mt-24">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">Frequently Asked Questions</h2>
-        <p className="text-muted-foreground">Got questions? We've got answers!</p>
-      </div>
-      
-      <div className="max-w-3xl mx-auto">
-        <Accordion type="single" collapsible className="w-full space-y-4">
-          {faqs.map((faq, idx) => (
-            <AccordionItem 
-              key={idx} 
-              value={`faq-${idx}`}
-              className="border rounded-lg px-6 bg-card"
-            >
-              <AccordionTrigger className="text-left font-semibold hover:no-underline py-4">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground pb-4">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
+    <section>
+      <h2 className="text-3xl font-bold mb-6">Frequently Asked Questions</h2>
+      <Accordion type="single" collapsible className="w-full">
+        {faqs.map((faq, index) => (
+          <AccordionItem value={`item-${index}`} key={index}>
+            <AccordionTrigger className="text-lg text-left">{faq.question}</AccordionTrigger>
+            <AccordionContent className="text-base text-muted-foreground">
+              {faq.answer}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </section>
   );
 };
