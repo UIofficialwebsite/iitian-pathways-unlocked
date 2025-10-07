@@ -1,25 +1,25 @@
 import React, { useState, useEffect, RefObject } from 'react';
 import { cn } from '@/lib/utils';
 
+interface Tab {
+    id: string;
+    label: string;
+}
+
 interface StickyTabNavProps {
+    tabs: Tab[];
     sectionRefs: {
         [key: string]: RefObject<HTMLDivElement>;
     };
 }
 
-const TABS = [
-    { id: 'features', label: 'Features' },
-    { id: 'about', label: 'About' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'ssp', label: 'SSP Portal' },
-    { id: 'faq', label: 'FAQs' },
-];
-
-const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
+const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
     const [isSticky, setSticky] = useState(false);
-    const [activeTab, setActiveTab] = useState('features');
+    const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     
-    const navBarHeight = 64; // h-16 for main navbar
+    const mainNavBarHeight = 64; // Corresponds to h-16
+    const stickyNavBarHeight = 57; // Approximate height of this sticky nav itself
+    const totalOffset = mainNavBarHeight + stickyNavBarHeight + 16; // Added 16px for padding
 
     useEffect(() => {
         const handleScroll = () => {
@@ -32,7 +32,7 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
             let currentTab = '';
             for (const sectionId in sectionRefs) {
                 const section = sectionRefs[sectionId].current;
-                if (section && window.scrollY >= section.offsetTop - (navBarHeight * 2)) {
+                if (section && window.scrollY >= section.offsetTop - totalOffset) {
                     currentTab = sectionId;
                 }
             }
@@ -45,16 +45,13 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
-    }, [sectionRefs]);
+    }, [sectionRefs, totalOffset]);
 
-    // This function is now simplified and more robust
     const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start',
-            });
+        const section = sectionRefs[sectionId]?.current;
+        if (section) {
+            const y = section.getBoundingClientRect().top + window.scrollY - (mainNavBarHeight + stickyNavBarHeight);
+            window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
 
@@ -64,14 +61,14 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ sectionRefs }) => {
             isSticky ? "sticky top-16 shadow-md" : "relative"
         )}>
             <div className="container mx-auto px-4">
-                <div className="flex justify-start space-x-2 md:space-x-8">
-                    {TABS.map((tab) => (
+                <div className="flex justify-start space-x-2 md:space-x-8 overflow-x-auto">
+                    {/* CHANGE: Now mapping over the 'tabs' prop instead of a hardcoded array */}
+                    {tabs.map((tab) => (
                         <button
                             key={tab.id}
-                            // The onClick handler now calls the simplified function
                             onClick={() => scrollToSection(tab.id)}
                             className={cn(
-                                "py-4 px-2 md:px-4 text-sm md:text-base font-semibold border-b-2 transition-colors duration-200",
+                                "py-4 px-2 md:px-4 text-sm md:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap",
                                 activeTab === tab.id
                                     ? "border-blue-600 text-blue-600"
                                     : "border-transparent text-gray-600 hover:text-blue-600"
