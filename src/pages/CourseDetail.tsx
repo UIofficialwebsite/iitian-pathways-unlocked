@@ -51,47 +51,61 @@ const CourseDetail: React.FC = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchCourseData = async () => {
       if (!courseId) {
-        setError('Course ID is missing from the URL.');
-        setLoading(false);
+        if (isMounted) {
+          setError('Course ID is missing from the URL.');
+          setLoading(false);
+        }
         return;
       }
 
       try {
-        setLoading(true);
-        setError(null);
+        if (isMounted) {
+          setLoading(true);
+          setError(null);
+        }
 
-        // Fetch all course-related data in parallel for better performance
-        const [courseResult, scheduleResult, faqResult] = await Promise.all([
-          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
-          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
-          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
-        ]);
+        const { data, error: courseError } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('id', courseId)
+          .maybeSingle();
 
-        if (courseResult.error) throw new Error(`Backend Error: ${courseResult.error.message}`);
-        
-        if (!courseResult.data) {
-          setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
-        } else {
-          setCourse(courseResult.data as Course);
+        if (courseError) throw courseError;
+
+        if (!data) {
+          if (isMounted) navigate('/404', { replace: true });
+          return;
+        }
+
+        if (isMounted) {
+          setCourse(data as Course);
+          
+          const [scheduleResult, faqResult] = await Promise.all([
+            supabase.from('batch_schedule').select('*').eq('course_id', courseId),
+            supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+          ]);
 
           if (scheduleResult.data) setScheduleData(scheduleResult.data as BatchScheduleItem[]);
-          
-          if (faqResult.data && faqResult.data.length > 0) {
-            setFaqs(faqResult.data as CourseFaq[]);
-          }
+          if (faqResult.data && faqResult.data.length > 0) setFaqs(faqResult.data as CourseFaq[]);
         }
       } catch (err: any) {
         console.error('Error fetching course data:', err);
-        setError(err.message || 'An unexpected error occurred. Please try refreshing the page.');
+        if (isMounted) setError(err.message || 'An unexpected error occurred. Please try refreshing the page.');
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchCourseData();
-  }, [courseId]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [courseId, navigate]);
 
   // Loading state with placeholder skeletons
   if (loading) {
@@ -142,21 +156,11 @@ const CourseDetail: React.FC = () => {
     );
   }
   
-  // This check prevents rendering with incomplete data, fixing the "cannot read 'title'" error
+  // This check prevents rendering with incomplete data
   if (!course) {
-    return (
-      <>
-        <NavBar />
-        <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Course Not Found</AlertTitle>
-            <AlertDescription>The course data could not be loaded or the course does not exist.</AlertDescription>
-          </Alert>
-        </div>
-        <Footer />
-      </>
-    );
+    // This state should ideally not be reached due to the redirect logic,
+    // but it's a good safeguard.
+    return null;
   }
 
   const formatDate = (dateString: string | null) => {
