@@ -16,6 +16,7 @@ import AboutSection from '@/components/courses/detail/AboutSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 
 // Define the types for the data we'll be fetching
 interface BatchScheduleItem {
@@ -35,7 +36,7 @@ const CourseDetail: React.FC = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
-  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined); // Use undefined to handle the fallback correctly
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,6 +47,7 @@ const CourseDetail: React.FC = () => {
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
     faqs: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
   };
 
   useEffect(() => {
@@ -60,7 +62,6 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch all course-related data in parallel for better performance
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
@@ -73,10 +74,7 @@ const CourseDetail: React.FC = () => {
           setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
         } else {
           setCourse(courseResult.data as Course);
-
           if (scheduleResult.data) setScheduleData(scheduleResult.data as BatchScheduleItem[]);
-          
-          // If course-specific FAQs are found, update the state
           if (faqResult.data && faqResult.data.length > 0) {
             setFaqs(faqResult.data as CourseFaq[]);
           }
@@ -92,7 +90,6 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
-  // Loading state with placeholder skeletons
   if (loading) {
     return (
       <>
@@ -118,7 +115,6 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  // Utility to format dates
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
     try {
@@ -128,7 +124,6 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  // Error state or when a course is not found
   if (error || !course) {
     return (
       <>
@@ -159,6 +154,7 @@ const CourseDetail: React.FC = () => {
     { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
     { id: 'faqs', label: 'FAQs' },
+    { id: 'moreDetails', label: 'More Details' },
   ];
 
   return (
@@ -172,7 +168,6 @@ const CourseDetail: React.FC = () => {
           </Button>
         </div>
 
-        {/* Header Section */}
         <div className="shiny-blue-bg border-b">
           <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl">
@@ -197,7 +192,6 @@ const CourseDetail: React.FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-3 gap-12">
             
-            {/* Left Column: Course Content */}
             <div className="lg:col-span-2 space-y-12">
               <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={course} /></div>
               <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={course} /></div>
@@ -206,9 +200,9 @@ const CourseDetail: React.FC = () => {
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
                 <FAQSection faqs={faqs} />
               </div>
+              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
             </div>
 
-            {/* Right Column: Sticky Enrollment Card */}
             <div className="lg:col-span-1 relative">
               <div className="sticky top-32">
                 <EnrollmentCard course={course} />
