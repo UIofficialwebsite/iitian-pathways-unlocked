@@ -63,8 +63,8 @@ const CourseDetail: React.FC = () => {
         // Fetch all course-related data in parallel for better performance
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
-          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
-          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+          supabase.from('batch_schedule' as any).select('*').eq('course_id', courseId),
+          supabase.from('course_faqs' as any).select('question, answer').eq('course_id', courseId),
         ]);
 
         if (courseResult.error) throw new Error(`Backend Error: ${courseResult.error.message}`);
@@ -72,13 +72,13 @@ const CourseDetail: React.FC = () => {
         if (!courseResult.data) {
           setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
         } else {
-          setCourse(courseResult.data as Course);
+          setCourse(courseResult.data as any);
 
-          if (scheduleResult.data) setScheduleData(scheduleResult.data as BatchScheduleItem[]);
+          if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
           
           // If course-specific FAQs are found, update the state
           if (faqResult.data && faqResult.data.length > 0) {
-            setFaqs(faqResult.data as CourseFaq[]);
+            setFaqs(faqResult.data as any);
           }
         }
       } catch (err: any) {
