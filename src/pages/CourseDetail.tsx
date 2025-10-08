@@ -13,6 +13,7 @@ import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
@@ -43,6 +44,7 @@ const CourseDetail: React.FC = () => {
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
     faqs: useRef<HTMLDivElement>(null),
@@ -156,6 +158,7 @@ const CourseDetail: React.FC = () => {
   const tabs = [
     { id: 'features', label: 'Features' },
     { id: 'about', label: 'About' },
+    { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
     { id: 'faqs', label: 'FAQs' },
@@ -201,6 +204,7 @@ const CourseDetail: React.FC = () => {
             <div className="lg:col-span-2 space-y-12">
               <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={course} /></div>
               <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={course} /></div>
+              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
               <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
               <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
