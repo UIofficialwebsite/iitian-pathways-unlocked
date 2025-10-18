@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, Clock, BookOpen } from 'lucide-react';
+import { MapPin, Calendar, BookOpen } from 'lucide-react';
 
 interface EnrollmentCardProps {
     course: Course;
@@ -76,9 +76,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                                 </div>
                                 <div className="flex items-center text-gray-700">
                                     <Calendar className="w-5 h-5 mr-3 text-gray-500" />
-                                    <span className="font-normal">
-                                        {formatDate(course.start_date)} - {formatDate(course.end_date)}
-                                    </span>
+                                    <div className="flex flex-col">
+                                        <span className="font-normal">Starts on: {formatDate(course.start_date)}</span>
+                                        <span className="font-normal">Ends on: {formatDate(course.end_date)}</span>
+                                    </div>
                                 </div>
                                 <div className="flex items-center text-gray-700">
                                     <BookOpen className="w-5 h-5 mr-3 text-gray-500" />
