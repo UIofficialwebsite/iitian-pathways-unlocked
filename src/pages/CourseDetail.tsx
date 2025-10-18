@@ -17,6 +17,7 @@ import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
+import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide'; // Make sure to create this component
 
 // Define the types for the data we'll be fetching
 interface BatchScheduleItem {
@@ -36,17 +37,18 @@ const CourseDetail: React.FC = () => {
   const navigate = useNavigate();
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
-  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined); // Use undefined to handle the fallback correctly
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Create refs for each section to handle smooth scrolling
+  // Create refs for each section
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
+    access: useRef<HTMLDivElement>(null), // Ref for the new section
     faqs: useRef<HTMLDivElement>(null),
   };
 
@@ -62,7 +64,6 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch all course-related data in parallel for better performance
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule' as any).select('*').eq('course_id', courseId),
@@ -75,10 +76,7 @@ const CourseDetail: React.FC = () => {
           setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
         } else {
           setCourse(courseResult.data as any);
-
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
-          
-          // If course-specific FAQs are found, update the state
           if (faqResult.data && faqResult.data.length > 0) {
             setFaqs(faqResult.data as any);
           }
@@ -94,7 +92,6 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
-  // Loading state with placeholder skeletons
   if (loading) {
     return (
       <>
@@ -120,7 +117,6 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  // Utility to format dates
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
     try {
@@ -130,7 +126,6 @@ const CourseDetail: React.FC = () => {
     }
   };
 
-  // Error state or when a course is not found
   if (error || !course) {
     return (
       <>
@@ -161,6 +156,7 @@ const CourseDetail: React.FC = () => {
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
+    { id: 'access', label: 'Course Access' }, // New tab
     { id: 'faqs', label: 'FAQs' },
   ];
 
@@ -207,6 +203,7 @@ const CourseDetail: React.FC = () => {
               <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
               <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
               <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
+              <div id="access" ref={sectionRefs.access} className="scroll-mt-32"><CourseAccessGuide /></div>
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
                 <FAQSection faqs={faqs} />
               </div>
