@@ -25,9 +25,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                 </CardHeader>
                 <CardContent className="p-6">
                     <div className="flex items-baseline mb-4">
-                        <span className="text-3xl font-bold text-gray-900">${course.discounted_price || course.price}</span>
+                        <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
                         {course.discounted_price && (
-                            <span className="text-gray-500 line-through ml-2">${course.price}</span>
+                            <span className="text-gray-500 line-through ml-2">₹{course.price}</span>
                         )}
                     </div>
                     <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer">
