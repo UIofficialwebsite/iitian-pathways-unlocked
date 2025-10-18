@@ -1,27 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
 import { Course } from '@/components/admin/courses/types';
 
 interface EnrollmentCardProps {
     course: Course;
 }
 
-const INCLUSIONS = [
-    "Interactive Live Classes",
-    "24/7 Doubt Support",
-    "SSP Portal Access",
-    "Comprehensive Notes"
-];
-
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
+    const [featuresVisible, setFeaturesVisible] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            if (cardRef.current) {
+                const { top } = cardRef.current.getBoundingClientRect();
+                if (top <= 0) {
+                    setFeaturesVisible(true);
+                } else {
+                    setFeaturesVisible(false);
+                }
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+        };
+    }, []);
+
     return (
-        <div className="sticky top-24">
+        <div className="sticky top-24" ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg">
                     <CardHeader className="p-0">
-                        {/* This line displays the batch image from your database */}
                         <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
                     <CardContent className="p-6">
@@ -31,18 +43,24 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                                 <span className="text-gray-500 line-through ml-2">₹{course.price}</span>
                             )}
                         </div>
-                        <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer">
-                            <Button size="lg" className="w-full text-lg">Enroll Now</Button>
-                        </a>
-                        <div className="mt-6 space-y-3">
-                            <h4 className="font-semibold text-gray-700">This course includes:</h4>
-                            {INCLUSIONS.map((item, index) => (
-                                <div key={index} className="flex items-center text-gray-600">
-                                    <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                                    <span>{item}</span>
+                        <div
+                            className={`transition-all duration-500 ease-in-out transform ${
+                                featuresVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
+                            }`}
+                        >
+                            <div className="mt-6 space-y-3">
+                                <h4 className="font-semibold text-gray-700">{course.degree_name} - {course.level}</h4>
+                                <div className="text-gray-600">
+                                    <span>Starts on {new Date(course.start_date).toLocaleDateString()} Ends on {new Date(course.end_date).toLocaleDateString()}</span>
                                 </div>
-                            ))}
+                                <div className="text-gray-600">
+                                    <span>Language: {course.language}</span>
+                                </div>
+                            </div>
                         </div>
+                        <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block mt-6">
+                            <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
+                        </a>
                     </CardContent>
                 </Card>
             </div>
