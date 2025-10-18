@@ -31,6 +31,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    const formatDate = (dateString: string) => {
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('en-GB', options);
+    };
+
     return (
         <div className="sticky top-24" ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
@@ -72,7 +77,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                                 <div className="flex items-center text-gray-700">
                                     <Calendar className="w-5 h-5 mr-3 text-gray-500" />
                                     <span className="font-normal">
-                                        {new Date(course.start_date).toLocaleDateString()} - {new Date(course.end_date).toLocaleDateString()}
+                                        {formatDate(course.start_date)} - {formatDate(course.end_date)}
                                     </span>
                                 </div>
                                 <div className="flex items-center text-gray-700">
