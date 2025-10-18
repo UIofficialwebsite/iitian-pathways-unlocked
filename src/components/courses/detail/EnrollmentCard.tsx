@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
@@ -8,29 +8,27 @@ interface EnrollmentCardProps {
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
-    const [featuresVisible, setFeaturesVisible] = useState(false);
-    const cardRef = useRef<HTMLDivElement>(null);
+    const [startDateVisible, setStartDateVisible] = useState(false);
 
     useEffect(() => {
         const handleScroll = () => {
-            if (cardRef.current) {
-                const { top } = cardRef.current.getBoundingClientRect();
-                if (top <= 0) {
-                    setFeaturesVisible(true);
-                } else {
-                    setFeaturesVisible(false);
-                }
+            // Triggers the animation after the user scrolls down a little
+            if (window.scrollY > 50) {
+                setStartDateVisible(true);
+            } else {
+                setStartDateVisible(false);
             }
         };
 
         window.addEventListener('scroll', handleScroll);
+        // Cleanup the event listener on component unmount
         return () => {
             window.removeEventListener('scroll', handleScroll);
         };
     }, []);
 
     return (
-        <div className="sticky top-24" ref={cardRef}>
+        <div className="sticky top-24">
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg">
                     <CardHeader className="p-0">
@@ -43,21 +41,26 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                                 <span className="text-gray-500 line-through ml-2">₹{course.price}</span>
                             )}
                         </div>
-                        <div
-                            className={`transition-all duration-500 ease-in-out transform ${
-                                featuresVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-                            }`}
-                        >
-                            <div className="mt-6 space-y-3">
-                                <h4 className="font-semibold text-gray-700">{course.degree_name} - {course.level}</h4>
-                                <div className="text-gray-600">
-                                    <span>Starts on {new Date(course.start_date).toLocaleDateString()} Ends on {new Date(course.end_date).toLocaleDateString()}</span>
-                                </div>
-                                <div className="text-gray-600">
-                                    <span>Language: {course.language}</span>
-                                </div>
+
+                        {/* Static details that are always visible */}
+                        <div className="space-y-2 mb-4">
+                            <h4 className="font-semibold text-gray-700">{course.degree_name} - {course.level}</h4>
+                            <div className="text-gray-600">
+                                <span>Language: {course.language}</span>
                             </div>
                         </div>
+
+                        {/* Animated start date */}
+                        <div
+                            className={`transition-all duration-500 ease-in-out transform ${
+                                startDateVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
+                            }`}
+                        >
+                            <div className="text-gray-600 font-medium">
+                                <span>Starts on: {new Date(course.start_date).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+
                         <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block mt-6">
                             <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                         </a>
