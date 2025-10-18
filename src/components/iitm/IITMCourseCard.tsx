@@ -13,28 +13,43 @@ interface IITMCourseCardProps {
 
 const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
   const isPremium = course.course_type === 'Gold';
+  const isOnline = course.course_type === 'Online';
   const hasDiscount = course.discounted_price && course.discounted_price < course.price;
 
   return (
     <Card
-      className={`border-none shadow-md hover:shadow-xl transition-all relative ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : ''}`}
+      className={`border-none shadow-md hover:shadow-xl transition-all relative overflow-hidden ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-white'}`}
     >
+      {/* Corner Banners */}
       {course.bestseller && (
-        <Badge className="absolute -top-2 -left-2 bg-green-500 text-white transform -rotate-12">
-          Bestseller
-        </Badge>
+        <div className="absolute top-0 left-0">
+          <div className="absolute transform -rotate-45 bg-green-500 text-center text-white font-semibold py-1 left-[-34px] top-[32px] w-[170px]">
+            Bestseller
+          </div>
+        </div>
       )}
       {hasDiscount && (
-         <Badge className="absolute -top-2 -right-2 bg-red-500 text-white">
-          -{Math.round(((course.price - course.discounted_price!) / course.price) * 100)}%
-        </Badge>
+        <div className="absolute top-0 right-0">
+          <div className="absolute transform rotate-45 bg-red-500 text-center text-white font-semibold py-1 right-[-34px] top-[32px] w-[170px]">
+            {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
+          </div>
+        </div>
       )}
-      <CardHeader>
+      {isOnline && !course.bestseller && (
+        <div className="absolute top-0 left-0">
+          <div className="absolute transform -rotate-45 bg-blue-500 text-center text-white font-semibold py-1 left-[-34px] top-[32px] w-[170px]">
+            Online Batch
+          </div>
+        </div>
+      )}
+
+
+      <CardHeader className="pt-12">
         <div className="flex justify-between items-start mb-2">
-          <CardTitle className="text-xl">
-            {course.title}
+          <CardTitle className="text-xl flex items-center flex-wrap">
+            <span className="mr-2">{course.title}</span>
             {isPremium && (
-              <Badge className="ml-2 bg-amber-500 text-white">
+              <Badge variant="default" className="bg-amber-500 text-white">
                 <Star className="h-3 w-3 mr-1 fill-current" /> Premium
               </Badge>
             )}
@@ -66,15 +81,15 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
           </ul>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center">
-        <div className="flex items-center">
+      <CardFooter className="flex justify-between items-center bg-gray-50 p-4">
+        <div className="flex items-baseline">
           {hasDiscount ? (
             <>
-              <span className={`text-xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.discounted_price}</span>
+              <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.discounted_price}</span>
               <span className="ml-2 text-gray-500 line-through">₹{course.price}</span>
             </>
           ) : (
-            <span className={`text-xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.price}</span>
+            <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.price}</span>
           )}
         </div>
         <div className="flex items-center space-x-2">
