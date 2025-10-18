@@ -1,4 +1,3 @@
-
 export interface Course {
   id: string;
   title: string;
@@ -15,6 +14,7 @@ export interface Course {
   created_at: string;
   subject: string | null;
   start_date: string | null;
+  end_date: string | null;
   course_type: string | null;
   branch: string | null;
   level: string | null;
