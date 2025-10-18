@@ -2,13 +2,21 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
+
+// Import UI components for building the page layout
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+
+// Import icons for a richer user experience
 import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
+
+// Import layout components like NavBar and Footer
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+
+// Import specialized components for the course detail page
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
@@ -17,9 +25,9 @@ import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
 import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
-import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide'; // Make sure to create this component
+import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 
-// Define the types for the data we'll be fetching
+// Define the TypeScript interfaces for the data we expect to fetch
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -33,25 +41,29 @@ interface CourseFaq {
 }
 
 const CourseDetail: React.FC = () => {
+  // Get the courseId from the URL parameters
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+
+  // State hooks to manage course data, loading status, and errors
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Create refs for each section
+  // Refs for each content section to enable smooth scrolling with the sticky navigation
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
     ssp: useRef<HTMLDivElement>(null),
-    access: useRef<HTMLDivElement>(null), // Ref for the new section
+    access: useRef<HTMLDivElement>(null),
     faqs: useRef<HTMLDivElement>(null),
   };
 
+  // useEffect hook to fetch all course data when the component mounts or courseId changes
   useEffect(() => {
     const fetchCourseData = async () => {
       if (!courseId) {
@@ -64,6 +76,7 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         setError(null);
 
+        // Fetch course, schedule, and FAQs data in parallel for better performance
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule' as any).select('*').eq('course_id', courseId),
@@ -92,6 +105,7 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
+  // Display a loading skeleton while data is being fetched
   if (loading) {
     return (
       <>
@@ -117,15 +131,7 @@ const CourseDetail: React.FC = () => {
     );
   }
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'TBA';
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-    } catch {
-      return dateString;
-    }
-  };
-
+  // Display an error message if fetching fails or the course is not found
   if (error || !course) {
     return (
       <>
@@ -150,86 +156,74 @@ const CourseDetail: React.FC = () => {
     );
   }
 
+  // Define the tabs for the sticky navigation bar
   const tabs = [
     { id: 'features', label: 'Features' },
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
     { id: 'ssp', label: 'SSP Portal' },
-    { id: 'access', label: 'Course Access' }, // New tab
+    { id: 'access', label: 'Course Access' },
     { id: 'faqs', label: 'FAQs' },
   ];
 
+  // Render the main course detail page
   return (
     <>
       <NavBar />
       <main className="min-h-screen pt-20 bg-background">
         <div className="container mx-auto px-4 py-4">
-          <Button onClick={() => navigate('/courses')} variant="ghost" size="sm">
+          <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Courses
           </Button>
         </div>
 
-        {/* Header Section */}
+        {/* Header Section: Displays the main course title, description, and stats */}
         <div className="shiny-blue-bg border-b">
-          <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+          <div className="container mx-auto px-4 py-8">
             <div className="max-w-4xl">
-              <div className="flex flex-wrap gap-2 mb-3 md:mb-4">
-                {course.exam_category && <Badge variant="secondary" className="text-xs md:text-sm">{course.exam_category}</Badge>}
-                {course.level && <Badge variant="outline" className="text-xs md:text-sm">{course.level}</Badge>}
-                {course.bestseller && <Badge className="bg-amber-500 text-white text-xs md:text-sm">⭐ Best Seller</Badge>}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {course.exam_category && <Badge variant="secondary">{course.exam_category}</Badge>}
+                {course.level && <Badge variant="outline">{course.level}</Badge>}
+                {course.bestseller && <Badge className="bg-amber-500 text-white">⭐ Best Seller</Badge>}
               </div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 md:mb-4 text-white leading-tight">{course.title}</h1>
-              <p className="text-base md:text-lg text-white/90 mb-4 md:mb-6">{course.description}</p>
-              <div className="flex flex-wrap items-center gap-3 md:gap-6 text-xs md:text-sm text-white">
-                <div className="flex items-center gap-1.5 md:gap-2"><Star className="h-4 w-4 md:h-5 md:w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-white/80">rating</span></div>
-                <div className="flex items-center gap-1.5 md:gap-2"><Users className="h-4 w-4 md:h-5 md:w-5 text-white/80" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-white/80">students</span></div>
-                <div className="flex items-center gap-1.5 md:gap-2"><Calendar className="h-4 w-4 md:h-5 md:w-5 text-white/80" /><span className="text-white/80">Starts: {formatDate(course.start_date)}</span></div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{course.title}</h1>
+              <p className="text-md md:text-lg text-white/90 mb-6">{course.description}</p>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 sm:gap-6 text-sm text-white">
+                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-white/80">rating</span></div>
+                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-white/80" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-white/80">students</span></div>
+                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-white/80" /><span className="text-white/80">Starts: {new Date(course.start_date || "").toLocaleDateString()}</span></div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Sticky Navigation: Allows users to jump to different sections */}
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
-        <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
-          <div className="grid lg:grid-cols-3 gap-6 md:gap-8 lg:gap-12">
+        {/* Main Content Area */}
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             
-            {/* Left Column: Course Content */}
-            <div className="lg:col-span-2 space-y-8 md:space-y-10 lg:space-y-12">
-              <div id="features" ref={sectionRefs.features} className="scroll-mt-24 md:scroll-mt-32"><FeaturesSection course={course} /></div>
-              <div id="about" ref={sectionRefs.about} className="scroll-mt-24 md:scroll-mt-32"><AboutSection course={course} /></div>
-              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-24 md:scroll-mt-32"><MoreDetailsSection /></div>
-              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-24 md:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-24 md:scroll-mt-32"><SSPPortalSection /></div>
-              <div id="access" ref={sectionRefs.access} className="scroll-mt-24 md:scroll-mt-32"><CourseAccessGuide /></div>
-              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-24 md:scroll-mt-32">
-                <FAQSection faqs={faqs} />
-              </div>
-            </div>
-
-            {/* Right Column: Enrollment Card - Hidden on mobile, shown as sticky on desktop */}
-            <div className="hidden lg:block lg:col-span-1">
-              <div className="sticky top-24">
+            {/* Right Column: Contains the sticky enrollment card. It's ordered first on mobile for better UX. */}
+            <div className="lg:col-span-1 lg:order-last">
+              <div className="lg:sticky top-28">
                 <EnrollmentCard course={course} />
               </div>
             </div>
 
-          </div>
-          
-          {/* Mobile Enrollment Card - Fixed at bottom on mobile */}
-          <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t shadow-lg p-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex flex-col">
-                <span className="text-2xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
-                {course.discounted_price && (
-                  <span className="text-sm text-gray-500 line-through">₹{course.price}</span>
-                )}
+            {/* Left Column: Contains all the detailed sections about the course. */}
+            <div className="lg:col-span-2 space-y-12">
+              <div id="features" ref={sectionRefs.features} className="scroll-mt-24"><FeaturesSection course={course} /></div>
+              <div id="about" ref={sectionRefs.about} className="scroll-mt-24"><AboutSection course={course} /></div>
+              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-24"><MoreDetailsSection /></div>
+              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-24"><ScheduleSection scheduleData={scheduleData} /></div>
+              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-24"><SSPPortalSection /></div>
+              <div id="access" ref={sectionRefs.access} className="scroll-mt-24"><CourseAccessGuide /></div>
+              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-24">
+                <FAQSection faqs={faqs} />
               </div>
-              <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
-                <Button size="lg" className="w-full">Enroll Now</Button>
-              </a>
             </div>
           </div>
         </div>
