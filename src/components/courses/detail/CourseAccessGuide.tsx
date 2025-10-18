@@ -5,18 +5,18 @@ import { CheckCircle, HelpCircle } from 'lucide-react';
 const CourseAccessGuide = () => {
   return (
     <div className="my-8">
-        <h2 className="text-3xl font-bold text-center mb-6">How to Access Your Course</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6">How to Access Your Course</h2>
         <Card className="bg-gray-50 border-gray-200 overflow-hidden">
-            <CardContent className="px-6 md:px-8 py-8">
+            <CardContent className="px-4 sm:px-6 md:px-8 py-8">
                 {/* Flowchart */}
-                <ol className="relative border-l-2 border-gray-200 space-y-10 pl-8 ml-4">
+                <ol className="relative border-l-2 border-gray-200 space-y-10 ml-2 sm:ml-4 pl-6 sm:pl-8">
                     {/* Step 1 */}
                     <li className="flex items-start">
                         <span className="absolute -left-5 flex items-center justify-center bg-green-500 rounded-full h-10 w-10 text-white font-bold text-lg">
                             1
                         </span>
-                        <div className="ml-6">
-                            <h3 className="font-semibold text-xl">Go to Your Profile Dashboard</h3>
+                        <div className="ml-4 sm:ml-6">
+                            <h3 className="font-semibold text-lg sm:text-xl">Go to Your Profile Dashboard</h3>
                             <p className="text-gray-600 mt-1">After enrolling, navigate to your personal dashboard.</p>
                         </div>
                     </li>
@@ -25,8 +25,8 @@ const CourseAccessGuide = () => {
                         <span className="absolute -left-5 flex items-center justify-center bg-green-500 rounded-full h-10 w-10 text-white font-bold text-lg">
                             2
                         </span>
-                        <div className="ml-6">
-                            <h3 className="font-semibold text-xl">Click on the SSP Portal Block</h3>
+                        <div className="ml-4 sm:ml-6">
+                            <h3 className="font-semibold text-lg sm:text-xl">Click on the SSP Portal Block</h3>
                             <p className="text-gray-600 mt-1">Find and click the SSP Portal to proceed.</p>
                         </div>
                     </li>
@@ -35,8 +35,8 @@ const CourseAccessGuide = () => {
                         <span className="absolute -left-5 flex items-center justify-center bg-green-500 rounded-full h-10 w-10 text-white font-bold text-lg">
                             3
                         </span>
-                        <div className="ml-6">
-                            <h3 className="font-semibold text-xl">Login with Registered Email</h3>
+                        <div className="ml-4 sm:ml-6">
+                            <h3 className="font-semibold text-lg sm:text-xl">Login with Registered Email</h3>
                             <p className="text-gray-600 mt-1">Use the same email you used during enrollment to log in.</p>
                         </div>
                     </li>
@@ -45,8 +45,8 @@ const CourseAccessGuide = () => {
                         <span className="absolute -left-5 flex items-center justify-center bg-green-500 rounded-full h-10 w-10 text-white">
                             <CheckCircle className="h-6 w-6"/>
                         </span>
-                        <div className="ml-6">
-                            <h3 className="font-semibold text-xl">Access Granted!</h3>
+                        <div className="ml-4 sm:ml-6">
+                            <h3 className="font-semibold text-lg sm:text-xl">Access Granted!</h3>
                             <p className="text-gray-600 mt-1">Your batch access will be updated within 2 minutes.</p>
                         </div>
                     </li>
@@ -66,11 +66,10 @@ const CourseAccessGuide = () => {
                     </div>
                 </div>
 
-                {/* Support Email Block */}
-                <div className="text-center mt-12 p-4 bg-blue-50 border border-blue-100 rounded-lg">
-                    <p className="flex items-center justify-center text-md text-gray-800">
-                        <HelpCircle className="h-5 w-5 mr-2 text-blue-500"/>
-                        Facing any issues? Please reach out to us at:
+                {/* CORRECTED SUPPORT EMAIL SECTION: No longer in a block */}
+                <div className="text-center mt-12">
+                    <p className="text-md text-gray-700">
+                        Facing any issues? Please reach out to us at: 
                         <a href="mailto:help.unknowniitians@gmail.com" className="font-semibold text-royal hover:underline ml-1">
                             help.unknowniitians@gmail.com
                         </a>
