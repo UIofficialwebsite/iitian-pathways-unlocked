@@ -17,15 +17,8 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
 
   return (
     <Card
-      className={`border-none shadow-md hover:shadow-xl transition-all relative overflow-hidden ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-white'}`}
+      className={`border-none shadow-md hover:shadow-xl transition-all relative overflow-hidden flex flex-col ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-white'}`}
     >
-      {/* Bestseller Badge - Folded Corner Style */}
-      {course.bestseller && (
-        <div className="absolute left-[-34px] top-[32px] w-[150px] transform -rotate-45 bg-green-500 text-center text-white font-semibold py-1">
-          Bestseller
-        </div>
-      )}
-
       <CardHeader className="pt-8">
         <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-xl flex items-center flex-wrap">
@@ -40,9 +33,9 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
             {course.level ? course.level.charAt(0).toUpperCase() + course.level.slice(1) : ''}
           </Badge>
         </div>
-        <CardDescription className="text-base">{course.description}</CardDescription>
+        <CardDescription className="text-base min-h-[60px]">{course.description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-grow">
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p className="text-sm text-gray-500 flex items-center"><CalendarDays className="h-4 w-4 mr-2" /> Batch Starts</p>
@@ -63,7 +56,7 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
           </ul>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center bg-gray-50 p-4">
+      <CardFooter className="flex justify-between items-center bg-gray-50 p-4 mt-auto">
         <div className="flex items-baseline">
           {hasDiscount ? (
             <>
