@@ -1,9 +1,10 @@
-
 import React from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star } from "lucide-react";
+import { Star, CalendarDays, Languages } from "lucide-react";
 import EnrollButton from "@/components/EnrollButton";
+import { Button } from "@/components/ui/button";
 import { Course } from "@/components/admin/courses/types";
 
 interface IITMCourseCardProps {
@@ -12,11 +13,22 @@ interface IITMCourseCardProps {
 
 const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
   const isPremium = course.course_type === 'Gold';
+  const hasDiscount = course.discounted_price && course.discounted_price < course.price;
 
   return (
-    <Card 
-      className={`border-none shadow-md hover:shadow-xl transition-all ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : ''}`}
+    <Card
+      className={`border-none shadow-md hover:shadow-xl transition-all relative ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : ''}`}
     >
+      {course.bestseller && (
+        <Badge className="absolute -top-2 -left-2 bg-green-500 text-white transform -rotate-12">
+          Bestseller
+        </Badge>
+      )}
+      {hasDiscount && (
+         <Badge className="absolute -top-2 -right-2 bg-red-500 text-white">
+          -{Math.round(((course.price - course.discounted_price!) / course.price) * 100)}%
+        </Badge>
+      )}
       <CardHeader>
         <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-xl">
@@ -36,15 +48,15 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
       <CardContent>
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <p className="text-sm text-gray-500">Duration</p>
-            <p className="font-medium">{course.duration}</p>
+            <p className="text-sm text-gray-500 flex items-center"><CalendarDays className="h-4 w-4 mr-2" /> Batch Starts</p>
+            <p className="font-medium">{course.start_date ? new Date(course.start_date).toLocaleDateString() : 'TBA'}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Enrolled</p>
-            <p className="font-medium">{course.students_enrolled || 0}+ students</p>
+            <p className="text-sm text-gray-500 flex items-center"><Languages className="h-4 w-4 mr-2" /> Language</p>
+            <p className="font-medium">{course.language || 'English'}</p>
           </div>
         </div>
-        
+
         <div className="space-y-2">
           <p className="text-sm font-medium text-gray-700">Key Features:</p>
           <ul className="list-disc pl-5 space-y-1">
@@ -56,7 +68,7 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
       </CardContent>
       <CardFooter className="flex justify-between items-center">
         <div className="flex items-center">
-          {course.discounted_price && course.discounted_price < course.price ? (
+          {hasDiscount ? (
             <>
               <span className={`text-xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.discounted_price}</span>
               <span className="ml-2 text-gray-500 line-through">₹{course.price}</span>
@@ -65,14 +77,19 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
             <span className={`text-xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.price}</span>
           )}
         </div>
-        <EnrollButton 
-          courseId={course.id}
-          enrollmentLink={course.enroll_now_link || undefined}
-          coursePrice={course.discounted_price || course.price}
-          className={isPremium ? 
-            "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" : 
-            "bg-royal hover:bg-royal-dark text-white"}
-        />
+        <div className="flex items-center space-x-2">
+            <Link to={`/courses/${course.id}`}>
+                <Button variant="outline">Know More</Button>
+            </Link>
+            <EnrollButton
+              courseId={course.id}
+              enrollmentLink={course.enroll_now_link || undefined}
+              coursePrice={course.discounted_price || course.price}
+              className={isPremium ?
+                "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
+                "bg-royal hover:bg-royal-dark text-white"}
+            />
+        </div>
       </CardFooter>
     </Card>
   );
