@@ -1,34 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
+import { Separator } from '@/components/ui/separator';
 
 interface EnrollmentCardProps {
     course: Course;
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
-    const [startDateVisible, setStartDateVisible] = useState(false);
+    const [detailsVisible, setDetailsVisible] = useState(false);
+    const cardRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const handleScroll = () => {
-            // Triggers the animation after the user scrolls down a little
-            if (window.scrollY > 50) {
-                setStartDateVisible(true);
-            } else {
-                setStartDateVisible(false);
+            if (cardRef.current) {
+                const { top } = cardRef.current.getBoundingClientRect();
+                // Start animation when the top of the card is at or above the top of the viewport
+                setDetailsVisible(top <= 0);
             }
         };
 
         window.addEventListener('scroll', handleScroll);
-        // Cleanup the event listener on component unmount
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-        };
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
-        <div className="sticky top-24">
+        <div className="sticky top-24" ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg">
                     <CardHeader className="p-0">
@@ -42,26 +40,28 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                             )}
                         </div>
 
-                        {/* Static details that are always visible */}
-                        <div className="space-y-2 mb-4">
-                            <h4 className="font-semibold text-gray-700">{course.degree_name} - {course.level}</h4>
-                            <div className="text-gray-600">
-                                <span>Language: {course.language}</span>
-                            </div>
-                        </div>
-
-                        {/* Animated start date */}
-                        <div
-                            className={`transition-all duration-500 ease-in-out transform ${
-                                startDateVisible ? 'translate-y-0 opacity-100' : '-translate-y-4 opacity-0'
-                            }`}
+                        {/* Animated details section */}
+                        <div 
+                            className="transition-all ease-in-out duration-500 overflow-hidden"
+                            style={{ 
+                                maxHeight: detailsVisible ? '200px' : '0',
+                                opacity: detailsVisible ? 1 : 0,
+                            }}
                         >
-                            <div className="text-gray-600 font-medium">
-                                <span>Starts on: {new Date(course.start_date).toLocaleDateString()}</span>
+                            <div className="space-y-3 pt-2 pb-4">
+                                <h4 className="font-semibold text-gray-700">{course.branch} - {course.level}</h4>
+                                <p className="text-sm text-gray-600">
+                                    Starts on {new Date(course.start_date).toLocaleDateString()} &bull; Ends on {new Date(course.end_date).toLocaleDateString()}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                    Language: {course.language}
+                                </p>
                             </div>
                         </div>
+                        
+                        <Separator className="my-4" />
 
-                        <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block mt-6">
+                        <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block">
                             <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                         </a>
                     </CardContent>
