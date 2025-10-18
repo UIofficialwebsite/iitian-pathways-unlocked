@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle, HelpCircle } from 'lucide-react';
 
 const CourseAccessGuide = () => {
@@ -7,10 +7,8 @@ const CourseAccessGuide = () => {
     <div className="my-8">
         <h2 className="text-3xl font-bold text-center mb-6">How to Access Your Course</h2>
         <Card className="bg-gray-50 border-gray-200 overflow-hidden">
-            <CardHeader>
-                <CardTitle className="text-2xl text-center">Enrolled for our Premium Courses? Here's what's next.</CardTitle>
-            </CardHeader>
-            <CardContent className="px-8 py-6">
+            <CardContent className="px-6 md:px-8 py-8">
+                {/* Flowchart */}
                 <ol className="relative border-l-2 border-gray-200 space-y-10 pl-8 ml-4">
                     {/* Step 1 */}
                     <li className="flex items-start">
@@ -56,22 +54,23 @@ const CourseAccessGuide = () => {
 
                 {/* Video Embed */}
                 <div className="mt-12">
-                    <div className="aspect-w-16 aspect-h-9 w-full">
-                        <iframe 
-                            src="https://www.youtube.com/embed/gQH0_Rp3Tuw?si=2h6AR1z0iVSFM3bS&rel=0" 
-                            title="Dashboard Walkthrough" 
-                            frameBorder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    <div className="relative mx-auto max-w-3xl" style={{ paddingBottom: '56.25%', height: 0 }}>
+                        <iframe
+                            src="https://www.youtube.com/embed/gQH0_Rp3Tuw?si=2h6AR1z0iVSFM3bS&rel=0"
+                            title="Dashboard Walkthrough"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                             allowFullScreen
-                            className="w-full h-full rounded-lg shadow-xl"
+                            className="absolute top-0 left-0 w-full h-full rounded-lg shadow-xl"
                         ></iframe>
                     </div>
                 </div>
 
-                {/* Support Email */}
-                <div className="text-center mt-10">
-                    <p className="text-md text-gray-700">
-                        Facing any issues? Please reach out to us at: 
+                {/* Support Email Block */}
+                <div className="text-center mt-12 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                    <p className="flex items-center justify-center text-md text-gray-800">
+                        <HelpCircle className="h-5 w-5 mr-2 text-blue-500"/>
+                        Facing any issues? Please reach out to us at:
                         <a href="mailto:help.unknowniitians@gmail.com" className="font-semibold text-royal hover:underline ml-1">
                             help.unknowniitians@gmail.com
                         </a>
