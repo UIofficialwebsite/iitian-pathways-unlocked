@@ -57,15 +57,15 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
             "bg-white/80 backdrop-blur-lg border-b z-30 transition-all duration-300",
             isSticky ? "sticky top-16 shadow-md" : "relative"
         )}>
-            <div className="container mx-auto px-4">
-                <div className="flex justify-start space-x-2 md:space-x-8 overflow-x-auto">
+            <div className="container mx-auto px-3 md:px-4">
+                <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
                     {/* This now correctly maps over the 'tabs' prop, making it dynamic */}
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => scrollToSection(tab.id)}
                             className={cn(
-                                "py-4 px-2 md:px-4 text-sm md:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap",
+                                "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap flex-shrink-0",
                                 activeTab === tab.id
                                     ? "border-blue-600 text-blue-600"
                                     : "border-transparent text-gray-600 hover:text-blue-600"

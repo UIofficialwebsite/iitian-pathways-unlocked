@@ -40,9 +40,9 @@ interface FAQSectionProps {
 
 const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
   return (
-    <section>
-      <h2 className="text-3xl font-bold mb-8">Frequently Asked Questions</h2>
-      <Accordion type="single" collapsible className="w-full space-y-4">
+    <section className="pb-20 lg:pb-0">
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Frequently Asked Questions</h2>
+      <Accordion type="single" collapsible className="w-full space-y-3 md:space-y-4">
         {faqs.map((faq, index) => (
           <AccordionItem
             value={`item-${index}`}
@@ -51,12 +51,12 @@ const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
             className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
           >
             <AccordionTrigger
-              className="text-lg text-left font-semibold text-blue-900 px-6 py-4 hover:no-underline"
+              className="text-sm md:text-base lg:text-lg text-left font-semibold text-blue-900 px-4 md:px-6 py-3 md:py-4 hover:no-underline"
             >
               {faq.question}
             </AccordionTrigger>
             <AccordionContent
-              className="px-6 pt-0 pb-5 text-base text-slate-700"
+              className="px-4 md:px-6 pt-0 pb-4 md:pb-5 text-sm md:text-base text-slate-700"
             >
               {faq.answer}
             </AccordionContent>

@@ -11,16 +11,16 @@ const MoreDetailsSection: React.FC = () => {
   ];
 
   return (
-    <section className="border-t pt-12">
-      <h2 className="text-3xl font-bold mb-6">More Details</h2>
+    <section className="border-t pt-6 md:pt-8 lg:pt-12">
+      <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">More Details</h2>
       
-      <ul className="space-y-3">
+      <ul className="space-y-2.5 md:space-y-3">
         {details.map((detail, index) => (
-          <li key={index} className="flex items-start gap-3">
-            <span className="text-primary text-lg mt-1 flex-shrink-0">
-              <Check className="h-5 w-5" />
+          <li key={index} className="flex items-start gap-2 md:gap-3">
+            <span className="text-primary mt-0.5 md:mt-1 flex-shrink-0">
+              <Check className="h-4 w-4 md:h-5 md:w-5" />
             </span>
-            <span className="text-muted-foreground leading-relaxed">
+            <span className="text-muted-foreground leading-relaxed text-sm md:text-base">
               {detail}
             </span>
           </li>

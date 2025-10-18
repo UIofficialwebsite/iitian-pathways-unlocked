@@ -175,6 +175,16 @@ img {
   overflow: hidden;
 }
 
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 .animate-marq {
   animation: marq var(--duration, 16s) linear infinite;
 }
