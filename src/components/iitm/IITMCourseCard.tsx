@@ -13,38 +13,20 @@ interface IITMCourseCardProps {
 
 const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
   const isPremium = course.course_type === 'Gold';
-  const isOnline = course.course_type === 'Online';
   const hasDiscount = course.discounted_price && course.discounted_price < course.price;
 
   return (
     <Card
       className={`border-none shadow-md hover:shadow-xl transition-all relative overflow-hidden ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-white'}`}
     >
-      {/* Corner Banners */}
+      {/* Bestseller Badge - Folded Corner Style */}
       {course.bestseller && (
-        <div className="absolute top-0 left-0">
-          <div className="absolute transform -rotate-45 bg-green-500 text-center text-white font-semibold py-1 left-[-34px] top-[32px] w-[170px]">
-            Bestseller
-          </div>
-        </div>
-      )}
-      {hasDiscount && (
-        <div className="absolute top-0 right-0">
-          <div className="absolute transform rotate-45 bg-red-500 text-center text-white font-semibold py-1 right-[-34px] top-[32px] w-[170px]">
-            {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
-          </div>
-        </div>
-      )}
-      {isOnline && !course.bestseller && (
-        <div className="absolute top-0 left-0">
-          <div className="absolute transform -rotate-45 bg-blue-500 text-center text-white font-semibold py-1 left-[-34px] top-[32px] w-[170px]">
-            Online Batch
-          </div>
+        <div className="absolute left-[-34px] top-[32px] w-[150px] transform -rotate-45 bg-green-500 text-center text-white font-semibold py-1">
+          Bestseller
         </div>
       )}
 
-
-      <CardHeader className="pt-12">
+      <CardHeader className="pt-8">
         <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-xl flex items-center flex-wrap">
             <span className="mr-2">{course.title}</span>
@@ -93,6 +75,11 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
           )}
         </div>
         <div className="flex items-center space-x-2">
+           {hasDiscount && (
+             <Badge variant="destructive">
+               {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
+             </Badge>
+           )}
             <Link to={`/courses/${course.id}`}>
                 <Button variant="outline">Know More</Button>
             </Link>
