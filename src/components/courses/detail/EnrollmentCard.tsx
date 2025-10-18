@@ -12,12 +12,18 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
+    // Calculates the discount percentage
+    const discountPercentage = course.price && course.discounted_price
+        ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
+        : 0;
+
     useEffect(() => {
         const handleScroll = () => {
-            if (cardRef.current) {
-                const { top } = cardRef.current.getBoundingClientRect();
-                // Start animation when the top of the card is at or above the top of the viewport
-                setDetailsVisible(top <= 0);
+            // Triggers the animation as soon as the user scrolls down a bit
+            if (window.scrollY > 100) {
+                setDetailsVisible(true);
+            } else {
+                setDetailsVisible(false);
             }
         };
 
@@ -33,17 +39,27 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                         <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
                     <CardContent className="p-6">
-                        <div className="flex items-baseline mb-4">
-                            <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-baseline">
+                                <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
+                                {course.discounted_price && (
+                                    <span className="text-gray-500 line-through ml-2">₹{course.price}</span>
+                                )}
+                            </div>
                             {course.discounted_price && (
-                                <span className="text-gray-500 line-through ml-2">₹{course.price}</span>
+                                <div className="relative">
+                                    <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
+                                        {discountPercentage}% OFF
+                                    </div>
+                                    <div className="absolute top-1/2 -left-2 transform -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-green-500"></div>
+                                </div>
                             )}
                         </div>
 
                         {/* Animated details section */}
-                        <div 
+                        <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
-                            style={{ 
+                            style={{
                                 maxHeight: detailsVisible ? '200px' : '0',
                                 opacity: detailsVisible ? 1 : 0,
                             }}
@@ -58,7 +74,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
                                 </p>
                             </div>
                         </div>
-                        
+
                         <Separator className="my-4" />
 
                         <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block">
