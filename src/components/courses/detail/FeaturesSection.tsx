@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { Video, Users, Clock, Award, BookOpen, Headphones, CheckCircle } from "lucide-react";
+import { Video, Users, BookOpen, Headphones, CheckCircle, WalletMinimal, UserCheck } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 
 interface FeaturesSectionProps {
