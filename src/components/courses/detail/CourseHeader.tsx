@@ -1,29 +1,72 @@
-import React from 'react';
+import { FC } from 'react';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Star, Clock, Users, BookOpen } from 'lucide-react';
 import { Course } from '@/components/admin/courses/types';
 
 interface CourseHeaderProps {
-    course: Course;
+  course: Course;
 }
 
-const CourseHeader: React.FC<CourseHeaderProps> = ({ course }) => {
-    return (
-        <div className="relative py-16 md:py-24 overflow-hidden shiny-blue-bg">
-            <div className="container mx-auto px-4 relative z-10">
-                <div className="max-w-3xl">
-                    <span className="bg-white/90 backdrop-blur-sm text-blue-600 font-semibold text-sm px-4 py-1 rounded-full shadow-md mb-4 inline-block">
-                        Online
-                    </span>
-                    {/* Text colors are now dark for readability on the light background */}
-                    <h1 className="text-4xl md:text-5xl font-bold leading-tight text-gray-900">{course.title}</h1>
-                    <p className="mt-4 text-lg text-gray-700">{course.description}</p>
-                    <div className="mt-6 flex items-center space-x-6 text-gray-800">
-                        <span className="font-semibold">{course.students_enrolled?.toLocaleString()}+ Students Enrolled</span>
-                        <span className="font-semibold">Rating: {course.rating} ★</span>
-                    </div>
-                </div>
+const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
+  const {
+    title = "Course Title Placeholder",
+    subtitle = "A brief and engaging subtitle for the course.",
+    rating = 4.8,
+    reviewsCount = 250,
+    duration = "8 weeks",
+    studentCount = 5000,
+    category = "Technology",
+    level = "Beginner",
+  } = course;
+
+  return (
+    <header 
+      className="text-white py-12 md:py-20"
+      style={{
+        background: 'linear-gradient(90deg, #1B0034, #2E005E, #3C1361, #44227F)'
+      }}
+    >
+      <div className="container mx-auto px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <Badge 
+            variant="secondary" 
+            className="mb-4 bg-opacity-20 bg-white text-white border-none"
+          >
+            {category}
+          </Badge>
+          <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-[#FFFFFF]">
+            {title}
+          </h1>
+          <p className="text-lg md:text-xl text-[#C7B8EA] mb-8">
+            {subtitle}
+          </p>
+          <div className="flex items-center justify-center flex-wrap gap-x-6 gap-y-2 text-[#A18BD0] mb-8">
+            <div className="flex items-center space-x-1">
+              <Star className="w-5 h-5 text-[#FFBB00]" />
+              <span>{rating} ({reviewsCount} reviews)</span>
             </div>
+            <div className="flex items-center space-x-1">
+              <Clock className="w-5 h-5 text-[#FFBB00]" />
+              <span>{duration}</span>
+            </div>
+            <div className="flex items-center space-x-1">
+              <Users className="w-5 h-5 text-[#FFBB00]" />
+              <span>{studentCount.toLocaleString()} students</span>
+            </div>
+             <div className="flex items-center space-x-1">
+              <BookOpen className="w-5 h-5 text-[#FFBB00]" />
+              <span>{level}</span>
+            </div>
+          </div>
+          <div className="flex justify-center space-x-4">
+            <Button size="lg" variant="luxury">Enroll Now</Button>
+            <Button size="lg" variant="luxury_outline">Watch Preview</Button>
+          </div>
         </div>
-    );
+      </div>
+    </header>
+  );
 };
 
 export default CourseHeader;
