@@ -20,14 +20,14 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
       description: "Personalized attention with limited students per batch"
     },
     {
-      icon: Clock,
-      title: "Flexible Timing",
-      description: "Choose from multiple batch timings that suit your schedule"
+      icon: WalletMinimal,
+      title: "Affordable Learning",
+      description: "High-quality education at prices every student can afford."
     },
     {
-      icon: Award,
-      title: "Certification",
-      description: "Receive a recognized certificate upon course completion"
+      icon: UserCheck,
+      title: "Personal Mentorship",
+      description: "Dedicated mentors to guide you with study plans, career oriented decisions"
     },
     {
       icon: BookOpen,
