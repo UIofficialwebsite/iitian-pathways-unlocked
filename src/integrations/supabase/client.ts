@@ -1,13 +1,26 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-// Directly read the full URL and the key from the environment variables.
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+const realtimeUrl = import.meta.env.VITE_SUPABASE_REALTIME_URL;
 
-// This check is important. It will tell us if the environment variables are not being loaded correctly.
-if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('Supabase environment variables (VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY) are not defined.');
+if (!supabaseUrl || !supabaseKey || !realtimeUrl) {
+  throw new Error('Supabase environment variables are not fully defined. Check VITE_SUPABASE_URL, VITE_SUPABASE_PUBLISHABLE_KEY, and VITE_SUPABASE_REALTIME_URL.');
 }
 
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+export const supabase = createClient<Database>(
+  supabaseUrl,
+  supabaseKey,
+  {
+    // This is the crucial part.
+    // It tells Supabase to use a different URL for real-time connections.
+    realtime: {
+      params: {
+        eventsPerSecond: 10,
+      },
+      // This overrides the WebSocket URL
+      transport: new WebSocket(realtimeUrl),
+    },
+  }
+);
