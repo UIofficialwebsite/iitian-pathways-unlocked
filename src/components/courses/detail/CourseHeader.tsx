@@ -24,7 +24,7 @@ const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
     <header 
       className="text-white py-12 md:py-20"
       style={{
-        background: 'linear-gradient(90deg, #1B0034, #2E005E, #3C1361, #44227F)'
+        background: 'linear-gradient(90deg, #0F2027 0%, #203A43 50%, #2C5364 100%)'
       }}
     >
       <div className="container mx-auto px-4">
