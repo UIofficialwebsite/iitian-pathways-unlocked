@@ -21,11 +21,11 @@ const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
   } = course;
 
   return (
-    <header className="relative overflow-hidden text-white py-16 md:py-24 bg-gradient-to-r from-[#0F2027] via-[#203A43] to-[#2C5364]">
+    <header className="relative overflow-hidden text-white py-16 md:py-24 bg-gradient-to-r from-[#1D2B64] to-[#3E517A]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.05),transparent)]" />
       <div className="container relative z-10 mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <Badge className="mb-5 bg-white/10 text-[#FFD700] border-none">
+          <Badge className="mb-5 bg-white/15 text-[#FFD700] border-none">
             {category}
           </Badge>
 
@@ -33,11 +33,11 @@ const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
             {title}
           </h1>
 
-          <p className="text-lg md:text-xl text-[#C7B8EA] mb-8 opacity-90">
+          <p className="text-lg md:text-xl text-[#E0E0E0] mb-8 opacity-90">
             {subtitle}
           </p>
 
-          <div className="flex items-center justify-center flex-wrap gap-x-6 gap-y-2 text-[#A18BD0] mb-10">
+          <div className="flex items-center justify-center flex-wrap gap-x-6 gap-y-2 text-[#B0B0B0] mb-10">
             <div className="flex items-center space-x-1">
               <Star className="w-5 h-5 text-[#FFD700]" />
               <span>{rating} ({reviewsCount} reviews)</span>
