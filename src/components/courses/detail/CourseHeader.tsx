@@ -11,12 +11,11 @@ interface CourseHeaderProps {
 const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
   const {
     title = "Course Title Placeholder",
-    subtitle = "A brief and engaging subtitle for the course.",
+    description = "A brief and engaging subtitle for the course.",
     rating = 4.8,
-    reviewsCount = 250,
     duration = "8 weeks",
-    studentCount = 5000,
-    category = "Technology",
+    students_enrolled = 5000,
+    exam_category = "Technology",
     level = "Beginner",
   } = course;
 
@@ -33,18 +32,18 @@ const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
             variant="secondary" 
             className="mb-4 bg-opacity-20 bg-white text-white border-none"
           >
-            {category}
+            {exam_category}
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-[#FFFFFF]">
             {title}
           </h1>
           <p className="text-lg md:text-xl text-[#C7B8EA] mb-8">
-            {subtitle}
+            {description}
           </p>
           <div className="flex items-center justify-center flex-wrap gap-x-6 gap-y-2 text-[#A18BD0] mb-8">
             <div className="flex items-center space-x-1">
               <Star className="w-5 h-5 text-[#FFBB00]" />
-              <span>{rating} ({reviewsCount} reviews)</span>
+              <span>{rating}</span>
             </div>
             <div className="flex items-center space-x-1">
               <Clock className="w-5 h-5 text-[#FFBB00]" />
@@ -52,7 +51,7 @@ const CourseHeader: FC<CourseHeaderProps> = ({ course }) => {
             </div>
             <div className="flex items-center space-x-1">
               <Users className="w-5 h-5 text-[#FFBB00]" />
-              <span>{studentCount.toLocaleString()} students</span>
+              <span>{students_enrolled?.toLocaleString() || 0} students</span>
             </div>
              <div className="flex items-center space-x-1">
               <BookOpen className="w-5 h-5 text-[#FFBB00]" />
