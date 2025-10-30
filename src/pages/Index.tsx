@@ -10,11 +10,13 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 // import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
+import { AnnouncementBar } from "@/components/AnnouncementBar";
 
 const Index = () => {
   return (
     <>
       <NavBar />
+      <AnnouncementBar />
       <HeroCarousel />
       <WelcomeSection />
       <CategoriesSection />
