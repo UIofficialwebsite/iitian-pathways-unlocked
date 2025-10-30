@@ -11,7 +11,6 @@ export const AnnouncementBar = () => {
   const { announcements, loading } = useAnnouncements();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [show, setShow] = useState(true);
-  const [isVisible, setIsVisible] = useState(true);
 
   // Rotate announcements every 8 seconds
   useEffect(() => {
@@ -24,18 +23,9 @@ export const AnnouncementBar = () => {
     return () => clearInterval(interval);
   }, [announcements.length]);
 
-  // Handle scroll behavior
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setIsVisible(scrollPosition < 100);
-    };
+  // Keep announcement bar always visible (removed scroll behavior)
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (loading || announcements.length === 0 || !show || !isVisible) {
+  if (loading || announcements.length === 0 || !show) {
     return null;
   }
 
@@ -48,22 +38,11 @@ export const AnnouncementBar = () => {
 
   const handleClose = () => {
     setShow(false);
-    // If there are more announcements, show the next one after a delay
-    if (announcements.length > 1) {
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % announcements.length);
-        setShow(true);
-      }, 500);
-    }
+    // Remove announcement bar completely when X is clicked
   };
 
   return (
-    <div
-      className={cn(
-        'fixed top-16 left-0 right-0 z-40 transition-all duration-300',
-        isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
-      )}
-    >
+    <div className="fixed top-16 left-0 right-0 z-40 transition-all duration-300">
       <Banner
         show={show}
         onHide={handleClose}

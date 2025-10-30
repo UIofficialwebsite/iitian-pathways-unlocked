@@ -51,7 +51,7 @@ export const useAnnouncements = () => {
       const courseAnnouncements: Announcement[] = (courses || []).map((course) => ({
         id: course.id,
         type: 'course' as const,
-        title: `🎓 ${course.title} - Live Batch Now Open!`,
+        title: `${course.title} - Live Batch Now Open!`,
         description: course.description,
         link: `/course/${course.id}`,
       }));
@@ -59,7 +59,7 @@ export const useAnnouncements = () => {
       const jobAnnouncements: Announcement[] = (jobs || []).map((job) => ({
         id: job.id,
         type: 'job' as const,
-        title: `💼 ${job.title} at ${job.company}`,
+        title: `${job.title} at ${job.company}`,
         description: job.description || undefined,
         link: `/career#${job.id}`,
       }));
