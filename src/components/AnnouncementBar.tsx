@@ -60,38 +60,36 @@ export const AnnouncementBar = () => {
   return (
     <div
       className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        'fixed top-16 left-0 right-0 z-40 transition-all duration-300',
         isVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
       )}
     >
-      <div className="mx-auto max-w-7xl px-4">
-        <Banner
-          show={show}
-          onHide={handleClose}
-          variant={isCourse ? 'premium' : 'info'}
-          title={currentAnnouncement.title}
-          description={
-            announcements.length > 1
-              ? `${currentIndex + 1} of ${announcements.length} announcements`
-              : undefined
-          }
-          showShade={true}
-          closable={true}
-          icon={isCourse ? <Sparkles className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />}
-          action={
-            <Button
-              onClick={handleAction}
-              size="sm"
-              className="inline-flex items-center gap-1"
-              variant="ghost"
-            >
-              {isCourse ? 'Join Now' : 'Apply Now'}
-              <ArrowRight className="h-3 w-3" />
-            </Button>
-          }
-          className="h-[60px] rounded-none border-x-0 border-t-0"
-        />
-      </div>
+      <Banner
+        show={show}
+        onHide={handleClose}
+        variant={isCourse ? 'premium' : 'info'}
+        title={currentAnnouncement.title}
+        description={
+          announcements.length > 1
+            ? `${currentIndex + 1} of ${announcements.length} announcements`
+            : undefined
+        }
+        showShade={true}
+        closable={true}
+        icon={isCourse ? <Sparkles className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />}
+        action={
+          <Button
+            onClick={handleAction}
+            size="sm"
+            className="inline-flex items-center gap-1"
+            variant="ghost"
+          >
+            {isCourse ? 'Join Now' : 'Apply Now'}
+            <ArrowRight className="h-3 w-3" />
+          </Button>
+        }
+        className="h-[60px] rounded-none border-x-0 border-t-0"
+      />
     </div>
   );
 };
