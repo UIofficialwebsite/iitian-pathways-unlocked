@@ -40,9 +40,7 @@ const BranchNotesAccordion = ({
   };
 
   /**
-   * Renders a single note item.
-   * - Always shows the title and description.
-   * - Conditionally shows Share/Download buttons only if a file_link exists.
+   * Renders a single note item as a card, matching the original design.
    */
   const renderNoteItem = (note: Note) => (
     <div key={note.id} className="flex items-center justify-between p-3 border-b last:border-b-0 min-h-[50px]">
@@ -128,29 +126,19 @@ const BranchNotesAccordion = ({
             )}
           </AccordionTrigger>
           <AccordionContent className="p-0">
-            {/* --- LEVEL 2 ACCORDION (WEEK) --- */}
-            <Accordion type="multiple" className="w-full px-4 pb-4 space-y-2">
-              {subjectData.weeks.map((weekData) => (
-                <AccordionItem
-                  value={`week-${weekData.week}`}
-                  key={weekData.week}
-                  className="border rounded-md bg-gray-50"
-                >
-                  <AccordionTrigger className="px-4 py-3 font-semibold text-gray-700">
-                    Week {weekData.week}
-                  </AccordionTrigger>
-                  <AccordionContent className="p-0 bg-white">
-                    {weekData.notes.length > 0 ? (
-                      weekData.notes.map(renderNoteItem)
-                    ) : (
-                      <p className="p-4 text-sm text-gray-500">
-                        No notes available for this week.
-                      </p>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+            {/* --- This is the list of note cards --- */}
+            {/* It maps directly over the notes for this subject */}
+            <div className="px-4 pb-4">
+              {subjectData.notes.length > 0 ? (
+                <div className="border rounded-md bg-white">
+                  {subjectData.notes.map(renderNoteItem)}
+                </div>
+              ) : (
+                <p className="p-4 text-sm text-gray-500 text-center">
+                  No notes available for this subject yet.
+                </p>
+              )}
+            </div>
           </AccordionContent>
         </AccordionItem>
       ))}
