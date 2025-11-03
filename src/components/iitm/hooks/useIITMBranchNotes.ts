@@ -1,120 +1,151 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
+// Type for a single note
 export interface Note {
   id: string;
   title: string;
-  description: string;
-  week: number;
-  downloads: number;
-  subject?: string | null;
-  diploma_specialization?: string | null;
+  description?: string;
+  file_link: string;
+  download_count: number;
+  // Add other note fields if needed
 }
 
-export interface UseIITMBranchNotesResult {
+// Type for a subject row from your new table
+export interface SubjectStructure {
+  id: number;
+  branch: string;
+  level: string;
+  subject_name: string;
+  week: number | null;
+  specialization: string | null;
+  display_order: number;
+}
+
+// Type for a subject that also contains its notes
+export interface SubjectWithNotes extends SubjectStructure {
   notes: Note[];
-  loading: boolean;
-  groupedNotes: Record<string, Note[]>;
-  getCurrentSubjects: (specialization?: string | null) => string[];
-  getAvailableSpecializations: () => string[];
-  reloadNotes: () => void;
 }
 
-export function useIITMBranchNotes(branch: string, level: string): UseIITMBranchNotesResult {
-  const [notes, setNotes] = useState<Note[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [reloadFlag, setReloadFlag] = useState(0);
-  const reloadNotes = useCallback(() => setReloadFlag((x) => x + 1), []);
+// The final data structure: an array of weeks, each containing subjects with their notes
+export interface GroupedData {
+  week: number;
+  subjects: SubjectWithNotes[];
+}
 
-  useEffect(() => {
+// Helper to convert 'data-science' to 'Data Science'
+const formatBranchName = (branch: string) => {
+  return branch
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+export const useIITMBranchNotes = (branch: string, level: string) => {
+  const [loading, setLoading] = useState(false);
+  const [groupedData, setGroupedData] = useState<GroupedData[]>([]);
+  const [availableSpecializations, setAvailableSpecializations] = useState<string[]>([]);
+
+  const reloadNotes = useCallback(async () => {
     setLoading(true);
-    (async () => {
-      try {
-        const { data, error } = await supabase
-          .from("iitm_branch_notes")
-          .select("*")
-          .eq("is_active", true)
-          .eq("branch", branch)
-          .eq("level", level)
-          .order("subject", { ascending: true })
-          .order("week_number", { ascending: true });
+    setGroupedData([]);
+    setAvailableSpecializations([]);
 
-        if (error) {
-          throw error;
-        }
+    try {
+      const dbBranchName = formatBranchName(branch);
 
-        const mappedNotes: Note[] = (data || []).map((n: any) => ({
-          id: n.id,
-          title: n.title,
-          description: n.description || "",
-          week: n.week_number || 1,
-          downloads: n.download_count ?? 0,
-          subject: n.subject || null,
-          diploma_specialization: n.diploma_specialization || null,
-        }));
-        setNotes(mappedNotes);
-      } catch (error) {
-        console.error("Error fetching IITM notes:", error);
-        setNotes([]);
-      } finally {
+      // 1. Fetch the subject structure from the new table
+      const { data: subjectsData, error: subjectsError } = await supabase
+        .from('iitm_bs_subjects')
+        .select('*')
+        .eq('branch', dbBranchName)
+        .eq('level', level)
+        .order('week', { ascending: true })
+        .order('display_order', { ascending: true });
+
+      if (subjectsError) throw subjectsError;
+      if (!subjectsData || subjectsData.length === 0) {
         setLoading(false);
+        return; // No subjects found
       }
-    })();
-  }, [branch, level, reloadFlag]);
+
+      // 2. Fetch all notes for this branch and level
+      const { data: notesData, error: notesError } = await supabase
+        .from('notes')
+        .select('id, title, description, file_link, download_count, subject') // Only select needed fields
+        .eq('exam_type', 'IITM_BS')
+        .eq('branch', dbBranchName)
+        .eq('level', level);
+
+      if (notesError) throw notesError;
+
+      // 3. Process and group the data
+      
+      // Create a quick lookup map for notes
+      const notesMap = new Map<string, Note[]>();
+      if (notesData) {
+        for (const note of notesData) {
+          if (!note.subject) continue;
+          if (!notesMap.has(note.subject)) {
+            notesMap.set(note.subject, []);
+          }
+          notesMap.get(note.subject)!.push(note as Note);
+        }
+      }
+
+      // Create a map to hold subjects grouped by week
+      const weeksMap = new Map<number, SubjectWithNotes[]>();
+      const specializations = new Set<string>();
+
+      for (const subject of subjectsData as SubjectStructure[]) {
+        const week = subject.week || 0; // Group subjects with null week under 'Week 0' or similar
+        
+        // Find notes for this subject
+        const notes = notesMap.get(subject.subject_name) || [];
+
+        // Add to week map
+        if (!weeksMap.has(week)) {
+          weeksMap.set(week, []);
+        }
+        weeksMap.get(week)!.push({ ...subject, notes });
+
+        // Collect specializations
+        if (subject.specialization) {
+          specializations.add(subject.specialization);
+        }
+      }
+
+      // 4. Convert maps to the final array structure
+      const finalGroupedData: GroupedData[] = Array.from(weeksMap.keys())
+        .sort((a, b) => a - b) // Sort by week number
+        .map(week => ({
+          week,
+          subjects: weeksMap.get(week)!,
+        }));
+
+      setGroupedData(finalGroupedData);
+      setAvailableSpecializations(Array.from(specializations));
+      
+    } catch (error: any) {
+      toast({
+        title: "Error fetching notes",
+        description: error.message || "Could not load data from the database.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [branch, level]);
 
   useEffect(() => {
-    const channel = supabase
-      .channel('public:iitm_branch_notes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'iitm_branch_notes' },
-        (payload) => {
-          console.log('Real-time change detected in iitm_branch_notes:', payload);
-          reloadNotes();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    reloadNotes();
   }, [reloadNotes]);
 
-  const getAvailableSpecializations = () => {
-    if (level !== 'diploma') return [];
-    const specializations = new Set<string>();
-    notes.forEach(note => {
-      if (note.diploma_specialization) {
-        specializations.add(note.diploma_specialization);
-      }
-    });
-    return Array.from(specializations).sort();
+  return {
+    loading,
+    groupedData,
+    availableSpecializations,
+    reloadNotes,
   };
-
-  const groupedNotes = notes.reduce((acc: Record<string, Note[]>, note) => {
-    if (note.subject) {
-      if (!acc[note.subject]) {
-        acc[note.subject] = [];
-      }
-      acc[note.subject].push(note);
-    }
-    return acc;
-  }, {});
-
-  const getCurrentSubjects = (specialization?: string | null) => {
-    let filteredNotes = notes;
-    if (level === 'diploma' && specialization && specialization !== 'all') {
-      filteredNotes = notes.filter(n => n.diploma_specialization === specialization);
-    }
-    
-    const subjects = new Set<string>();
-    filteredNotes.forEach(note => {
-        if (note.subject) {
-            subjects.add(note.subject);
-        }
-    });
-    return Array.from(subjects).sort();
-  };
-
-  return { notes, loading, groupedNotes, getCurrentSubjects, getAvailableSpecializations, reloadNotes };
-}
+};
