@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
@@ -17,9 +16,12 @@ const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize state from URL
+  // Initialize state from URL (this part was correct)
   const initialTab = getTabFromUrl(location.pathname);
   const [activeTab, setActiveTab] = useState(initialTab);
+  
+  // **NEW:** Get the filter params from the URL on load
+  const initialParams = getParamsFromUrl(location.pathname);
 
   // Update URL when tab changes
   const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string) => {
@@ -43,7 +45,8 @@ const IITMBSPrep = () => {
 
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    updateUrl(newTab);
+    // When changing tabs, we only update the tab in the URL, not the filters
+    updateUrl(newTab); 
   };
 
   return (
@@ -74,24 +77,36 @@ const IITMBSPrep = () => {
               </TabsList>
             </div>
             
+            {/* **MODIFIED:** Pass 'initialParams' to tab components */}
             <TabsContent value="notes" className="mt-6">
-              <BranchNotesTab onFilterChange={updateUrl} />
+              <BranchNotesTab 
+                initialParams={initialParams} 
+                onFilterChange={updateUrl} 
+              />
             </TabsContent>
             
             <TabsContent value="pyqs" className="mt-6">
-              <PYQsTab onFilterChange={updateUrl} />
+              <PYQsTab 
+                initialParams={initialParams} 
+                onFilterChange={updateUrl} 
+              />
             </TabsContent>
             
             <TabsContent value="syllabus" className="mt-6">
-              <SyllabusTab onFilterChange={updateUrl} />
+              <SyllabusTab 
+                initialParams={initialParams} 
+                onFilterChange={updateUrl} 
+              />
             </TabsContent>
             
             <TabsContent value="tools" className="mt-6">
-              <IITMToolsTab />
+              {/* Assuming IITMToolsTab might also need params */}
+              <IITMToolsTab initialParams={initialParams} />
             </TabsContent>
             
             <TabsContent value="courses" className="mt-6">
-              <PaidCoursesTab />
+              {/* Assuming PaidCoursesTab might also need params */}
+              <PaidCoursesTab initialParams={initialParams} />
             </TabsContent>
             
             <TabsContent value="news" className="mt-6">
