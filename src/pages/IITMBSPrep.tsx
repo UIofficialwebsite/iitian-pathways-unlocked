@@ -100,13 +100,11 @@ const IITMBSPrep = () => {
             </TabsContent>
             
             <TabsContent value="tools" className="mt-6">
-              {/* Assuming IITMToolsTab might also need params */}
-              <IITMToolsTab initialParams={initialParams} />
+              <IITMToolsTab />
             </TabsContent>
             
             <TabsContent value="courses" className="mt-6">
-              {/* Assuming PaidCoursesTab might also need params */}
-              <PaidCoursesTab initialParams={initialParams} />
+              <PaidCoursesTab />
             </TabsContent>
             
             <TabsContent value="news" className="mt-6">

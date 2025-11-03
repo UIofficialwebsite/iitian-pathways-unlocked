@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-// Import useSearchParams to read URL query parameters
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -22,15 +21,16 @@ const getCategoryFromUrl = (param: string | null) => {
 };
 
 const Courses = () => {
-  // Get URL search params
   const [searchParams] = useSearchParams();
-  
-  // Initialize state by reading the 'category' param from the URL
-  const [selectedCategory, setSelectedCategory] = useState(() => 
-    getCategoryFromUrl(searchParams.get("category"))
-  );
-  
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const { courses, contentLoading } = useBackend();
+
+  // Sync state with URL params on mount and when URL changes
+  useEffect(() => {
+    const categoryParam = searchParams.get("category");
+    const categoryFromUrl = getCategoryFromUrl(categoryParam);
+    setSelectedCategory(categoryFromUrl);
+  }, [searchParams]);
 
   const categories = [
     { id: "all", name: "All Courses" },

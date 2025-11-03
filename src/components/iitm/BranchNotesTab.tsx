@@ -6,12 +6,23 @@ import BranchNotesAccordion from "./BranchNotesAccordion";
 import { useIITMBranchNotes, Note } from "./hooks/useIITMBranchNotes";
 
 interface BranchNotesTabProps {
+  initialParams?: string[];
   onFilterChange?: (tab: string, branch?: string, level?: string) => void;
 }
 
-const BranchNotesTab = ({ onFilterChange }: BranchNotesTabProps) => {
-  const [branch, setBranch] = useState("data-science");
-  const [level, setLevel] = useState("foundation");
+const BranchNotesTab = ({ initialParams, onFilterChange }: BranchNotesTabProps) => {
+  const [branch, setBranch] = useState(() => {
+    if (initialParams && initialParams[0]) {
+      return initialParams[0].toLowerCase().replace(/\s+/g, '-');
+    }
+    return "data-science";
+  });
+  const [level, setLevel] = useState(() => {
+    if (initialParams && initialParams[1]) {
+      return initialParams[1].toLowerCase();
+    }
+    return "foundation";
+  });
   const [specialization, setSpecialization] = useState("all");
 
   const {

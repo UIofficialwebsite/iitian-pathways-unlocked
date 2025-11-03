@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface EnrollmentCardProps {
     course: Course;
@@ -11,6 +12,7 @@ interface EnrollmentCardProps {
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
+    const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
     // Calculates the discount percentage
@@ -34,6 +36,28 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
     const formatDate = (dateString: string) => {
         const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: 'long', year: 'numeric' };
         return new Date(dateString).toLocaleDateString('en-GB', options);
+    };
+
+    const handleShare = async () => {
+        const courseUrl = window.location.href;
+        
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: course.title,
+                    text: `Check out this course: ${course.title}`,
+                    url: courseUrl,
+                });
+                toast.success('Shared successfully');
+            } else {
+                await navigator.clipboard.writeText(courseUrl);
+                setCopied(true);
+                toast.success('Link copied to clipboard');
+                setTimeout(() => setCopied(false), 2000);
+            }
+        } catch (error) {
+            console.error('Error sharing:', error);
+        }
     };
 
     return (
@@ -90,9 +114,19 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
 
                         <Separator className="my-4" />
 
-                        <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="block">
-                            <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
-                        </a>
+                        <div className="flex gap-2">
+                            <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
+                                <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
+                            </a>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="aspect-square p-0"
+                                onClick={handleShare}
+                            >
+                                {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>

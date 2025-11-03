@@ -9,14 +9,35 @@ import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 
 interface PYQsTabProps {
+  initialParams?: string[];
   onFilterChange?: (tab: string, branch?: string, level?: string, examType?: string, year?: string) => void;
 }
 
-const PYQsTab = ({ onFilterChange }: PYQsTabProps) => {
-  const [branch, setBranch] = useState("data-science");
-  const [level, setLevel] = useState("foundation");
-  const [examType, setExamType] = useState("quiz1");
-  const [year, setYear] = useState("2023");
+const PYQsTab = ({ initialParams, onFilterChange }: PYQsTabProps) => {
+  const [branch, setBranch] = useState(() => {
+    if (initialParams && initialParams[0]) {
+      return initialParams[0].toLowerCase().replace(/\s+/g, '-');
+    }
+    return "data-science";
+  });
+  const [level, setLevel] = useState(() => {
+    if (initialParams && initialParams[1]) {
+      return initialParams[1].toLowerCase();
+    }
+    return "foundation";
+  });
+  const [examType, setExamType] = useState(() => {
+    if (initialParams && initialParams[2]) {
+      return initialParams[2].toLowerCase().replace(/\s+/g, '');
+    }
+    return "quiz1";
+  });
+  const [year, setYear] = useState(() => {
+    if (initialParams && initialParams[3]) {
+      return initialParams[3];
+    }
+    return "2023";
+  });
   
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
   

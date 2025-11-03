@@ -113,8 +113,16 @@ const SyllabusCard: React.FC<{ branchKey: 'data-science' | 'electronic-systems',
   );
 };
 
-const SyllabusTab = ({ onFilterChange }: { onFilterChange?: (tab: string, branch?: string) => void }) => {
-  const [branch, setBranch] = useState<keyof typeof syllabusData>("data-science");
+const SyllabusTab = ({ initialParams, onFilterChange }: { initialParams?: string[]; onFilterChange?: (tab: string, branch?: string) => void }) => {
+  const [branch, setBranch] = useState<keyof typeof syllabusData>(() => {
+    if (initialParams && initialParams[0]) {
+      const branchParam = initialParams[0].toLowerCase().replace(/\s+/g, '-');
+      if (branchParam === 'data-science' || branchParam === 'electronic-systems') {
+        return branchParam;
+      }
+    }
+    return "data-science";
+  });
   const [downloads, setDownloads] = useState({
     "data-science-syllabus": 482,
     "electronic-systems-syllabus": 315,
