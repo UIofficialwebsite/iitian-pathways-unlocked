@@ -1,96 +1,95 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="x-apple-disable-message-reformatting">
-    <title>Premium Batch Enrollment</title>
-    <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f7f9; }
-        table { border-spacing: 0; }
-        td { padding: 0; }
-        img { border: 0; width: 100%; max-width: 100%; height: auto; }
-        .wrapper { width: 100%; table-layout: fixed; background-color: #f4f7f9; padding: 40px 0; }
-        .main { background-color: #ffffff; margin: 0 auto; width: 100%; max-width: 640px; border-spacing: 0; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.07); }
-        .header { background-color: #2c3e50; padding: 25px 40px; text-align: center; color: #ffffff; }
-        .header h1 { margin: 0; font-size: 26px; }
-        .header p { margin: 10px 0 0; font-size: 16px; }
-        .batch-column { width: 50%; padding: 20px; vertical-align: top; }
-        .batch-card { border: 1px solid #e9ecef; border-radius: 8px; overflow: hidden; }
-        .batch-title { font-size: 18px; font-weight: bold; color: #2c3e50; margin: 15px 20px; text-align: center; }
-        .features { font-size: 15px; line-height: 1.6; color: #555555; padding: 0 20px; text-align: left; }
-        .features ul { padding-left: 20px; margin: 0 0 20px; }
-        .button-container { padding: 0 20px 20px; }
-        .button { display: block; padding: 12px 20px; border-radius: 6px; text-align: center; text-decoration: none; font-size: 16px; font-weight: bold; color: #ffffff; background-color: #007bff; }
-        .footer { padding: 20px; text-align: center; font-size: 12px; color: #888888; background-color: #f4f7f9; }
-        
-        @media screen and (max-width: 640px) {
-            .batch-column { width: 100%; display: block; padding: 20px 20px 0; }
-            .main table { width: 100% !important; }
-        }
-    </style>
-</head>
-<body>
-    <center class="wrapper">
-        <table class="main" width="100%">
-            <tr>
-                <td colspan="2" class="header">
-                    <h1>Choose Your Premium Batch</h1>
-                    <p>Select the right program to accelerate your preparation.</p>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <table width="100%">
-                        <tr>
-                            <td class="batch-column">
-                                <div class="batch-card">
-                                    <a href="https://payments.cashfree.com/forms/rebouncequalifierbatch" target="_blank">
-                                        <img src="https://drive.google.com/uc?export=view&id=1FhdUxrHGequq1DjJP4MLAYO0l-xGyM41" alt="Re-Attempt Qualifier Batch">
-                                    </a>
-                                    <h2 class="batch-title">Re-Attempt / 2nd Qualifier Batch</h2>
-                                    <div class="features">
-                                        <ul>
-                                            <li>Daily Live Classes</li>
-                                            <li>Premium Mentorship</li>
-                                            <li>Proper Guidance</li>
-                                            <li>Doubt Sessions</li>
-                                        </ul>
-                                    </div>
-                                    <div class="button-container">
-                                        <a href="https://payments.cashfree.com/forms/rebouncequalifierbatch" target="_blank" class="button">Enroll Now</a>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="batch-column">
-                                <div class="batch-card">
-                                    <a href="https://payments.cashfree.com/forms/quiz2preparationbatch" target="_blank">
-                                        <img src="https://drive.google.com/uc?export=view&id=1oOWxEQSIsawc9g7wskfCSsjKIbHttB3N" alt="Quiz 2 Batch">
-                                    </a>
-                                    <h2 class="batch-title">Quiz 2 Premium Batch</h2>
-                                    <div class="features">
-                                        <ul>
-                                            <li>Daily Live Classes</li>
-                                            <li>Premium Mentorship</li>
-                                            <li>Proper Guidance</li>
-                                            <li>Doubt Sessions</li>
-                                        </ul>
-                                    </div>
-                                    <div class="button-container">
-                                        <a href="https://payments.cashfree.com/forms/quiz2preparationbatch" target="_blank" class="button">Enroll Now</a>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2" class="footer">
-                    <p>You received this email because you are part of our student community.</p>
-                </td>
-            </tr>
-        </table>
-    </center>
-</body>
-</html>
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Banner } from '@/components/ui/banner';
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Sparkles, Briefcase } from 'lucide-react';
+import { useAnnouncements } from '@/hooks/useAnnouncements';
+import { cn } from '@/lib/utils';
+
+export const AnnouncementBar = () => {
+  const navigate = useNavigate();
+  const { announcements, loading } = useAnnouncements();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [show, setShow] = useState(true);
+
+  // Rotate announcements every 8 seconds
+  useEffect(() => {
+    if (announcements.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % announcements.length);
+    }, 8000);
+
+    return () => clearInterval(interval);
+  }, [announcements.length]);
+
+  if (loading || announcements.length === 0 || !show) {
+    return null;
+  }
+
+  const currentAnnouncement = announcements[currentIndex];
+  const isCourse = currentAnnouncement.type === 'course';
+
+  const handleAction = () => {
+    navigate(currentAnnouncement.link);
+  };
+
+  const handleClose = () => {
+    setShow(false);
+  };
+
+  return (
+    // 1. This outer div creates the floating overlay.
+    //    - 'fixed': Makes it float over the page content (like the carousel).
+    //    - 'top-24': Positions it down from the top, *not* attached to the navbar.
+    //      (Adjust this 'top-24' value as needed, e.g., 'top-20' or 'top-28').
+    //    - 'left-4 right-4 md:left-0 md:right-0': On mobile, it has padding from the sides.
+    //      On desktop ('md:'), it spans the full width to allow the container to center itself.
+    //    - 'z-40': Ensures it's above other content (like the carousel).
+    //    - 'pointer-events-none': Allows clicks to pass *through* the empty parts of this container.
+    <div className="fixed top-24 left-4 right-4 md:left-0 md:right-0 z-40 pointer-events-none">
+      
+      {/* 2. This container centers the block and controls its max-width. */}
+      {/* - 'container mx-auto max-w-4xl': Standard centering and width control for desktop.
+      //    - 'pointer-events-auto': Re-enables clicks *only* for the block itself.
+      */}
+      <div className="container mx-auto max-w-4xl pointer-events-auto">
+        <Banner
+          show={show}
+          onHide={handleClose}
+          variant={'default'} // Use default and override styles
+          title={currentAnnouncement.title}
+          description={
+            announcements.length > 1
+              ? `${currentIndex + 1} of ${announcements.length} announcements`
+              : undefined
+          }
+          showShade={false}
+          closable={true}
+          // 3. Icons are set to white to be visible on the black background
+          icon={
+            isCourse ? (
+              <Sparkles className="h-5 w-5 text-white" />
+            ) : (
+              <Briefcase className="h-5 w-5 text-white" />
+            )
+          }
+          action={
+            <Button
+              onClick={handleAction}
+              size="sm"
+              // 4. Button styled as requested: white bg, dark text
+              className="inline-flex items-center gap-1 bg-white text-black hover:bg-gray-200"
+            >
+              {isCourse ? 'Join Now' : 'Apply Now'}
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          }
+          // 5. This styles the Banner as the black rectangular block.
+          //    - 'p-4 md:p-6': Mobile-responsive padding (less on small screens).
+          className="bg-black text-white p-4 md:p-6 rounded-lg shadow-lg"
+        />
+      </div>
+    </div>
+  );
+};
