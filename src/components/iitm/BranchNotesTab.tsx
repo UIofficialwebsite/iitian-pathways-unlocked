@@ -10,9 +10,8 @@ interface BranchNotesTabProps {
 }
 
 const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) => {
-  // Set initial state from URL params if available
   const [branch, setBranch] = useState(initialParams?.branch || "data-science");
-  const [level, setLevel] = useState(initialParams?.level || "foundation");
+  const [level, setLevel] = useState(initialParams?.level || "qualifier"); // Default to qualifier
   const [specialization, setSpecialization] = useState(initialParams?.specialization || "all");
 
   const {
@@ -22,32 +21,26 @@ const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) 
     reloadNotes,
   } = useIITMBranchNotes(branch, level);
 
-  // Update URL when filters change
   useEffect(() => {
-    // Only update URL if params are different
     if (branch !== initialParams?.branch || level !== initialParams?.level) {
       onFilterChange?.('notes', branch, level);
     }
-    // Reset specialization when branch or level changes
     setSpecialization("all");
   }, [branch, level]);
 
-  // Handle branch changes
   const handleBranchChange = (newBranch: string) => {
     setBranch(newBranch);
     onFilterChange?.('notes', newBranch, level);
   };
 
-  // Handle level changes
   const handleLevelChange = (newLevel: string) => {
     setLevel(newLevel);
-    setSpecialization('all'); // Reset specialization on level change
+    setSpecialization('all');
     onFilterChange?.('notes', branch, newLevel);
   };
   
-  // Show specialization filter ONLY for Data Science Diploma
+  // Show specialization filter ONLY if the data from the DB has specializations
   const showSpecializationFilter = 
-    branch === 'data-science' && 
     level === 'diploma' && 
     availableSpecializations.length > 0;
 
@@ -85,7 +78,6 @@ const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) 
         </div>
       </div>
 
-      {/* Specialization filter logic updated */}
       {showSpecializationFilter && (
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
@@ -113,7 +105,6 @@ const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) 
           )}
         </h2>
 
-        {/* Pass new props to the accordion */}
         <BranchNotesAccordion
           groupedData={groupedData}
           specialization={specialization}
