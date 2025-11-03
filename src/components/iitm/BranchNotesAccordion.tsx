@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useIITMBranchNotesManager } from "./hooks/useIITMBranchNotesManager";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { slugify } from "@/utils/urlHelpers";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export interface BranchNotesAccordionProps {
   groupedNotes: Record<string, Note[]>;
@@ -41,6 +42,9 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
   const { isAdmin } = useAuth();
   const { deleteIITMNote } = useIITMBranchNotesManager();
   const { handleDownload, downloadCounts } = useBackend();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expandedSubject, setExpandedSubject] = useState<string>("");
 
   const handleDeleteNote = async (noteId: string, noteTitle: string) => {
     if (!isAdmin) return;
@@ -59,6 +63,16 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
     }
   };
 
+  const handleAccordionChange = (subject: string) => {
+    setExpandedSubject(subject);
+    if (subject) {
+      const branch = slugify(subject);
+      const levelSlug = slugify(level);
+      const newUrl = `/exam-preparation/iitm-bs/notes/${branch}/${levelSlug}`;
+      navigate(newUrl, { replace: true });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
@@ -74,10 +88,25 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
         const subjectNotes = groupedNotes[subject] || [];
 
         return (
-          <Accordion type="single" collapsible key={subject} className="bg-white rounded-lg shadow-md">
+          <Accordion 
+            type="single" 
+            collapsible 
+            key={subject} 
+            className="bg-white rounded-lg shadow-md"
+            onValueChange={handleAccordionChange}
+          >
             <AccordionItem value={subject}>
               <AccordionTrigger className="p-4 hover:bg-gray-50">
-                <span className="font-semibold text-lg">{subject}</span>
+                <div className="flex items-center justify-between w-full pr-4">
+                  <span className="font-semibold text-lg">{subject}</span>
+                  <ShareButton
+                    url={buildIITMNoteUrl(subject, level)}
+                    title={`${subject} - ${level}`}
+                    description={`Notes for ${subject} at ${level} level`}
+                    size="sm"
+                    variant="ghost"
+                  />
+                </div>
               </AccordionTrigger>
               <AccordionContent className="p-4 pt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -115,13 +144,6 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
                         >
                           <Download className="h-3 w-3 mr-1" /> Download
                         </Button>
-                        <ShareButton
-                          url={buildIITMNoteUrl(subject, level)}
-                          title={note.title}
-                          description={note.description}
-                          size="sm"
-                          variant="ghost"
-                        />
                         <div className="flex items-center">
                           <span className="text-xs text-gray-500">{downloadCounts[note.id] || note.downloads || 0}</span>
                         </div>
