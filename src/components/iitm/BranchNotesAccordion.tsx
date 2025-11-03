@@ -9,6 +9,7 @@ import { Note } from "./hooks/useIITMBranchNotes";
 import { useAuth } from "@/hooks/useAuth";
 import { useIITMBranchNotesManager } from "./hooks/useIITMBranchNotesManager";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { slugify } from "@/utils/urlHelpers";
 
 export interface BranchNotesAccordionProps {
   groupedNotes: Record<string, Note[]>;
@@ -17,6 +18,18 @@ export interface BranchNotesAccordionProps {
   loading: boolean;
   onNotesChange?: () => void;
 }
+
+const buildIITMNoteUrl = (subject: string, level: string): string => {
+  const origin = window.location.origin;
+  const branch = slugify(subject);
+  const levelSlug = slugify(level);
+  
+  if (branch && levelSlug) {
+    return `${origin}/exam-preparation/iitm-bs/notes/${branch}/${levelSlug}`;
+  }
+  
+  return window.location.href;
+};
 
 const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
   groupedNotes,
@@ -103,7 +116,7 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
                           <Download className="h-3 w-3 mr-1" /> Download
                         </Button>
                         <ShareButton
-                          url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${note.id}`}
+                          url={buildIITMNoteUrl(subject, level)}
                           title={note.title}
                           description={note.description}
                           size="sm"

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, Eye, Trash2 } from "lucide-react";
 import { ShimmerButton } from './ui/shimmer-button';
 import { ShareButton } from './ShareButton';
+import { slugify } from '@/utils/urlHelpers';
 
 interface Chapter {
     id: string;
@@ -12,6 +13,11 @@ interface Chapter {
     file_link?: string;
     download_count?: number;
     content_url?: string | null;
+    exam_type?: string;
+    subject?: string;
+    class_level?: string;
+    branch?: string;
+    level?: string;
 }
 
 interface ChapterListProps {
@@ -22,6 +28,30 @@ interface ChapterListProps {
     onDelete?: (noteId: string) => Promise<void>;
     contentType?: 'notes' | 'pyqs';
 }
+
+const buildNoteUrl = (chapter: Chapter, contentType: string): string => {
+    const origin = window.location.origin;
+    const examType = chapter.exam_type?.toLowerCase().replace(/\s+/g, '-') || '';
+    
+    // For IITM BS notes
+    if (examType === 'iitm-bs' || examType === 'iitm_bs') {
+        const branch = slugify(chapter.branch || '');
+        const level = slugify(chapter.level || '');
+        if (branch && level) {
+            return `${origin}/exam-preparation/iitm-bs/${contentType}/${branch}/${level}`;
+        }
+    }
+    
+    // For JEE/NEET notes
+    if ((examType === 'jee' || examType === 'neet') && chapter.class_level && chapter.subject) {
+        const classLevel = slugify(chapter.class_level);
+        const subject = slugify(chapter.subject);
+        return `${origin}/exam-preparation/${examType}/${contentType}/${classLevel}/${subject}`;
+    }
+    
+    // Fallback to current URL
+    return window.location.href;
+};
 
 const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete, contentType = 'notes' }) => {
     return (
@@ -50,7 +80,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                                 </Button>
                             )}
                             <ShareButton
-                                url={window.location.href}
+                                url={buildNoteUrl(chapter, contentType)}
                                 title={chapter.title}
                                 description={chapter.description}
                                 size="sm"
