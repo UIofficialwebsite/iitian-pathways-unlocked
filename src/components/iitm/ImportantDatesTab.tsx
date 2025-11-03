@@ -42,7 +42,7 @@ const ImportantDatesTab = () => {
                                 <p className="text-sm text-gray-600 mt-1">{date.description}</p>
                             </div>
                             <ShareButton
-                                url={`${window.location.origin}/exam-preparation/iitm-bs/important-dates/${date.id}`}
+                                url={window.location.href}
                                 title={date.title}
                                 description={date.description}
                                 size="sm"

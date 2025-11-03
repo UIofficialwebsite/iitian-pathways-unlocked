@@ -50,7 +50,7 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                                 </Button>
                             )}
                             <ShareButton
-                                url={`${window.location.origin}/exam-preparation/${contentType}/${chapter.id}`}
+                                url={window.location.href}
                                 title={chapter.title}
                                 description={chapter.description}
                                 size="sm"
