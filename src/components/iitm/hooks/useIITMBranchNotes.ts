@@ -14,7 +14,7 @@ export interface Note {
   diploma_specialization?: string;
 }
 
-// Type for a subject from your iitm_bs_subjects table
+// Type for a subject from your new iitm_bs_subjects table
 export interface Subject {
   id: number;
   branch: string;
