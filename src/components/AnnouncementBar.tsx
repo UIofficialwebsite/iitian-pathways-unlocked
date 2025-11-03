@@ -39,55 +39,47 @@ export const AnnouncementBar = () => {
   };
 
   return (
-    // 1. This outer div creates the floating overlay.
-    //    - 'fixed': Makes it float over the page content (like the carousel).
-    //    - 'top-24': Positions it down from the top, *not* attached to the navbar.
-    //      (Adjust this 'top-24' value as needed, e.g., 'top-20' or 'top-28').
-    //    - 'left-4 right-4 md:left-0 md:right-0': On mobile, it has padding from the sides.
-    //      On desktop ('md:'), it spans the full width to allow the container to center itself.
-    //    - 'z-40': Ensures it's above other content (like the carousel).
-    //    - 'pointer-events-none': Allows clicks to pass *through* the empty parts of this container.
+    // 1. Floating wrapper: Positions the block over the page.
+    //    - Mobile-responsive side padding (left-4 right-4)
+    //    - Desktop centering (md:left-0 md:right-0)
+    //    - 'top-24' positions it down from the top.
     <div className="fixed top-24 left-4 right-4 md:left-0 md:right-0 z-40 pointer-events-none">
       
-      {/* 2. This container centers the block and controls its max-width. */}
-      {/* - 'container mx-auto max-w-4xl': Standard centering and width control for desktop.
-      //    - 'pointer-events-auto': Re-enables clicks *only* for the block itself.
+      {/* 2. Centering & Width container: 
+           - 'max-w-4xl' limits width on desktop.
+           - 'pointer-events-auto' makes only the block clickable.
       */}
       <div className="container mx-auto max-w-4xl pointer-events-auto">
+        
         <Banner
           show={show}
           onHide={handleClose}
-          variant={'default'} // Use default and override styles
+          // 3. Changing Colors: Uses the Banner's built-in variants.
+          variant={isCourse ? 'premium' : 'info'}
           title={currentAnnouncement.title}
           description={
             announcements.length > 1
               ? `${currentIndex + 1} of ${announcements.length} announcements`
               : undefined
           }
-          showShade={false}
+          showShade={true}
           closable={true}
-          // 3. Icons are set to white to be visible on the black background
-          icon={
-            isCourse ? (
-              <Sparkles className="h-5 w-5 text-white" />
-            ) : (
-              <Briefcase className="h-5 w-5 text-white" />
-            )
-          }
+          icon={isCourse ? <Sparkles className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />}
           action={
             <Button
               onClick={handleAction}
               size="sm"
-              // 4. Button styled as requested: white bg, dark text
-              className="inline-flex items-center gap-1 bg-white text-black hover:bg-gray-200"
+              className="inline-flex items-center gap-1"
+              // 4. Button style: 'ghost' adapts to the banner's color.
+              variant="ghost"
             >
               {isCourse ? 'Join Now' : 'Apply Now'}
               <ArrowRight className="h-3 w-3" />
             </Button>
           }
-          // 5. This styles the Banner as the black rectangular block.
-          //    - 'p-4 md:p-6': Mobile-responsive padding (less on small screens).
-          className="bg-black text-white p-4 md:p-6 rounded-lg shadow-lg"
+          // 5. Block Style: Adds padding and rounded corners.
+          //    The default shadow from 'banner.tsx' will apply.
+          className="p-4 md:p-6 rounded-lg"
         />
       </div>
     </div>
