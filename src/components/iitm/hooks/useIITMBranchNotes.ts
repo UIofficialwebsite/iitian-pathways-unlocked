@@ -62,7 +62,7 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
     try {
       // 1. Fetch the Subject Structure (The "Scaffolding")
       const { data: subjectsData, error: subjectsError } = await supabase
-        .from('iitm_bs_subjects')
+        .from('iitm_bs_subjects' as any)
         .select('*')
         .eq('branch', dbBranchName)
         .eq('level', dbLevelName)
@@ -99,12 +99,12 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
       
       // 4. Collect all unique specializations
       const specializationsSet = new Set<string>();
-      subjectsData.forEach(s => {
+      (subjectsData as any[]).forEach((s: any) => {
         if(s.specialization) specializationsSet.add(s.specialization);
       });
 
       // 5. Build the final structure (Subject > Notes)
-      const finalGroupedData: GroupedData[] = subjectsData.map((subject: Subject) => {
+      const finalGroupedData: GroupedData[] = (subjectsData as any[]).map((subject: any) => {
         // Find all notes for this subject, or use an empty array
         const notesForSubject = notesMap.get(subject.subject_name) || [];
 

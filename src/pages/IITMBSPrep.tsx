@@ -24,12 +24,13 @@ const IITMBSPrep = () => {
   const initialParams = getParamsFromUrl(location.pathname);
 
   // Update URL when tab changes
-  const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string) => {
+  const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string, subject?: string) => {
     const params: Record<string, string | undefined> = {};
     
     if (tab === 'notes' || tab === 'tools' || tab === 'courses' || tab === 'news' || tab === 'dates') {
       if (branch) params.branch = branch;
       if (level) params.level = level;
+      if (subject) params.subject = subject;
     } else if (tab === 'pyqs') {
       if (branch) params.branch = branch;
       if (level) params.level = level;

@@ -5,14 +5,20 @@ import BranchNotesAccordion from "./BranchNotesAccordion";
 import { useIITMBranchNotes } from "./hooks/useIITMBranchNotes";
 
 interface BranchNotesTabProps {
-  onFilterChange?: (tab: string, branch?: string, level?: string) => void;
-  initialParams?: Record<string, string>; // For deep linking
+  onFilterChange?: (tab: string, branch?: string, level?: string, subject?: string) => void;
+  initialParams?: string[]; // Array from URL: ['Data Science', 'Foundation', 'Mathematics 1']
 }
 
 const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) => {
-  const [branch, setBranch] = useState(initialParams?.branch || "data-science");
-  const [level, setLevel] = useState(initialParams?.level || "qualifier"); // Default to qualifier
-  const [specialization, setSpecialization] = useState(initialParams?.specialization || "all");
+  // Parse initialParams: [0] = branch, [1] = level, [2] = subject
+  const parsedBranch = initialParams?.[0]?.toLowerCase().replace(/\s+/g, '-') || "data-science";
+  const parsedLevel = initialParams?.[1]?.toLowerCase() || "foundation";
+  const parsedSubject = initialParams?.[2] || "";
+  
+  const [branch, setBranch] = useState(parsedBranch);
+  const [level, setLevel] = useState(parsedLevel);
+  const [specialization, setSpecialization] = useState("all");
+  const [selectedSubject, setSelectedSubject] = useState(parsedSubject);
 
   const {
     loading,
@@ -22,21 +28,25 @@ const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) 
   } = useIITMBranchNotes(branch, level);
 
   useEffect(() => {
-    if (branch !== initialParams?.branch || level !== initialParams?.level) {
-      onFilterChange?.('notes', branch, level);
-    }
     setSpecialization("all");
   }, [branch, level]);
 
   const handleBranchChange = (newBranch: string) => {
     setBranch(newBranch);
+    setSelectedSubject("");
     onFilterChange?.('notes', newBranch, level);
   };
 
   const handleLevelChange = (newLevel: string) => {
     setLevel(newLevel);
     setSpecialization('all');
+    setSelectedSubject("");
     onFilterChange?.('notes', branch, newLevel);
+  };
+  
+  const handleSubjectChange = (subject: string) => {
+    setSelectedSubject(subject);
+    onFilterChange?.('notes', branch, level, subject);
   };
   
   // Show specialization filter ONLY if the data from the DB has specializations
@@ -110,6 +120,10 @@ const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) 
           specialization={specialization}
           loading={loading}
           onNotesChange={reloadNotes}
+          branch={branch}
+          level={level}
+          selectedSubject={selectedSubject}
+          onSubjectChange={handleSubjectChange}
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,17 +7,23 @@ import {
 } from "@/components/ui/accordion";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Download, Share2, Info } from "lucide-react";
+import { FileText, Download, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
+import { ShareButton } from "@/components/ShareButton";
+import { slugify } from "@/utils/urlHelpers";
 
 interface BranchNotesAccordionProps {
   loading: boolean;
   groupedData: GroupedData[];
-  specialization: string; // "all", "Programming", "Data Science"
+  specialization: string;
   onNotesChange: () => void;
+  branch: string;
+  level: string;
+  selectedSubject?: string;
+  onSubjectChange?: (subject: string) => void;
 }
 
 const BranchNotesAccordion = ({
@@ -25,24 +31,43 @@ const BranchNotesAccordion = ({
   groupedData,
   specialization,
   onNotesChange,
+  branch,
+  level,
+  selectedSubject,
+  onSubjectChange,
 }: BranchNotesAccordionProps) => {
 
   const { toast } = useToast();
   const { handleDownload } = useDownloadHandler();
+  const [openSubjects, setOpenSubjects] = useState<string[]>([]);
 
-  const handleShare = (note: Note) => {
-    // This deep-linking logic will need to be implemented
-    navigator.clipboard.writeText(note.file_link);
-    toast({
-      title: "Link Copied!",
-      description: "Note share link copied to clipboard.",
-    });
+  // Auto-open accordion if selectedSubject is provided
+  useEffect(() => {
+    if (selectedSubject) {
+      const subjectValue = `subject-${selectedSubject}`;
+      setOpenSubjects([subjectValue]);
+    }
+  }, [selectedSubject]);
+
+  const buildSubjectUrl = (subjectName: string) => {
+    const slugifiedSubject = slugify(subjectName);
+    return `${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugifiedSubject}`;
   };
 
-  /**
-   * Renders a single note item as a card, matching the original design.
-   */
-  const renderNoteItem = (note: Note) => (
+  const handleAccordionChange = (values: string[]) => {
+    setOpenSubjects(values);
+    
+    // If a subject is opened, update URL
+    if (values.length > 0) {
+      const subjectValue = values[values.length - 1]; // Get the last opened
+      const subjectName = subjectValue.replace('subject-', '');
+      onSubjectChange?.(subjectName);
+    } else {
+      onSubjectChange?.("");
+    }
+  };
+
+   const renderNoteItem = (note: Note) => (
     <div key={note.id} className="flex items-center justify-between p-3 border-b last:border-b-0 min-h-[50px]">
       <div className="flex items-center gap-3">
         <FileText className="h-5 w-5 text-gray-500 flex-shrink-0" />
@@ -60,13 +85,10 @@ const BranchNotesAccordion = ({
             <span className="text-xs text-gray-500 flex items-center gap-1">
               <Download className="h-3 w-3" /> {note.download_count}
             </span>
-            <Button variant="ghost" size="icon" onClick={() => handleShare(note)}>
-              <Share2 className="h-4 w-4" />
-            </Button>
             <Button
               size="icon"
-              className="bg-royal hover:bg-royal-dark text-white" // Restored bluish button
-              onClick={() => handleDownload(note.id, note.file_link, 'iitm_branch_notes')}
+              className="bg-royal hover:bg-royal-dark text-white"
+              onClick={() => handleDownload(note.id, 'notes', note.file_link)}
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -109,7 +131,12 @@ const BranchNotesAccordion = ({
   }
 
   return (
-    <Accordion type="multiple" className="w-full space-y-4">
+    <Accordion 
+      type="multiple" 
+      className="w-full space-y-4"
+      value={openSubjects}
+      onValueChange={handleAccordionChange}
+    >
       {/* --- LEVEL 1 ACCORDION (SUBJECT) --- */}
       {filteredSubjects.map((subjectData) => (
         <AccordionItem
@@ -117,9 +144,18 @@ const BranchNotesAccordion = ({
           key={subjectData.subjectName}
           className="border-none rounded-lg bg-white shadow-sm"
         >
-          <AccordionTrigger className="px-6 py-4 text-lg font-bold text-gray-800">
-            {/* Specialization tag has been removed from here */}
-            {subjectData.subjectName}
+          <AccordionTrigger className="px-6 py-4 text-lg font-bold text-gray-800 hover:no-underline">
+            <div className="flex items-center justify-between w-full pr-4">
+              <span>{subjectData.subjectName}</span>
+              <ShareButton
+                url={buildSubjectUrl(subjectData.subjectName)}
+                title={`${subjectData.subjectName} - IITM BS Notes`}
+                description={`View notes for ${subjectData.subjectName} - ${level} level`}
+                variant="ghost"
+                size="icon"
+                className="ml-2"
+              />
+            </div>
           </AccordionTrigger>
           <AccordionContent className="p-0">
             {/* --- This is the list of note cards --- */}

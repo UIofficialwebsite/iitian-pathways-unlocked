@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { ShareButton } from "@/components/ShareButton";
 
 interface PYQsTabProps {
   initialParams?: string[];
@@ -186,17 +187,26 @@ const PYQsTab = ({ initialParams, onFilterChange }: PYQsTabProps) => {
                   <div className="text-sm text-gray-600">Shift: {pyq.shift}</div>
                 )}
               </CardHeader>
-              <CardFooter className="flex justify-between">
-                <ShimmerButton
-                  onClick={() => handleDownloadClick(pyq.id, pyq.file_link || undefined)}
-                  disabled={!pyq.file_link}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
-                  shimmerColor="#22c55e"
-                  background="rgba(34, 197, 94, 1)"
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </ShimmerButton>
+              <CardFooter className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <ShimmerButton
+                    onClick={() => handleDownloadClick(pyq.id, pyq.file_link || undefined)}
+                    disabled={!pyq.file_link}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                    shimmerColor="#22c55e"
+                    background="rgba(34, 197, 94, 1)"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </ShimmerButton>
+                  <ShareButton
+                    url={window.location.href}
+                    title={pyq.title}
+                    description={pyq.description || `${pyq.subject} - ${year}`}
+                    variant="outline"
+                    size="icon"
+                  />
+                </div>
                 <div className="flex items-center">
                   <span className="text-sm text-gray-500">{downloadCounts[pyq.id] || pyq.download_count || 0}</span>
                   <div className="ml-2 bg-gray-200 h-1.5 w-16 rounded-full overflow-hidden">

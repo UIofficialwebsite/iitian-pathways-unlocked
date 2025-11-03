@@ -21,10 +21,10 @@ export const buildExamUrl = (
 ): string => {
   const baseUrl = `/exam-preparation/${exam.toLowerCase()}`;
   
-  // Clean params - remove undefined/empty values
+  // Clean params - remove undefined/empty values and 'all'
   const cleanParams = Object.entries(params)
     .filter(([_, value]) => value && value !== 'all')
-    .map(([key, value]) => slugify(value!));
+    .map(([_, value]) => slugify(value!));
   
   if (cleanParams.length === 0) {
     return `${baseUrl}/${slugify(tab)}`;
