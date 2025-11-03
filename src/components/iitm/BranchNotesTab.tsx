@@ -1,41 +1,35 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BranchNotesAccordion from "./BranchNotesAccordion";
-import { useIITMBranchNotes, Note } from "./hooks/useIITMBranchNotes";
+import { useIITMBranchNotes } from "./hooks/useIITMBranchNotes";
 
 interface BranchNotesTabProps {
-  initialParams?: string[];
   onFilterChange?: (tab: string, branch?: string, level?: string) => void;
+  initialParams?: Record<string, string>; // For deep linking
 }
 
-const BranchNotesTab = ({ initialParams, onFilterChange }: BranchNotesTabProps) => {
-  const [branch, setBranch] = useState(() => {
-    if (initialParams && initialParams[0]) {
-      return initialParams[0].toLowerCase().replace(/\s+/g, '-');
-    }
-    return "data-science";
-  });
-  const [level, setLevel] = useState(() => {
-    if (initialParams && initialParams[1]) {
-      return initialParams[1].toLowerCase();
-    }
-    return "foundation";
-  });
-  const [specialization, setSpecialization] = useState("all");
+const BranchNotesTab = ({ onFilterChange, initialParams }: BranchNotesTabProps) => {
+  // Set initial state from URL params if available
+  const [branch, setBranch] = useState(initialParams?.branch || "data-science");
+  const [level, setLevel] = useState(initialParams?.level || "foundation");
+  const [specialization, setSpecialization] = useState(initialParams?.specialization || "all");
 
   const {
     loading,
-    groupedNotes,
-    getCurrentSubjects,
-    getAvailableSpecializations,
+    groupedData,
+    availableSpecializations,
     reloadNotes,
   } = useIITMBranchNotes(branch, level);
 
+  // Update URL when filters change
   useEffect(() => {
+    // Only update URL if params are different
+    if (branch !== initialParams?.branch || level !== initialParams?.level) {
+      onFilterChange?.('notes', branch, level);
+    }
+    // Reset specialization when branch or level changes
     setSpecialization("all");
-    onFilterChange?.('notes', branch, level);
   }, [branch, level]);
 
   // Handle branch changes
@@ -47,12 +41,15 @@ const BranchNotesTab = ({ initialParams, onFilterChange }: BranchNotesTabProps) 
   // Handle level changes
   const handleLevelChange = (newLevel: string) => {
     setLevel(newLevel);
-    setSpecialization('all');
+    setSpecialization('all'); // Reset specialization on level change
     onFilterChange?.('notes', branch, newLevel);
   };
-
-  const availableSpecializations = getAvailableSpecializations();
-  const currentSubjects = getCurrentSubjects(specialization);
+  
+  // Show specialization filter ONLY for Data Science Diploma
+  const showSpecializationFilter = 
+    branch === 'data-science' && 
+    level === 'diploma' && 
+    availableSpecializations.length > 0;
 
   return (
     <div className="space-y-8">
@@ -88,7 +85,8 @@ const BranchNotesTab = ({ initialParams, onFilterChange }: BranchNotesTabProps) 
         </div>
       </div>
 
-      {level === "diploma" && availableSpecializations.length > 0 && (
+      {/* Specialization filter logic updated */}
+      {showSpecializationFilter && (
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
           <Select value={specialization} onValueChange={setSpecialization}>
@@ -110,18 +108,15 @@ const BranchNotesTab = ({ initialParams, onFilterChange }: BranchNotesTabProps) 
       <div className="mt-6">
         <h2 className="text-2xl font-bold mb-4 capitalize">
           {branch.replace('-', ' ')} - {level.charAt(0).toUpperCase() + level.slice(1)} Level Notes
-          {level === "diploma" && specialization !== 'all' && (
+          {showSpecializationFilter && specialization !== 'all' && (
             <span className="text-sm font-normal text-gray-600 ml-2">({specialization})</span>
-          )}
-          {level === "qualifier" && (
-            <span className="text-sm font-normal text-gray-600 ml-2">(Weeks 1-4 only)</span>
           )}
         </h2>
 
+        {/* Pass new props to the accordion */}
         <BranchNotesAccordion
-          groupedNotes={groupedNotes}
-          level={level}
-          currentSubjects={currentSubjects}
+          groupedData={groupedData}
+          specialization={specialization}
           loading={loading}
           onNotesChange={reloadNotes}
         />
