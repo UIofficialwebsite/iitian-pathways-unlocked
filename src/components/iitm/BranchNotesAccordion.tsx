@@ -1,167 +1,151 @@
-
-import React, { useState } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import React from "react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { FileText, Download, Share2, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Download, FileText, Trash2, Edit } from "lucide-react";
-import { ShareButton } from "../ShareButton";
-import { Note } from "./hooks/useIITMBranchNotes";
-import { useAuth } from "@/hooks/useAuth";
-import { useIITMBranchNotesManager } from "./hooks/useIITMBranchNotesManager";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
-import { slugify } from "@/utils/urlHelpers";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
+import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 
-export interface BranchNotesAccordionProps {
-  groupedNotes: Record<string, Note[]>;
-  level: string;
-  currentSubjects: string[];
+interface BranchNotesAccordionProps {
   loading: boolean;
-  onNotesChange?: () => void;
+  groupedData: GroupedData[];
+  specialization: string; // "all", "Programming", "Data Science"
+  onNotesChange: () => void;
 }
 
-const buildIITMNoteUrl = (subject: string, level: string): string => {
-  const origin = window.location.origin;
-  const branch = slugify(subject);
-  const levelSlug = slugify(level);
-  
-  if (branch && levelSlug) {
-    return `${origin}/exam-preparation/iitm-bs/notes/${branch}/${levelSlug}`;
-  }
-  
-  return window.location.href;
-};
-
-const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
-  groupedNotes,
-  level,
-  currentSubjects,
+const BranchNotesAccordion = ({
   loading,
+  groupedData,
+  specialization,
   onNotesChange,
-}) => {
-  const { isAdmin } = useAuth();
-  const { deleteIITMNote } = useIITMBranchNotesManager();
-  const { handleDownload, downloadCounts } = useBackend();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [expandedSubject, setExpandedSubject] = useState<string>("");
+}: BranchNotesAccordionProps) => {
 
-  const handleDeleteNote = async (noteId: string, noteTitle: string) => {
-    if (!isAdmin) return;
-    
-    if (window.confirm(`Are you sure you want to delete "${noteTitle}"?`)) {
-      const success = await deleteIITMNote(noteId);
-      if (success && onNotesChange) {
-        onNotesChange();
-      }
-    }
+  const { toast } = useToast();
+  const { handleDownload } = useDownloadHandler();
+
+  const handleShare = (note: Note) => {
+    // This deep-linking logic will need to be implemented
+    // For now, it just copies the file link
+    navigator.clipboard.writeText(note.file_link);
+    toast({
+      title: "Link Copied!",
+      description: "Note share link copied to clipboard.",
+    });
   };
 
-  const handleDownloadClick = async (noteId: string, fileUrl?: string) => {
-    if (fileUrl) {
-      await handleDownload(noteId, 'notes', fileUrl);
-    }
-  };
-
-  const handleAccordionChange = (subject: string) => {
-    setExpandedSubject(subject);
-    if (subject) {
-      const branch = slugify(subject);
-      const levelSlug = slugify(level);
-      const newUrl = `/exam-preparation/iitm-bs/notes/${branch}/${levelSlug}`;
-      navigate(newUrl, { replace: true });
-    }
-  };
+  const renderNoteItem = (note: Note) => (
+    <div key={note.id} className="flex items-center justify-between p-3 border-b last:border-b-0">
+      <div className="flex items-center gap-3">
+        <FileText className="h-5 w-5 text-gray-500" />
+        <span className="font-medium">{note.title}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-gray-500 flex items-center gap-1">
+          <Download className="h-3 w-3" /> {note.download_count}
+        </span>
+        <Button variant="ghost" size="icon" onClick={() => handleShare(note)}>
+          <Share2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDownload(note.id, note.file_link, 'notes')}
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
-        <span className="ml-2 text-gray-600">Loading notes...</span>
+      <div className="space-y-2">
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
+        <Skeleton className="h-12 w-full" />
       </div>
     );
   }
 
+  if (groupedData.length === 0) {
+    return (
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          No notes have been added for this section yet. Please check back later.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      {currentSubjects.map((subject) => {
-        const subjectNotes = groupedNotes[subject] || [];
+    <Accordion type="multiple" className="w-full space-y-4">
+      {/* Level 1 Accordion: Weeks */}
+      {groupedData.map((weekData) => {
+        // Filter subjects based on specialization
+        const filteredSubjects =
+          specialization === "all"
+            ? weekData.subjects
+            : weekData.subjects.filter(
+                (subject) =>
+                  !subject.specialization || subject.specialization === specialization
+              );
+        
+        // If no subjects match the filter, don't render the week
+        if (filteredSubjects.length === 0) {
+          return null;
+        }
 
         return (
-          <Accordion 
-            type="single" 
-            collapsible 
-            key={subject} 
-            className="bg-white rounded-lg shadow-md"
-            onValueChange={handleAccordionChange}
+          <AccordionItem
+            value={`week-${weekData.week}`}
+            key={weekData.week}
+            className="border-none rounded-lg bg-white shadow-sm"
           >
-            <AccordionItem value={subject}>
-              <AccordionTrigger className="p-4 hover:bg-gray-50">
-                <div className="flex items-center justify-between w-full pr-4">
-                  <span className="font-semibold text-lg">{subject}</span>
-                  <ShareButton
-                    url={buildIITMNoteUrl(subject, level)}
-                    title={`${subject} - ${level}`}
-                    description={`Notes for ${subject} at ${level} level`}
-                    size="sm"
-                    variant="ghost"
-                  />
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-4 pt-0">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {subjectNotes.map((note) => (
-                    <Card key={note.id} className="border-none shadow-sm hover:shadow-md transition-all">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center">
-                          <div className="rounded-full bg-royal/10 p-2 mr-3">
-                            <FileText className="h-4 w-4 text-royal" />
-                          </div>
-                          <div className="flex-1">
-                            <CardTitle className="text-base">{note.title}</CardTitle>
-                            <CardDescription className="text-xs">{note.description}</CardDescription>
-                          </div>
-                          {isAdmin && (
-                            <div className="flex items-center space-x-1 ml-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteNote(note.id, note.title)}
-                                className="admin-only text-red-600 hover:text-red-800 h-6 w-6 p-0"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardFooter className="flex justify-between items-center pt-0">
-                        <Button
-                          size="sm"
-                          onClick={() => handleDownloadClick(note.id, (note as any).file_link)}
-                          className="bg-royal hover:bg-royal-dark text-white text-xs"
-                          disabled={!(note as any).file_link}
-                        >
-                          <Download className="h-3 w-3 mr-1" /> Download
-                        </Button>
-                        <div className="flex items-center">
-                          <span className="text-xs text-gray-500">{downloadCounts[note.id] || note.downloads || 0}</span>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  ))}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+            <AccordionTrigger className="px-6 py-4 text-lg font-bold text-gray-800">
+              Week {weekData.week}
+            </AccordionTrigger>
+            <AccordionContent className="p-0">
+              {/* Level 2 Accordion: Subjects */}
+              <Accordion type="multiple" className="w-full px-4 pb-4 space-y-2">
+                {filteredSubjects.map((subject) => (
+                  <AccordionItem
+                    value={`subject-${subject.id}`}
+                    key={subject.id}
+                    className="border rounded-md bg-gray-50"
+                  >
+                    <AccordionTrigger className="px-4 py-3 font-semibold text-gray-700">
+                      {subject.subject_name}
+                      {subject.specialization && (
+                        <span className="ml-2 text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
+                          {subject.specialization}
+                        </span>
+                      )}
+                    </AccordionTrigger>
+                    <AccordionContent className="p-0 bg-white">
+                      {subject.notes.length > 0 ? (
+                        subject.notes.map(renderNoteItem)
+                      ) : (
+                        <p className="p-4 text-sm text-gray-500">
+                          No notes available for this subject yet.
+                        </p>
+                      )}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </AccordionContent>
+          </AccordionItem>
         );
       })}
-      {!loading && currentSubjects.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
-          No subjects available for this selection. Please try a different branch or level.
-        </div>
-      )}
-    </div>
+    </Accordion>
   );
 };
 
