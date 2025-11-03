@@ -2,36 +2,38 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Type for a single note
+// Type for a single note from your iitm_branch_notes table
 export interface Note {
   id: string;
   title: string;
   description?: string;
   file_link: string;
   download_count: number;
-  subject: string; // Ensure subject is part of the type
+  subject: string;
+  week_number: number;
+  diploma_specialization?: string;
 }
 
-// Type for a subject row from your new table
-export interface SubjectStructure {
+// Type for a subject from your iitm_bs_subjects table
+export interface Subject {
   id: number;
   branch: string;
   level: string;
   subject_name: string;
-  week: number | null;
   specialization: string | null;
-  display_order: number;
 }
 
-// Type for a subject that also contains its notes
-export interface SubjectWithNotes extends SubjectStructure {
+// Type for a Week that contains its notes
+export interface WeekData {
+  week: number;
   notes: Note[];
 }
 
-// The final data structure: an array of weeks, each containing subjects with their notes
+// The final data structure: an array of Subjects, each containing weeks with their notes
 export interface GroupedData {
-  week: number;
-  subjects: SubjectWithNotes[];
+  subjectName: string;
+  specialization: string | null;
+  weeks: WeekData[];
 }
 
 // Helper to convert 'data-science' to 'Data Science'
@@ -54,85 +56,85 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
   const { toast } = useToast();
 
   const reloadNotes = useCallback(async () => {
-    if (!branch || !level) return; // Don't fetch if filters aren't set
+    if (!branch || !level) return;
 
     setLoading(true);
     setGroupedData([]);
     setAvailableSpecializations([]);
 
-    // --- FIX: Capitalize branch and level ---
     const dbBranchName = formatBranchName(branch);
     const dbLevelName = formatLevelName(level);
-    // ----------------------------------------
 
     try {
-      // 1. Fetch the subject structure from the new table
+      // 1. Fetch the Subject Structure (The "Scaffolding")
       const { data: subjectsData, error: subjectsError } = await supabase
         .from('iitm_bs_subjects')
         .select('*')
         .eq('branch', dbBranchName)
-        .eq('level', dbLevelName) // Use capitalized level
-        .order('week', { ascending: true })
+        .eq('level', dbLevelName)
         .order('display_order', { ascending: true });
 
       if (subjectsError) throw subjectsError;
       if (!subjectsData || subjectsData.length === 0) {
         setLoading(false);
-        // This is normal if no subjects are in the DB for this filter
-        return; 
+        return; // No subjects defined for this course
       }
 
-      // 2. Fetch all notes for this branch and level
+      // 2. Fetch all available Notes (The "Content")
       const { data: notesData, error: notesError } = await supabase
-        .from('notes')
-        .select('id, title, description, file_link, download_count, subject')
-        .eq('exam_type', 'IITM_BS')
+        .from('iitm_branch_notes')
+        .select('*')
         .eq('branch', dbBranchName)
-        .eq('level', dbLevelName); // Use capitalized level
+        .eq('level', dbLevelName);
 
       if (notesError) throw notesError;
 
-      // 3. Process and group the data
-      const notesMap = new Map<string, Note[]>();
+      // 3. Create a fast lookup map for the notes
+      // Map<SubjectName, Map<WeekNumber, Note[]>>
+      const notesMap = new Map<string, Map<number, Note[]>>();
       if (notesData) {
-        for (const note of notesData) {
-          if (!note.subject) continue;
+        for (const note of notesData as Note[]) {
           if (!notesMap.has(note.subject)) {
-            notesMap.set(note.subject, []);
+            notesMap.set(note.subject, new Map<number, Note[]>());
           }
-          notesMap.get(note.subject)!.push(note as Note);
+          if (!notesMap.get(note.subject)!.has(note.week_number)) {
+            notesMap.get(note.subject)!.set(note.week_number, []);
+          }
+          notesMap.get(note.subject)!.get(note.week_number)!.push(note);
         }
       }
+      
+      // 4. Collect all unique specializations
+      const specializationsSet = new Set<string>();
+      subjectsData.forEach(s => {
+        if(s.specialization) specializationsSet.add(s.specialization);
+      });
 
-      const weeksMap = new Map<number, SubjectWithNotes[]>();
-      const specializations = new Set<string>();
+      // 5. Build the final structure (Subject > Week 1-12 > Notes)
+      const finalGroupedData: GroupedData[] = subjectsData.map((subject: Subject) => {
+        const weeks: WeekData[] = [];
+        const subjectNotes = notesMap.get(subject.subject_name);
 
-      for (const subject of subjectsData as SubjectStructure[]) {
-        const week = subject.week || 0; 
-        
-        // Find notes for this subject
-        const notes = notesMap.get(subject.subject_name) || [];
-
-        if (!weeksMap.has(week)) {
-          weeksMap.set(week, []);
+        // Create all 12 weeks for this subject
+        for (let i = 1; i <= 12; i++) {
+          // Find notes for this specific week, or use an empty array
+          const notesForWeek = subjectNotes ? (subjectNotes.get(i) || []) : [];
+          
+          weeks.push({
+            week: i,
+            notes: notesForWeek,
+          });
         }
-        weeksMap.get(week)!.push({ ...subject, notes });
 
-        if (subject.specialization) {
-          specializations.add(subject.specialization);
-        }
-      }
-
-      // 4. Convert maps to the final array structure
-      const finalGroupedData: GroupedData[] = Array.from(weeksMap.keys())
-        .sort((a, b) => a - b) // Sort by week number
-        .map(week => ({
-          week,
-          subjects: weeksMap.get(week)!,
-        }));
+        return {
+          subjectName: subject.subject_name,
+          specialization: subject.specialization || null,
+          weeks: weeks,
+        };
+      });
 
       setGroupedData(finalGroupedData);
-      setAvailableSpecializations(Array.from(specializations));
+      setAvailableSpecializations(Array.from(specializationsSet));
       
     } catch (error: any) {
       toast({
