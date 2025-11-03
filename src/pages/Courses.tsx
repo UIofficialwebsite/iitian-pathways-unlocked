@@ -1,5 +1,6 @@
-
 import React, { useState } from "react";
+// Import useSearchParams to read URL query parameters
+import { useSearchParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
@@ -12,8 +13,23 @@ import WhyChooseUsSection from "@/components/courses/WhyChooseUsSection";
 import CategoryFilter from "@/components/courses/CategoryFilter";
 import { StaggerTestimonials } from "@/components/ui/stagger-testimonials";
 
+// Helper function to map URL params to state values
+const getCategoryFromUrl = (param: string | null) => {
+  if (param === "iitm-bs") return "IITM BS";
+  if (param === "jee") return "JEE";
+  if (param === "neet") return "NEET";
+  return "all";
+};
+
 const Courses = () => {
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  // Get URL search params
+  const [searchParams] = useSearchParams();
+  
+  // Initialize state by reading the 'category' param from the URL
+  const [selectedCategory, setSelectedCategory] = useState(() => 
+    getCategoryFromUrl(searchParams.get("category"))
+  );
+  
   const { courses, contentLoading } = useBackend();
 
   const categories = [
