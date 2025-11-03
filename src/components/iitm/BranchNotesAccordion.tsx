@@ -118,16 +118,11 @@ const BranchNotesAccordion = ({
           className="border-none rounded-lg bg-white shadow-sm"
         >
           <AccordionTrigger className="px-6 py-4 text-lg font-bold text-gray-800">
+            {/* Specialization tag has been removed from here */}
             {subjectData.subjectName}
-            {subjectData.specialization && (
-              <span className="ml-2 text-xs font-medium text-blue-600 bg-blue-100 px-2 py-0.5 rounded-full">
-                {subjectData.specialization}
-              </span>
-            )}
           </AccordionTrigger>
           <AccordionContent className="p-0">
             {/* --- This is the list of note cards --- */}
-            {/* It maps directly over the notes for this subject */}
             <div className="px-4 pb-4">
               {subjectData.notes.length > 0 ? (
                 <div className="border rounded-md bg-white">
