@@ -56,7 +56,6 @@ const BranchNotesAccordion = ({
         </div>
       </div>
       <div className="flex items-center flex-shrink-0 gap-2">
-        {/* --- THIS IS THE FIX --- */}
         {/* Only show buttons if file_link is present */}
         {note.file_link ? (
           <>
@@ -77,7 +76,6 @@ const BranchNotesAccordion = ({
         ) : (
           <span className="text-xs text-gray-400 italic pr-2">No file</span>
         )}
-        {/* --- END OF FIX --- */}
       </div>
     </div>
   );
@@ -114,7 +112,7 @@ const BranchNotesAccordion = ({
 
   return (
     <Accordion type="multiple" className="w-full space-y-4">
-      {/* Level 1 Accordion: Subjects */}
+      {/* --- LEVEL 1 ACCORDION (SUBJECT) --- */}
       {filteredSubjects.map((subjectData) => (
         <AccordionItem
           value={`subject-${subjectData.subjectName}`}
@@ -130,7 +128,7 @@ const BranchNotesAccordion = ({
             )}
           </AccordionTrigger>
           <AccordionContent className="p-0">
-            {/* Level 2 Accordion: Weeks */}
+            {/* --- LEVEL 2 ACCORDION (WEEK) --- */}
             <Accordion type="multiple" className="w-full px-4 pb-4 space-y-2">
               {subjectData.weeks.map((weekData) => (
                 <AccordionItem
@@ -142,7 +140,6 @@ const BranchNotesAccordion = ({
                     Week {weekData.week}
                   </AccordionTrigger>
                   <AccordionContent className="p-0 bg-white">
-                    {/* Render all notes found for this week */}
                     {weekData.notes.length > 0 ? (
                       weekData.notes.map(renderNoteItem)
                     ) : (
