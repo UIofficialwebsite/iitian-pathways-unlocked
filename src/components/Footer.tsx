@@ -235,19 +235,19 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">Data Science</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Foundation Level
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/data-science/diploma" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/data-science/diploma" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Diploma Level
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/data-science/degree" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/data-science/degree" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Degree Level
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -255,19 +255,19 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">Electronic Systems</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/electronic-systems/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Foundation Level
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/diploma" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/electronic-systems/diploma" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Diploma Level
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/notes/electronic-systems/degree" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/notes/electronic-systems/degree" className="text-gray-400 hover:text-white transition-colors text-sm">
                         Degree Level
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -275,14 +275,14 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">Other Exams</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/jee/notes" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/jee/notes" className="text-gray-400 hover:text-white transition-colors text-sm">
                         JEE Notes
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/neet/notes" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/neet/notes" className="text-gray-400 hover:text-white transition-colors text-sm">
                         NEET Notes
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -297,9 +297,9 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">IITM BS</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/iitm-bs/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/iitm-bs/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
                         All IITM BS PYQs
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -307,14 +307,14 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">JEE</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/jee/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/jee/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
                         JEE Main - January Session
-                      </Link>
+                      </a>
                     </li>
                     <li>
-                      <Link to="/exam-preparation/jee/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/jee/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
                         JEE Main - April Session
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -322,9 +322,9 @@ const Footer = () => {
                   <h5 className="text-sm font-medium text-gray-300 mb-2">NEET</h5>
                   <ul className="space-y-1.5 ml-2">
                     <li>
-                      <Link to="/exam-preparation/neet/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                      <a href="/exam-preparation/neet/pyqs" className="text-gray-400 hover:text-white transition-colors text-sm">
                         NEET PYQs
-                      </Link>
+                      </a>
                     </li>
                   </ul>
                 </div>
@@ -336,19 +336,19 @@ const Footer = () => {
               <h4 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">IITM Tools</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/iitm-tools/cgpa-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/iitm-tools/cgpa-calculator" className="text-gray-400 hover:text-white transition-colors text-sm">
                     CGPA Calculator
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/iitm-tools/grade-calculator/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/iitm-tools/grade-calculator/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
                     Grade Calculator
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/iitm-tools/marks-predictor/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/iitm-tools/marks-predictor/data-science/foundation" className="text-gray-400 hover:text-white transition-colors text-sm">
                     Marks Predictor
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -358,29 +358,29 @@ const Footer = () => {
               <h4 className="text-lg font-semibold text-white border-b border-gray-700 pb-2">Courses</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/courses?category=iitm-bs" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/courses?category=iitm-bs" className="text-gray-400 hover:text-white transition-colors text-sm">
                     IITM BS Courses
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/courses?category=jee" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/courses?category=jee" className="text-gray-400 hover:text-white transition-colors text-sm">
                     JEE Courses
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/courses?category=neet" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/courses?category=neet" className="text-gray-400 hover:text-white transition-colors text-sm">
                     NEET Courses
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">
                     All Courses
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link to="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">
+                  <a href="/courses" className="text-gray-400 hover:text-white transition-colors text-sm">
                     Video Lectures
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
