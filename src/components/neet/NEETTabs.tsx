@@ -17,6 +17,7 @@ interface NEETTabsProps {
 const NEETTabs = ({ navigate, location }: NEETTabsProps) => {
   // Initialize state from URL
   const initialTab = getTabFromUrl(location.pathname);
+  const initialParams = getParamsFromUrl(location.pathname);
   const [activeTab, setActiveTab] = useState(initialTab);
 
   // Update URL when filters change
@@ -67,7 +68,7 @@ const NEETTabs = ({ navigate, location }: NEETTabsProps) => {
           </div>
 
           <TabsContent value="notes">
-            <NEETNotesTab onFilterChange={updateUrl} />
+            <NEETNotesTab initialParams={initialParams} onFilterChange={updateUrl} />
           </TabsContent>
 
           <TabsContent value="pyqs">

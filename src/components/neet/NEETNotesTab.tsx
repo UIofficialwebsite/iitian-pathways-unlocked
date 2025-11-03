@@ -6,12 +6,18 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 
 interface NEETNotesTabProps {
   onFilterChange?: (tab: string, subject?: string, classLevel?: string) => void;
+  initialParams?: string[];
 }
 
-const NEETNotesTab = ({ onFilterChange }: NEETNotesTabProps) => {
+const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   const { notes, contentLoading } = useBackend();
-  const [activeSubject, setActiveSubject] = useState("Physics");
-  const [activeClass, setActiveClass] = useState("class11");
+  
+  // Parse initialParams: [0] = subject, [1] = class
+  const initialSubject = initialParams?.[0] || "Physics";
+  const initialClass = initialParams?.[1]?.toLowerCase() || "class11";
+  
+  const [activeSubject, setActiveSubject] = useState(initialSubject);
+  const [activeClass, setActiveClass] = useState(initialClass);
 
   const neetNotes = useMemo(() => notes.filter(note => note.exam_type === 'NEET'), [notes]);
 

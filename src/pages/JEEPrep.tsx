@@ -40,9 +40,13 @@ const JEEPrep = () => {
     return sortedSubjects;
   }, [jeeNotes]);
 
-  // Initialize filters from URL params
-  const [activeSubject, setActiveSubject] = useState(urlParams[0] || "Physics");
-  const [activeClass, setActiveClass] = useState(urlParams[1] || "class11");
+  // Initialize filters from URL params - subject first, then class
+  // URL format: /exam-preparation/jee/notes/Physics/class11
+  const initialSubject = urlParams[0] || "Physics";
+  const initialClass = urlParams[1]?.toLowerCase() || "class11";
+  
+  const [activeSubject, setActiveSubject] = useState(initialSubject);
+  const [activeClass, setActiveClass] = useState(initialClass);
   const [downloads, setDownloads] = useState<Record<string, number>>({});
 
   // Update URL when filters change
