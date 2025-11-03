@@ -4,6 +4,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ShareButton } from "@/components/ShareButton";
 import CGPACalculator from "@/components/iitm/CGPACalculator";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
 import FoundationMarksPredictor from "@/components/iitm/FoundationMarksPredictor";
@@ -57,8 +58,13 @@ const IITMCalculators = () => {
 
             <TabsContent value="grade-calculator" className="mt-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Grade Calculator</CardTitle>
+                  <ShareButton
+                    url={`${window.location.origin}/iitm-tools/grade-calculator/${selectedBranch}/${selectedLevel}`}
+                    title="IITM BS Grade Calculator"
+                    description={`Calculate your grade for ${selectedLevel} level - ${selectedBranch}`}
+                  />
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -128,8 +134,13 @@ const IITMCalculators = () => {
 
             <TabsContent value="cgpa-calculator" className="mt-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>CGPA Calculator</CardTitle>
+                  <ShareButton
+                    url={`${window.location.origin}/iitm-tools/cgpa-calculator`}
+                    title="IITM BS CGPA Calculator"
+                    description="Calculate your cumulative grade point average"
+                  />
                 </CardHeader>
                 <CardContent>
                   <CGPACalculator />
@@ -139,8 +150,13 @@ const IITMCalculators = () => {
 
             <TabsContent value="marks-predictor" className="mt-6">
               <Card>
-                <CardHeader>
+                <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Marks Predictor</CardTitle>
+                  <ShareButton
+                    url={`${window.location.origin}/iitm-tools/marks-predictor/${selectedBranch}/${selectedLevel}`}
+                    title="IITM BS Marks Predictor"
+                    description={`Predict your marks for ${selectedLevel} level - ${selectedBranch}`}
+                  />
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">

@@ -30,7 +30,7 @@ const NEETSubjectBlock = ({ subject, selectedClass }: SubjectBlockProps) => {
   }
 
   return (
-    <ChapterList chapters={chapters} downloadCounts={downloadCounts} onDownload={handleDownloadClick} />
+    <ChapterList chapters={chapters} downloadCounts={downloadCounts} onDownload={handleDownloadClick} contentType="notes" />
   );
 };
 

@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardFooter } from "@/comp
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, Trash2, Edit } from "lucide-react";
+import { ShareButton } from "../ShareButton";
 import { Note } from "./hooks/useIITMBranchNotes";
 import { useAuth } from "@/hooks/useAuth";
 import { useIITMBranchNotesManager } from "./hooks/useIITMBranchNotesManager";
@@ -92,7 +93,7 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
                           )}
                         </div>
                       </CardHeader>
-                      <CardFooter className="flex justify-between pt-0">
+                      <CardFooter className="flex justify-between items-center pt-0">
                         <Button
                           size="sm"
                           onClick={() => handleDownloadClick(note.id, (note as any).file_link)}
@@ -101,6 +102,13 @@ const BranchNotesAccordion: React.FC<BranchNotesAccordionProps> = ({
                         >
                           <Download className="h-3 w-3 mr-1" /> Download
                         </Button>
+                        <ShareButton
+                          url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${note.id}`}
+                          title={note.title}
+                          description={note.description}
+                          size="sm"
+                          variant="ghost"
+                        />
                         <div className="flex items-center">
                           <span className="text-xs text-gray-500">{downloadCounts[note.id] || note.downloads || 0}</span>
                         </div>

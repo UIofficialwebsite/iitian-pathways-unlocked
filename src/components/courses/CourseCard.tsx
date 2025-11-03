@@ -11,6 +11,7 @@ import {
   Languages,
   ImageOff,
 } from "lucide-react";
+import { ShareButton } from '../ShareButton';
 import EnrollButton from "@/components/EnrollButton";
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
@@ -166,19 +167,29 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
               )}
            </div>
 
-           <div className="w-full grid grid-cols-2 gap-3">
-              <Button 
-                variant="outline" 
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
-                onClick={() => navigate(`/courses/${course.id}`)}
-              >
-                Explore
-              </Button>
-              <EnrollButton
-                courseId={course.id}
-                enrollmentLink={course.enroll_now_link || undefined}
-                coursePrice={course.discounted_price || course.price}
-                className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold transition-all duration-200`}
+           <div className="w-full flex flex-col gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                >
+                  Explore
+                </Button>
+                <EnrollButton
+                  courseId={course.id}
+                  enrollmentLink={course.enroll_now_link || undefined}
+                  coursePrice={course.discounted_price || course.price}
+                  className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold transition-all duration-200`}
+                />
+              </div>
+              <ShareButton
+                url={`${window.location.origin}/courses/${course.id}`}
+                title={course.title}
+                description={course.description}
+                variant="ghost"
+                showText
+                className="w-full"
               />
           </div>
         </CardFooter>

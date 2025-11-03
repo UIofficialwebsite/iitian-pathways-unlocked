@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Download } from "lucide-react";
 import AdminAddButton from "@/components/admin/AdminAddButton";
 import { ShimmerButton } from "./ui/shimmer-button";
+import { ShareButton } from "./ShareButton";
 
 interface PyqSet {
   id: string;
@@ -110,7 +111,7 @@ const SubjectPyqs = ({
               </div>
               <CardDescription>{pyq.description}</CardDescription>
             </CardHeader>
-            <CardFooter className="flex justify-between">
+            <CardFooter className="flex justify-between items-center">
               <ShimmerButton
                 onClick={() => onDownload(pyq.id)}
                 background="rgba(26, 86, 219, 0.8)"
@@ -120,6 +121,12 @@ const SubjectPyqs = ({
                     <Download className="h-4 w-4 mr-2" /> Download
                 </span>
               </ShimmerButton>
+              <ShareButton
+                url={`${window.location.origin}/exam-preparation/pyqs/${pyq.id}`}
+                title={pyq.title}
+                description={`${pyq.description} - ${selectedYear}`}
+                size="sm"
+              />
               <div className="flex items-center">
                 <span className="text-sm text-gray-500">{downloads[pyq.id] || 0}</span>
                 <div className="ml-2 bg-gray-200 h-1.5 w-16 rounded-full overflow-hidden">

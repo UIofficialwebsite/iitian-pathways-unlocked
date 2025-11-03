@@ -53,6 +53,7 @@ const SubjectBlock = ({ subject, selectedClass, examType }: SubjectBlockProps) =
         onDownload={handleDownloadClick}
         isAdmin={isAdmin}
         onDelete={handleDeleteClick}
+        contentType="notes"
       />
     </div>
   );

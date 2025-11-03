@@ -23,6 +23,7 @@ import {
   FileText,
   Loader2
 } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -288,7 +289,12 @@ const Career = () => {
                           )}
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-4 border-t flex justify-end">
+                      <CardFooter className="pt-4 border-t flex justify-between">
+                        <ShareButton
+                          url={`${window.location.origin}/career?job=${job.id}`}
+                          title={job.title}
+                          description={`${job.company} - ${job.location}`}
+                        />
                         <Button asChild className="bg-royal hover:bg-royal-dark text-white">
                           <a href={job.application_url || '#'} target="_blank" rel="noopener noreferrer">Apply Now</a>
                         </Button>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Users, MessageCircle } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { ShareButton } from "../ShareButton";
 
 const CommunitiesTab = () => {
   const { communities, contentLoading } = useBackend();
@@ -74,20 +75,28 @@ const CommunitiesTab = () => {
                     )}
                   </div>
 
-                  <Button 
-                    asChild 
-                    className={`w-full ${getButtonStyle(community.group_type)}`}
-                  >
-                    <a 
-                      href={community.group_link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2"
+                  <div className="flex gap-2">
+                    <Button 
+                      asChild 
+                      className={`flex-1 ${getButtonStyle(community.group_type)}`}
                     >
-                      <MessageCircle className="h-4 w-4" />
-                      Join {community.group_type}
-                    </a>
-                  </Button>
+                      <a 
+                        href={community.group_link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Join {community.group_type}
+                      </a>
+                    </Button>
+                    <ShareButton
+                      url={`${window.location.origin}/communities/${community.id}`}
+                      title={community.name}
+                      description={community.description || `Join ${community.name} community`}
+                      size="icon"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>

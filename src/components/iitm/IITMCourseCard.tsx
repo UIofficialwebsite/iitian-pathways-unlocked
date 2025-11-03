@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, CalendarDays, Languages } from "lucide-react";
+import { ShareButton } from "../ShareButton";
 import EnrollButton from "@/components/EnrollButton";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/components/admin/courses/types";
@@ -56,35 +57,45 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
           </ul>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between items-center bg-gray-50 p-4 mt-auto">
-        <div className="flex items-baseline">
-          {hasDiscount ? (
-            <>
-              <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.discounted_price}</span>
-              <span className="ml-2 text-gray-500 line-through">₹{course.price}</span>
-            </>
-          ) : (
-            <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.price}</span>
-          )}
+      <CardFooter className="flex flex-col gap-3 bg-gray-50 p-4 mt-auto">
+        <div className="flex justify-between items-center w-full">
+          <div className="flex items-baseline">
+            {hasDiscount ? (
+              <>
+                <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.discounted_price}</span>
+                <span className="ml-2 text-gray-500 line-through">₹{course.price}</span>
+              </>
+            ) : (
+              <span className={`text-2xl font-bold ${isPremium ? 'text-amber-600' : 'text-royal'}`}>₹{course.price}</span>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+             {hasDiscount && (
+               <Badge variant="destructive">
+                 {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
+               </Badge>
+             )}
+              <Link to={`/courses/${course.id}`}>
+                  <Button variant="outline">Know More</Button>
+              </Link>
+              <EnrollButton
+                courseId={course.id}
+                enrollmentLink={course.enroll_now_link || undefined}
+                coursePrice={course.discounted_price || course.price}
+                className={isPremium ?
+                  "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
+                  "bg-royal hover:bg-royal-dark text-white"}
+              />
+          </div>
         </div>
-        <div className="flex items-center space-x-2">
-           {hasDiscount && (
-             <Badge variant="destructive">
-               {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
-             </Badge>
-           )}
-            <Link to={`/courses/${course.id}`}>
-                <Button variant="outline">Know More</Button>
-            </Link>
-            <EnrollButton
-              courseId={course.id}
-              enrollmentLink={course.enroll_now_link || undefined}
-              coursePrice={course.discounted_price || course.price}
-              className={isPremium ?
-                "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
-                "bg-royal hover:bg-royal-dark text-white"}
-            />
-        </div>
+        <ShareButton
+          url={`${window.location.origin}/courses/${course.id}`}
+          title={course.title}
+          description={course.description}
+          variant="ghost"
+          showText
+          className="w-full"
+        />
       </CardFooter>
     </Card>
   );

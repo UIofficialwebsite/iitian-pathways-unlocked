@@ -3,6 +3,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Eye, Trash2 } from "lucide-react";
 import { ShimmerButton } from './ui/shimmer-button';
+import { ShareButton } from './ShareButton';
 
 interface Chapter {
     id: string;
@@ -19,9 +20,10 @@ interface ChapterListProps {
     onDownload: (noteId: string, fileUrl?: string) => Promise<void>;
     isAdmin?: boolean;
     onDelete?: (noteId: string) => Promise<void>;
+    contentType?: 'notes' | 'pyqs';
 }
 
-const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete }) => {
+const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onDownload, isAdmin, onDelete, contentType = 'notes' }) => {
     return (
         <div className="space-y-4">
             <ul className="space-y-3">
@@ -47,6 +49,12 @@ const ChapterList: React.FC<ChapterListProps> = ({ chapters, downloadCounts, onD
                                     <span className="hidden md:inline">Preview</span>
                                 </Button>
                             )}
+                            <ShareButton
+                                url={`${window.location.origin}/exam-preparation/${contentType}/${chapter.id}`}
+                                title={chapter.title}
+                                description={chapter.description}
+                                size="sm"
+                            />
                             <ShimmerButton
                                 onClick={() => onDownload(chapter.id, chapter.file_link || undefined)}
                                 disabled={!chapter.file_link}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download } from "lucide-react";
+import { ShareButton } from "./ShareButton";
 
 interface Chapter {
   id: string;
@@ -46,13 +47,19 @@ const SubjectChapters = ({ chapters, downloads, onDownload }: SubjectChaptersPro
                     </div>
                     <CardDescription>{chapter.description}</CardDescription>
                   </CardHeader>
-                  <CardFooter className="flex justify-between">
+                  <CardFooter className="flex justify-between items-center">
                     <Button
                       onClick={() => onDownload(chapter.id)}
                       className="bg-royal hover:bg-royal-dark text-white"
                     >
                       <Download className="h-4 w-4 mr-2" /> Download
                     </Button>
+                    <ShareButton
+                      url={`${window.location.origin}/notes/${chapter.id}`}
+                      title={chapter.title}
+                      description={chapter.description}
+                      size="sm"
+                    />
                     <div className="flex items-center">
                       <span className="text-sm text-gray-500">{downloads[chapter.id] || 0}</span>
                       <div className="ml-2 bg-gray-200 h-1.5 w-16 rounded-full overflow-hidden">

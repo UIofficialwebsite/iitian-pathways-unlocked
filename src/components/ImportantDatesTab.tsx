@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { ShareButton } from "./ShareButton";
 
 interface ImportantDate {
   id: string;
@@ -79,8 +80,19 @@ const ImportantDatesTab = ({ examType }: ImportantDatesTabProps) => {
                         <span className="text-royal text-sm uppercase">{new Date(date.date_value).toLocaleString('default', { month: 'short' })}</span>
                     </div>
                     <div className="flex-1 p-4">
-                        <CardTitle className="text-base font-semibold">{date.title}</CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">{date.description}</p>
+                        <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                                <CardTitle className="text-base font-semibold">{date.title}</CardTitle>
+                                <p className="text-sm text-gray-600 mt-1">{date.description}</p>
+                            </div>
+                            <ShareButton
+                                url={`${window.location.origin}/important-dates/${date.id}`}
+                                title={date.title}
+                                description={date.description}
+                                size="sm"
+                                variant="ghost"
+                            />
+                        </div>
                         <div className="flex flex-wrap gap-2 mt-2">
                             {date.category && <Badge variant="outline">{date.category}</Badge>}
                             {date.tag && <Badge variant="secondary">{date.tag}</Badge>}
