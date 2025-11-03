@@ -23,8 +23,6 @@ export const AnnouncementBar = () => {
     return () => clearInterval(interval);
   }, [announcements.length]);
 
-  // Keep announcement bar always visible (removed scroll behavior)
-
   if (loading || announcements.length === 0 || !show) {
     return null;
   }
@@ -38,37 +36,50 @@ export const AnnouncementBar = () => {
 
   const handleClose = () => {
     setShow(false);
-    // Remove announcement bar completely when X is clicked
   };
 
   return (
-    <div className="fixed top-16 left-0 right-0 z-40 transition-all duration-300">
-      <Banner
-        show={show}
-        onHide={handleClose}
-        variant={isCourse ? 'premium' : 'info'}
-        title={currentAnnouncement.title}
-        description={
-          announcements.length > 1
-            ? `${currentIndex + 1} of ${announcements.length} announcements`
-            : undefined
-        }
-        showShade={true}
-        closable={true}
-        icon={isCourse ? <Sparkles className="h-5 w-5" /> : <Briefcase className="h-5 w-5" />}
-        action={
-          <Button
-            onClick={handleAction}
-            size="sm"
-            className="inline-flex items-center gap-1"
-            variant="ghost"
-          >
-            {isCourse ? 'Join Now' : 'Apply Now'}
-            <ArrowRight className="h-3 w-3" />
-          </Button>
-        }
-        className="h-[60px] rounded-none border-x-0 border-t-0"
-      />
+    // 1. This outer div creates the spacing on the page
+    <div className="py-8 md:py-12">
+      {/* 2. This container centers the block and controls its max-width */}
+      <div className="container mx-auto max-w-4xl">
+        <Banner
+          show={show}
+          onHide={handleClose}
+          // 3. Use 'default' variant, as we're overriding styles
+          variant={'default'}
+          title={currentAnnouncement.title}
+          description={
+            announcements.length > 1
+              ? `${currentIndex + 1} of ${announcements.length} announcements`
+              : undefined
+          }
+          showShade={false} // No shade needed on a black bg
+          closable={true}
+          // 4. Ensure icons are white to be visible on the black background
+          icon={
+            isCourse ? (
+              <Sparkles className="h-5 w-5 text-white" />
+            ) : (
+              <Briefcase className="h-5 w-5 text-white" />
+            )
+          }
+          action={
+            <Button
+              onClick={handleAction}
+              size="sm"
+              // 5. Button styled as requested: white bg, dark text
+              className="inline-flex items-center gap-1 bg-white text-black hover:bg-gray-200"
+              //    (We remove variant="ghost")
+            >
+              {isCourse ? 'Join Now' : 'Apply Now'}
+              <ArrowRight className="h-3 w-3" />
+            </Button>
+          }
+          // 6. This styles the Banner as the black rectangular block
+          className="bg-black text-white p-6 md:p-8 rounded-lg shadow-lg"
+        />
+      </div>
     </div>
   );
 };
