@@ -1,5 +1,3 @@
-// src/components/dashboard/DashboardTopNav.tsx
-
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -11,13 +9,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Added
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react"; // Added Menu
+import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
-import DashboardSidebar from "./DashboardSidebar"; // Added
+import DashboardSidebar from "./DashboardSidebar";
 
-// Copied from ModernDashboard.tsx
+// Define profile type
 interface UserProfile {
   program_type: string | null;
   branch?: string | null;
@@ -33,9 +31,10 @@ interface UserProfile {
 interface DashboardTopNavProps {
   profile: UserProfile | null;
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments') => void;
+  onProfileUpdate: (updatedProfile: UserProfile) => void; // Added for modal
 }
 
-const DashboardTopNav = ({ profile, onViewChange }: DashboardTopNavProps) => {
+const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTopNavProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -63,18 +62,22 @@ const DashboardTopNav = ({ profile, onViewChange }: DashboardTopNavProps) => {
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0">
               <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
-                <DashboardSidebar profile={profile} />
+                {/* Pass onProfileUpdate to mobile sidebar */}
+                <DashboardSidebar profile={profile} onProfileUpdate={onProfileUpdate} />
               </div>
             </SheetContent>
           </Sheet>
 
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0">
+          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
             <img
               className="h-8 w-auto"
               src="/lovable-uploads/logo_ui_new.png"
               alt="UI Logo"
             />
+            <span className="font-sans text-lg font-semibold text-black hidden sm:block">
+              Unknown IITians
+            </span>
           </Link>
         </div>
 
