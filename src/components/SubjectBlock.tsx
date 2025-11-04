@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import ChapterList from "./ChapterList";
@@ -13,9 +12,10 @@ interface SubjectBlockProps {
 const SubjectBlock = ({ subject, selectedClass, examType }: SubjectBlockProps) => {
   const { notes, handleDownload, downloadCounts, contentLoading, isAdmin, deleteNote } = useBackend();
   
+  // UPDATED: Added .sort() to order chapters by display_order_no
   const chapters = notes.filter(
     note => note.exam_type === examType && note.subject === subject && note.class_level === selectedClass
-  );
+  ).sort((a, b) => (a.display_order_no || 0) - (b.display_order_no || 0));
 
   const handleDownloadClick = async (noteId: string, fileUrl?: string) => {
     await handleDownload(noteId, 'notes', fileUrl);
