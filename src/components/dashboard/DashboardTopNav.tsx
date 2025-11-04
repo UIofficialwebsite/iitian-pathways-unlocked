@@ -11,19 +11,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // Added
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid } from "lucide-react";
+import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react"; // Added Menu
 import { useAuth } from '@/hooks/useAuth';
+import DashboardSidebar from "./DashboardSidebar"; // Added
 
 // Copied from ModernDashboard.tsx
 interface UserProfile {
-  program_type: string;
-  branch?: string;
-  level?: string;
-  exam_type?: string;
-  student_status?: string;
-  subjects?: string[];
-  student_name?: string;
+  program_type: string | null;
+  branch?: string | null;
+  level?: string | null;
+  exam_type?: string | null;
+  student_status?: string | null;
+  subjects?: string[] | null;
+  student_name?: string | null;
+  full_name?: string | null;
+  email?: string | null;
 }
 
 interface DashboardTopNavProps {
@@ -48,8 +52,23 @@ const DashboardTopNav = ({ profile, onViewChange }: DashboardTopNavProps) => {
     <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         
-        {/* Left: Logo */}
-        <div className="flex items-center">
+        {/* Left: Mobile Menu & Logo */}
+        <div className="flex items-center gap-2">
+          {/* Mobile Hamburger Menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="lg:hidden">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 p-0">
+              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
+                <DashboardSidebar profile={profile} />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          {/* Logo */}
           <Link to="/" className="flex-shrink-0">
             <img
               className="h-8 w-auto"
@@ -69,7 +88,6 @@ const DashboardTopNav = ({ profile, onViewChange }: DashboardTopNavProps) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1 h-auto">
                 <Avatar className="h-8 w-8">
-                  {/* You can add user.avatar_url here if you have one */}
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
                   <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
