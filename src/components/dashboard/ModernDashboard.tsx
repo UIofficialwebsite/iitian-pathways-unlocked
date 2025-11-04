@@ -69,7 +69,7 @@ const ModernDashboard = () => {
         throw error;
       }
 
-      setProfile(data as UserProfile);
+      setProfile(data);
     } catch (error: any) {
       console.error('Error loading profile:', error);
       toast({

@@ -11,25 +11,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react"; // Removed LayoutDashboard
+import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar from "./DashboardSidebar";
 
 // Define profile type
 interface UserProfile {
-  id: string;
   program_type: string | null;
   branch?: string | null;
   level?: string | null;
   exam_type?: string | null;
   student_status?: string | null;
-  [key: string]: any;
+  subjects?: string[] | null;
+  student_name?: string | null;
+  full_name?: string | null;
+  email?: string | null;
 }
 
 interface DashboardTopNavProps {
   profile: UserProfile | null;
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments') => void;
-  onProfileUpdate: (updatedProfile: UserProfile) => void;
+  onProfileUpdate: (updatedProfile: UserProfile) => void; // Added for modal
 }
 
 const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTopNavProps) => {
@@ -70,7 +72,7 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
           <Link to="/" className="flex-shrink-0 flex items-center gap-2">
             <img
               className="h-8 w-auto"
-              src="/lovable-uploads/logo_ui_new.png" // Using the same logo
+              src="/lovable-uploads/logo_ui_new.png"
               alt="UI Logo"
             />
             <span className="font-sans text-lg font-semibold text-black hidden sm:block">
@@ -101,7 +103,6 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
                 <p className="text-xs text-gray-500 truncate">{userEmail}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              {/* "My Dashboard" link removed */}
               <DropdownMenuItem onClick={() => onViewChange('profile')} className="cursor-pointer">
                 <User className="h-4 w-4 mr-2" />
                 My Profile
@@ -124,4 +125,3 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
 };
 
 export default DashboardTopNav;
-
