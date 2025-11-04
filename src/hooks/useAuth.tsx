@@ -24,7 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    if (!currentUser?.email) {
+    // We need both ID and Email for the checks
+    if (!currentUser?.id || !currentUser?.email) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setUserRole(null);
@@ -40,16 +41,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check admin_users table
+      // Check admin_users table (this table uses 'email')
       const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('is_super_admin')
-        .eq('email', currentUser.email)
+        .eq('email', currentUser.email) 
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
-        // Hide RLS errors from the console, as they are expected for non-admins
-        if (error.code !== '42501') { 
+         // Hide RLS errors (code 42501) as they are expected for non-admins
+        if (error.code !== '42501') {
           console.error('useAuth: Error checking admin_users:', error);
         }
       }
@@ -61,16 +62,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check profiles table for role
+      // **THE FIX IS HERE:** Check profiles table using 'id'
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('email', currentUser.email)
+        .eq('id', currentUser.id) // This query now matches the RLS policy from Step 1
         .maybeSingle();
       
       if (profileError && profileError.code !== 'PGRST116') {
-        // Hide RLS errors from the console
-        if (profileError.code !== '42501') {
+        if (profileError.code !== '42501') { // Hide RLS errors
           console.error('useAuth: Error checking profiles:', profileError);
         }
       }
@@ -141,7 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Only check status if not loading to prevent race conditions
     if (!isLoading) {
-      checkAdminStatus(user);
+      checkAdminStatus(user).catch(console.error);
     }
   }, [user, isLoading]);
 
