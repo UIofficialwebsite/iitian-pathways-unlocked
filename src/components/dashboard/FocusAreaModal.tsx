@@ -43,19 +43,11 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
   const [step, setStep] = useState<Step>('initial');
 
   // **FIXED:** This effect now only runs when the modal opens.
-  // This loads the user's current settings and fixes the "Back" button.
+  // It ALWAYS sets the step to 'initial' and just loads the data.
   useEffect(() => {
     if (isOpen) {
-      const initialProgramType = profile?.program_type;
-      
-      // Set step based on profile, or 'initial' if incomplete
-      if (initialProgramType === 'IITM_BS') {
-        setStep('iitm_bs');
-      } else if (initialProgramType === 'COMPETITIVE_EXAM') {
-        setStep('competitive_exam');
-      } else {
-        setStep('initial');
-      }
+      // **FIX:** Always start at the 'initial' step
+      setStep('initial');
       
       // Load current profile data into local state, defaulting to empty strings
       setProgramType(profile?.program_type || '');
@@ -64,10 +56,10 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
       setBranch(profile?.branch || '');
       setLevel(profile?.level || '');
     }
-  }, [isOpen, profile]); // Removed 'step' from dependency array
+  }, [isOpen, profile]);
   
-  // **FIXED:** This now clears the *other* program's fields when you switch.
-  // This fixes the "Save" button being enabled incorrectly.
+  // **FIXED:** This now clears the *other* program's fields when you switch
+  // AND pre-fills the fields for the program you clicked.
   const handleProgramChange = (type: 'IITM_BS' | 'COMPETITIVE_EXAM') => {
     setProgramType(type);
     if (type === 'IITM_BS') {
@@ -75,11 +67,17 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
       // Clear competitive exam fields
       setExamType('');
       setStudentStatus('');
+      // Pre-fill with existing data if available
+      setBranch(profile?.branch || '');
+      setLevel(profile?.level || '');
     } else {
       setStep('competitive_exam');
       // Clear IITM BS fields
       setBranch('');
       setLevel('');
+      // Pre-fill with existing data if available
+      setExamType(profile?.exam_type || '');
+      setStudentStatus(profile?.student_status || '');
     }
   };
 
@@ -224,13 +222,12 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <SelectValue placeholder="Select your Level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="qualifier">Qualifier</SelectItem> {/* Added Qualifier */}
+              <SelectItem value="qualifier">Qualifier</SelectItem>
               <SelectItem value="foundation">Foundation</SelectItem>
               <SelectItem value="diploma">Diploma</SelectItem>
               <SelectItem value="degree">Degree</SelectItem>
-            </SelectItem> {/* <-- THIS WAS THE TYPO, NOW FIXED */}
-          </SelectContent>
-        </Select>
+            </SelectContent>
+          </Select>
         )}
 
         <div className="flex justify-end gap-2">
