@@ -42,11 +42,11 @@ const buildNoteUrl = (chapter: Chapter, contentType: string): string => {
         }
     }
     
-    // For JEE/NEET notes
+    // For JEE/NEET notes - subject comes before class
     if ((examType === 'jee' || examType === 'neet') && chapter.class_level && chapter.subject) {
         const classLevel = slugify(chapter.class_level);
         const subject = slugify(chapter.subject);
-        return `${origin}/exam-preparation/${examType}/${contentType}/${classLevel}/${subject}`;
+        return `${origin}/exam-preparation/${examType}/${contentType}/${subject}/${classLevel}`;
     }
     
     // Fallback to current URL

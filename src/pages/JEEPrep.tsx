@@ -42,7 +42,12 @@ const JEEPrep = () => {
 
   // Initialize filters from URL params - subject first, then class
   // URL format: /exam-preparation/jee/notes/physics/class11
-  const initialSubject = urlParams[0] || (subjects.length > 0 ? subjects[0] : "Physics");
+  // Find matching subject from available subjects (case-insensitive)
+  const urlSubject = urlParams[0];
+  const matchedSubject = urlSubject 
+    ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase()) 
+    : null;
+  const initialSubject = matchedSubject || (subjects.length > 0 ? subjects[0] : "Physics");
   const initialClass = urlParams[1] || "class11";
   
   const [activeSubject, setActiveSubject] = useState(initialSubject);
@@ -68,12 +73,16 @@ const JEEPrep = () => {
   };
 
   useEffect(() => {
-    if (!contentLoading && subjects.length > 0 && !subjects.includes(activeSubject)) {
-      const newSubject = subjects[0];
-      setActiveSubject(newSubject);
-      updateUrl(activeTab, newSubject, activeClass);
+    if (!contentLoading && subjects.length > 0) {
+      // If URL subject doesn't match any available subject, update to first available
+      const isSubjectAvailable = subjects.some(s => s.toLowerCase() === activeSubject.toLowerCase());
+      if (!isSubjectAvailable) {
+        const newSubject = subjects[0];
+        setActiveSubject(newSubject);
+        updateUrl(activeTab, newSubject, activeClass);
+      }
     }
-  }, [contentLoading, subjects, activeSubject]);
+  }, [contentLoading, subjects]);
 
   // Handle tab changes
   const handleTabChange = (newTab: string) => {

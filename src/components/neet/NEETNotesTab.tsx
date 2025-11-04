@@ -13,11 +13,11 @@ const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   const { notes, contentLoading } = useBackend();
   
   // Parse initialParams: [0] = subject, [1] = class
-  const initialSubject = initialParams?.[0] || "Physics";
-  const initialClass = initialParams?.[1] || "class11";
+  // Find matching subject from available subjects (case-insensitive)
+  const urlSubject = initialParams?.[0];
   
-  const [activeSubject, setActiveSubject] = useState(initialSubject);
-  const [activeClass, setActiveClass] = useState(initialClass);
+  const [activeSubject, setActiveSubject] = useState("Physics");
+  const [activeClass, setActiveClass] = useState(initialParams?.[1] || "class11");
 
   const neetNotes = useMemo(() => notes.filter(note => note.exam_type === 'NEET'), [notes]);
 
@@ -37,12 +37,20 @@ const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   }, [neetNotes]);
   
   useEffect(() => {
-    if (!contentLoading && subjects.length > 0 && !subjects.includes(activeSubject)) {
-      const newSubject = subjects[0];
-      setActiveSubject(newSubject);
-      onFilterChange?.('notes', newSubject, activeClass);
+    if (!contentLoading && subjects.length > 0) {
+      // Match URL subject with available subjects (case-insensitive)
+      const matchedSubject = urlSubject 
+        ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase())
+        : null;
+      
+      const newSubject = matchedSubject || subjects[0];
+      
+      if (newSubject !== activeSubject) {
+        setActiveSubject(newSubject);
+        onFilterChange?.('notes', newSubject, activeClass);
+      }
     }
-  }, [contentLoading, subjects, activeSubject]);
+  }, [contentLoading, subjects]);
 
   // Handle subject changes
   const handleSubjectChange = (newSubject: string) => {
