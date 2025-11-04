@@ -42,10 +42,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       // Check admin_users table
-      const { data: adminUser, error } = await supabase
+      const { data, error } = await supabase
         .from('admin_users')
         .select('is_super_admin')
-        .eq('email', currentUser.email)
+        .eq('user_id', user.id); // <-- This line is the fix
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
