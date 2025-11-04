@@ -108,6 +108,7 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
+        // This query correctly fetches `batch_name` from the `courses` table
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -136,7 +137,8 @@ const MyEnrollments = () => {
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
         for (const enrollment of rawData as RawEnrollment[]) {
-          if (!enrollment.courses) continue; // Skip if join failed
+          // Check if the joined 'courses' data exists
+          if (!enrollment.courses) continue; 
 
           const course_id = enrollment.course_id;
 
