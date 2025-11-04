@@ -16,31 +16,28 @@ import {
   Newspaper,
   FileText,
   ExternalLink,
-  Menu,
   Loader2 // Added for main loader
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+// Sheet components are no longer needed here
 import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; // New Top Nav
 import MyProfile from "./MyProfile"; // New Profile View
 import MyEnrollments from "./MyEnrollments"; // New Enrollments View
-// ProfileEditModal is no longer used
 
 interface UserProfile {
-  id: string; // Added ID
-  program_type: string | null; // Added null
+  id: string;
+  program_type: string | null;
   branch?: string | null;
   level?: string | null;
   exam_type?: string | null;
   student_status?: string | null;
   subjects?: string[] | null;
   student_name?: string | null;
-  full_name?: string | null; // Added for profile
-  email?: string | null; // Added for profile
+  full_name?: string | null;
+  email?: string | null;
 }
 
-// Define the active views
 type ActiveView = 'dashboard' | 'profile' | 'enrollments';
 
 const ModernDashboard = () => {
@@ -51,7 +48,6 @@ const ModernDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
 
-  // Get filtered content based on profile
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs, courses, importantDates, newsUpdates } = filteredContent;
 
@@ -62,7 +58,7 @@ const ModernDashboard = () => {
   }, [user]);
 
   const fetchUserProfile = async () => {
-    if (!user) return; // Guard clause
+    if (!user) return;
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -88,7 +84,6 @@ const ModernDashboard = () => {
     }
   };
 
-  // Main loading state for profile fetch
   if (loading || contentLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -97,7 +92,6 @@ const ModernDashboard = () => {
     );
   }
 
-  // Content for the main dashboard view
   const renderDashboardView = () => (
     <>
       {/* Stats Cards */}
@@ -149,9 +143,7 @@ const ModernDashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Profile Overview and SSP Portal */}
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-1 gap-8 items-start">
-          {/* SSP Portal Card */}
           <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
@@ -175,7 +167,6 @@ const ModernDashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Activity */}
         <div>
           <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
@@ -230,9 +221,7 @@ const ModernDashboard = () => {
         </div>
       </div>
 
-      {/* Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mt-8">
-        {/* Recent Notes */}
         <Card className="hover:shadow-md transition-all duration-300 border border-gray-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -266,7 +255,6 @@ const ModernDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent PYQs */}
         <Card className="hover:shadow-md transition-all duration-300 border border-gray-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -300,7 +288,6 @@ const ModernDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Latest News */}
         <Card className="hover:shadow-md transition-all duration-300 border border-gray-200">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -333,7 +320,6 @@ const ModernDashboard = () => {
         </Card>
       </div>
 
-      {/* Important Dates */}
       {importantDates.length > 0 && (
         <Card className="mt-8 hover:shadow-md transition-all duration-300 border border-gray-200">
           <CardHeader className="pb-3">
@@ -365,35 +351,22 @@ const ModernDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       
-      {/* --- DESKTOP SIDEBAR (FIXED) --- */}
-      <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 lg:z-30">
+      {/* --- TOP NAV (FIXED, FULL-WIDTH) --- */}
+      <DashboardTopNav 
+        profile={profile} 
+        onViewChange={setActiveView} 
+      />
+
+      {/* --- DESKTOP SIDEBAR (FIXED, BELOW TOPNAV) --- */}
+      <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:top-16 lg:bottom-0 lg:left-0 lg:z-30">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
           <DashboardSidebar profile={profile} />
         </div>
       </div>
 
-      {/* --- TOP NAV (FIXED) --- */}
-      <div className="lg:pl-72">
-        <DashboardTopNav 
-          profile={profile} 
-          onViewChange={setActiveView} 
-        />
-        
-        {/* --- MOBILE HAMBURGER (INSIDE CONTENT) --- */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="lg:hidden fixed top-2 left-2 z-50 bg-white/50 backdrop-blur-sm">
-              <Menu className="h-6 w-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-72 p-0">
-            <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
-              <DashboardSidebar profile={profile} />
-            </div>
-          </SheetContent>
-        </Sheet>
-        
-        {/* --- MAIN CONTENT AREA --- */}
+      {/* --- MAIN CONTENT AREA (WITH PADDING) --- */}
+      {/* Added pt-16 for top nav and lg:pl-72 for sidebar */}
+      <div className="lg:pl-72 pt-16">
         <main className="py-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             {activeView === 'dashboard' && renderDashboardView()}
@@ -403,7 +376,6 @@ const ModernDashboard = () => {
         </main>
       </div>
       
-      {/* ProfileEditModal removed */}
     </div>
   );
 };
