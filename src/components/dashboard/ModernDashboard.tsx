@@ -33,6 +33,7 @@ interface UserProfile {
   student_name?: string | null;
   full_name?: string | null;
   email?: string | null;
+  gender?: string | null; // Added gender
   [key: string]: any; // Allow other properties
 }
 
@@ -69,7 +70,7 @@ const ModernDashboard = () => {
         throw error;
       }
 
-      setProfile(data);
+      setProfile(data as UserProfile);
     } catch (error: any) {
       console.error('Error loading profile:', error);
       toast({
@@ -384,3 +385,4 @@ const ModernDashboard = () => {
 };
 
 export default ModernDashboard;
+
