@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ArrowRight, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope } from 'lucide-react';
+import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope } from 'lucide-react';
 
 // Define profile type
 interface UserProfile {
@@ -42,45 +42,42 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
   // State for UI flow
   const [step, setStep] = useState<Step>('initial');
 
-  // Reset local state when modal opens or profile changes
+  // **FIXED:** This effect now only runs when the modal opens.
+  // This loads the user's current settings and fixes the "Back" button.
   useEffect(() => {
     if (isOpen) {
+      const initialProgramType = profile?.program_type;
+      
       // Set step based on profile, or 'initial' if incomplete
-      if (profile?.program_type === 'IITM_BS') {
+      if (initialProgramType === 'IITM_BS') {
         setStep('iitm_bs');
-      } else if (profile?.program_type === 'COMPETITIVE_EXAM') {
+      } else if (initialProgramType === 'COMPETITIVE_EXAM') {
         setStep('competitive_exam');
       } else {
         setStep('initial');
       }
       
-      // Load current profile data into local state
+      // Load current profile data into local state, defaulting to empty strings
       setProgramType(profile?.program_type || '');
       setExamType(profile?.exam_type || '');
       setStudentStatus(profile?.student_status || '');
       setBranch(profile?.branch || '');
       setLevel(profile?.level || '');
-
-      // If user clicks a new program, clear old selections
-      if (step === 'initial') {
-        setExamType('');
-        setStudentStatus('');
-        setBranch('');
-        setLevel('');
-      }
-
     }
-  }, [isOpen, profile, step]);
+  }, [isOpen, profile]); // Removed 'step' from dependency array
   
-  // Clear specific fields when changing program type
+  // **FIXED:** This now clears the *other* program's fields when you switch.
+  // This fixes the "Save" button being enabled incorrectly.
   const handleProgramChange = (type: 'IITM_BS' | 'COMPETITIVE_EXAM') => {
     setProgramType(type);
     if (type === 'IITM_BS') {
       setStep('iitm_bs');
+      // Clear competitive exam fields
       setExamType('');
       setStudentStatus('');
     } else {
       setStep('competitive_exam');
+      // Clear IITM BS fields
       setBranch('');
       setLevel('');
     }
@@ -231,8 +228,9 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <SelectItem value="foundation">Foundation</SelectItem>
               <SelectItem value="diploma">Diploma</SelectItem>
               <SelectItem value="degree">Degree</SelectItem>
-            </SelectContent>
-          </Select>
+            </ElectedItem>
+          </SelectContent>
+        </Select>
         )}
 
         <div className="flex justify-end gap-2">
