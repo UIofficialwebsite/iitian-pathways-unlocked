@@ -5,10 +5,8 @@ import { Link } from 'react-router-dom';
 import { 
   Card, 
   CardContent, 
-  CardHeader, 
   CardTitle, 
-  CardDescription, 
-  CardFooter 
+  CardDescription
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,6 +24,7 @@ type RawEnrollment = {
     title: string | null;
     start_date: string | null; 
     end_date: string | null;   
+    image_url: string | null; // Added for the image
   } | null;
 };
 
@@ -36,58 +35,75 @@ type GroupedEnrollment = {
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
+  image_url: string | null; // Added for the image
 };
 
 // --- NEW: Enrollment List Item (based on your new image) ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
+  
+  const StatusIndicator = () => {
+    if (enrollment.status === 'Ongoing') {
+      return (
+        <div className="flex items-center justify-end gap-2" title="Ongoing">
+          <span className="text-sm font-medium text-green-600">Ongoing</span>
+          {/* This is the "beep" effect */}
+          <span className="relative flex h-3 w-3">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+          </span>
+        </div>
+      );
+    }
+    
+    // "Success" badge for completed/expired batches
+    return (
+      <Badge 
+        className="bg-green-100 text-green-800 hover:bg-green-100/80"
+        title="Completed"
+      >
+        Success
+      </Badge>
+    );
+  };
+
   return (
     <Card className="w-full">
-      <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        {/* Left Side: Info */}
-        <div className="flex-grow">
-          {/* Top Row: Title and Status */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-            <CardTitle className="text-xl font-bold text-gray-900 pr-4">
-              {enrollment.title}
-            </CardTitle>
-            <Badge 
-              variant={enrollment.status === 'Ongoing' ? 'default' : 'destructive'}
-              className="flex-shrink-0 mt-2 sm:mt-0"
-            >
-              {enrollment.status}
-            </Badge>
-          </div>
-          
-          {/* Middle Row: End Date */}
-          <CardDescription className="mb-3">
+      <CardContent className="flex items-center gap-4 p-4">
+        {/* Image */}
+        <img 
+          src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"} // Use image_url or placeholder
+          alt={enrollment.title} 
+          className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover hidden sm:block" 
+        />
+
+        {/* Middle Section: Title, Subjects, Date */}
+        <div className="flex-grow space-y-1">
+          <CardTitle className="text-lg md:text-xl font-bold text-gray-900">
+            {enrollment.title}
+          </CardTitle>
+          {/* Comma-separated subjects */}
+          <CardDescription className="text-sm text-gray-600 line-clamp-2">
+            <span className="font-medium text-gray-700">Subjects:</span> {enrollment.subjects.join(', ') || 'N/A'}
+          </CardDescription>
+          <p className="text-sm text-gray-500 pt-1">
             {enrollment.end_date
               ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
               : 'No end date specified'}
-          </CardDescription>
-
-          {/* Bottom Row: Subjects */}
-          <div>
-            <h4 className="text-sm font-semibold text-gray-700 mb-2">Subjects Enrolled:</h4>
-            <div className="flex flex-wrap gap-2">
-              {enrollment.subjects.length > 0 ? (
-                enrollment.subjects.map((subject) => (
-                  <Badge key={subject} variant="secondary">
-                    {subject}
-                  </Badge>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500">No specific subjects listed.</p>
-              )}
-            </div>
-          </div>
+          </p>
         </div>
 
-        {/* Right Side: Button */}
-        <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0 md:ml-6">
-          <Button asChild className="w-full" variant="outline">
+        {/* Right Section: Status & Button */}
+        <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 w-auto sm:w-36 gap-2">
+          
+          {/* Status Badge Wrapper */}
+          <div className="h-8 flex items-center">
+            <StatusIndicator />
+          </div>
+
+          {/* Button */}
+          <Button asChild variant="outline" size="sm" className="w-full">
             <Link to={`/courses/${enrollment.course_id}`}>
               Go to Course
-              <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>
         </div>
@@ -145,7 +161,8 @@ const MyEnrollments = () => {
               id,
               title, 
               start_date,
-              end_date
+              end_date,
+              image_url
             )
           `)
           .eq('user_id', user.id);
@@ -182,6 +199,7 @@ const MyEnrollments = () => {
               end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
+              image_url: enrollment.courses.image_url, // Added image_url
             });
           }
 
@@ -229,8 +247,8 @@ const MyEnrollments = () => {
         // --- Empty State ---
         <NoEnrollmentsPlaceholder />
       ) : (
-        // --- UPDATED: This is now a vertical stack (space-y-6) ---
-        <div className="space-y-6">
+        // --- UPDATED: This is now a vertical stack (space-y-4) ---
+        <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
             <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
           ))}
