@@ -24,9 +24,9 @@ type RawEnrollment = {
   subject_name: string | null;
   courses: {
     id: string;
-    title: string | null; // Changed from batch_name
-    batch_start_date: string | null;
-    batch_end_date: string | null;
+    title: string | null;
+    start_date: string | null; // Corrected: from batch_start_date
+    end_date: string | null;   // Corrected: from batch_end_date
     slug: string | null;
   } | null;
 };
@@ -34,9 +34,9 @@ type RawEnrollment = {
 // Type for the data after we group it by course_id
 type GroupedEnrollment = {
   course_id: string;
-  title: string; // Changed from batch_name
-  batch_start_date: string | null;
-  batch_end_date: string | null;
+  title: string;
+  start_date: string | null; // Corrected: from batch_start_date
+  end_date: string | null;   // Corrected: from batch_end_date
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
   slug: string | null;
@@ -49,7 +49,7 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl font-bold text-gray-900 mb-2 pr-2">
-            {enrollment.title} {/* Changed from batch_name */}
+            {enrollment.title}
           </CardTitle>
           <Badge 
             variant={enrollment.status === 'Ongoing' ? 'default' : 'destructive'}
@@ -59,8 +59,8 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
           </Badge>
         </div>
         <CardDescription>
-          {enrollment.batch_end_date
-            ? `Batch ends on: ${new Date(enrollment.batch_end_date).toLocaleDateString()}`
+          {enrollment.end_date // Corrected: from batch_end_date
+            ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
             : 'No end date specified'}
         </CardDescription>
       </CardHeader>
@@ -108,7 +108,7 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
-        // This query correctly fetches `title` from the `courses` table
+        // This query now uses the correct column names: title, start_date, end_date
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -118,8 +118,8 @@ const MyEnrollments = () => {
             courses (
               id,
               title, 
-              batch_start_date,
-              batch_end_date,
+              start_date,
+              end_date,
               slug
             )
           `)
@@ -143,8 +143,8 @@ const MyEnrollments = () => {
           const course_id = enrollment.course_id;
 
           // Determine batch status
-          const endDate = enrollment.courses.batch_end_date 
-            ? new Date(enrollment.courses.batch_end_date) 
+          const endDate = enrollment.courses.end_date // Corrected: from batch_end_date
+            ? new Date(enrollment.courses.end_date) 
             : null;
           let status: GroupedEnrollment['status'] = 'Unknown';
           if (endDate) {
@@ -158,9 +158,9 @@ const MyEnrollments = () => {
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
-              title: enrollment.courses.title || 'Unnamed Batch', // Changed from batch_name
-              batch_start_date: enrollment.courses.batch_start_date,
-              batch_end_date: enrollment.courses.batch_end_date,
+              title: enrollment.courses.title || 'Unnamed Batch',
+              start_date: enrollment.courses.start_date, // Corrected
+              end_date: enrollment.courses.end_date,     // Corrected
               status: status,
               subjects: [],
               slug: enrollment.courses.slug,
