@@ -5,7 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Edit, Save, X, User, Camera } from 'lucide-react';
+import { Loader2, Edit, Save, X, User } from 'lucide-react'; // Removed Camera
 import { Tables } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -217,9 +217,7 @@ const MyProfile = () => {
                   {profile.student_name?.charAt(0).toUpperCase() || <User />}
                 </AvatarFallback>
               </Avatar>
-              <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full h-10 w-10 bg-white shadow">
-                <Camera className="h-5 w-5" />
-              </Button>
+              {/* --- CAMERA BUTTON REMOVED --- */}
             </div>
             <h2 className="text-2xl font-semibold text-gray-900">{profile.student_name || "Update Name"}</h2>
             <p className="text-gray-500">{profile.email}</p>
@@ -306,4 +304,3 @@ const MyProfile = () => {
 };
 
 export default MyProfile;
-
