@@ -15,16 +15,15 @@ import { useToast } from '@/components/ui/use-toast';
 
 // --- Define Types ---
 
-// This type now correctly matches your schema
 type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
   courses: {
     id: string;
-    title: string | null;       // Correct: uses title
+    title: string | null;
     start_date: string | null; 
-    end_date: string | null;     // Correct: uses end_date
+    end_date: string | null;   
     image_url: string | null;
   } | null;
 };
@@ -35,15 +34,14 @@ type GroupedEnrollment = {
   start_date: string | null; 
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
-  subjects: string[];
+  subjects: string[]; // Still needed for grouping logic
   image_url: string | null;
 };
 
-// --- Enrollment List Item Component ---
+// --- NEW: Enrollment List Item (based on your new image) ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   
   const StatusIndicator = () => {
-    // Status is 'Ongoing'
     if (enrollment.status === 'Ongoing') {
       return (
         <div className="flex items-center justify-end gap-2" title="Ongoing">
@@ -57,7 +55,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
       );
     }
     
-    // Status is 'Batch Expired'
+    // "Success" badge for completed/expired batches
     return (
       <Badge 
         className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium"
@@ -68,18 +66,19 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     );
   };
 
-  // Format the date as seen in your image
   const formattedEndDate = enrollment.end_date 
     ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
     : 'No end date';
 
   return (
-    // The entire card is a link, targeting the course_id
-    <Link to={`/courses/${enrollment.course_id}`} className="block">
-      <Card className="w-full relative overflow-hidden flex flex-col hover:shadow-md transition-shadow rounded-lg">
+    // The entire card is a link, as implied by the image
+    <Link to={`/courses/${enrollment.course_id}`} className="block group">
+      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg
+                     border border-gray-200 group-hover:border-black transition-all duration-200">
         <CardContent className="flex items-center gap-4 p-4">
-          {/* Image Container */}
-          <div className="flex-shrink-0 w-28 h-20 md:w-32 md:h-24 overflow-hidden rounded-lg">
+          
+          {/* Image Container (16:9 Aspect Ratio) */}
+          <div className="flex-shrink-0 w-32 sm:w-36 aspect-video overflow-hidden rounded-lg bg-gray-50">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
@@ -87,7 +86,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
             />
           </div>
 
-          {/* Middle Section: Title, Subjects, Date */}
+          {/* Middle Section: Title, Date */}
           <div className="flex-grow space-y-1">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
               <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
@@ -104,17 +103,15 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
               {formattedEndDate} • Free
             </p>
             
-            {/* Comma-separated subjects */}
-             <CardDescription className="text-sm text-gray-600 line-clamp-2 pt-1">
-              <span className="font-medium text-gray-700">Subjects:</span> {enrollment.subjects.join(', ') || 'N/A'}
-            </CardDescription>
+            {/* REMOVED Subjects line to match new design */}
+
           </div>
 
           {/* Right Arrow */}
           <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
         </CardContent>
         
-        {/* Expiry Date Banner (Appears when status is 'Batch Expired') */}
+        {/* Expiry Date Banner (NO LINK) */}
         {enrollment.status === 'Batch Expired' && (
           <div className="bg-red-50 text-red-700 text-sm p-3 text-center">
             This batch got expired on {formattedEndDate}!
@@ -164,7 +161,6 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments
-        // This query now correctly uses title, start_date, end_date, image_url
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -196,7 +192,6 @@ const MyEnrollments = () => {
           if (!enrollment.courses) continue; 
           const course_id = enrollment.course_id;
           
-          // Determine batch status based on end_date
           const endDate = enrollment.courses.end_date 
             ? new Date(enrollment.courses.end_date) 
             : null;
@@ -204,7 +199,7 @@ const MyEnrollments = () => {
           if (endDate) {
             status = today > endDate ? 'Batch Expired' : 'Ongoing';
           } else {
-            status = 'Ongoing'; // Assume ongoing if no end date
+            status = 'Ongoing'; 
           }
 
           if (!enrollmentsMap.has(course_id)) {
@@ -214,7 +209,7 @@ const MyEnrollments = () => {
               start_date: enrollment.courses.start_date,
               end_date: enrollment.courses.end_date,
               status: status,
-              subjects: [],
+              subjects: [], // Still need this to gather subjects
               image_url: enrollment.courses.image_url,
             });
           }
