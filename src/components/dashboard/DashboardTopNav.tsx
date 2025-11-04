@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu, LayoutDashboard } from "lucide-react"; // Added LayoutDashboard
+import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react"; // Removed LayoutDashboard
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar from "./DashboardSidebar";
 
@@ -101,10 +101,7 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
                 <p className="text-xs text-gray-500 truncate">{userEmail}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onViewChange('dashboard')} className="cursor-pointer">
-                <LayoutDashboard className="h-4 w-4 mr-2" />
-                My Dashboard
-              </DropdownMenuItem>
+              {/* "My Dashboard" link removed */}
               <DropdownMenuItem onClick={() => onViewChange('profile')} className="cursor-pointer">
                 <User className="h-4 w-4 mr-2" />
                 My Profile
