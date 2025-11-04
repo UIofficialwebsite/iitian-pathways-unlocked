@@ -45,14 +45,47 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
   // Reset local state when modal opens or profile changes
   useEffect(() => {
     if (isOpen) {
+      // Set step based on profile, or 'initial' if incomplete
+      if (profile?.program_type === 'IITM_BS') {
+        setStep('iitm_bs');
+      } else if (profile?.program_type === 'COMPETITIVE_EXAM') {
+        setStep('competitive_exam');
+      } else {
+        setStep('initial');
+      }
+      
+      // Load current profile data into local state
       setProgramType(profile?.program_type || '');
       setExamType(profile?.exam_type || '');
       setStudentStatus(profile?.student_status || '');
       setBranch(profile?.branch || '');
       setLevel(profile?.level || '');
-      setStep('initial');
+
+      // If user clicks a new program, clear old selections
+      if (step === 'initial') {
+        setExamType('');
+        setStudentStatus('');
+        setBranch('');
+        setLevel('');
+      }
+
     }
-  }, [isOpen, profile]);
+  }, [isOpen, profile, step]);
+  
+  // Clear specific fields when changing program type
+  const handleProgramChange = (type: 'IITM_BS' | 'COMPETITIVE_EXAM') => {
+    setProgramType(type);
+    if (type === 'IITM_BS') {
+      setStep('iitm_bs');
+      setExamType('');
+      setStudentStatus('');
+    } else {
+      setStep('competitive_exam');
+      setBranch('');
+      setLevel('');
+    }
+  };
+
 
   const handleSave = async () => {
     if (!user) {
@@ -101,10 +134,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
         <Button
           variant={programType === 'IITM_BS' ? "default" : "outline"}
           className="w-full justify-between h-16 text-left"
-          onClick={() => {
-            setProgramType('IITM_BS');
-            setStep('iitm_bs');
-          }}
+          onClick={() => handleProgramChange('IITM_BS')}
         >
           <div className="flex items-center">
             <GraduationCap className="h-6 w-6 mr-3" />
@@ -113,15 +143,12 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <p className="text-xs">Data Science or Electronic Systems</p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
+          <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
         </Button>
         <Button
           variant={programType === 'COMPETITIVE_EXAM' ? "default" : "outline"}
           className="w-full justify-between h-16 text-left"
-          onClick={() => {
-            setProgramType('COMPETITIVE_EXAM');
-            setStep('competitive_exam');
-          }}
+          onClick={() => handleProgramChange('COMPETITIVE_EXAM')}
         >
           <div className="flex items-center">
             <UserCheck className="h-6 w-6 mr-3" />
@@ -130,7 +157,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <p className="text-xs">JEE, NEET, etc.</p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
+          <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
         </Button>
       </div>
     </>
@@ -147,8 +174,8 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
             <SelectValue placeholder="Select your Exam" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="JEE"><div className="flex items-center">JEE</div></SelectItem>
-            <SelectItem value="NEET"><div className="flex items-center">NEET</div></SelectItem>
+            <SelectItem value="JEE">JEE</SelectItem>
+            <SelectItem value="NEET">NEET</SelectItem>
           </SelectContent>
         </Select>
         
@@ -193,16 +220,20 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
           </SelectContent>
         </Select>
         
-        <Select value={level} onValueChange={setLevel}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your Level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="foundation">Foundation</SelectItem>
-            <SelectItem value="diploma">Diploma</SelectItem>
-            <SelectItem value="degree">Degree</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Only show Level select *after* Branch is selected */}
+        {branch && (
+          <Select value={level} onValueChange={setLevel}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select your Level" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="qualifier">Qualifier</SelectItem> {/* Added Qualifier */}
+              <SelectItem value="foundation">Foundation</SelectItem>
+              <SelectItem value="diploma">Diploma</SelectItem>
+              <SelectItem value="degree">Degree</SelectItem>
+            </SelectContent>
+          </Select>
+        )}
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setStep('initial')}>Back</Button>
@@ -229,3 +260,4 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 };
 
 export default FocusAreaModal;
+
