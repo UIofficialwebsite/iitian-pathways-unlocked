@@ -15,15 +15,16 @@ import { useToast } from '@/components/ui/use-toast';
 
 // --- Define Types ---
 
+// This type now correctly matches your schema
 type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
   courses: {
     id: string;
-    title: string | null;
+    title: string | null;       // Correct: uses title
     start_date: string | null; 
-    end_date: string | null;   
+    end_date: string | null;     // Correct: uses end_date
     image_url: string | null;
   } | null;
 };
@@ -38,10 +39,11 @@ type GroupedEnrollment = {
   image_url: string | null;
 };
 
-// --- NEW: Enrollment List Item (based on your new image) ---
+// --- Enrollment List Item Component ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   
   const StatusIndicator = () => {
+    // Status is 'Ongoing'
     if (enrollment.status === 'Ongoing') {
       return (
         <div className="flex items-center justify-end gap-2" title="Ongoing">
@@ -55,7 +57,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
       );
     }
     
-    // "Success" badge for completed/expired batches
+    // Status is 'Batch Expired'
     return (
       <Badge 
         className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium"
@@ -66,12 +68,13 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     );
   };
 
+  // Format the date as seen in your image
   const formattedEndDate = enrollment.end_date 
     ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
     : 'No end date';
 
   return (
-    // The entire card is a link, as implied by the image
+    // The entire card is a link, targeting the course_id
     <Link to={`/courses/${enrollment.course_id}`} className="block">
       <Card className="w-full relative overflow-hidden flex flex-col hover:shadow-md transition-shadow rounded-lg">
         <CardContent className="flex items-center gap-4 p-4">
@@ -111,7 +114,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
           <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
         </CardContent>
         
-        {/* Expiry Date Banner (NO LINK) */}
+        {/* Expiry Date Banner (Appears when status is 'Batch Expired') */}
         {enrollment.status === 'Batch Expired' && (
           <div className="bg-red-50 text-red-700 text-sm p-3 text-center">
             This batch got expired on {formattedEndDate}!
@@ -160,7 +163,8 @@ const MyEnrollments = () => {
       
       try {
         setLoading(true);
-        // 1. Fetch raw enrollments, joining with courses table
+        // 1. Fetch raw enrollments
+        // This query now correctly uses title, start_date, end_date, image_url
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -191,6 +195,8 @@ const MyEnrollments = () => {
         for (const enrollment of rawData as RawEnrollment[]) {
           if (!enrollment.courses) continue; 
           const course_id = enrollment.course_id;
+          
+          // Determine batch status based on end_date
           const endDate = enrollment.courses.end_date 
             ? new Date(enrollment.courses.end_date) 
             : null;
@@ -198,7 +204,7 @@ const MyEnrollments = () => {
           if (endDate) {
             status = today > endDate ? 'Batch Expired' : 'Ongoing';
           } else {
-            status = 'Ongoing';
+            status = 'Ongoing'; // Assume ongoing if no end date
           }
 
           if (!enrollmentsMap.has(course_id)) {
@@ -213,6 +219,7 @@ const MyEnrollments = () => {
             });
           }
 
+          // Add subject to the grouped list
           const groupedEntry = enrollmentsMap.get(course_id)!;
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
@@ -257,7 +264,7 @@ const MyEnrollments = () => {
         // --- Empty State ---
         <NoEnrollmentsPlaceholder />
       ) : (
-        // --- UPDATED: List of EnrollmentListItem components ---
+        // --- List of EnrollmentListItem components ---
         <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
             <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
