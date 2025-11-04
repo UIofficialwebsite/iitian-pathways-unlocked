@@ -27,7 +27,6 @@ type RawEnrollment = {
     title: string | null;
     start_date: string | null; 
     end_date: string | null;   
-    // Removed 'slug' as it does not exist in your schema
   } | null;
 };
 
@@ -39,7 +38,6 @@ type GroupedEnrollment = {
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
-  // Removed 'slug'
 };
 
 // --- NEW Enrollment Card Component ---
@@ -109,7 +107,7 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
-        // CORRECTED QUERY: Removed 'slug'
+        // CORRECTED QUERY: Uses title, start_date, end_date
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -163,7 +161,6 @@ const MyEnrollments = () => {
               end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
-              // Removed 'slug'
             });
           }
 
