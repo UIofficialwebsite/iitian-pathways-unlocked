@@ -1,6 +1,4 @@
-// src/components/dashboard/MyProfile.tsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
@@ -8,21 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2, Edit, Save, X, User } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tables } from '@/integrations/supabase/types'; // Import types
 
 // Define profile type
-interface UserProfile {
-  id: string;
-  full_name: string | null;
-  student_name: string | null;
-  email: string | null;
-  program_type: string | null;
-  branch: string | null;
-  level: string | null;
-  exam_type: string | null;
-  student_status: string | null;
-  // Add any other fields you want to show/edit
-}
+type UserProfile = Tables<'profiles'>;
 
 // Helper component for editable fields
 const EditableField = ({ label, value, onSave }: { label: string, value: string | null, onSave: (newValue: string) => Promise<void> }) => {
@@ -106,45 +93,13 @@ const MyProfile = () => {
 
       if (error) throw error;
       
-      setProfile(data); // Update local state with new profile data
+      setProfile(data as UserProfile); // Update local state with new profile data
       toast({ title: "Success", description: `${field.replace('_', ' ')} updated.` });
     } catch (error: any) {
       toast({ title: "Error", description: `Failed to update ${field}.`, variant: "destructive" });
     }
   };
   
-  // Specific handler for Program Type (which controls other fields)
-  const handleProgramTypeUpdate = async (value: string) => {
-    if (!user || !profile) return;
-    
-    // When changing program type, clear the old fields
-    const updates: Partial<UserProfile> = {
-      program_type: value,
-      updated_at: new Date().toISOString(),
-      branch: null,
-      level: null,
-      exam_type: null,
-      student_status: null
-    };
-
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setProfile(data);
-      toast({ title: "Success", description: "Program type updated." });
-    } catch (error: any) {
-      toast({ title: "Error", description: "Failed to update program type.", variant: "destructive" });
-    }
-  };
-
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -172,7 +127,7 @@ const MyProfile = () => {
         </div>
         <div>
           <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">View and edit your personal information and preferences.</p>
+          <p className="text-gray-600">View and edit your personal information.</p>
         </div>
       </div>
 
@@ -191,107 +146,52 @@ const MyProfile = () => {
             <label className="text-sm font-medium text-gray-600">Email</label>
             <p className="text-gray-900 mt-1">{profile.email}</p>
           </div>
+          {/* You can add more editable fields here, e.g., phone */}
+          {/* <EditableField 
+            label="Phone" 
+            value={profile.phone} 
+            onSave={(value) => handleUpdate('phone', value)} 
+          /> */}
         </CardContent>
       </Card>
 
-      {/* Program Details */}
+      {/* Academic Program details are now managed in the FocusAreaModal */}
       <Card>
         <CardHeader>
           <CardTitle>Academic Program</CardTitle>
-          <CardDescription>This helps us personalize your content.</CardDescription>
+          <CardDescription>
+            To edit your focus area, please use the "My Focus Area" button in the sidebar.
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Program Type Selector */}
-          <div className="py-4 border-b border-gray-200">
+           <div className="py-4 border-b border-gray-200">
             <label className="text-sm font-medium text-gray-600">Program Type</label>
-            <Select 
-              value={profile.program_type || ""} 
-              onValueChange={handleProgramTypeUpdate}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Select your program" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="COMPETITIVE_EXAM">Competitive Exam (JEE, NEET)</SelectItem>
-                <SelectItem value="IITM_BS">IITM BS Degree</SelectItem>
-              </SelectContent>
-            </Select>
+            <p className="text-gray-900 mt-1">{profile.program_type || "Not set"}</p>
           </div>
-
-          {/* IITM BS Fields */}
           {profile.program_type === 'IITM_BS' && (
             <>
               <div className="py-4 border-b border-gray-200">
                 <label className="text-sm font-medium text-gray-600">Branch</label>
-                <Select 
-                  value={profile.branch || ""} 
-                  onValueChange={(value) => handleUpdate('branch', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="data-science">Data Science and Applications</SelectItem>
-                    <SelectItem value="electronic-systems">Electronic Systems</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-gray-900 mt-1 capitalize">{profile.branch || "Not set"}</p>
               </div>
               <div className="py-4 border-b border-gray-200">
                 <label className="text-sm font-medium text-gray-600">Level</label>
-                <Select 
-                  value={profile.level || ""} 
-                  onValueChange={(value) => handleUpdate('level', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your level" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="foundation">Foundation</SelectItem>
-                    <SelectItem value="diploma">Diploma</SelectItem>
-                    <SelectItem value="degree">Degree</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-gray-900 mt-1 capitalize">{profile.level || "Not set"}</p>
               </div>
             </>
           )}
-
-          {/* Competitive Exam Fields */}
           {profile.program_type === 'COMPETITIVE_EXAM' && (
             <>
               <div className="py-4 border-b border-gray-200">
                 <label className="text-sm font-medium text-gray-600">Exam Type</label>
-                <Select 
-                  value={profile.exam_type || ""} 
-                  onValueChange={(value) => handleUpdate('exam_type', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your exam" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="JEE">JEE</SelectItem>
-                    <SelectItem value="NEET">NEET</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-gray-900 mt-1">{profile.exam_type || "Not set"}</p>
               </div>
               <div className="py-4 border-b border-gray-200">
                 <label className="text-sm font-medium text-gray-600">Student Status</label>
-                <Select 
-                  value={profile.student_status || ""} 
-                  onValueChange={(value) => handleUpdate('student_status', value)}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select your status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="class11">Class 11</SelectItem>
-                    <SelectItem value="class12">Class 12</SelectItem>
-                    <SelectItem value="dropper">Dropper</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-gray-900 mt-1">{profile.student_status || "Not set"}</p>
               </div>
             </>
           )}
-
         </CardContent>
       </Card>
     </div>
