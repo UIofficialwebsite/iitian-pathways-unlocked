@@ -1,70 +1,70 @@
-// src/components/dashboard/MyEnrollments.tsx
-
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, LayoutGrid, ArrowRight } from 'lucide-react';
-import { Tables } from '@/integrations/supabase/types'; // Import types
+import { ArrowRight, Inbox, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
-type Course = Tables<'courses'>;
-type Enrollment = Tables<'enrollments'>;
-type EnrolledCourse = Course & { enrollment_status: string };
+// --- This is the placeholder for an enrolled course card ---
+// You would replace this with your actual CourseCard component
+const EnrolledCourseCardPlaceholder = ({ title }: { title: string }) => (
+  <Card>
+    <CardHeader>
+      <CardTitle>{title}</CardTitle>
+      <CardDescription>You are enrolled in this course.</CardDescription>
+    </CardHeader>
+  </Card>
+);
 
+// --- This is the main component for the "No Enrollments" state ---
+const NoEnrollmentsPlaceholder = () => {
+  return (
+    <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
+      {/* Icon based on the "empty box" in your image */}
+      <Inbox className="h-32 w-32 text-gray-400 mb-6" strokeWidth={1.5} />
+      
+      {/* Heading with matching font style */}
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        No Enrollments Yet!
+      </h2>
+      
+      {/* Description with matching font style */}
+      <p className="text-gray-600 max-w-md mx-auto">
+        It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
+      </p>
+      
+      {/* Button to navigate to courses */}
+      <Button asChild size="lg" className="mt-6">
+        <Link to="/courses">
+          Explore Courses
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Link>
+      </Button>
+    </div>
+  );
+};
+
+
+// --- Main Page Component ---
 const MyEnrollments = () => {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const [courses, setCourses] = useState<EnrolledCourse[]>([]);
+  // --- START: Placeholder Logic ---
+  // Replace this with your actual data fetching (e.g., from useAuth and Supabase)
+  const [enrollments, setEnrollments] = useState<any[]>([]); // Set to [] to test empty state
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchEnrollments = async () => {
-      if (!user) return;
-      try {
-        // 1. Fetch user's enrollments
-        const { data: enrollments, error: enrollError } = await supabase
-          .from('enrollments')
-          .select('*')
-          .eq('user_id', user.id);
-        
-        if (enrollError) throw enrollError;
-        if (!enrollments || enrollments.length === 0) {
-          setCourses([]);
-          return;
-        }
+    // Simulate fetching data
+    const timer = setTimeout(() => {
+      // --- TOGGLE THIS TO TEST ---
+      // setEnrollments([{ id: 1, title: "Sample Course 1" }]); // Test with data
+      setEnrollments([]); // Test with empty state
+      // ---
+      setLoading(false);
+    }, 1500);
 
-        // 2. Get the list of course IDs
-        const courseIds = enrollments.map((e: Enrollment) => e.course_id);
+    return () => clearTimeout(timer);
+  }, []);
+  // --- END: Placeholder Logic ---
 
-        // 3. Fetch the details for those courses
-        const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .in('id', courseIds);
-
-        if (courseError) throw courseError;
-
-        // 4. Map enrollments to course data
-        const enrolledCourses = courseData.map((course: Course) => {
-          const enrollment = enrollments.find((e: Enrollment) => e.course_id === course.id);
-          return {
-            ...course,
-            enrollment_status: enrollment?.status || 'enrolled',
-          };
-        });
-
-        setCourses(enrolledCourses);
-        
-      } catch (error: any) {
-        toast({ title: "Error", description: "Could not fetch enrollments.", variant: "destructive" });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEnrollments();
-  }, [user, toast]);
 
   if (loading) {
     return (
@@ -76,43 +76,21 @@ const MyEnrollments = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      <div className="flex items-center gap-4">
-        <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-          <LayoutGrid className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
-          <p className="text-gray-600">Access your current and past courses.</p>
-        </div>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
+        <p className="text-gray-600">All the courses you are currently enrolled in.</p>
       </div>
 
-      {courses.length === 0 ? (
-        <Card>
-          <CardContent className="pt-6 text-center text-gray-500">
-            You are not enrolled in any courses yet.
-          </CardContent>
-        </Card>
+      {/* Conditional Content */}
+      {enrollments.length === 0 ? (
+        // --- This is the empty state design you requested ---
+        <NoEnrollmentsPlaceholder />
       ) : (
+        // --- This is where your list of courses would go ---
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {courses.map((course) => (
-            <Card key={course.id} className="flex flex-col overflow-hidden">
-              <img 
-                src={course.image_url || '/lovable-uploads/logo_ui_new.png'} 
-                alt={course.title}
-                className="h-48 w-full object-cover" 
-              />
-              <CardHeader>
-                <CardTitle>{course.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{course.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-end">
-                <a href={course.enroll_now_link || "#"} target="_blank" rel="noopener noreferrer">
-                  <Button className="w-full">
-                    Go to Course <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </a>
-              </CardContent>
-            </Card>
+          {enrollments.map((course) => (
+            <EnrolledCourseCardPlaceholder key={course.id} title={course.title} />
           ))}
         </div>
       )}
