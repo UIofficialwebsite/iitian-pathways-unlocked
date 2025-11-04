@@ -519,18 +519,17 @@ export type Database = {
       }
       notes: {
         Row: {
-          branch: string | null
           class_level: string | null
           content_url: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          display_order_no: number | null
           download_count: number | null
           exam_type: string | null
           file_link: string | null
           id: string
           is_active: boolean | null
-          level: string | null
           session: string | null
           shift: string | null
           subject: string | null
@@ -538,18 +537,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          branch?: string | null
           class_level?: string | null
           content_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          display_order_no?: number | null
           download_count?: number | null
           exam_type?: string | null
           file_link?: string | null
           id?: string
           is_active?: boolean | null
-          level?: string | null
           session?: string | null
           shift?: string | null
           subject?: string | null
@@ -557,18 +555,17 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          branch?: string | null
           class_level?: string | null
           content_url?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          display_order_no?: number | null
           download_count?: number | null
           exam_type?: string | null
           file_link?: string | null
           id?: string
           is_active?: boolean | null
-          level?: string | null
           session?: string | null
           shift?: string | null
           subject?: string | null
