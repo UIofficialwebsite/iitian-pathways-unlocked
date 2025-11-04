@@ -14,7 +14,7 @@ import {
   Shield, 
   GraduationCap, 
   FastForward,
-  Home // Added Home Icon
+  Home
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
@@ -65,15 +65,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile }) => {
 
   return (
     <nav className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="flex items-center h-16 px-4 border-b border-gray-200">
-        <Link to="/" className="flex items-center gap-2">
-          {/* Using text logo, you can replace with <img /> */}
-          <span className="text-xl font-bold text-gray-900">Your Logo</span>
-        </Link>
-      </div>
-
-      <div className="flex-1 overflow-y-auto py-4">
+      {/* --- LOGO REMOVED FROM HERE --- */}
+      
+      <div className="flex-1 overflow-y-auto py-4 pt-16"> {/* Added pt-16 to clear top nav */}
         <div className="px-4 space-y-4">
           
           <div>
