@@ -21,6 +21,7 @@ import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; 
 import MyProfile from "./MyProfile"; 
 import MyEnrollments from "./MyEnrollments"; 
+import StudyPortal from "./StudyPortal"; // --- IMPORTED STUDY PORTAL ---
 
 interface UserProfile {
   id: string;
@@ -37,7 +38,8 @@ interface UserProfile {
   [key: string]: any; // Allow other properties
 }
 
-type ActiveView = 'dashboard' | 'profile' | 'enrollments';
+// --- ADDED 'studyPortal' TO THE ACTIVE VIEW TYPE ---
+type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
 
 const ModernDashboard = () => {
   const { user } = useAuth();
@@ -45,7 +47,9 @@ const ModernDashboard = () => {
   const { getFilteredContent, contentLoading } = useBackend();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
+  
+  // --- SET DEFAULT VIEW TO 'studyPortal' ---
+  const [activeView, setActiveView] = useState<ActiveView>('studyPortal');
 
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs, courses, importantDates, newsUpdates } = filteredContent;
@@ -96,6 +100,8 @@ const ModernDashboard = () => {
     );
   }
 
+  // This function now renders the *original* dashboard view (with stats), 
+  // which is no longer the default but can still be accessed if activeView is set to 'dashboard'.
   const renderDashboardView = () => (
     <>
       {/* Stats Cards */}
@@ -373,11 +379,25 @@ const ModernDashboard = () => {
       <div className="lg:pl-72 pt-16">
         <main className="py-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            
+            {/* --- UPDATED RENDER LOGIC --- */}
+            
+            {/* The 'dashboard' view is the old stats page */}
             {activeView === 'dashboard' && renderDashboardView()}
+            
+            {/* The new 'studyPortal' view, which is now the default */}
+            {activeView === 'studyPortal' && (
+              <StudyPortal 
+                profile={profile} 
+                onViewChange={setActiveView} 
+              />
+            )}
+            
             {activeView === 'profile' && <MyProfile />}
             {activeView === 'enrollments' && <MyEnrollments />}
+
           </div>
-        </main>
+        </Gmain>
       </div>
       
     </div>
