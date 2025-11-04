@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,22 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Edit, Trash2, Download, Search } from "lucide-react";
-
-interface Note {
-  id: string;
-  title: string;
-  description: string;
-  subject: string;
-  class_level: string;
-  exam_type: string;
-  branch: string;
-  level: string;
-  session: string;
-  shift: string;
-  file_link: string;
-  download_count: number;
-  created_at: string;
-}
+import { Note } from "@/hooks/useNotesManager";
 
 const NotesManagerTab = () => {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -75,7 +60,7 @@ const NotesManagerTab = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
+      setNotes((data as unknown as Note[]) || []);
     } catch (error: any) {
       toast({
         title: "Error",

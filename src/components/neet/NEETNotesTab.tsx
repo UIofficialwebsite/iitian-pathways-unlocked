@@ -14,7 +14,7 @@ const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   
   // Parse initialParams: [0] = subject, [1] = class
   const initialSubject = initialParams?.[0] || "Physics";
-  const initialClass = initialParams?.[1]?.toLowerCase() || "class11";
+  const initialClass = initialParams?.[1] || "class11";
   
   const [activeSubject, setActiveSubject] = useState(initialSubject);
   const [activeClass, setActiveClass] = useState(initialClass);

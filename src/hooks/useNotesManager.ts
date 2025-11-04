@@ -18,7 +18,11 @@ export interface Note {
   exam_type: string | null;
   branch: string | null;
   level: string | null;
+  session: string | null;
+  shift: string | null;
+  display_order_no: number | null;
   created_at: string;
+  updated_at?: string;
 }
 
 export const useNotesManager = () => {
@@ -37,7 +41,7 @@ export const useNotesManager = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setNotes(data || []);
+      setNotes((data as unknown as Note[]) || []);
     } catch (error: any) {
       toast({
         title: "Load Error",

@@ -41,9 +41,9 @@ const JEEPrep = () => {
   }, [jeeNotes]);
 
   // Initialize filters from URL params - subject first, then class
-  // URL format: /exam-preparation/jee/notes/Physics/class11
-  const initialSubject = urlParams[0] || "Physics";
-  const initialClass = urlParams[1]?.toLowerCase() || "class11";
+  // URL format: /exam-preparation/jee/notes/physics/class11
+  const initialSubject = urlParams[0] || (subjects.length > 0 ? subjects[0] : "Physics");
+  const initialClass = urlParams[1] || "class11";
   
   const [activeSubject, setActiveSubject] = useState(initialSubject);
   const [activeClass, setActiveClass] = useState(initialClass);
