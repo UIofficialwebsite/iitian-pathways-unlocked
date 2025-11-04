@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2, Inbox } from 'lucide-react'; // Added Inbox icon
 import { Link } from 'react-router-dom';
 import { 
   Card, 
@@ -17,7 +17,6 @@ import { useToast } from '@/components/ui/use-toast';
 
 // --- Define Types ---
 
-// Type for the raw data from Supabase
 type RawEnrollment = {
   id: string;
   course_id: string;
@@ -30,7 +29,6 @@ type RawEnrollment = {
   } | null;
 };
 
-// Type for the data after we group it by course_id
 type GroupedEnrollment = {
   course_id: string;
   title: string;
@@ -40,7 +38,7 @@ type GroupedEnrollment = {
   subjects: string[];
 };
 
-// --- NEW Enrollment Card Component ---
+// --- Enrollment Card Component (for when enrollments exist) ---
 const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   return (
     <Card className="flex flex-col h-full">
@@ -77,7 +75,6 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
         </div>
       </CardContent>
       <CardFooter>
-        {/* CORRECTED LINK: Uses course_id instead of slug */}
         <Button asChild className="w-full" variant="outline">
           <Link to={`/courses/${enrollment.course_id}`}>
             Go to Course
@@ -86,6 +83,34 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
         </Button>
       </CardFooter>
     </Card>
+  );
+};
+
+// --- NEW: No Enrollments Placeholder (based on your image) ---
+const NoEnrollmentsPlaceholder = () => {
+  return (
+    <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
+      {/* Icon based on the "empty box" in your image */}
+      <Inbox className="h-32 w-32 text-gray-400 mb-6" strokeWidth={1.5} />
+      
+      {/* Heading */}
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">
+        No Enrollments Yet!
+      </h2>
+      
+      {/* Description */}
+      <p className="text-gray-600 max-w-md mx-auto mb-6">
+        It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
+      </p>
+      
+      {/* Button to navigate to courses */}
+      <Button asChild size="lg">
+        <Link to="/courses">
+          Explore Courses
+          <ArrowRight className="ml-2 h-5 w-5" />
+        </Link>
+      </Button>
+    </div>
   );
 };
 
@@ -107,7 +132,6 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
-        // CORRECTED QUERY: Uses title, start_date, end_date
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -207,18 +231,8 @@ const MyEnrollments = () => {
 
       {/* Conditional Content */}
       {groupedEnrollments.length === 0 ? (
-        // --- This is the new, simple empty state ---
-        <Card>
-          <CardContent className="pt-6 text-center">
-            <p className="text-gray-500">You have no enrollments yet.</p>
-            <Button asChild size="lg" className="mt-6">
-              <Link to="/courses">
-                Explore Courses
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-          </CardContent>
-        </Card>
+        // --- UPDATED Empty State: Card wrapper removed ---
+        <NoEnrollmentsPlaceholder />
       ) : (
         // --- This is the new Card Grid implementation ---
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
