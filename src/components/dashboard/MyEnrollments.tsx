@@ -72,8 +72,23 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
     : 'No end date';
 
-  // Determine if the course is Free or Paid based on the price
-  const displayPrice = (enrollment.price === 0) ? 'Free' : 'Paid';
+  // --- NEW: Price Display Logic ---
+  const PriceDisplay = () => {
+    if (enrollment.price === 0) {
+      return (
+        <span className="font-medium text-green-700">Free</span> // Dark green for Free
+      );
+    }
+    
+    if (enrollment.price && enrollment.price > 0) {
+      return (
+        <span className="font-medium text-gray-800">{`₹${enrollment.price}`}</span> // Show price
+      );
+    }
+    
+    // Fallback if price is null
+    return null;
+  };
 
   return (
     // The entire card is a link, with hover effect
@@ -105,8 +120,10 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
             </div>
             
             {/* Date - Updated to show Free/Paid */}
-            <p className="text-base text-gray-600">
-              {formattedEndDate} • {displayPrice}
+            <p className="text-base text-gray-600 flex items-center gap-1.5">
+              <span>{formattedEndDate}</span>
+              <span>•</span>
+              <PriceDisplay />
             </p>
             
           </div>
@@ -215,7 +232,7 @@ const MyEnrollments = () => {
               end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
-              image_url: enrollment.courses.image_url,
+              image_url: enrollment.courses.image__url,
               price: enrollment.courses.price, // Store the price
             });
           }
