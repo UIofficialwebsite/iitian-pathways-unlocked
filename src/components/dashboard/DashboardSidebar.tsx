@@ -20,13 +20,15 @@ import { Separator } from '@/components/ui/separator';
 
 // Copied from ModernDashboard.tsx
 interface UserProfile {
-  program_type: string;
-  branch?: string;
-  level?: string;
-  exam_type?: string;
-  student_status?: string;
-  subjects?: string[];
-  student_name?: string;
+  program_type: string | null;
+  branch?: string | null;
+  level?: string | null;
+  exam_type?: string | null;
+  student_status?: string | null;
+  subjects?: string[] | null;
+  student_name?: string | null;
+  full_name?: string | null;
+  email?: string | null;
 }
 
 interface DashboardSidebarProps {
@@ -67,7 +69,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile }) => {
     <nav className="flex flex-col h-full">
       {/* --- LOGO REMOVED FROM HERE --- */}
       
-      <div className="flex-1 overflow-y-auto py-4 pt-16"> {/* Added pt-16 to clear top nav */}
+      {/* Removed pt-16 from this div */}
+      <div className="flex-1 overflow-y-auto py-4">
         <div className="px-4 space-y-4">
           
           <div>
