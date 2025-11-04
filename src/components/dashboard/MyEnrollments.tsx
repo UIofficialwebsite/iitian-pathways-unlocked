@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Inbox } from 'lucide-react'; // Added Inbox icon
+import { ArrowRight, Loader2, Inbox } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   Card, 
@@ -38,72 +38,75 @@ type GroupedEnrollment = {
   subjects: string[];
 };
 
-// --- Enrollment Card Component (for when enrollments exist) ---
-const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
+// --- NEW: Enrollment List Item (based on your new image) ---
+const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   return (
-    <Card className="flex flex-col h-full">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-xl font-bold text-gray-900 mb-2 pr-2">
-            {enrollment.title}
-          </CardTitle>
-          <Badge 
-            variant={enrollment.status === 'Ongoing' ? 'default' : 'destructive'}
-            className="flex-shrink-0"
-          >
-            {enrollment.status}
-          </Badge>
+    <Card className="w-full">
+      <CardContent className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        {/* Left Side: Info */}
+        <div className="flex-grow">
+          {/* Top Row: Title and Status */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+            <CardTitle className="text-xl font-bold text-gray-900 pr-4">
+              {enrollment.title}
+            </CardTitle>
+            <Badge 
+              variant={enrollment.status === 'Ongoing' ? 'default' : 'destructive'}
+              className="flex-shrink-0 mt-2 sm:mt-0"
+            >
+              {enrollment.status}
+            </Badge>
+          </div>
+          
+          {/* Middle Row: End Date */}
+          <CardDescription className="mb-3">
+            {enrollment.end_date
+              ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
+              : 'No end date specified'}
+          </CardDescription>
+
+          {/* Bottom Row: Subjects */}
+          <div>
+            <h4 className="text-sm font-semibold text-gray-700 mb-2">Subjects Enrolled:</h4>
+            <div className="flex flex-wrap gap-2">
+              {enrollment.subjects.length > 0 ? (
+                enrollment.subjects.map((subject) => (
+                  <Badge key={subject} variant="secondary">
+                    {subject}
+                  </Badge>
+                ))
+              ) : (
+                <p className="text-sm text-gray-500">No specific subjects listed.</p>
+              )}
+            </div>
+          </div>
         </div>
-        <CardDescription>
-          {enrollment.end_date
-            ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
-            : 'No end date specified'}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex-grow">
-        <h4 className="text-sm font-semibold text-gray-700 mb-3">Subjects Enrolled</h4>
-        <div className="flex flex-wrap gap-2">
-          {enrollment.subjects.length > 0 ? (
-            enrollment.subjects.map((subject) => (
-              <Badge key={subject} variant="secondary">
-                {subject}
-              </Badge>
-            ))
-          ) : (
-            <p className="text-sm text-gray-500">No specific subjects listed.</p>
-          )}
+
+        {/* Right Side: Button */}
+        <div className="w-full md:w-auto flex-shrink-0 mt-4 md:mt-0 md:ml-6">
+          <Button asChild className="w-full" variant="outline">
+            <Link to={`/courses/${enrollment.course_id}`}>
+              Go to Course
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </CardContent>
-      <CardFooter>
-        <Button asChild className="w-full" variant="outline">
-          <Link to={`/courses/${enrollment.course_id}`}>
-            Go to Course
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </CardFooter>
     </Card>
   );
 };
 
-// --- NEW: No Enrollments Placeholder (based on your image) ---
+// --- No Enrollments Placeholder (based on your previous image) ---
 const NoEnrollmentsPlaceholder = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
-      {/* Icon based on the "empty box" in your image */}
       <Inbox className="h-32 w-32 text-gray-400 mb-6" strokeWidth={1.5} />
-      
-      {/* Heading */}
       <h2 className="text-2xl font-bold text-gray-900 mb-2">
         No Enrollments Yet!
       </h2>
-      
-      {/* Description */}
       <p className="text-gray-600 max-w-md mx-auto mb-6">
         It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
       </p>
-      
-      {/* Button to navigate to courses */}
       <Button asChild size="lg">
         <Link to="/courses">
           Explore Courses
@@ -159,12 +162,8 @@ const MyEnrollments = () => {
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
         for (const enrollment of rawData as RawEnrollment[]) {
-          // Check if the joined 'courses' data exists
           if (!enrollment.courses) continue; 
-
           const course_id = enrollment.course_id;
-
-          // Determine batch status
           const endDate = enrollment.courses.end_date 
             ? new Date(enrollment.courses.end_date) 
             : null;
@@ -172,11 +171,9 @@ const MyEnrollments = () => {
           if (endDate) {
             status = today > endDate ? 'Batch Expired' : 'Ongoing';
           } else {
-            // If no end date, assume it's ongoing
             status = 'Ongoing';
           }
 
-          // If this is the first time we see this course_id, create a new entry
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
@@ -188,14 +185,12 @@ const MyEnrollments = () => {
             });
           }
 
-          // Add the subject to the list for this course_id
           const groupedEntry = enrollmentsMap.get(course_id)!;
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
           }
         }
 
-        // Convert the Map values back to an array for rendering
         const processedEnrollments = Array.from(enrollmentsMap.values());
         setGroupedEnrollments(processedEnrollments);
 
@@ -231,13 +226,13 @@ const MyEnrollments = () => {
 
       {/* Conditional Content */}
       {groupedEnrollments.length === 0 ? (
-        // --- UPDATED Empty State: Card wrapper removed ---
+        // --- Empty State ---
         <NoEnrollmentsPlaceholder />
       ) : (
-        // --- This is the new Card Grid implementation ---
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        // --- UPDATED: This is now a vertical stack (space-y-6) ---
+        <div className="space-y-6">
           {groupedEnrollments.map((enrollment) => (
-            <EnrollmentCard key={enrollment.course_id} enrollment={enrollment} />
+            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
           ))}
         </div>
       )}
