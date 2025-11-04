@@ -4,7 +4,18 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Library, Briefcase, Users, Phone, Info, Shield, GraduationCap, FastForward } from 'lucide-react';
+import { 
+  BookOpen, 
+  Library, 
+  Briefcase, 
+  Users, 
+  Phone, 
+  Info, 
+  Shield, 
+  GraduationCap, 
+  FastForward,
+  Home // Added Home Icon
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 // Copied from ModernDashboard.tsx
@@ -132,8 +143,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile }) => {
         </div>
       </div>
 
-      {/* Bottom Dynamic Button */}
-      <div className="mt-auto p-4 border-t border-gray-200">
+      {/* --- BOTTOM BUTTONS --- */}
+      <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
+        {/* Added Home Button */}
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Home
+        </Button>
+        
+        {/* Dynamic Exam Prep Button */}
         {getExamPrepButton()}
       </div>
     </nav>
