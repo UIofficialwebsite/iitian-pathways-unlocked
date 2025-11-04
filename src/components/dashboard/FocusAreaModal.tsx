@@ -42,11 +42,11 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
   // State for UI flow
   const [step, setStep] = useState<Step>('initial');
 
-  // **FIXED:** This effect now only runs when the modal opens.
+  // This effect now only runs when the modal opens.
   // It ALWAYS sets the step to 'initial' and just loads the data.
   useEffect(() => {
     if (isOpen) {
-      // **FIX:** Always start at the 'initial' step
+      // Always start at the 'initial' step
       setStep('initial');
       
       // Load current profile data into local state, defaulting to empty strings
@@ -58,7 +58,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
     }
   }, [isOpen, profile]);
   
-  // **FIXED:** This now clears the *other* program's fields when you switch
+  // This now clears the *other* program's fields when you switch
   // AND pre-fills the fields for the program you clicked.
   const handleProgramChange = (type: 'IITM_BS' | 'COMPETITIVE_EXAM') => {
     setProgramType(type);
@@ -226,6 +226,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <SelectItem value="foundation">Foundation</SelectItem>
               <SelectItem value="diploma">Diploma</SelectItem>
               <SelectItem value="degree">Degree</SelectItem>
+              {/* THE EXTRA TAG IS NOW REMOVED */}
             </SelectContent>
           </Select>
         )}
@@ -255,4 +256,3 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 };
 
 export default FocusAreaModal;
-
