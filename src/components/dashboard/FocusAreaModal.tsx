@@ -228,7 +228,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <SelectItem value="foundation">Foundation</SelectItem>
               <SelectItem value="diploma">Diploma</SelectItem>
               <SelectItem value="degree">Degree</SelectItem>
-            </ElectedItem>
+            </SelectItem> {/* <-- THIS WAS THE TYPO, NOW FIXED */}
           </SelectContent>
         </Select>
         )}
