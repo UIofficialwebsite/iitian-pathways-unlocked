@@ -38,7 +38,7 @@ type GroupedEnrollment = {
   image_url: string | null;
 };
 
-// --- NEW: Enrollment List Item (based on your new image) ---
+// --- NEW: Enrollment List Item (Larger and refined) ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   
   const StatusIndicator = () => {
@@ -71,14 +71,15 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     : 'No end date';
 
   return (
-    // The entire card is a link, as implied by the image
+    // The entire card is a link, with hover effect
     <Link to={`/courses/${enrollment.course_id}`} className="block group">
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg
                      border border-gray-200 group-hover:border-black transition-all duration-200">
-        <CardContent className="flex items-center gap-4 p-4">
+        {/* Increased padding from p-4 to p-5 */}
+        <CardContent className="flex items-center gap-5 p-5">
           
-          {/* Image Container (16:9 Aspect Ratio) */}
-          <div className="flex-shrink-0 w-32 sm:w-36 aspect-video overflow-hidden rounded-lg bg-gray-50">
+          {/* Image Container (16:9 Aspect Ratio) - Increased size */}
+          <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
@@ -86,8 +87,8 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
             />
           </div>
 
-          {/* Middle Section: Title, Date */}
-          <div className="flex-grow space-y-1">
+          {/* Middle Section: Title, Date - Increased spacing */}
+          <div className="flex-grow space-y-1.5">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
               <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
                 {enrollment.title}
@@ -98,22 +99,20 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
               </div>
             </div>
             
-            {/* Date */}
-            <p className="text-sm text-gray-500">
+            {/* Date - Increased font size and darkness */}
+            <p className="text-base text-gray-600">
               {formattedEndDate} • Free
             </p>
             
-            {/* REMOVED Subjects line to match new design */}
-
           </div>
 
           {/* Right Arrow */}
           <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
         </CardContent>
         
-        {/* Expiry Date Banner (NO LINK) */}
+        {/* Expiry Date Banner (NO LINK) - Increased padding and font size */}
         {enrollment.status === 'Batch Expired' && (
-          <div className="bg-red-50 text-red-700 text-sm p-3 text-center">
+          <div className="bg-red-50 text-red-700 text-base p-4 text-center">
             This batch got expired on {formattedEndDate}!
           </div>
         )}
@@ -144,7 +143,7 @@ const NoEnrollmentsPlaceholder = () => {
 };
 
 
-// --- Main Page Component ---
+// --- Main Page Component (Logic unchanged) ---
 const MyEnrollments = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -209,7 +208,7 @@ const MyEnrollments = () => {
               start_date: enrollment.courses.start_date,
               end_date: enrollment.courses.end_date,
               status: status,
-              subjects: [], // Still need this to gather subjects
+              subjects: [],
               image_url: enrollment.courses.image_url,
             });
           }
