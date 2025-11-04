@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,7 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    if (!currentUser?.email) {
+    // --- UPDATED: Check for user ID instead of email ---
+    if (!currentUser?.id) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setUserRole(null);
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // First check the hardcoded super admin
+      // First check the hardcoded super admin (this is fine)
       if (currentUser.email === 'uiwebsite638@gmail.com') {
         setIsAdmin(true);
         setIsSuperAdmin(true);
@@ -41,11 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check admin_users table
-      const { data, error } = await supabase
+      // --- UPDATED: Check admin_users table using 'user_id' ---
+      // (This assumes your 'admin_users' table has a 'user_id' column)
+      const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('is_super_admin')
-        .eq('user_id', user.id); // <-- This line is the fix
+        .eq('user_id', currentUser.id) // Changed from 'email'
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
@@ -59,11 +60,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check profiles table for role
+      // --- UPDATED: Check profiles table using 'id' ---
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('email', currentUser.email)
+        .eq('id', currentUser.id) // Changed from 'email'
         .maybeSingle();
       
       if (profileError && profileError.code !== 'PGRST116') {
