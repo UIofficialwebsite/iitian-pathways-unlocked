@@ -4,8 +4,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope } from 'lucide-react';
+import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle } from 'lucide-react';
+// We no longer import the constants file
+
+// Define the shape of the options we fetch
+interface FocusOption {
+  id: string;
+  parent_id: string | null;
+  label: string;
+  value_to_save: string;
+  profile_column_to_update: string;
+  icon: string | null;
+  display_order: number;
+}
 
 // Define profile type
 interface UserProfile {
@@ -15,7 +26,7 @@ interface UserProfile {
   level?: string | null;
   exam_type?: string | null;
   student_status?: string | null;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
 interface FocusAreaModalProps {
@@ -25,64 +36,78 @@ interface FocusAreaModalProps {
   onProfileUpdate: (updatedProfile: UserProfile) => void;
 }
 
-type Step = 'initial' | 'competitive_exam' | 'iitm_bs';
+// Map icon strings from database to actual components
+const iconMap: { [key: string]: React.ElementType } = {
+  GraduationCap: GraduationCap,
+  UserCheck: UserCheck,
+  Laptop: Laptop,
+  Microscope: Microscope,
+  default: Circle,
+};
 
 const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profile, onProfileUpdate }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingOptions, setIsFetchingOptions] = useState(true);
   
-  // State for selections
-  const [programType, setProgramType] = useState(profile?.program_type || '');
-  const [examType, setExamType] = useState(profile?.exam_type || '');
-  const [studentStatus, setStudentStatus] = useState(profile?.student_status || '');
-  const [branch, setBranch] = useState(profile?.branch || '');
-  const [level, setLevel] = useState(profile?.level || '');
+  // State for all options fetched from DB
+  const [allOptions, setAllOptions] = useState<FocusOption[]>([]);
   
-  // State for UI flow
-  const [step, setStep] = useState<Step>('initial');
+  // State for tracking the user's path through the tree
+  const [selectionPath, setSelectionPath] = useState<FocusOption[]>([]);
+  
+  // The ID of the current parent (null = root)
+  const [currentStepParentId, setCurrentStepParentId] = useState<string | null>(null);
 
-  // This effect now only runs when the modal opens.
-  // It ALWAYS sets the step to 'initial' and just loads the data.
+  // This effect runs when the modal opens to fetch all options
   useEffect(() => {
     if (isOpen) {
-      // Always start at the 'initial' step
-      setStep('initial');
+      setIsFetchingOptions(true);
+      setCurrentStepParentId(null); // Always start at the root
+      setSelectionPath([]); // Clear path
+
+      const fetchOptions = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('focus_options')
+            .select('*')
+            .order('display_order', { ascending: true });
+            
+          if (error) throw error;
+          setAllOptions(data);
+        } catch (error: any) {
+          toast({ title: "Error", description: "Could not load program options.", variant: "destructive" });
+        } finally {
+          setIsFetchingOptions(false);
+        }
+      };
       
-      // Load current profile data into local state, defaulting to empty strings
-      setProgramType(profile?.program_type || '');
-      setExamType(profile?.exam_type || '');
-      setStudentStatus(profile?.student_status || '');
-      setBranch(profile?.branch || '');
-      setLevel(profile?.level || '');
+      fetchOptions();
     }
-  }, [isOpen, profile]);
+  }, [isOpen, toast]);
   
-  // This now clears the *other* program's fields when you switch
-  // AND pre-fills the fields for the program you clicked.
-  const handleProgramChange = (type: 'IITM_BS' | 'COMPETITIVE_EXAM') => {
-    setProgramType(type);
-    if (type === 'IITM_BS') {
-      setStep('iitm_bs');
-      // Clear competitive exam fields
-      setExamType('');
-      setStudentStatus('');
-      // Pre-fill with existing data if available
-      setBranch(profile?.branch || '');
-      setLevel(profile?.level || '');
+  // This function is called when a user clicks an option
+  const handleOptionClick = (option: FocusOption) => {
+    // Find the depth of the clicked item to replace the correct part of the path
+    const parentIndex = selectionPath.findIndex(p => p.id === option.parent_id);
+    const newPath = [...selectionPath.slice(0, parentIndex + 1), option];
+    setSelectionPath(newPath);
+
+    // Check if this option has children
+    const children = allOptions.filter(o => o.parent_id === option.id);
+    
+    if (children.length > 0) {
+      // If yes, move to the next step
+      setCurrentStepParentId(option.id);
     } else {
-      setStep('competitive_exam');
-      // Clear IITM BS fields
-      setBranch('');
-      setLevel('');
-      // Pre-fill with existing data if available
-      setExamType(profile?.exam_type || '');
-      setStudentStatus(profile?.student_status || '');
+      // If no, this is the final selection, save it.
+      handleSave(newPath);
     }
   };
 
-
-  const handleSave = async () => {
+  // This function builds the 'updates' object dynamically
+  const handleSave = async (path: FocusOption[]) => {
     if (!user) {
       toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
       return;
@@ -90,14 +115,19 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 
     setIsLoading(true);
     
-    const updates: Partial<UserProfile> = {
-      program_type: programType,
-      exam_type: programType === 'COMPETITIVE_EXAM' ? examType : null,
-      student_status: programType === 'COMPETITIVE_EXAM' ? studentStatus : null,
-      branch: programType === 'IITM_BS' ? branch : null,
-      level: programType === 'IITM_BS' ? level : null,
-      updated_at: new Date().toISOString(),
+    // Start with all relevant fields cleared
+    const updates: { [key: string]: string | null } = {
+      program_type: null,
+      branch: null,
+      level: null,
+      exam_type: null,
+      student_status: null,
     };
+    
+    // Add the new values from the user's path
+    path.forEach(option => {
+      updates[option.profile_column_to_update] = option.value_to_save;
+    });
 
     try {
       const { data, error } = await supabase
@@ -120,139 +150,84 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
     }
   };
 
-  const renderInitialStep = () => (
-    <>
-      <DialogDescription>
-        Select your academic program to get personalized content.
-      </DialogDescription>
-      <div className="space-y-4 pt-4">
-        <Button
-          variant={programType === 'IITM_BS' ? "default" : "outline"}
-          className="w-full justify-between h-16 text-left"
-          onClick={() => handleProgramChange('IITM_BS')}
-        >
-          <div className="flex items-center">
-            <GraduationCap className="h-6 w-6 mr-3" />
-            <div>
-              <p className="font-semibold">IITM BS Degree</p>
-              <p className="text-xs">Data Science or Electronic Systems</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
-        </Button>
-        <Button
-          variant={programType === 'COMPETITIVE_EXAM' ? "default" : "outline"}
-          className="w-full justify-between h-16 text-left"
-          onClick={() => handleProgramChange('COMPETITIVE_EXAM')}
-        >
-          <div className="flex items-center">
-            <UserCheck className="h-6 w-6 mr-3" />
-            <div>
-              <p className="font-semibold">Competitive Exam</p>
-              <p className="text-xs">JEE, NEET, etc.</p>
-            </div>
-          </div>
-          <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
-        </Button>
-      </div>
-    </>
-  );
+  // Get the options for the current step
+  const currentOptions = allOptions.filter(o => o.parent_id === currentStepParentId);
+  
+  // Get the title/description for the current step
+  const currentParent = allOptions.find(o => o.id === currentStepParentId);
+  let title = "Choose your focus area";
+  let description = "Select your academic program to get personalized content.";
+  if (currentParent) {
+    // A bit of logic to make the title user-friendly
+    let stepTitle = currentParent.profile_column_to_update.replace('_', ' ');
+    if (stepTitle === 'program type') stepTitle = 'program';
+    if (stepTitle === 'exam type') stepTitle = 'exam';
+    if (stepTitle === 'student status') stepTitle = 'standard';
 
-  const renderCompetitiveExamStep = () => (
-    <>
-      <DialogDescription>
-        Select your exam and standard.
-      </DialogDescription>
-      <div className="space-y-4 pt-4">
-        <Select value={examType} onValueChange={setExamType}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your Exam" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="JEE">JEE</SelectItem>
-            <SelectItem value="NEET">NEET</SelectItem>
-          </SelectContent>
-        </Select>
-        
-        <Select value={studentStatus} onValueChange={setStudentStatus}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your Standard" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="class11">Class 11</SelectItem>
-            <SelectItem value="class12">Class 12</SelectItem>
-            <SelectItem value="dropper">Dropper</SelectItem>
-          </SelectContent>
-        </Select>
+    title = `Select ${stepTitle}`; // e.g., "Select branch"
+    description = `You selected: ${selectionPath.map(p => p.label).join(' > ')}`;
+  }
 
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setStep('initial')}>Back</Button>
-          <Button onClick={handleSave} disabled={isLoading || !examType || !studentStatus}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-
-  const renderIITMBSStep = () => (
-    <>
-      <DialogDescription>
-        Select your branch and level.
-      </DialogDescription>
-      <div className="space-y-4 pt-4">
-        <Select value={branch} onValueChange={setBranch}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select your Branch" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="data-science">
-              <div className="flex items-center gap-2"><Laptop className="h-4 w-4" /> Data Science</div>
-            </SelectItem>
-            <SelectItem value="electronic-systems">
-              <div className="flex items-center gap-2"><Microscope className="h-4 w-4" /> Electronic Systems</div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-        
-        {/* Only show Level select *after* Branch is selected */}
-        {branch && (
-          <Select value={level} onValueChange={setLevel}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select your Level" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="qualifier">Qualifier</SelectItem>
-              <SelectItem value="foundation">Foundation</SelectItem>
-              <SelectItem value="diploma">Diploma</SelectItem>
-              <SelectItem value="degree">Degree</SelectItem>
-              {/* THE EXTRA TAG IS NOW REMOVED */}
-            </SelectContent>
-          </Select>
-        )}
-
-        <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setStep('initial')}>Back</Button>
-          <Button onClick={handleSave} disabled={isLoading || !branch || !level}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
+  // Check if the user has a value selected at this step
+  const selectedValue = selectionPath.find(p => p.parent_id === currentStepParentId)?.value_to_save;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Choose your focus area</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {step === 'initial' && renderInitialStep()}
-        {step === 'competitive_exam' && renderCompetitiveExamStep()}
-        {step === 'iitm_bs' && renderIITMBSStep()}
+
+        {isFetchingOptions || isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        ) : (
+          <div className="space-y-4 pt-4">
+            {currentOptions.length > 0 ? (
+              currentOptions.map(option => {
+                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
+                return (
+                  <Button
+                    key={option.id}
+                    variant={selectedValue === option.value_to_save ? "default" : "outline"}
+                    className="w-full justify-between h-16 text-left"
+                    onClick={() => handleOptionClick(option)}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="h-6 w-6 mr-3" />
+                      <div>
+                        <p className="font-semibold">{option.label}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
+                  </Button>
+                );
+              })
+            ) : (
+              <p className="text-center text-gray-500">No options available for this selection.</p>
+            )}
+
+            {/* Back Button */}
+            {currentStepParentId !== null && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const newPath = [...selectionPath.slice(0, -1)];
+                  setSelectionPath(newPath);
+                  setCurrentStepParentId(newPath.length > 0 ? newPath[newPath.length - 1].parent_id : null);
+                }}
+              >
+                Back
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 };
 
 export default FocusAreaModal;
+
