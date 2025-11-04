@@ -24,7 +24,7 @@ type RawEnrollment = {
   subject_name: string | null;
   courses: {
     id: string;
-    batch_name: string | null;
+    title: string | null; // Changed from batch_name
     batch_start_date: string | null;
     batch_end_date: string | null;
     slug: string | null;
@@ -34,7 +34,7 @@ type RawEnrollment = {
 // Type for the data after we group it by course_id
 type GroupedEnrollment = {
   course_id: string;
-  batch_name: string;
+  title: string; // Changed from batch_name
   batch_start_date: string | null;
   batch_end_date: string | null;
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
@@ -49,7 +49,7 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
       <CardHeader>
         <div className="flex justify-between items-start">
           <CardTitle className="text-xl font-bold text-gray-900 mb-2 pr-2">
-            {enrollment.batch_name}
+            {enrollment.title} {/* Changed from batch_name */}
           </CardTitle>
           <Badge 
             variant={enrollment.status === 'Ongoing' ? 'default' : 'destructive'}
@@ -108,7 +108,7 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
-        // This query correctly fetches `batch_name` from the `courses` table
+        // This query correctly fetches `title` from the `courses` table
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -117,7 +117,7 @@ const MyEnrollments = () => {
             subject_name,
             courses (
               id,
-              batch_name,
+              title, 
               batch_start_date,
               batch_end_date,
               slug
@@ -158,7 +158,7 @@ const MyEnrollments = () => {
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
-              batch_name: enrollment.courses.batch_name || 'Unnamed Batch',
+              title: enrollment.courses.title || 'Unnamed Batch', // Changed from batch_name
               batch_start_date: enrollment.courses.batch_start_date,
               batch_end_date: enrollment.courses.batch_end_date,
               status: status,
