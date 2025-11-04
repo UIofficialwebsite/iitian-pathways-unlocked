@@ -9,6 +9,7 @@ import { Loader2, Edit, Save, X, User, Camera } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from '@/components/ui/separator'; // Import Separator
 
 // Define profile type
 type UserProfile = Tables<'profiles'> & {
@@ -225,10 +226,11 @@ const MyProfile = () => {
           </Card>
         </div>
 
-        {/* Right Column: Info Cards */}
-        <div className="lg:col-span-2 space-y-8">
-          {/* Personal Information */}
+        {/* Right Column: Info Cards (Combined into ONE) */}
+        <div className="lg:col-span-2">
+          {/* --- ONE SINGLE CARD --- */}
           <Card>
+            {/* Personal Information Section */}
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
@@ -255,10 +257,11 @@ const MyProfile = () => {
                 <p className="text-gray-900 font-medium mt-1">{profile.email}</p>
               </div>
             </CardContent>
-          </Card>
 
-          {/* Academic Program (Read-Only) */}
-          <Card>
+            {/* --- SEPARATOR --- */}
+            <Separator className="my-6" />
+
+            {/* Academic Program Section (Read-Only) */}
             <CardHeader>
               <CardTitle>Academic Program</CardTitle>
               <CardDescription>
