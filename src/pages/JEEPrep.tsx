@@ -42,13 +42,16 @@ const JEEPrep = () => {
 
   // Initialize filters from URL params - subject first, then class
   // URL format: /exam-preparation/jee/notes/physics/class11
-  // Find matching subject from available subjects (case-insensitive)
+  // Note: params come unslugified as "Physics", "Class12" but we need proper casing
   const urlSubject = urlParams[0];
+  const urlClass = urlParams[1]?.toLowerCase(); // Convert "Class12" to "class12"
+  
+  // Find matching subject from available subjects (case-insensitive)
   const matchedSubject = urlSubject 
     ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase()) 
     : null;
   const initialSubject = matchedSubject || (subjects.length > 0 ? subjects[0] : "Physics");
-  const initialClass = urlParams[1] || "class11";
+  const initialClass = urlClass || "class11";
   
   const [activeSubject, setActiveSubject] = useState(initialSubject);
   const [activeClass, setActiveClass] = useState(initialClass);
@@ -74,10 +77,23 @@ const JEEPrep = () => {
 
   useEffect(() => {
     if (!contentLoading && subjects.length > 0) {
-      // If URL subject doesn't match any available subject, update to first available
+      // Match URL subject with available subjects
+      let newSubject = activeSubject;
+      
+      if (urlSubject) {
+        const matched = subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase());
+        if (matched && matched !== activeSubject) {
+          newSubject = matched;
+          setActiveSubject(matched);
+          updateUrl(activeTab, matched, activeClass);
+          return;
+        }
+      }
+      
+      // If current subject is not available, update to first available
       const isSubjectAvailable = subjects.some(s => s.toLowerCase() === activeSubject.toLowerCase());
       if (!isSubjectAvailable) {
-        const newSubject = subjects[0];
+        newSubject = subjects[0];
         setActiveSubject(newSubject);
         updateUrl(activeTab, newSubject, activeClass);
       }

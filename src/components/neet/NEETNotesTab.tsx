@@ -13,11 +13,12 @@ const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   const { notes, contentLoading } = useBackend();
   
   // Parse initialParams: [0] = subject, [1] = class
-  // Find matching subject from available subjects (case-insensitive)
+  // Note: params come unslugified as "Physics", "Class12" but we need "physics", "class12"
   const urlSubject = initialParams?.[0];
+  const urlClass = initialParams?.[1]?.toLowerCase(); // Convert "Class12" to "class12"
   
-  const [activeSubject, setActiveSubject] = useState("Physics");
-  const [activeClass, setActiveClass] = useState(initialParams?.[1] || "class11");
+  const [activeSubject, setActiveSubject] = useState(urlSubject || "Physics");
+  const [activeClass, setActiveClass] = useState(urlClass || "class11");
 
   const neetNotes = useMemo(() => notes.filter(note => note.exam_type === 'NEET'), [notes]);
 
@@ -39,18 +40,29 @@ const NEETNotesTab = ({ onFilterChange, initialParams }: NEETNotesTabProps) => {
   useEffect(() => {
     if (!contentLoading && subjects.length > 0) {
       // Match URL subject with available subjects (case-insensitive)
-      const matchedSubject = urlSubject 
-        ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase())
-        : null;
+      let newSubject = activeSubject;
       
-      const newSubject = matchedSubject || subjects[0];
+      // If URL has a subject, try to match it
+      if (urlSubject) {
+        const matched = subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase());
+        if (matched && matched !== activeSubject) {
+          newSubject = matched;
+          setActiveSubject(matched);
+        }
+      }
       
-      if (newSubject !== activeSubject) {
+      // If current subject is not in available subjects, use first one
+      if (!subjects.some(s => s.toLowerCase() === newSubject.toLowerCase())) {
+        newSubject = subjects[0];
         setActiveSubject(newSubject);
+      }
+      
+      // Update URL if subject changed
+      if (newSubject !== activeSubject) {
         onFilterChange?.('notes', newSubject, activeClass);
       }
     }
-  }, [contentLoading, subjects]);
+  }, [contentLoading, subjects, urlSubject]);
 
   // Handle subject changes
   const handleSubjectChange = (newSubject: string) => {
