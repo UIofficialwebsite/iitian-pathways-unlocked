@@ -25,6 +25,7 @@ type RawEnrollment = {
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
+    price: number | null; // Added price
   } | null;
 };
 
@@ -36,6 +37,7 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[]; // Still needed for grouping logic
   image_url: string | null;
+  price: number | null; // Added price
 };
 
 // --- NEW: Enrollment List Item (Larger and refined) ---
@@ -70,6 +72,9 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
     : 'No end date';
 
+  // Determine if the course is Free or Paid based on the price
+  const displayPrice = (enrollment.price === 0) ? 'Free' : 'Paid';
+
   return (
     // The entire card is a link, with hover effect
     <Link to={`/courses/${enrollment.course_id}`} className="block group">
@@ -99,9 +104,9 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
               </div>
             </div>
             
-            {/* Date - Increased font size and darkness */}
+            {/* Date - Updated to show Free/Paid */}
             <p className="text-base text-gray-600">
-              {formattedEndDate} • Free
+              {formattedEndDate} • {displayPrice}
             </p>
             
           </div>
@@ -171,7 +176,8 @@ const MyEnrollments = () => {
               title, 
               start_date,
               end_date,
-              image_url
+              image_url,
+              price
             )
           `)
           .eq('user_id', user.id);
@@ -210,6 +216,7 @@ const MyEnrollments = () => {
               status: status,
               subjects: [],
               image_url: enrollment.courses.image_url,
+              price: enrollment.courses.price, // Store the price
             });
           }
 
