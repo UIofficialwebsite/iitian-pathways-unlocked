@@ -25,9 +25,9 @@ type RawEnrollment = {
   courses: {
     id: string;
     title: string | null;
-    start_date: string | null; // Corrected: from batch_start_date
-    end_date: string | null;   // Corrected: from batch_end_date
-    slug: string | null;
+    start_date: string | null; 
+    end_date: string | null;   
+    // Removed 'slug' as it does not exist in your schema
   } | null;
 };
 
@@ -35,11 +35,11 @@ type RawEnrollment = {
 type GroupedEnrollment = {
   course_id: string;
   title: string;
-  start_date: string | null; // Corrected: from batch_start_date
-  end_date: string | null;   // Corrected: from batch_end_date
+  start_date: string | null; 
+  end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
-  slug: string | null;
+  // Removed 'slug'
 };
 
 // --- NEW Enrollment Card Component ---
@@ -59,7 +59,7 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
           </Badge>
         </div>
         <CardDescription>
-          {enrollment.end_date // Corrected: from batch_end_date
+          {enrollment.end_date
             ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
             : 'No end date specified'}
         </CardDescription>
@@ -79,8 +79,9 @@ const EnrollmentCard = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
         </div>
       </CardContent>
       <CardFooter>
+        {/* CORRECTED LINK: Uses course_id instead of slug */}
         <Button asChild className="w-full" variant="outline">
-          <Link to={`/courses/${enrollment.slug || ''}`}>
+          <Link to={`/courses/${enrollment.course_id}`}>
             Go to Course
             <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
@@ -108,7 +109,7 @@ const MyEnrollments = () => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments, joining with courses table
-        // This query now uses the correct column names: title, start_date, end_date
+        // CORRECTED QUERY: Removed 'slug'
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -119,8 +120,7 @@ const MyEnrollments = () => {
               id,
               title, 
               start_date,
-              end_date,
-              slug
+              end_date
             )
           `)
           .eq('user_id', user.id);
@@ -143,7 +143,7 @@ const MyEnrollments = () => {
           const course_id = enrollment.course_id;
 
           // Determine batch status
-          const endDate = enrollment.courses.end_date // Corrected: from batch_end_date
+          const endDate = enrollment.courses.end_date 
             ? new Date(enrollment.courses.end_date) 
             : null;
           let status: GroupedEnrollment['status'] = 'Unknown';
@@ -159,11 +159,11 @@ const MyEnrollments = () => {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
               title: enrollment.courses.title || 'Unnamed Batch',
-              start_date: enrollment.courses.start_date, // Corrected
-              end_date: enrollment.courses.end_date,     // Corrected
+              start_date: enrollment.courses.start_date,
+              end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
-              slug: enrollment.courses.slug,
+              // Removed 'slug'
             });
           }
 
