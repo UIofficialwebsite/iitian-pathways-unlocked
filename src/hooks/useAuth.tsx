@@ -24,7 +24,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    // Check for email, which is what your table uses
     if (!currentUser?.email) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
@@ -41,15 +40,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check admin_users table using 'email'
+      // Check admin_users table
       const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('is_super_admin')
-        .eq('email', currentUser.email) // REVERTED: This is correct
+        .eq('email', currentUser.email)
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
-        console.error('useAuth: Error checking admin_users:', error);
+        // Hide RLS errors from the console, as they are expected for non-admins
+        if (error.code !== '42501') { 
+          console.error('useAuth: Error checking admin_users:', error);
+        }
       }
 
       if (adminUser) {
@@ -59,15 +61,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // Check profiles table using 'email'
+      // Check profiles table for role
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('email', currentUser.email) // REVERTED: This is correct
+        .eq('email', currentUser.email)
         .maybeSingle();
       
       if (profileError && profileError.code !== 'PGRST116') {
-        console.error('useAuth: Error checking profiles:', profileError);
+        // Hide RLS errors from the console
+        if (profileError.code !== '42501') {
+          console.error('useAuth: Error checking profiles:', profileError);
+        }
       }
 
       const role = profile?.role || 'student';
