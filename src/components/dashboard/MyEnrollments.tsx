@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Inbox } from 'lucide-react';
+import { ArrowRight, Loader2, Inbox, ChevronRight } from 'lucide-react'; // Added ChevronRight
 import { Link } from 'react-router-dom';
 import { 
   Card, 
@@ -24,7 +24,8 @@ type RawEnrollment = {
     title: string | null;
     start_date: string | null; 
     end_date: string | null;   
-    image_url: string | null; // Added for the image
+    image_url: string | null;
+    expiry_link: string | null; // Added expiry_link
   } | null;
 };
 
@@ -35,7 +36,8 @@ type GroupedEnrollment = {
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
-  image_url: string | null; // Added for the image
+  image_url: string | null;
+  expiry_link: string | null; // Added expiry_link
 };
 
 // --- NEW: Enrollment List Item (based on your new image) ---
@@ -58,61 +60,74 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     // "Success" badge for completed/expired batches
     return (
       <Badge 
-        className="bg-green-100 text-green-800 hover:bg-green-100/80"
+        className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium" // Slightly darker text for contrast
         title="Completed"
       >
-        Success
+        SUCCESS
       </Badge>
     );
   };
 
+  const formattedEndDate = enrollment.end_date 
+    ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
+    : 'No end date';
+
   return (
-    <Card className="w-full">
-      <CardContent className="flex items-center gap-4 p-4">
-        {/* Image */}
-        <img 
-          src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"} // Use image_url or placeholder
-          alt={enrollment.title} 
-          className="w-20 h-20 md:w-24 md:h-24 rounded-lg object-cover hidden sm:block" 
-        />
-
-        {/* Middle Section: Title, Subjects, Date */}
-        <div className="flex-grow space-y-1">
-          <CardTitle className="text-lg md:text-xl font-bold text-gray-900">
-            {enrollment.title}
-          </CardTitle>
-          {/* Comma-separated subjects */}
-          <CardDescription className="text-sm text-gray-600 line-clamp-2">
-            <span className="font-medium text-gray-700">Subjects:</span> {enrollment.subjects.join(', ') || 'N/A'}
-          </CardDescription>
-          <p className="text-sm text-gray-500 pt-1">
-            {enrollment.end_date
-              ? `Batch ends on: ${new Date(enrollment.end_date).toLocaleDateString()}`
-              : 'No end date specified'}
-          </p>
-        </div>
-
-        {/* Right Section: Status & Button */}
-        <div className="flex flex-col items-end justify-between self-stretch flex-shrink-0 w-auto sm:w-36 gap-2">
-          
-          {/* Status Badge Wrapper */}
-          <div className="h-8 flex items-center">
-            <StatusIndicator />
+    <>
+      <Card className="w-full relative overflow-hidden flex flex-col">
+        <CardContent className="flex items-center gap-4 p-4">
+          {/* Image Container (Adjusted for full resolution and aspect ratio) */}
+          <div className="flex-shrink-0 w-28 h-20 md:w-32 md:h-24 overflow-hidden rounded-lg">
+            <img 
+              src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"} // Use image_url or placeholder
+              alt={enrollment.title} 
+              className="w-full h-full object-cover object-center" // Ensure full image, no square crop
+            />
           </div>
 
-          {/* Button */}
-          <Button asChild variant="outline" size="sm" className="w-full">
-            <Link to={`/courses/${enrollment.course_id}`}>
-              Go to Course
+          {/* Middle Section: Title, Subjects, Date */}
+          <div className="flex-grow space-y-1">
+            {/* Top Row: Title and Status (aligned to top in card) */}
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
+              <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
+                {enrollment.title}
+              </CardTitle>
+              {/* Status Indicator */}
+              <div className="flex-shrink-0 mt-1 sm:mt-0">
+                <StatusIndicator />
+              </div>
+            </div>
+            
+            {/* Date */}
+            <p className="text-sm text-gray-500">
+              {formattedEndDate} • Free {/* Assuming 'Free' is always shown as per image */}
+            </p>
+            
+            {/* Subjects (if needed, otherwise remove) */}
+            {/* <CardDescription className="text-sm text-gray-600 line-clamp-2">
+              <span className="font-medium text-gray-700">Subjects:</span> {enrollment.subjects.join(', ') || 'N/A'}
+            </CardDescription> */}
+          </div>
+
+          {/* Right Arrow (always present as per image) */}
+          <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
+        </CardContent>
+        
+        {/* Expiry Link Banner (only for expired batches) */}
+        {enrollment.status === 'Batch Expired' && enrollment.expiry_link && (
+          <div className="bg-red-50 text-red-700 text-sm p-3 text-center flex items-center justify-center gap-1">
+            This batch got expired on {formattedEndDate}! 
+            <Link to={enrollment.expiry_link} className="font-semibold underline hover:text-red-800">
+              Renew to access this batch again
             </Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        )}
+      </Card>
+    </>
   );
 };
 
-// --- No Enrollments Placeholder (based on your previous image) ---
+// --- No Enrollments Placeholder (unchanged) ---
 const NoEnrollmentsPlaceholder = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
@@ -162,7 +177,8 @@ const MyEnrollments = () => {
               title, 
               start_date,
               end_date,
-              image_url
+              image_url,
+              expiry_link // Fetch expiry_link
             )
           `)
           .eq('user_id', user.id);
@@ -199,7 +215,8 @@ const MyEnrollments = () => {
               end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
-              image_url: enrollment.courses.image_url, // Added image_url
+              image_url: enrollment.courses.image_url,
+              expiry_link: enrollment.courses.expiry_link, // Store expiry_link
             });
           }
 
@@ -247,7 +264,7 @@ const MyEnrollments = () => {
         // --- Empty State ---
         <NoEnrollmentsPlaceholder />
       ) : (
-        // --- UPDATED: This is now a vertical stack (space-y-4) ---
+        // --- UPDATED: List of EnrollmentListItem components ---
         <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
             <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
