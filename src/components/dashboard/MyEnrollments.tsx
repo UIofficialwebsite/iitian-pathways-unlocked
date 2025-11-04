@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Inbox, ChevronRight } from 'lucide-react'; // Added ChevronRight
+import { ArrowRight, Loader2, Inbox, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   Card, 
@@ -25,7 +25,6 @@ type RawEnrollment = {
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
-    expiry_link: string | null; // Added expiry_link
   } | null;
 };
 
@@ -37,7 +36,6 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
   image_url: string | null;
-  expiry_link: string | null; // Added expiry_link
 };
 
 // --- NEW: Enrollment List Item (based on your new image) ---
@@ -60,7 +58,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     // "Success" badge for completed/expired batches
     return (
       <Badge 
-        className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium" // Slightly darker text for contrast
+        className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium"
         title="Completed"
       >
         SUCCESS
@@ -73,21 +71,21 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     : 'No end date';
 
   return (
-    <>
-      <Card className="w-full relative overflow-hidden flex flex-col">
+    // The entire card is a link, as implied by the image
+    <Link to={`/courses/${enrollment.course_id}`} className="block">
+      <Card className="w-full relative overflow-hidden flex flex-col hover:shadow-md transition-shadow rounded-lg">
         <CardContent className="flex items-center gap-4 p-4">
-          {/* Image Container (Adjusted for full resolution and aspect ratio) */}
+          {/* Image Container */}
           <div className="flex-shrink-0 w-28 h-20 md:w-32 md:h-24 overflow-hidden rounded-lg">
             <img 
-              src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"} // Use image_url or placeholder
+              src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
-              className="w-full h-full object-cover object-center" // Ensure full image, no square crop
+              className="w-full h-full object-cover object-center"
             />
           </div>
 
           {/* Middle Section: Title, Subjects, Date */}
           <div className="flex-grow space-y-1">
-            {/* Top Row: Title and Status (aligned to top in card) */}
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
               <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
                 {enrollment.title}
@@ -100,30 +98,27 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
             
             {/* Date */}
             <p className="text-sm text-gray-500">
-              {formattedEndDate} • Free {/* Assuming 'Free' is always shown as per image */}
+              {formattedEndDate} • Free
             </p>
             
-            {/* Subjects (if needed, otherwise remove) */}
-            {/* <CardDescription className="text-sm text-gray-600 line-clamp-2">
+            {/* Comma-separated subjects */}
+             <CardDescription className="text-sm text-gray-600 line-clamp-2 pt-1">
               <span className="font-medium text-gray-700">Subjects:</span> {enrollment.subjects.join(', ') || 'N/A'}
-            </CardDescription> */}
+            </CardDescription>
           </div>
 
-          {/* Right Arrow (always present as per image) */}
+          {/* Right Arrow */}
           <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
         </CardContent>
         
-        {/* Expiry Link Banner (only for expired batches) */}
-        {enrollment.status === 'Batch Expired' && enrollment.expiry_link && (
-          <div className="bg-red-50 text-red-700 text-sm p-3 text-center flex items-center justify-center gap-1">
-            This batch got expired on {formattedEndDate}! 
-            <Link to={enrollment.expiry_link} className="font-semibold underline hover:text-red-800">
-              Renew to access this batch again
-            </Link>
+        {/* Expiry Date Banner (NO LINK) */}
+        {enrollment.status === 'Batch Expired' && (
+          <div className="bg-red-50 text-red-700 text-sm p-3 text-center">
+            This batch got expired on {formattedEndDate}!
           </div>
         )}
       </Card>
-    </>
+    </Link>
   );
 };
 
@@ -177,8 +172,7 @@ const MyEnrollments = () => {
               title, 
               start_date,
               end_date,
-              image_url,
-              expiry_link // Fetch expiry_link
+              image_url
             )
           `)
           .eq('user_id', user.id);
@@ -216,7 +210,6 @@ const MyEnrollments = () => {
               status: status,
               subjects: [],
               image_url: enrollment.courses.image_url,
-              expiry_link: enrollment.courses.expiry_link, // Store expiry_link
             });
           }
 
