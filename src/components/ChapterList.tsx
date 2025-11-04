@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Eye, Trash2 } from "lucide-react";
@@ -18,6 +17,7 @@ interface Chapter {
     class_level?: string;
     branch?: string;
     level?: string;
+    display_order_no?: number | null;
 }
 
 interface ChapterListProps {
