@@ -24,8 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    // --- UPDATED: Check for user ID instead of email ---
-    if (!currentUser?.id) {
+    // Check for email, which is what your table uses
+    if (!currentUser?.email) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
       setUserRole(null);
@@ -33,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // First check the hardcoded super admin (this is fine)
+      // First check the hardcoded super admin
       if (currentUser.email === 'uiwebsite638@gmail.com') {
         setIsAdmin(true);
         setIsSuperAdmin(true);
@@ -41,12 +41,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // --- UPDATED: Check admin_users table using 'user_id' ---
-      // (This assumes your 'admin_users' table has a 'user_id' column)
+      // Check admin_users table using 'email'
       const { data: adminUser, error } = await supabase
         .from('admin_users')
         .select('is_super_admin')
-        .eq('user_id', currentUser.id) // Changed from 'email'
+        .eq('email', currentUser.email) // REVERTED: This is correct
         .maybeSingle();
       
       if (error && error.code !== 'PGRST116') {
@@ -60,11 +59,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
-      // --- UPDATED: Check profiles table using 'id' ---
+      // Check profiles table using 'email'
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', currentUser.id) // Changed from 'email'
+        .eq('email', currentUser.email) // REVERTED: This is correct
         .maybeSingle();
       
       if (profileError && profileError.code !== 'PGRST116') {
