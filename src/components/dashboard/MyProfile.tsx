@@ -5,14 +5,20 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Edit, Save, X, User } from 'lucide-react';
-import { Tables } from '@/integrations/supabase/types'; // Import types
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Import Select
+import { Loader2, Edit, Save, X, User, Camera } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Define profile type
 type UserProfile = Tables<'profiles'> & {
-  gender?: string | null; // Add gender if it's not in your types yet
+  gender?: string | null; 
 };
+
+// --- PLACEHOLDER AVATARS ---
+const MALE_AVATAR = "https://placehold.co/400x400/EBF4FF/1E40AF?text=User&font=inter";
+const FEMALE_AVATAR = "https://placehold.co/400x400/FCE7F3/DB2777?text=User&font=inter";
+const DEFAULT_AVATAR = "https://placehold.co/400x400/F3F4F6/6B7280?text=User&font=inter";
 
 // Helper component for editable text fields
 const EditableField = ({ label, value, onSave, type = 'text' }: { label: string, value: string | null, onSave: (newValue: string) => Promise<void>, type?: string }) => {
@@ -28,8 +34,8 @@ const EditableField = ({ label, value, onSave, type = 'text' }: { label: string,
   };
 
   return (
-    <div className="py-4 border-b border-gray-200">
-      <label className="text-sm font-medium text-gray-600">{label}</label>
+    <div className="py-4">
+      <label className="text-sm font-medium text-gray-500">{label}</label>
       {isEditing ? (
         <div className="flex items-center gap-2 mt-1">
           <Input 
@@ -47,7 +53,7 @@ const EditableField = ({ label, value, onSave, type = 'text' }: { label: string,
         </div>
       ) : (
         <div className="flex items-center justify-between mt-1">
-          <p className="text-gray-900">{value || "Not set"}</p>
+          <p className="text-gray-900 font-medium">{value || "Not set"}</p>
           <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
             <Edit className="h-4 w-4" />
           </Button>
@@ -71,8 +77,8 @@ const EditableSelect = ({ label, value, onSave, options }: { label: string, valu
   };
 
   return (
-    <div className="py-4 border-b border-gray-200">
-      <label className="text-sm font-medium text-gray-600">{label}</label>
+    <div className="py-4">
+      <label className="text-sm font-medium text-gray-500">{label}</label>
       {isEditing ? (
         <div className="flex items-center gap-2 mt-1">
           <Select value={currentValue} onValueChange={setCurrentValue}>
@@ -96,7 +102,7 @@ const EditableSelect = ({ label, value, onSave, options }: { label: string, valu
         </div>
       ) : (
         <div className="flex items-center justify-between mt-1">
-          <p className="text-gray-900">{value || "Not set"}</p>
+          <p className="text-gray-900 font-medium">{value || "Not set"}</p>
           <Button size="icon" variant="ghost" onClick={() => { setIsEditing(true); setCurrentValue(value || ""); }}>
             <Edit className="h-4 w-4" />
           </Button>
@@ -145,9 +151,12 @@ const MyProfile = () => {
   const handleUpdate = async (field: keyof UserProfile, value: string) => {
     if (!user || !profile) return;
     try {
+      // Use 'gender' as keyof UserProfile for the gender field
+      const updateData = { [field]: value, updated_at: new Date().toISOString() };
+      
       const { data, error } = await supabase
         .from('profiles')
-        .update({ [field]: value, updated_at: new Date().toISOString() })
+        .update(updateData)
         .eq('id', user.id)
         .select()
         .single();
@@ -155,10 +164,16 @@ const MyProfile = () => {
       if (error) throw error;
       
       setProfile(data as UserProfile); // Update local state with new profile data
-      toast({ title: "Success", description: `${field.replace('_', ' ')} updated.` });
-    } catch (error: any)
-      toast({ title: "Error", description: `Failed to update ${field}. ${error.message}`, variant: "destructive" });
+      toast({ title: "Success", description: `${String(field).replace('_', ' ')} updated.` });
+    } catch (error: any) {
+      toast({ title: "Error", description: `Failed to update ${String(field)}. ${error.message}`, variant: "destructive" });
     }
+  };
+
+  const getAvatarSrc = () => {
+    if (profile?.gender === 'Male') return MALE_AVATAR;
+    if (profile?.gender === 'Female') return FEMALE_AVATAR;
+    return DEFAULT_AVATAR;
   };
   
   if (loading) {
@@ -181,86 +196,108 @@ const MyProfile = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center gap-4">
-        <div className="p-3 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-          <User className="h-8 w-8 text-white" />
-        </div>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-          <p className="text-gray-600">View and edit your personal information.</p>
-        </div>
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* New Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
+        <p className="text-gray-600">View and edit your personal information and academic focus.</p>
       </div>
 
-      {/* Personal Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <EditableField 
-            label="Full Name" 
-            value={profile.student_name || profile.full_name} 
-            onSave={(value) => handleUpdate('student_name', value)} 
-          />
-          <div className="py-4 border-b border-gray-200">
-            <label className="text-sm font-medium text-gray-600">Email</label>
-            <p className="text-gray-900 mt-1">{profile.email}</p>
-          </div>
-          <EditableField 
-            label="Phone" 
-            value={profile.phone} 
-            onSave={(value) => handleUpdate('phone', value)} 
-            type="tel"
-          />
-          <EditableSelect
-            label="Gender"
-            value={profile.gender || null}
-            onSave={(value) => handleUpdate('gender', value)}
-            options={genderOptions}
-          />
-        </CardContent>
-      </Card>
+      {/* New Two-Column Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {/* Left Column: Avatar */}
+        <div className="lg:col-span-1">
+          <Card className="p-6 flex flex-col items-center text-center">
+            <div className="relative mb-4">
+              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
+                <AvatarImage src={getAvatarSrc()} alt={profile.student_name || "User"} />
+                <AvatarFallback className="text-4xl">
+                  {profile.student_name?.charAt(0).toUpperCase() || <User />}
+                </AvatarFallback>
+              </Avatar>
+              <Button size="icon" variant="outline" className="absolute -bottom-2 -right-2 rounded-full h-10 w-10 bg-white shadow">
+                <Camera className="h-5 w-5" />
+              </Button>
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">{profile.student_name || "Update Name"}</h2>
+            <p className="text-gray-500">{profile.email}</p>
+          </Card>
+        </div>
 
-      {/* Academic Program details are now managed in the FocusAreaModal */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Academic Program</CardTitle>
-          <CardDescription>
-            To edit your focus area, please use the "My Focus Area" button in the sidebar.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-           <div className="py-4 border-b border-gray-200">
-            <label className="text-sm font-medium text-gray-600">Program Type</label>
-            <p className="text-gray-900 mt-1">{profile.program_type || "Not set"}</p>
-          </div>
-          {profile.program_type === 'IITM_BS' && (
-            <>
-              <div className="py-4 border-b border-gray-200">
-                <label className="text-sm font-medium text-gray-600">Branch</label>
-                <p className="text-gray-900 mt-1 capitalize">{profile.branch || "Not set"}</p>
+        {/* Right Column: Info Cards */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Personal Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Personal Information</CardTitle>
+            </CardHeader>
+            <CardContent className="divide-y divide-gray-200">
+              <EditableField 
+                label="Full Name" 
+                value={profile.student_name || profile.full_name} 
+                onSave={(value) => handleUpdate('student_name', value)} 
+              />
+              <EditableField 
+                label="Phone" 
+                value={profile.phone} 
+                onSave={(value) => handleUpdate('phone', value)} 
+                type="tel"
+              />
+              <EditableSelect
+                label="Gender"
+                value={profile.gender || null}
+                onSave={(value) => handleUpdate('gender' as keyof UserProfile, value)}
+                options={genderOptions}
+              />
+              <div className="py-4">
+                <label className="text-sm font-medium text-gray-500">Email</label>
+                <p className="text-gray-900 font-medium mt-1">{profile.email}</p>
               </div>
-              <div className="py-4 border-b border-gray-200">
-                <label className="text-sm font-medium text-gray-600">Level</label>
-                <p className="text-gray-900 mt-1 capitalize">{profile.level || "Not set"}</p>
+            </CardContent>
+          </Card>
+
+          {/* Academic Program (Read-Only) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Academic Program</CardTitle>
+              <CardDescription>
+                To edit your focus area, please use the "My Focus Area" button in the sidebar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="py-2">
+                <label className="text-sm font-medium text-gray-500">Program Type</label>
+                <p className="text-gray-900 font-medium">{profile.program_type || "Not set"}</p>
               </div>
-            </>
-          )}
-          {profile.program_type === 'COMPETITIVE_EXAM' && (
-            <>
-              <div className="py-4 border-b border-gray-200">
-                <label className="text-sm font-medium text-gray-600">Exam Type</label>
-                <p className="text-gray-900 mt-1">{profile.exam_type || "Not set"}</p>
-              </div>
-              <div className="py-4 border-b border-gray-200">
-                <label className="text-sm font-medium text-gray-600">Student Status</label>
-                <p className="text-gray-900 mt-1">{profile.student_status || "Not set"}</p>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+              {profile.program_type === 'IITM_BS' && (
+                <>
+                  <div className="py-2">
+                    <label className="text-sm font-medium text-gray-500">Branch</label>
+                    <p className="text-gray-900 font-medium capitalize">{profile.branch || "Not set"}</p>
+                  </div>
+                  <div className="py-2">
+                    <label className="text-sm font-medium text-gray-500">Level</label>
+                    <p className="text-gray-900 font-medium capitalize">{profile.level || "Not set"}</p>
+                  </div>
+                </>
+              )}
+              {profile.program_type === 'COMPETITIVE_EXAM' && (
+                <>
+                  <div className="py-2">
+                    <label className="text-sm font-medium text-gray-500">Exam Type</label>
+                    <p className="text-gray-900 font-medium">{profile.exam_type || "Not set"}</p>
+                  </div>
+                  <div className="py-2">
+                    <label className="text-sm font-medium text-gray-500">Student Status</label>
+                    <p className="text-gray-900 font-medium">{profile.student_status || "Not set"}</p>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 };
