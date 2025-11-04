@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2 } from 'lucide-react'; // Removed Inbox
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { 
   Card, 
@@ -148,7 +148,7 @@ const MyEnrollments = () => {
           if (endDate) {
             status = today > endDate ? 'Batch Expired' : 'Ongoing';
           } else {
-            // If no end date, assume it's ongoing (or set to 'Unknown' if preferred)
+            // If no end date, assume it's ongoing
             status = 'Ongoing';
           }
 
@@ -208,7 +208,7 @@ const MyEnrollments = () => {
 
       {/* Conditional Content */}
       {groupedEnrollments.length === 0 ? (
-        // --- This is the new, simple empty state (graphic removed) ---
+        // --- This is the new, simple empty state ---
         <Card>
           <CardContent className="pt-6 text-center">
             <p className="text-gray-500">You have no enrollments yet.</p>
