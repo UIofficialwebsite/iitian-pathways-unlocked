@@ -1,5 +1,3 @@
-// src/components/dashboard/ModernDashboard.tsx
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,14 +14,13 @@ import {
   Newspaper,
   FileText,
   ExternalLink,
-  Loader2 // Added for main loader
+  Loader2 
 } from "lucide-react";
 import { Link } from "react-router-dom";
-// Sheet components are no longer needed here
 import DashboardSidebar from "./DashboardSidebar";
-import DashboardTopNav from "./DashboardTopNav"; // New Top Nav
-import MyProfile from "./MyProfile"; // New Profile View
-import MyEnrollments from "./MyEnrollments"; // New Enrollments View
+import DashboardTopNav from "./DashboardTopNav"; 
+import MyProfile from "./MyProfile"; 
+import MyEnrollments from "./MyEnrollments"; 
 
 interface UserProfile {
   id: string;
@@ -36,6 +33,7 @@ interface UserProfile {
   student_name?: string | null;
   full_name?: string | null;
   email?: string | null;
+  [key: string]: any; // Allow other properties
 }
 
 type ActiveView = 'dashboard' | 'profile' | 'enrollments';
@@ -82,6 +80,11 @@ const ModernDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Callback function to update profile in this component's state
+  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    setProfile(updatedProfile);
   };
 
   if (loading || contentLoading) {
@@ -355,17 +358,17 @@ const ModernDashboard = () => {
       <DashboardTopNav 
         profile={profile} 
         onViewChange={setActiveView} 
+        onProfileUpdate={handleProfileUpdate} // Pass updater
       />
 
       {/* --- DESKTOP SIDEBAR (FIXED, BELOW TOPNAV) --- */}
       <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:top-16 lg:bottom-0 lg:left-0 lg:z-30">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
-          <DashboardSidebar profile={profile} />
+          <DashboardSidebar profile={profile} onProfileUpdate={handleProfileUpdate} /> 
         </div>
       </div>
 
       {/* --- MAIN CONTENT AREA (WITH PADDING) --- */}
-      {/* Added pt-16 for top nav and lg:pl-72 for sidebar */}
       <div className="lg:pl-72 pt-16">
         <main className="py-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
