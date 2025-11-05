@@ -306,36 +306,39 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
 
 /**
  * Builds a Supabase query for Level 1 or 2 filtering.
- * THIS IS THE CORE FIX: It now STRICTLY filters by exam_category.
+ * Returns null if profile is incomplete, which triggers fallback to show all courses.
  */
 const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
-  // If no profile or program type, we can't build a filtered query.
+  // If no profile or program type, return null to trigger fallback
   if (!profile || !profile.program_type) return null;
 
   let query: any = supabase
     .from('courses')
     .select('*');
   
-  // --- STRICT FILTERING ---
+  // STRICT FILTERING based on profile
   if (profile.program_type === 'IITM_BS') {
     query = query.eq('exam_category', 'IITM BS'); // Level 1
     if (level === 2 && profile.branch) {
-      query = query.eq('branch', profile.branch); // Level 2
+      query = query.eq('branch', profile.branch); // Level 2 - adds branch filter
     }
   } else if (profile.program_type === 'COMPETITIVE_EXAM') {
     query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1
     if (level === 2 && profile.exam_type) {
-      query = query.eq('exam_type', profile.exam_type); // Level 2
+      query = query.eq('exam_type', profile.exam_type); // Level 2 - adds exam_type filter
     }
   } else {
-    // For 'Upskilling' or other types
+    // For 'Upskilling' or other program types
     query = query.eq('exam_category', profile.program_type); 
   }
   return query;
 };
 
 /**
- * Fetches recommended courses with a 3-level waterfall filter and new sorting.
+ * Fetches recommended courses with a 3-level waterfall filter:
+ * - Level 2: Most specific (profile + branch/exam_type)
+ * - Level 1: Broader (profile only)
+ * - Level 0: Fallback (all non-expired courses)
  */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
   const today = new Date().toISOString();
@@ -346,7 +349,7 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
     
-    // This filter is correct: (end_date > today) OR (end_date IS NULL)
+    // Filter: (end_date > today) OR (end_date IS NULL)
     const { data, error } = await queryBuilder.or(`end_date.gt.${today},end_date.is.null`);
     
     if (error) {
@@ -357,15 +360,15 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
   };
 
   try {
-    // 1. Fetch Level 2 (Specific)
+    // Level 2: Most specific filtering (profile + detailed filters)
     const level2Query = buildProfileQuery(profile, 2);
     const level2Courses = await getValidCourses(level2Query);
 
-    // 2. Fetch Level 1 (Broader)
+    // Level 1: Broader filtering (profile only, no branch/exam_type)
     const level1Query = buildProfileQuery(profile, 1);
     const level1Courses = await getValidCourses(level1Query);
     
-    // 3. Combine & De-duplicate, preserving priority
+    // Combine Level 2 and Level 1 courses, de-duplicating
     const allCourses = new Map<string, Course>();
     
     level2Courses.forEach(course => allCourses.set(course.id, course));
@@ -373,24 +376,32 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
       if (!allCourses.has(course.id)) allCourses.set(course.id, course);
     });
     
-    // 4. Fallback: If NO courses matched the profile, show 3 recent generic courses
+    // Level 0: Fallback - If NO courses matched (profile is null/incomplete), show recent courses
     if (allCourses.size === 0) {
+      console.log("No profile-matched courses found. Showing fallback recommendations.");
       const level0Query = supabase
         .from('courses')
-        .select('*') 
-        .order('created_at', { ascending: false }); // Sort by newest
-      const level0Courses = await getValidCourses(level0Query);
-      // Add these to the map
-      level0Courses.forEach(course => {
-        if (!allCourses.has(course.id)) allCourses.set(course.id, course);
-      });
+        .select('*')
+        .or(`end_date.gt.${today},end_date.is.null`) // Filter non-expired
+        .order('created_at', { ascending: false }) // Sort by newest first
+        .limit(10); // Get 10 recent courses to have more options for sorting
+      
+      const { data: level0Data, error: level0Error } = await level0Query;
+      
+      if (level0Error) {
+        console.error("Error fetching fallback courses:", level0Error.message);
+      } else if (level0Data) {
+        level0Data.forEach(course => {
+          if (!allCourses.has(course.id)) allCourses.set(course.id, course as Course);
+        });
+      }
     }
 
-    // 5. Apply the advanced sorting logic
+    // Apply advanced sorting logic
     const combinedList = Array.from(allCourses.values());
     const sortedList = sortRecommendedCourses(combinedList);
 
-    // 6. Return the top 3
+    // Return top 3 recommendations
     return sortedList.slice(0, 3);
 
   } catch (error: any) { 
