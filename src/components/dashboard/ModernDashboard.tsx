@@ -6,6 +6,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { Loader2 } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; 
+import DashboardHeader from "./DashboardHeader"; // Import the new header
 import MyProfile from "./MyProfile"; 
 import MyEnrollments from "./MyEnrollments"; 
 import StudyPortal from "./StudyPortal"; 
@@ -101,10 +102,16 @@ const ModernDashboard = () => {
         </div>
       </div>
 
-      {/* --- MAIN CONTENT AREA (WITH PADDING) --- */}
-      <div className="lg:pl-72 pt-16">
-         {/* Changed from py-6 to py-4 to reduce top/bottom spacing */}
-        <main className="py-4">
+      {/* --- NEW CONTENT HEADER (FIXED, BELOW TOPNAV, RIGHT OF SIDEBAR) --- */}
+      <DashboardHeader 
+        activeView={activeView}
+        onViewChange={setActiveView}
+      />
+
+      {/* --- MAIN CONTENT AREA --- */}
+      {/* Added pt-16 for the TopNav and another pt-16 for the new DashboardHeader (total pt-32) */}
+      <div className="lg:pl-72 pt-32">
+        <main className="pb-8"> {/* Removed top padding, kept bottom padding */}
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             
             {(activeView === 'dashboard' || activeView === 'studyPortal') && (
@@ -112,6 +119,7 @@ const ModernDashboard = () => {
             )}
             
             {activeView === 'profile' && <MyProfile />}
+            
             {activeView === 'enrollments' && <MyEnrollments />}
             
           </div>
