@@ -1,32 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  // ArrowLeft is no longer needed here
   Loader2, 
   Book, 
   BookOpen,
   Users, 
   MessageSquare, 
   ChevronRight, 
-  Inbox, 
-  ArrowRight,
   FileText
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-// Tabs are no longer needed
-// import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
 import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
-import { RecommendedBatchCard } from './RecommendedBatchCard';
+// Import the new universal section
+import RecommendedBatchesSection from './RecommendedBatchesSection';
 import { useBackend } from '../BackendIntegratedWrapper'; 
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
-type Course = Tables<'courses'>;
+type Course = Tables<'courses'> & {
+  original_price?: number | null;
+};
 
 type RawEnrollment = {
   id: string;
@@ -134,7 +132,6 @@ const EnrolledView = ({
 }) => {
   return (
     <div className="space-y-10">
-      {/* 1. My Batches Section */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900">My Batches</h2>
         <p className="text-gray-600 mt-1">Continue your learning journey</p>
@@ -151,37 +148,23 @@ const EnrolledView = ({
 
 // --- View 2: Student is NOT Enrolled ---
 const NotEnrolledView = ({ 
-  recommendedCourses, 
+  recommendedCourses,
+  isLoading,
   notes, 
   pyqs 
 } : { 
   recommendedCourses: Course[], 
+  isLoading: boolean,
   notes: any[], 
   pyqs: any[] 
 }) => (
   <div className="space-y-10">
     
-    {/* Section 1: Top Recommended Batches */}
-    <section>
-      <h2 className="text-2xl font-bold text-gray-900">Top Recommended Batches</h2>
-      <p className="text-gray-600 mt-1">Let's start with these popular courses</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {recommendedCourses.length > 0 ? (
-          recommendedCourses.map((course) => (
-            <RecommendedBatchCard key={course.id} course={course} />
-          ))
-        ) : (
-          <p className="text-gray-500 col-span-3">No specific recommendations found. Check out all our courses!</p>
-        )}
-      </div>
-      
-      <div className="text-center mt-8">
-        <Button variant="outline" asChild className="px-8">
-          <Link to="/courses">View All Batches</Link>
-        </Button>
-      </div>
-    </section>
+    {/* Section 1: Use the new universal component */}
+    <RecommendedBatchesSection 
+      courses={recommendedCourses} 
+      isLoading={isLoading} 
+    />
     
     {/* Section 2: Quick Access Section */}
     <section>
@@ -274,7 +257,7 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
   const buildQuery = (level: 0 | 1 | 2) => {
     let query = supabase
       .from('courses')
-      .select('*')
+      .select('*, original_price') // Ensure original_price is fetched
       .order('created_at', { ascending: false })
       .limit(3);
     
@@ -300,18 +283,18 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     const { data: level2Data, error: level2Error } = await buildQuery(2);
     if (level2Error) throw level2Error;
     if (level2Data && level2Data.length > 0) {
-      return level2Data;
+      return level2Data as Course[];
     }
 
     const { data: level1Data, error: level1Error } = await buildQuery(1);
     if (level1Error) throw level1Error;
     if (level1Data && level1Data.length > 0) {
-      return level1Data;
+      return level1Data as Course[];
     }
 
     const { data: level0Data, error: level0Error } = await buildQuery(0);
     if (level0Error) throw level0Error;
-    return level0Data || [];
+    return (level0Data as Course[]) || [];
 
   } catch (error) {
     console.error("Error fetching recommended courses:", error);
@@ -335,7 +318,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // Get filtered notes and PYQs
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
 
@@ -350,7 +332,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
-        // Fetch enrollments and recommendations in parallel
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
           supabase
             .from('enrollments')
@@ -367,7 +348,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
 
         setRecommendedCourses(recCoursesResult);
 
-        // Process Enrollments
         if (rawData && rawData.length > 0) {
           const today = new Date();
           const enrollmentsMap = new Map<string, GroupedEnrollment>();
@@ -413,29 +393,22 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     fetchPortalData();
   }, [user, profile, toast]);
 
-  // Combined loading state
   const isLoading = dataLoading || contentLoading;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-royal" />
-      </div>
-    );
-  }
-
   return (
-    // Removed the wrapper div and header, as they are now in ModernDashboard
-    // and DashboardHeader.
-    // The main container is now just a simple conditional render.
     <div className="max-w-7xl mx-auto">
-      {hasEnrollments ? (
+      {isLoading && !hasEnrollments ? (
+         <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-royal" />
+        </div>
+      ) : hasEnrollments ? (
         <EnrolledView 
           enrollments={groupedEnrollments} 
         />
       ) : (
         <NotEnrolledView 
           recommendedCourses={recommendedCourses} 
+          isLoading={isLoading}
           notes={notes}
           pyqs={pyqs}
         />
