@@ -1,67 +1,49 @@
-import React from 'react';
-import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { RecommendedBatchCard } from './RecommendedBatchCard'; 
-import { Tables } from '@/integrations/supabase/types';
-import { Loader2 } from 'lucide-react';
+// src/components/dashboard/RecommendedBatchesSection.tsx
+// (FINAL UPDATED FILE)
 
-// Define the Course type this component expects
-type Course = Tables<'courses'> & {
-  price: number; // Not null
-  discounted_price?: number | null; // Can be null
-};
+import React from "react";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
+import RecommendedBatchCard from "./RecommendedBatchCard";
+import { CourseCardSkeleton } from "@/components/courses/CourseCardSkeleton";
+import { Course } from "@/components/admin/courses/types";
 
-interface RecommendedBatchesSectionProps {
-  courses: Course[];
-  isLoading: boolean;
-}
+const RecommendedBatchesSection: React.FC = () => {
+  // --- 1. GET THE NEW ARRAY FROM THE HOOK ---
+  const { recommendedCourses, loading } = useBackend();
 
-const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({ courses, isLoading }) => {
-  return (
-    <Card 
-      className="bg-white shadow-sm border border-gray-200"
-      style={{ fontFamily: "'Inter', sans-serif" }} 
-    >
-      <CardHeader>
-        <div>
-          <CardTitle className="text-2xl font-bold text-gray-900">
-            Top Recommended Batches
-          </CardTitle>
-          <CardDescription className="text-gray-600 mt-1">
-            Let's start with these popular courses
-          </CardDescription>
+  // --- 2. HANDLE LOADING STATE ---
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Recommended For You</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <CourseCardSkeleton />
+          <CourseCardSkeleton />
+          <CourseCardSkeleton />
         </div>
-        {/* Button removed from header */}
-      </CardHeader>
-
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <Loader2 className="h-8 w-8 animate-spin text-royal" />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-10">
-            {courses.length > 0 ? (
-              courses.map((course) => (
-                <RecommendedBatchCard key={course.id} course={course} />
-              ))
-            ) : (
-              <p className="text-gray-500 col-span-3 text-center py-10">
-                No recommendations found. Check back later!
-              </p>
-            )}
-          </div>
-        )}
-      </CardContent>
-
-      {/* "View All" button is now here, centered, after the content */}
-      <div className="p-6 pt-0 flex justify-center">
-        <Button asChild variant="outline" className="font-medium">
-          <Link to="/courses">View All Batches</Link>
-        </Button>
       </div>
-    </Card>
+    );
+  }
+
+  // --- 3. HANDLE NO RECOMMENDATIONS ---
+  // If the array is empty, don't show the section at all
+  if (recommendedCourses.length === 0) {
+    return null;
+  }
+
+  // --- 4. RENDER THE PERSONALIZED COURSES ---
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold">Recommended For You</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recommendedCourses.map((course: Course) => (
+          <RecommendedBatchCard
+            key={course.id}
+            course={course as unknown as Course} // Cast to bridge type diff
+          />
+        ))}
+      </div>
+    </div>
   );
 };
 
