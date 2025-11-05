@@ -21,6 +21,7 @@ import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; 
 import MyProfile from "./MyProfile"; 
 import MyEnrollments from "./MyEnrollments"; 
+import StudyPortal from "./StudyPortal"; // Import StudyPortal
 
 interface UserProfile {
   id: string;
@@ -37,7 +38,8 @@ interface UserProfile {
   [key: string]: any; // Allow other properties
 }
 
-type ActiveView = 'dashboard' | 'profile' | 'enrollments';
+// Add 'studyPortal' to the ActiveView type
+type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
 
 const ModernDashboard = () => {
   const { user } = useAuth();
@@ -365,7 +367,12 @@ const ModernDashboard = () => {
       {/* --- DESKTOP SIDEBAR (FIXED, BELOW TOPNAV) --- */}
       <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:top-16 lg:bottom-0 lg:left-0 lg:z-30">
         <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
-          <DashboardSidebar profile={profile} onProfileUpdate={handleProfileUpdate} /> 
+          {/* Pass onViewChange to the sidebar */}
+          <DashboardSidebar 
+            profile={profile} 
+            onProfileUpdate={handleProfileUpdate} 
+            onViewChange={setActiveView} 
+          /> 
         </div>
       </div>
 
@@ -373,9 +380,11 @@ const ModernDashboard = () => {
       <div className="lg:pl-72 pt-16">
         <main className="py-8">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* Add conditional rendering for StudyPortal */}
             {activeView === 'dashboard' && renderDashboardView()}
             {activeView === 'profile' && <MyProfile />}
             {activeView === 'enrollments' && <MyEnrollments />}
+            {activeView === 'studyPortal' && <StudyPortal profile={profile} onViewChange={setActiveView} />}
           </div>
         </main>
       </div>
