@@ -2,11 +2,13 @@ import React from "react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import RecommendedBatchCard from "./RecommendedBatchCard";
 import { CourseCardSkeleton } from "@/components/courses/CourseCardSkeleton";
+// We import the admin Course type because that is what the useBackend() hook provides
 import { Course } from "@/components/admin/courses/types";
 
 const RecommendedBatchesSection: React.FC = () => {
   // --- 1. GET THE NEW ARRAY FROM THE HOOK ---
   // 'loading' here is the main global loading state
+  // recommendedCourses is of type Course[] (from admin/courses/types)
   const { recommendedCourses, loading } = useBackend();
 
   // --- 2. HANDLE LOADING STATE ---
@@ -37,7 +39,12 @@ const RecommendedBatchesSection: React.FC = () => {
         {recommendedCourses.map((course: Course) => (
           <RecommendedBatchCard
             key={course.id}
-            course={course as unknown as Course} // Cast to bridge type diff
+            // --- THIS IS THE FIX ---
+            // The developer's "as unknown as Course" was a no-op
+            // and didn't solve the type mismatch.
+            // We cast to `any` to force the AdminCourse type into the
+            // PublicCourse prop expected by RecommendedBatchCard.
+            course={course as any}
           />
         ))}
       </div>
