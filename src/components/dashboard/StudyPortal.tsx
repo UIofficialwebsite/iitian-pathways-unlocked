@@ -22,8 +22,10 @@ import { PostgrestQueryBuilder } from '@supabase/supabase-js'; // Import this ty
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
+// This type definition now correctly reflects your schema for use in the card
 type Course = Tables<'courses'> & {
-  original_price?: number | null;
+  price: number; // Not null
+  discounted_price?: number | null; // Can be null
 };
 
 type RawEnrollment = {
@@ -36,7 +38,7 @@ type RawEnrollment = {
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
-    price: number | null;
+    price: number | null; // Note: enrollments table might have a different price type
   } | null;
 };
 type GroupedEnrollment = {
@@ -310,12 +312,14 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
  * Builds a Supabase query for Level 1 or 2 filtering.
  */
 const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
-  // Return null if no profile to filter by
   if (!profile) return null;
 
+  // --- THIS IS THE FIX ---
+  // We select '*' which includes all columns as defined in your schema.
+  // No more 'original_price'.
   let query = supabase
     .from('courses')
-    .select('*, original_price');
+    .select('*');
   
   if (profile.program_type === 'IITM_BS') {
     query = query.eq('exam_category', 'IITM BS'); // Level 1
@@ -328,7 +332,6 @@ const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
       query = query.eq('exam_type', profile.exam_type); // Level 2
     }
   } else {
-    // If profile type is something else (e.g., 'Upskilling' or null)
     return null;
   }
   return query;
@@ -342,18 +345,15 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 
   // Helper to get non-expired courses from a query
   const getValidCourses = async (
-    // Explicitly define the type for queryBuilder
-    queryBuilder: PostgrestQueryBuilder<any, any, {'*': any, 'original_price': any}> | null
+    // The type is now generic for `select('*')`
+    queryBuilder: PostgrestQueryBuilder<any, any, {'*': any}> | null 
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
     
-    // --- THIS IS THE FIX ---
-    // Change from .gt() to .or() to handle null dates and prevent 400 error
+    // This filter is correct: (end_date > today) OR (end_date IS NULL)
     const { data, error } = await queryBuilder.or(`end_date.gt.${today},end_date.is.null`);
-    // --- END OF FIX ---
     
     if (error) {
-      // Also, log the actual error message, not just "Object"
       console.error("Error fetching courses:", error.message); 
       return [];
     }
@@ -370,9 +370,11 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     const level1Courses = await getValidCourses(level1Query);
     
     // 3. Fetch Level 0 (Generic Fallback)
+    // --- THIS IS THE FIX ---
+    // We select '*' which is safe.
     const level0Query = supabase
       .from('courses')
-      .select('*, original_price')
+      .select('*') 
       .order('created_at', { ascending: false }); // Sort by newest
     const level0Courses = await getValidCourses(level0Query);
 
@@ -394,10 +396,9 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     // 6. Return the top 3
     return sortedList.slice(0, 3);
 
-  } catch (error: any) { // Catch 'any' type for safety
-    // Log the actual error message
+  } catch (error: any) { 
     console.error("Error in fetchRecommendedCourses:", error.message || error);
-    return []; // Return empty on any error
+    return []; 
   }
 }
 // --- END OF NEW RECOMMENDATION LOGIC ---
@@ -410,6 +411,7 @@ interface StudyPortalProps {
 }
 
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
+  // ... (This component is unchanged)
   const { user } = useAuth();
   const { toast } = useToast();
   const { getFilteredContent, contentLoading } = useBackend();
@@ -424,7 +426,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const hasEnrollments = groupedEnrollments.length > 0;
 
   useEffect(() => {
-    // We only wait for the user, not the profile.
     if (!user) {
       setDataLoading(false);
       return;
@@ -433,7 +434,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
-        // Fetch enrollments and recommendations in parallel
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
           supabase
             .from('enrollments')
@@ -442,7 +442,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
               courses (id, title, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
-          fetchRecommendedCourses(profile) // This will now run even if profile is null
+          fetchRecommendedCourses(profile)
         ]);
 
         const { data: rawData, error: enrollError } = enrollmentsResult;
@@ -493,7 +493,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     };
 
     fetchPortalData();
-  }, [user, profile, toast]); // 'profile' is still a dependency, so it re-fetches when it loads
+  }, [user, profile, toast]); 
 
   const isLoading = dataLoading || contentLoading;
 
