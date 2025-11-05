@@ -5,6 +5,9 @@ import { Database } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+
+// --- THIS IS THE IMPORT FIX ---
+// The import for FocusAreaModal now correctly uses curly braces {}
 import { FocusAreaModal } from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
 
@@ -13,7 +16,7 @@ import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 
-// Remove the <Tabs> imports - they are the cause of the error
+// Remove the <Tabs> imports - they were the cause of the white screen
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -98,11 +101,9 @@ const ModernDashboard: React.FC = () => {
         profile={profile}
       />
 
-      {/* --- THIS IS THE FIX ---
+      {/* --- THIS IS THE "WHITE SCREEN" FIX ---
         The <Tabs> and <TabsContent> wrappers were removed.
-        We now use simple conditional rendering based on the 'activeView' state,
-        which is already being managed by DashboardTopNav.
-        This eliminates the 'React.Children.only' error.
+        We now use simple conditional rendering based on the 'activeView' state.
       */}
       <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
         <div className="w-full max-w-7xl mx-auto">
