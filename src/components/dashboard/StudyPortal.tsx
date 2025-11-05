@@ -4,6 +4,7 @@ import {
   ArrowLeft, 
   Loader2, 
   Book, 
+  BookOpen, // <<<--- I HAVE ADDED THIS MISSING ICON
   Users, 
   MessageSquare, 
   ChevronRight, 
