@@ -22,10 +22,8 @@ import { PostgrestQueryBuilder } from '@supabase/supabase-js'; // Import this ty
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
-// This type definition now correctly reflects your schema for use in the card
 type Course = Tables<'courses'> & {
-  price: number; // Not null
-  discounted_price?: number | null; // Can be null
+  discounted_price?: number | null; // Schema uses this, not original_price
 };
 
 type RawEnrollment = {
@@ -38,7 +36,7 @@ type RawEnrollment = {
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
-    price: number | null; // Note: enrollments table might have a different price type
+    price: number | null; 
   } | null;
 };
 type GroupedEnrollment = {
@@ -310,17 +308,17 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
 
 /**
  * Builds a Supabase query for Level 1 or 2 filtering.
+ * THIS IS THE CORE FIX: It now STRICTLY filters by exam_category.
  */
 const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
-  if (!profile) return null;
+  // If no profile or program type, we can't build a filtered query.
+  if (!profile || !profile.program_type) return null;
 
-  // --- THIS IS THE FIX ---
-  // We select '*' which includes all columns as defined in your schema.
-  // No more 'original_price'.
   let query = supabase
     .from('courses')
     .select('*');
   
+  // --- STRICT FILTERING ---
   if (profile.program_type === 'IITM_BS') {
     query = query.eq('exam_category', 'IITM BS'); // Level 1
     if (level === 2 && profile.branch) {
@@ -332,7 +330,8 @@ const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
       query = query.eq('exam_type', profile.exam_type); // Level 2
     }
   } else {
-    return null;
+    // For 'Upskilling' or other types
+    query = query.eq('exam_category', profile.program_type); 
   }
   return query;
 };
@@ -345,7 +344,6 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 
   // Helper to get non-expired courses from a query
   const getValidCourses = async (
-    // The type is now generic for `select('*')`
     queryBuilder: PostgrestQueryBuilder<any, any, {'*': any}> | null 
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
@@ -369,25 +367,26 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     const level1Query = buildProfileQuery(profile, 1);
     const level1Courses = await getValidCourses(level1Query);
     
-    // 3. Fetch Level 0 (Generic Fallback)
-    // --- THIS IS THE FIX ---
-    // We select '*' which is safe.
-    const level0Query = supabase
-      .from('courses')
-      .select('*') 
-      .order('created_at', { ascending: false }); // Sort by newest
-    const level0Courses = await getValidCourses(level0Query);
-
-    // 4. Combine & De-duplicate, preserving priority
+    // 3. Combine & De-duplicate, preserving priority
     const allCourses = new Map<string, Course>();
     
     level2Courses.forEach(course => allCourses.set(course.id, course));
     level1Courses.forEach(course => {
       if (!allCourses.has(course.id)) allCourses.set(course.id, course);
     });
-    level0Courses.forEach(course => {
-      if (!allCourses.has(course.id)) allCourses.set(course.id, course);
-    });
+    
+    // 4. Fallback: If NO courses matched the profile, show 3 recent generic courses
+    if (allCourses.size === 0) {
+      const level0Query = supabase
+        .from('courses')
+        .select('*') 
+        .order('created_at', { ascending: false }); // Sort by newest
+      const level0Courses = await getValidCourses(level0Query);
+      // Add these to the map
+      level0Courses.forEach(course => {
+        if (!allCourses.has(course.id)) allCourses.set(course.id, course);
+      });
+    }
 
     // 5. Apply the advanced sorting logic
     const combinedList = Array.from(allCourses.values());
