@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <-- Corrected import
+import React, { useState, useEffect } from 'react'; // Corrected import
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -52,6 +52,7 @@ type GroupedEnrollment = {
 
 // --- Re-usable Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
+  // ... (This component is unchanged)
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
       return (
@@ -130,6 +131,7 @@ const EnrolledView = ({
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
+  // ... (This component is unchanged)
   return (
     <div className="space-y-10">
       <section>
@@ -158,8 +160,8 @@ const NotEnrolledView = ({
   notes: any[], 
   pyqs: any[] 
 }) => (
+  // ... (This component is unchanged)
   <div className="space-y-10">
-    
     <RecommendedBatchesSection 
       courses={recommendedCourses} 
       isLoading={isLoading} 
@@ -250,7 +252,7 @@ const NotEnrolledView = ({
 );
 
 
-// --- NEW RECOMMENDATION LOGIC ---
+// --- RECOMMENDATION LOGIC ---
 
 /**
  * Helper to get a numeric, sortable value for a course's level or class.
@@ -334,8 +336,8 @@ const buildProfileQuery = (profile: UserProfile, level: 1 | 2) => {
  */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
   
+  // This logic runs if profile is null (e.g., new user)
   if (!profile) {
-    // Fallback for new/null profiles: 3 Most Recent
     const { data, error } = await supabase
       .from('courses')
       .select('*, original_price')
@@ -371,7 +373,6 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     }
     
     // --- 3. Fallback to Level 0 (Generic: 3 Most Recent) ---
-    // This runs if profile type was not matched, or if Levels 1 & 2 returned no results.
     const { data: level0Data, error: level0Error } = await supabase
       .from('courses')
       .select('*, original_price')
@@ -386,7 +387,7 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     return []; // Return empty on any error
   }
 }
-// --- END OF NEW RECOMMENDATION LOGIC ---
+// --- END OF RECOMMENDATION LOGIC ---
 
 
 // --- Main Study Portal Component ---
@@ -410,10 +411,14 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const hasEnrollments = groupedEnrollments.length > 0;
 
   useEffect(() => {
-    if (!user || !profile) {
+    // --- THIS IS THE FIX ---
+    // We only wait for the user, not the profile.
+    // fetchRecommendedCourses can handle a null profile.
+    if (!user) {
       setDataLoading(false);
       return;
     }
+    // --- END OF FIX ---
 
     const fetchPortalData = async () => {
       setDataLoading(true);
@@ -426,7 +431,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
               courses (id, title, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
-          fetchRecommendedCourses(profile) // This now calls the new logic
+          fetchRecommendedCourses(profile) // This will now run even if profile is null
         ]);
 
         const { data: rawData, error: enrollError } = enrollmentsResult;
@@ -477,12 +482,17 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     };
 
     fetchPortalData();
-  }, [user, profile, toast]);
+  }, [user, profile, toast]); // It's correct to keep 'profile' in the dependency array
 
   const isLoading = dataLoading || contentLoading;
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* This logic is now correct. 
+        If loading, and no enrollments, show loader.
+        Once loading is false, if still no enrollments, show NotEnrolledView.
+        The NotEnrolledView will receive the (now populated) recommendedCourses list.
+      */}
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-royal" />
@@ -494,7 +504,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
       ) : (
         <NotEnrolledView 
           recommendedCourses={recommendedCourses} 
-          isLoading={isLoading}
+          isLoading={isLoading} // This will be false, which is correct
           notes={notes}
           pyqs={pyqs}
         />
