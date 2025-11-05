@@ -757,7 +757,7 @@ export type Database = {
           recommendation_text: string
           updated_at?: string | null
         }
-        Update:. {
+        Update: {
           category?: string | null
           company?: string
           created_at?: string | null
