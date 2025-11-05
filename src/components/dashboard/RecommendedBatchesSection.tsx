@@ -13,7 +13,16 @@ const RecommendedBatchesSection: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Recommended For You</h2>
+        {/* --- START: UPDATED CODE --- */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Top Recommended Batches
+          </h2>
+          <p className="text-md text-gray-600">
+            Based on your preferences
+          </p>
+        </div>
+        {/* --- END: UPDATED CODE --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <CourseCardSkeleton />
           <CourseCardSkeleton />
@@ -32,7 +41,16 @@ const RecommendedBatchesSection: React.FC = () => {
   // --- 4. RENDER THE PERSONALIZED COURSES ---
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Recommended For You</h2>
+      {/* --- START: UPDATED CODE --- */}
+      <div>
+        <h2 className="text-2xl font-bold text-gray-900">
+          Top Recommended Batches
+        </h2>
+        <p className="text-md text-gray-600">
+          Based on your preferences
+        </p>
+      </div>
+      {/* --- END: UPDATED CODE --- */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* --- FIX: Type course as 'any' and remove all casts --- */}
         {recommendedCourses.map((course: any) => (
