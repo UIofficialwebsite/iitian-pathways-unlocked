@@ -8,7 +8,6 @@ import { Tables } from '@/integrations/supabase/types';
 
 // Use the exact type based on your schema
 type Course = Tables<'courses'> & {
-  price: number; // Not null
   discounted_price?: number | null; // Can be null
 };
 
@@ -19,11 +18,21 @@ const getDiscount = (
   salePrice: number | null | undefined, 
   originalPrice: number
 ): string | null => {
-  if (!salePrice || originalPrice <= salePrice) {
+  // Ensure originalPrice is a valid number and greater than 0
+  if (typeof originalPrice !== 'number' || originalPrice <= 0) {
+    return null;
+  }
+  // Ensure salePrice is a valid number
+  if (typeof salePrice !== 'number' || salePrice === null) {
+    return null;
+  }
+  // No discount if sale price is higher or equal
+  if (originalPrice <= salePrice) {
     return null;
   }
   const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-  return `${discount}% OFF`;
+  // Only show discount if it's 1% or more
+  return discount > 0 ? `${discount}% OFF` : null;
 };
 
 export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) => {
@@ -40,14 +49,13 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
   } = course;
 
   // --- NEW LOGIC BASED ON SCHEMA ---
-  const originalPrice = price;
-  const salePrice = discounted_price;
+  const originalPrice = price; // price is numeric(10, 2) not null
+  const salePrice = discounted_price; // discounted_price is numeric(10, 2) null
   
   const discount = getDiscount(salePrice, originalPrice);
   const hasDiscount = !!discount;
 
-  // The price to show is the sale price if it exists, otherwise the original price
-  const finalPriceValue = salePrice ?? originalPrice;
+  const finalPriceValue = (salePrice !== null && salePrice < originalPrice) ? salePrice : originalPrice;
   const finalPriceString = finalPriceValue === 0 ? 'Free' : `₹${Math.round(finalPriceValue)}`;
   // --- END OF NEW LOGIC ---
 
@@ -73,10 +81,23 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
     >
       <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
         
-        <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem]">
-          {title || 'Unnamed Batch'}
-        </h3>
+        {/* --- MODIFICATION START: Title and Share Button Row --- */}
+        <div className="flex justify-between items-start gap-3">
+          <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem] flex-1">
+            {title || 'Unnamed Batch'}
+          </h3>
+          <Button 
+            onClick={handleShare}
+            variant="ghost"
+            size="icon" 
+            className="rounded-full text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0 h-9 w-9"
+          >
+            <Share2 className="h-5 w-5" />
+          </Button>
+        </div>
+        {/* --- MODIFICATION END --- */}
 
+        {/* --- Inner Sub-Card --- */}
         <Card className="bg-gray-50 border border-gray-200 overflow-hidden shadow-none">
           <div className="relative aspect-video bg-gray-100 overflow-hidden">
             <img 
@@ -84,13 +105,7 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
               alt={title || 'Course Image'} 
               className="w-full h-full object-cover object-center"
             />
-            <Button 
-              onClick={handleShare}
-              size="icon" 
-              className="absolute top-2 right-2 z-10 bg-green-500 hover:bg-green-600 rounded-full shadow-lg h-9 w-9"
-            >
-              <Share2 className="h-4 w-4 text-white" />
-            </Button>
+            {/* Share button removed from here */}
           </div>
           
           <div className="p-4 space-y-3">
