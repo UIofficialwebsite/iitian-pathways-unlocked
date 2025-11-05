@@ -148,12 +148,15 @@ export type Database = {
           features: string[] | null
           id: string
           image_url: string | null
+          is_live: boolean | null
+          language: string | null
           level: string | null
           price: number
           rating: number | null
           start_date: string | null
           students_enrolled: number | null
           subject: string | null
+          tags: string[] | null
           title: string
           updated_at: string | null
         }
@@ -170,12 +173,15 @@ export type Database = {
           features?: string[] | null
           id?: string
           image_url?: string | null
+          is_live?: boolean | null
+          language?: string | null
           level?: string | null
           price: number
           rating?: number | null
           start_date?: string | null
           students_enrolled?: number | null
           subject?: string | null
+          tags?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -192,12 +198,15 @@ export type Database = {
           features?: string[] | null
           id?: string
           image_url?: string | null
+          is_live?: boolean | null
+          language?: string | null
           level?: string | null
           price?: number
           rating?: number | null
           start_date?: string | null
           students_enrolled?: number | null
           subject?: string | null
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
         }
@@ -583,7 +592,9 @@ export type Database = {
           exam: string | null
           exam_type: string | null
           full_name: string | null
+          gender: string | null
           id: string
+          interests: string[] | null
           level: string | null
           phone: string | null
           profile_completed: boolean | null
@@ -603,7 +614,9 @@ export type Database = {
           exam?: string | null
           exam_type?: string | null
           full_name?: string | null
+          gender?: string | null
           id: string
+          interests?: string[] | null
           level?: string | null
           phone?: string | null
           profile_completed?: boolean | null
@@ -623,7 +636,9 @@ export type Database = {
           exam?: string | null
           exam_type?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
+          interests?: string[] | null
           level?: string | null
           phone?: string | null
           profile_completed?: boolean | null
@@ -897,6 +912,45 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_recommendations: {
+        Row: {
+          course_id: string
+          generated_at: string | null
+          score: number
+          source: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          generated_at?: string | null
+          score: number
+          source: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          generated_at?: string | null
+          score?: number
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_recommendations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_recommendations_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
