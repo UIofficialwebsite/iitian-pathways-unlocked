@@ -8,7 +8,7 @@ import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; 
 import MyProfile from "./MyProfile"; 
 import MyEnrollments from "./MyEnrollments"; 
-import StudyPortal from "./StudyPortal"; // Import StudyPortal
+import StudyPortal from "./StudyPortal"; 
 
 interface UserProfile {
   id: string;
@@ -25,19 +25,14 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// Keep 'dashboard' in the type for compatibility with other components
-// that might link back to it (e.g., StudyPortal's back button)
 type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
 
 const ModernDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  // contentLoading is still needed for the initial load check
   const { contentLoading } = useBackend(); 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  
-  // Set default view to 'studyPortal'
   const [activeView, setActiveView] = useState<ActiveView>('studyPortal');
 
   useEffect(() => {
@@ -108,11 +103,10 @@ const ModernDashboard = () => {
 
       {/* --- MAIN CONTENT AREA (WITH PADDING) --- */}
       <div className="lg:pl-72 pt-16">
-         {/* Changed from py-8 to py-6 to reduce top/bottom spacing */}
-        <main className="py-6">
+         {/* Changed from py-6 to py-4 to reduce top/bottom spacing */}
+        <main className="py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             
-            {/* Show StudyPortal for both 'dashboard' and 'studyPortal' active views */}
             {(activeView === 'dashboard' || activeView === 'studyPortal') && (
               <StudyPortal profile={profile} onViewChange={setActiveView} />
             )}
