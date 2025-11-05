@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // <-- This is the corrected line
+import React, { useState, useEffect } from 'react'; // <-- Corrected import
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -52,7 +52,6 @@ type GroupedEnrollment = {
 
 // --- Re-usable Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
-  // ... (This component is unchanged)
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
       return (
@@ -131,7 +130,6 @@ const EnrolledView = ({
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
-  // ... (This component is unchanged)
   return (
     <div className="space-y-10">
       <section>
@@ -160,8 +158,8 @@ const NotEnrolledView = ({
   notes: any[], 
   pyqs: any[] 
 }) => (
-  // ... (This component is unchanged)
   <div className="space-y-10">
+    
     <RecommendedBatchesSection 
       courses={recommendedCourses} 
       isLoading={isLoading} 
@@ -256,31 +254,24 @@ const NotEnrolledView = ({
 
 /**
  * Helper to get a numeric, sortable value for a course's level or class.
- * Lower numbers are sorted first (ascending).
  */
 const getSortableLevel = (course: Course): number => {
   const level = course.level; // 'Foundation', 'Diploma', 'Degree'
   const status = course.student_status; // 'Class 11', 'Class 12', 'Dropper'
 
-  // IITM BS Levels
   if (level === 'Foundation') return 1;
   if (level === 'Diploma') return 2;
   if (level === 'Degree') return 3;
 
-  // Competitive Exam Levels
   if (status === 'Class 11') return 11;
   if (status === 'Class 12') return 12;
   if (status === 'Dropper') return 13;
 
-  // Fallback for any other/null values
   return 99;
 };
 
 /**
- * Sorts courses based on the new logic:
- * 1. Ascending Level (Foundation -> Diploma -> Degree, or Class 11 -> 12 -> Dropper)
- * 2. Ascending Start Date (earliest first)
- * 3. Descending Created Date (newest first)
+ * Sorts courses based on the new logic
  */
 const sortRecommendedCourses = (courses: Course[]): Course[] => {
   return courses.sort((a, b) => {
@@ -292,19 +283,15 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
     }
 
     // 2. Sort by Start Date (Ascending - earliest first)
-    // Dates in the future are prioritized. null/Infinity dates go to the end.
     const now = new Date().getTime();
     const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity;
     const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity;
-
-    // Prioritize future dates over past dates
     const aIsFuture = dateA > now;
     const bIsFuture = dateB > now;
 
-    if (aIsFuture && !bIsFuture) return -1; // a comes first
-    if (!aIsFuture && bIsFuture) return 1;  // b comes first
+    if (aIsFuture && !bIsFuture) return -1; 
+    if (!aIsFuture && bIsFuture) return 1;  
 
-    // If both are future or both are past, sort by date
     if (dateA !== dateB) {
       return dateA - dateB; 
     }
@@ -317,63 +304,86 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
 };
 
 /**
- * Fetches recommended courses with a 2-level filter,
- * then applies the new advanced sorting.
+ * Builds a Supabase query for Level 1 or 2 filtering.
+ */
+const buildProfileQuery = (profile: UserProfile, level: 1 | 2) => {
+  let query = supabase
+    .from('courses')
+    .select('*, original_price');
+  
+  if (profile.program_type === 'IITM_BS') {
+    query = query.eq('exam_category', 'IITM BS'); // Level 1
+    if (level === 2 && profile.branch) {
+      query = query.eq('branch', profile.branch); // Level 2
+    }
+  } else if (profile.program_type === 'COMPETITIVE_EXAM') {
+    query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1
+    if (level === 2 && profile.exam_type) {
+      query = query.eq('exam_type', profile.exam_type); // Level 2
+    }
+  } else {
+    // If profile type is something else (e.g., 'Upskilling'), return null
+    // to skip to the generic fallback immediately.
+    return null;
+  }
+  return query;
+};
+
+/**
+ * Fetches recommended courses with a 3-level filter and new sorting.
  */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
-  // 1. Build the query to FILTER the courses
-  const buildQuery = (level: 0 | 1 | 2) => {
-    let query = supabase
+  
+  if (!profile) {
+    // Fallback for new/null profiles: 3 Most Recent
+    const { data, error } = await supabase
       .from('courses')
-      .select('*, original_price'); // Fetch all matching courses
-    
-    if (level === 0 || !profile) return query; // Level 0 (generic)
-
-    if (profile.program_type === 'IITM_BS') {
-      query = query.eq('exam_category', 'IITM BS'); // Level 1
-      if (level === 2 && profile.branch) {
-        query = query.eq('branch', profile.branch); // Level 2
-      }
-    } else if (profile.program_type === 'COMPETITIVE_EXAM') {
-      query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1
-      if (level === 2 && profile.exam_type) {
-        query = query.eq('exam_type', profile.exam_type); // Level 2
-      }
-    } else {
-      return buildQuery(0); // Fallback
-    }
-    return query;
-  };
+      .select('*, original_price')
+      .order('created_at', { ascending: false })
+      .limit(3);
+    if (error) console.error("Error fetching generic courses:", error);
+    return (data as Course[]) || [];
+  }
 
   try {
-    let courses: Course[] = [];
-
-    // 2. Try to fetch Level 2 (most specific)
-    const { data: level2Data, error: level2Error } = await buildQuery(2);
-    if (level2Error) throw level2Error;
-    if (level2Data && level2Data.length > 0) {
-      courses = level2Data as Course[];
-    } else {
-      // 3. Try Level 1 (broader) if Level 2 had no results
-      const { data: level1Data, error: level1Error } = await buildQuery(1);
-      if (level1Error) throw level1Error;
-      if (level1Data && level1Data.length > 0) {
-        courses = level1Data as Course[];
-      } else {
-        // 4. Fallback to Level 0 (generic) if Level 1 also had no results
-        const { data: level0Data, error: level0Error } = await buildQuery(0);
-        if (level0Error) throw level0Error;
-        courses = (level0Data as Course[]) || [];
+    // --- 1. Try Level 2 (Most Specific) ---
+    const level2Query = buildProfileQuery(profile, 2);
+    if (level2Query) {
+      const { data: level2Data, error: level2Error } = await level2Query;
+      if (level2Error) throw level2Error;
+      
+      if (level2Data && level2Data.length > 0) {
+        const sorted = sortRecommendedCourses(level2Data as Course[]);
+        return sorted.slice(0, 3);
       }
     }
 
-    // 5. Apply the advanced sorting logic and take the top 3
-    const sortedCourses = sortRecommendedCourses(courses);
-    return sortedCourses.slice(0, 3);
+    // --- 2. Try Level 1 (Broader) ---
+    const level1Query = buildProfileQuery(profile, 1);
+    if (level1Query) {
+      const { data: level1Data, error: level1Error } = await level1Query;
+      if (level1Error) throw level1Error;
+
+      if (level1Data && level1Data.length > 0) {
+        const sorted = sortRecommendedCourses(level1Data as Course[]);
+        return sorted.slice(0, 3);
+      }
+    }
+    
+    // --- 3. Fallback to Level 0 (Generic: 3 Most Recent) ---
+    // This runs if profile type was not matched, or if Levels 1 & 2 returned no results.
+    const { data: level0Data, error: level0Error } = await supabase
+      .from('courses')
+      .select('*, original_price')
+      .order('created_at', { ascending: false })
+      .limit(3);
+    
+    if (level0Error) throw level0Error;
+    return (level0Data as Course[]) || [];
 
   } catch (error) {
     console.error("Error fetching recommended courses:", error);
-    return [];
+    return []; // Return empty on any error
   }
 }
 // --- END OF NEW RECOMMENDATION LOGIC ---
@@ -386,7 +396,6 @@ interface StudyPortalProps {
 }
 
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
-  // ... (This component is unchanged)
   const { user } = useAuth();
   const { toast } = useToast();
   const { getFilteredContent, contentLoading } = useBackend();
