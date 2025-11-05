@@ -41,7 +41,7 @@ const formatBranch = (branch: string | null): string => {
 /**
  * Generates the specific audience text based on second-level filters
  */
-const getAudienceText = (course: Course): string => {
+const getAudienceText = (course: any): string => {
   const { exam_category, branch, level, student_status } = course;
 
   if (exam_category === 'IITM BS') {
@@ -97,7 +97,7 @@ type Course = Tables<'courses'> & {
 
 
 // --- COMPONENT ---
-export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) => {
+export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
 
   const {
     id,

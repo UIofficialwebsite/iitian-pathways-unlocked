@@ -1,9 +1,7 @@
 import React from "react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import RecommendedBatchCard from "./RecommendedBatchCard";
-import { CourseCardSkeleton } from "@/components/courses/CourseCardSkeleton";
-// We remove the admin Course import, it's not needed
-// import { Course } from "@/components/admin/courses/types";
+import { RecommendedBatchCard } from "./RecommendedBatchCard";
+import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 
 const RecommendedBatchesSection: React.FC = () => {
   // --- 1. GET THE NEW ARRAY FROM THE HOOK ---

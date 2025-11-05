@@ -17,8 +17,7 @@ import { supabase } from '../../integrations/supabase/client';
 import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
 import RecommendedBatchesSection from './RecommendedBatchesSection';
-import { useBackend } from '../BackendIntegratedWrapper'; 
-import { PostgrestQueryBuilder } from '@supabase/supabase-js'; // Import this type
+import { useBackend } from '../BackendIntegratedWrapper';
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
@@ -163,10 +162,7 @@ const NotEnrolledView = ({
   // ... (This component is unchanged)
   <div className="space-y-10">
     
-    <RecommendedBatchesSection 
-      courses={recommendedCourses} 
-      isLoading={isLoading} 
-    />
+    <RecommendedBatchesSection />
     
     <section>
         <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
@@ -258,7 +254,7 @@ const NotEnrolledView = ({
 /**
  * Helper to get a numeric, sortable value for a course's level or class.
  */
-const getSortableLevel = (course: Course): number => {
+const getSortableLevel = (course: any): number => {
   const level = course.level; // 'Foundation', 'Diploma', 'Degree'
   const status = course.student_status; // 'Class 11', 'Class 12', 'Dropper'
 
@@ -310,11 +306,11 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
  * Builds a Supabase query for Level 1 or 2 filtering.
  * THIS IS THE CORE FIX: It now STRICTLY filters by exam_category.
  */
-const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
+const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
   // If no profile or program type, we can't build a filtered query.
   if (!profile || !profile.program_type) return null;
 
-  let query = supabase
+  let query: any = supabase
     .from('courses')
     .select('*');
   
@@ -344,7 +340,7 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 
   // Helper to get non-expired courses from a query
   const getValidCourses = async (
-    queryBuilder: PostgrestQueryBuilder<any, any, {'*': any}> | null 
+    queryBuilder: any 
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
     
@@ -452,7 +448,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
         if (rawData && rawData.length > 0) {
           const today = new Date();
           const enrollmentsMap = new Map<string, GroupedEnrollment>();
-          for (const enrollment of rawData as RawEnrollment[]) {
+          for (const enrollment of rawData as unknown as RawEnrollment[]) {
             if (!enrollment.courses) continue; 
             const course_id = enrollment.course_id;
             const endDate = enrollment.courses.end_date ? new Date(enrollment.courses.end_date) : null;

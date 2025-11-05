@@ -70,12 +70,12 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
       const fetchOptions = async () => {
         try {
           const { data, error } = await supabase
-            .from('focus_options')
+            .from('focus_options' as any)
             .select('*')
             .order('display_order', { ascending: true });
             
           if (error) throw error;
-          setAllOptions(data);
+          setAllOptions(data as any);
         } catch (error: any) {
           toast({ title: "Error", description: "Could not load program options.", variant: "destructive" });
         } finally {

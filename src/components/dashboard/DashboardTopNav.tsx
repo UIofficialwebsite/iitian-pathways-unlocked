@@ -63,7 +63,7 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
             <SheetContent side="left" className="w-72 p-0">
               <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
                 {/* Pass onProfileUpdate to mobile sidebar */}
-                <DashboardSidebar profile={profile} onProfileUpdate={onProfileUpdate} />
+                <DashboardSidebar profile={profile as any} onProfileUpdate={onProfileUpdate} onViewChange={onViewChange} />
               </div>
             </SheetContent>
           </Sheet>

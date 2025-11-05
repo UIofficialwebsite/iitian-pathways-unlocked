@@ -30,9 +30,7 @@ const PersonalizedDashboard: React.FC<PersonalizedDashboardProps> = ({ profile }
         course.level === profile.level
       ),
       notes: notes.filter(note => 
-        (note.exam_type === 'IITM_BS' || note.exam_type === 'IITM BS') &&
-        note.branch === profile.branch && 
-        note.level === profile.level
+        (note.exam_type === 'IITM_BS' || note.exam_type === 'IITM BS')
       ),
       pyqs: pyqs.filter(pyq => 
         (pyq.exam_type === 'IITM_BS' || pyq.exam_type === 'IITM BS') &&

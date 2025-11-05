@@ -210,7 +210,7 @@ const MyEnrollments = () => {
         const today = new Date();
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
-        for (const enrollment of rawData as RawEnrollment[]) {
+        for (const enrollment of rawData as unknown as RawEnrollment[]) {
           if (!enrollment.courses) continue; 
           const course_id = enrollment.course_id;
           
@@ -232,7 +232,7 @@ const MyEnrollments = () => {
               end_date: enrollment.courses.end_date,
               status: status,
               subjects: [],
-              image_url: enrollment.courses.image__url,
+              image_url: enrollment.courses.image_url,
               price: enrollment.courses.price, // Store the price
             });
           }

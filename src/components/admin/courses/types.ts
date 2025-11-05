@@ -20,4 +20,5 @@ export interface Course {
   level: string | null;
   enroll_now_link: string | null;
   language: string | null;
+  student_status?: string | null; // For compatibility with some components
 }

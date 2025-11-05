@@ -29,7 +29,6 @@ export const useAnnouncements = () => {
   const fetchAnnouncements = async () => {
     try {
       // Fetch live premium courses (using bestseller for premium)
-      // @ts-expect-error - Supabase type inference issue
       const coursesResponse: any = await supabase
         .from('courses')
         .select('id, title, description')

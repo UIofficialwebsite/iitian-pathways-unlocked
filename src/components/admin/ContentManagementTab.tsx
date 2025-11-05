@@ -120,8 +120,8 @@ const ContentManagementTab = () => {
   const filteredPyqs = filterContent(pyqs);
   const filteredCourses = filterContent(courses || []);
 
-  const allSubjects = [...new Set([...notes, ...pyqs, ...(courses || [])].map(item => item.subject).filter(Boolean))];
-  const allExamTypes = [...new Set([...notes, ...pyqs, ...(courses || [])].map(item => item.exam_type || item.exam_category).filter(Boolean))];
+  const allSubjects = [...new Set([...notes, ...pyqs, ...(courses || [])].map((item: any) => item.subject).filter(Boolean))];
+  const allExamTypes = [...new Set([...notes, ...pyqs, ...(courses || [])].map((item: any) => item.exam_type || item.exam_category).filter(Boolean))];
 
   if (contentLoading) {
     return (

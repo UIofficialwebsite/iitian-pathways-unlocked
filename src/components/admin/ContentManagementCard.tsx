@@ -40,19 +40,12 @@ const ContentManagementCard: React.FC<ContentManagementCardProps> = ({
 
   const handleDelete = async () => {
     try {
-      let success = false;
       if (contentType === 'notes') {
-        success = await deleteNote(item.id);
+        await deleteNote(item.id);
       } else if (contentType === 'pyqs') {
-        success = await deletePyq(item.id);
+        await deletePyq(item.id);
       }
-
-      if (success) {
-        toast({
-          title: "Success",
-          description: `${contentType === 'notes' ? 'Note' : 'PYQ'} deleted successfully`,
-        });
-      }
+      // Success toast is handled by the backend wrapper
     } catch (error) {
       console.error('Error deleting content:', error);
       toast({
