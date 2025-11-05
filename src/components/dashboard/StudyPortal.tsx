@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
-  ArrowLeft, 
+  // ArrowLeft is no longer needed here
   Loader2, 
   Book, 
   BookOpen,
@@ -15,7 +15,8 @@ import {
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added for new tab bar
+// Tabs are no longer needed
+// import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
 import { useToast } from '../ui/use-toast';
@@ -27,7 +28,6 @@ import { useBackend } from '../BackendIntegratedWrapper';
 type UserProfile = Tables<'profiles'>;
 type Course = Tables<'courses'>;
 
-// ... (RawEnrollment and GroupedEnrollment types remain the same) ...
 type RawEnrollment = {
   id: string;
   course_id: string;
@@ -52,8 +52,7 @@ type GroupedEnrollment = {
   price: number | null;
 };
 
-
-// ... (EnrollmentListItem component remains the same) ...
+// --- Re-usable Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
@@ -128,14 +127,13 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 
 
 // --- View 1: Student IS Enrolled ---
-// This component is now only for the "My Batches" tab content
 const EnrolledView = ({ 
   enrollments
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
   return (
-    <div className="space-y-6 pt-4"> {/* Added padding-top */}
+    <div className="space-y-10">
       {/* 1. My Batches Section */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900">My Batches</h2>
@@ -146,18 +144,12 @@ const EnrolledView = ({
           ))}
         </div>
       </section>
-
-      {/* Quick Access section is removed from here as it's part of the main 
-        dashboard, or could be its own tab if needed. 
-        This view is now *only* for "My Batches".
-      */}
     </div>
   );
 };
 
 
 // --- View 2: Student is NOT Enrolled ---
-// This component is now only for the "Recommended" tab content
 const NotEnrolledView = ({ 
   recommendedCourses, 
   notes, 
@@ -167,12 +159,12 @@ const NotEnrolledView = ({
   notes: any[], 
   pyqs: any[] 
 }) => (
-  <div className="space-y-10 pt-4"> {/* Added padding-top */}
+  <div className="space-y-10">
     
     {/* Section 1: Top Recommended Batches */}
     <section>
       <h2 className="text-2xl font-bold text-gray-900">Top Recommended Batches</h2>
-      <p className="text-gray-600 mt-1">Based on your focus goal and popular courses</p>
+      <p className="text-gray-600 mt-1">Let's start with these popular courses</p>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
         {recommendedCourses.length > 0 ? (
@@ -191,7 +183,7 @@ const NotEnrolledView = ({
       </div>
     </section>
     
-    {/* Section 2: Quick Access Section (Moved from EnrolledView) */}
+    {/* Section 2: Quick Access Section */}
     <section>
         <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
         <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
@@ -277,15 +269,8 @@ const NotEnrolledView = ({
   </div>
 );
 
-// --- New Recommendation Logic ---
-/**
- * Fetches recommended courses with a 2-level filter and fallback.
- * Level 2: Filters by program_type AND branch/exam_type.
- * Level 1: Filters by program_type (e.g., 'IITM BS') only.
- * Level 0: Fetches 3 most recent courses, no filter.
- */
+// --- 2-Level Filter Recommendation Logic ---
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
-  
   const buildQuery = (level: 0 | 1 | 2) => {
     let query = supabase
       .from('courses')
@@ -293,50 +278,44 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
       .order('created_at', { ascending: false })
       .limit(3);
     
-    if (level === 0 || !profile) return query; // Level 0 (generic) or no profile
+    if (level === 0 || !profile) return query;
 
-    // --- Level 1+ Filtering ---
     if (profile.program_type === 'IITM_BS') {
-      query = query.eq('exam_category', 'IITM BS'); // Level 1 filter
+      query = query.eq('exam_category', 'IITM BS'); // Level 1
       if (level === 2 && profile.branch) {
-        query = query.eq('branch', profile.branch); // Level 2 filter
+        query = query.eq('branch', profile.branch); // Level 2
       }
     } else if (profile.program_type === 'COMPETITIVE_EXAM') {
-      query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1 filter
+      query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1
       if (level === 2 && profile.exam_type) {
-        query = query.eq('exam_type', profile.exam_type); // Level 2 filter
+        query = query.eq('exam_type', profile.exam_type); // Level 2
       }
     } else {
-      // No matching program type, fall back to generic
       return buildQuery(0);
     }
-    
     return query;
   };
 
   try {
-    // Try Level 2 (Specific)
     const { data: level2Data, error: level2Error } = await buildQuery(2);
     if (level2Error) throw level2Error;
     if (level2Data && level2Data.length > 0) {
       return level2Data;
     }
 
-    // Try Level 1 (Broader)
     const { data: level1Data, error: level1Error } = await buildQuery(1);
     if (level1Error) throw level1Error;
     if (level1Data && level1Data.length > 0) {
       return level1Data;
     }
 
-    // Fallback to Level 0 (Generic)
     const { data: level0Data, error: level0Error } = await buildQuery(0);
     if (level0Error) throw level0Error;
     return level0Data || [];
 
   } catch (error) {
     console.error("Error fetching recommended courses:", error);
-    return []; // Return empty array on error
+    return [];
   }
 }
 
@@ -355,12 +334,12 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  
-  // New state for the tabs
-  const [activeTab, setActiveTab] = useState<'enrolled' | 'recommended'>('recommended');
 
+  // Get filtered notes and PYQs
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
+
+  const hasEnrollments = groupedEnrollments.length > 0;
 
   useEffect(() => {
     if (!user || !profile) {
@@ -371,24 +350,24 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
-        // --- Fetch both enrollments and recommendations ---
-        
-        // 1. Fetch Enrollments
-        const { data: rawData, error: enrollError } = await supabase
-          .from('enrollments')
-          .select(`
-            id, course_id, subject_name,
-            courses (id, title, start_date, end_date, image_url, price)
-          `)
-          .eq('user_id', user.id);
-        
+        // Fetch enrollments and recommendations in parallel
+        const [enrollmentsResult, recCoursesResult] = await Promise.all([
+          supabase
+            .from('enrollments')
+            .select(`
+              id, course_id, subject_name,
+              courses (id, title, start_date, end_date, image_url, price)
+            `)
+            .eq('user_id', user.id),
+          fetchRecommendedCourses(profile)
+        ]);
+
+        const { data: rawData, error: enrollError } = enrollmentsResult;
         if (enrollError) throw enrollError;
 
-        // 2. Fetch Recommendations (using new smart function)
-        const recCourses = await fetchRecommendedCourses(profile);
-        setRecommendedCourses(recCourses);
+        setRecommendedCourses(recCoursesResult);
 
-        // 3. Process Enrollments
+        // Process Enrollments
         if (rawData && rawData.length > 0) {
           const today = new Date();
           const enrollmentsMap = new Map<string, GroupedEnrollment>();
@@ -415,14 +394,9 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
               groupedEntry.subjects.push(enrollment.subject_name);
             }
           }
-          const processedEnrollments = Array.from(enrollmentsMap.values());
-          setGroupedEnrollments(processedEnrollments);
-          
-          // 4. Set default tab based on enrollments
-          setActiveTab('enrolled'); // User has enrollments, so default to that tab
+          setGroupedEnrollments(Array.from(enrollmentsMap.values()));
         } else {
           setGroupedEnrollments([]);
-          setActiveTab('recommended'); // User has no enrollments, default to recommendations
         }
 
       } catch (error: any) {
@@ -451,42 +425,17 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   }
 
   return (
-    // Changed to smaller spacing
-    <div className="max-w-7xl mx-auto space-y-4"> 
-      
-      {/* Header Nav - Now left-aligned and no bottom margin */}
-      <div className="flex items-center gap-2">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => onViewChange('dashboard')}
-          className="mr-2"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <h1 className="text-2xl font-bold text-gray-900">Study Portal</h1>
-      </div>
-
-      {/* --- New Tab Bar --- */}
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 max-w-md">
-          <TabsTrigger value="enrolled" disabled={groupedEnrollments.length === 0}>
-            My Batches
-          </TabsTrigger>
-          <TabsTrigger value="recommended">Recommended</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {/* --- Conditional Content Based on Tab --- */}
-      {activeTab === 'enrolled' && (
+    // Removed the wrapper div and header, as they are now in ModernDashboard
+    // and DashboardHeader.
+    // The main container is now just a simple conditional render.
+    <div className="max-w-7xl mx-auto">
+      {hasEnrollments ? (
         <EnrolledView 
           enrollments={groupedEnrollments} 
         />
-      )}
-      
-      {activeTab === 'recommended' && (
+      ) : (
         <NotEnrolledView 
-          recommendedCourses={recommendedCourses}
+          recommendedCourses={recommendedCourses} 
           notes={notes}
           pyqs={pyqs}
         />
