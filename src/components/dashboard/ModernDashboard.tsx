@@ -1,131 +1,130 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/components/ui/use-toast";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/integrations/supabase/types";
 import { Loader2 } from "lucide-react";
-import DashboardSidebar from "./DashboardSidebar";
-import DashboardTopNav from "./DashboardTopNav"; 
-import DashboardHeader from "./DashboardHeader"; // Import the new header
-import MyProfile from "./MyProfile"; 
-import MyEnrollments from "./MyEnrollments"; 
-import StudyPortal from "./StudyPortal"; 
+import { useNavigate, useLocation } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { FocusAreaModal } from "./FocusAreaModal";
+import DashboardTopNav from "./DashboardTopNav";
 
-interface UserProfile {
-  id: string;
-  program_type: string | null;
-  branch?: string | null;
-  level?: string | null;
-  exam_type?: string | null;
-  student_status?: string | null;
-  subjects?: string[] | null;
-  student_name?: string | null;
-  full_name?: string | null;
-  email?: string | null;
-  gender?: string | null;
-  [key: string]: any;
-}
+// Import the views
+import StudyPortal from "./StudyPortal";
+import MyProfile from "./MyProfile";
+import MyEnrollments from "./MyEnrollments";
 
-type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
+// Remove the <Tabs> imports - they are the cause of the error
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const ModernDashboard = () => {
-  const { user } = useAuth();
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type DashboardView = "dashboard" | "profile" | "enrollments" | "studyPortal";
+
+const ModernDashboard: React.FC = () => {
+  const { user, isLoading: authLoading } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  const [activeView, setActiveView] = useState<DashboardView>("studyPortal");
+  
+  const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
-  const { contentLoading } = useBackend(); 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<ActiveView>('studyPortal');
 
   useEffect(() => {
-    if (user) {
-      fetchUserProfile();
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login", { state: { from: location } });
+      return;
     }
-  }, [user]);
 
-  const fetchUserProfile = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user?.id)
-        .single();
+    const fetchProfile = async () => {
+      setLoadingProfile(true);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
-      if (error && error.code !== 'PGRST116') {
-        throw error;
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
+
+        if (data) {
+          setProfile(data);
+          // Check if profile is incomplete (no program_type)
+          if (!data.program_type) {
+            setIsFocusModalOpen(true);
+          }
+        } else {
+          // No profile exists, force user to create one
+          setIsFocusModalOpen(true);
+        }
+      } catch (error: any) {
+        console.error("Error fetching profile:", error);
+        toast({
+          title: "Error",
+          description: "Could not fetch your profile. " + error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingProfile(false);
       }
+    };
 
-      setProfile(data as UserProfile);
-    } catch (error: any) {
-      console.error('Error loading profile:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load profile data",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleProfileUpdate = (updatedProfile: UserProfile) => {
+    fetchProfile();
+  }, [user, authLoading, navigate, location, toast]);
+
+  const handleFocusSave = (updatedProfile: Profile) => {
     setProfile(updatedProfile);
+    setIsFocusModalOpen(false);
   };
 
-  if (loading || contentLoading) {
+  const isLoading = authLoading || loadingProfile;
+
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Loader2 className="h-12 w-12 animate-spin text-royal" />
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-royal" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      
-      {/* --- TOP NAV (FIXED, FULL-WIDTH) --- */}
-      <DashboardTopNav 
-        profile={profile} 
-        onViewChange={setActiveView} 
-        onProfileUpdate={handleProfileUpdate} 
-      />
-
-      {/* --- DESKTOP SIDEBAR (FIXED, BELOW TOPNAV) --- */}
-      <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:top-16 lg:bottom-0 lg:left-0 lg:z-30">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white border-r border-gray-200">
-          <DashboardSidebar 
-            profile={profile} 
-            onProfileUpdate={handleProfileUpdate} 
-            onViewChange={setActiveView} 
-          /> 
-        </div>
-      </div>
-
-      {/* --- NEW CONTENT HEADER (FIXED, BELOW TOPNAV, RIGHT OF SIDEBAR) --- */}
-      <DashboardHeader 
+    <div className="flex flex-col min-h-screen bg-gray-50/50">
+      <DashboardTopNav
         activeView={activeView}
         onViewChange={setActiveView}
+        profile={profile}
       />
 
-      {/* --- MAIN CONTENT AREA --- */}
-      {/* Added pt-16 for the TopNav and another pt-16 for the new DashboardHeader (total pt-32) */}
-      <div className="lg:pl-72 pt-32">
-        <main className="pb-8"> {/* Removed top padding, kept bottom padding */}
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            
-            {(activeView === 'dashboard' || activeView === 'studyPortal') && (
-              <StudyPortal profile={profile as any} onViewChange={setActiveView} />
-            )}
-            
-            {activeView === 'profile' && <MyProfile />}
-            
-            {activeView === 'enrollments' && <MyEnrollments />}
-            
-          </div>
-        </main>
-      </div>
-      
+      {/* --- THIS IS THE FIX ---
+        The <Tabs> and <TabsContent> wrappers were removed.
+        We now use simple conditional rendering based on the 'activeView' state,
+        which is already being managed by DashboardTopNav.
+        This eliminates the 'React.Children.only' error.
+      */}
+      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <div className="w-full max-w-7xl mx-auto">
+          {activeView === 'studyPortal' && (
+            <StudyPortal profile={profile} onViewChange={setActiveView} />
+          )}
+          {activeView === 'profile' && (
+            <MyProfile profile={profile} setProfile={setProfile} />
+          )}
+          {activeView === 'enrollments' && (
+            <MyEnrollments />
+          )}
+        </div>
+      </main>
+
+      <FocusAreaModal
+        isOpen={isFocusModalOpen}
+        onClose={() => setIsFocusModalOpen(false)} // Allow closing if they want to browse anyway
+        onSave={handleFocusSave}
+        currentProfile={profile}
+        userId={user?.id}
+      />
     </div>
   );
 };
