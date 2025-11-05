@@ -52,6 +52,16 @@ interface BackendContextType {
 
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
 
+// THIS IS THE FIX: Define an empty/default state for the filtered content
+const emptyFilteredContent = {
+  courses: [] as Course[],
+  notes: [] as Note[],
+  pyqs: [] as Pyq[],
+  importantDates: [] as ImportantDate[],
+  newsUpdates: [] as NewsUpdate[],
+  communities: [] as Community[],
+};
+
 export const BackendIntegratedWrapper: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
@@ -214,16 +224,9 @@ export const BackendIntegratedWrapper: React.FC<{
   // --- THIS IS THE FIXED FUNCTION ---
   const getFilteredContent = useCallback(
     (profile: Database["public"]["Tables"]["profiles"]["Row"] | null) => {
-      // THIS IS THE FIX: Return an empty structure if no profile
+      // THIS IS THE FIX: Return a valid empty object
       if (!profile) {
-        return {
-          courses: courses as Course[],
-          notes: notes,
-          pyqs: pyqs,
-          importantDates: importantDates,
-          newsUpdates: newsUpdates,
-          communities: communities,
-        };
+        return emptyFilteredContent;
       }
 
       const programType = profile.program_type;
