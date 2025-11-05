@@ -4,7 +4,7 @@ import {
   ArrowLeft, 
   Loader2, 
   Book, 
-  BookOpen, // <<<--- I HAVE ADDED THIS MISSING ICON
+  BookOpen,
   Users, 
   MessageSquare, 
   ChevronRight, 
@@ -15,19 +15,19 @@ import {
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"; // Added for new tab bar
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
 import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
 import { RecommendedBatchCard } from './RecommendedBatchCard';
-// We need useBackend to get personalized content for enrolled students
 import { useBackend } from '../BackendIntegratedWrapper'; 
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
 type Course = Tables<'courses'>;
 
-// Types for Enrollment data
+// ... (RawEnrollment and GroupedEnrollment types remain the same) ...
 type RawEnrollment = {
   id: string;
   course_id: string;
@@ -52,7 +52,8 @@ type GroupedEnrollment = {
   price: number | null;
 };
 
-// --- Re-usable Enrollment List Item (for the "Enrolled" view) ---
+
+// ... (EnrollmentListItem component remains the same) ...
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
@@ -125,18 +126,16 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
   );
 };
 
+
 // --- View 1: Student IS Enrolled ---
+// This component is now only for the "My Batches" tab content
 const EnrolledView = ({ 
-  enrollments, 
-  notes, 
-  pyqs 
+  enrollments
 } : { 
-  enrollments: GroupedEnrollment[], 
-  notes: any[], 
-  pyqs: any[] 
+  enrollments: GroupedEnrollment[]
 }) => {
   return (
-    <div className="space-y-10">
+    <div className="space-y-6 pt-4"> {/* Added padding-top */}
       {/* 1. My Batches Section */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900">My Batches</h2>
@@ -148,10 +147,54 @@ const EnrolledView = ({
         </div>
       </section>
 
-      {/* 2. Quick Access Section */}
-      <section>
+      {/* Quick Access section is removed from here as it's part of the main 
+        dashboard, or could be its own tab if needed. 
+        This view is now *only* for "My Batches".
+      */}
+    </div>
+  );
+};
+
+
+// --- View 2: Student is NOT Enrolled ---
+// This component is now only for the "Recommended" tab content
+const NotEnrolledView = ({ 
+  recommendedCourses, 
+  notes, 
+  pyqs 
+} : { 
+  recommendedCourses: Course[], 
+  notes: any[], 
+  pyqs: any[] 
+}) => (
+  <div className="space-y-10 pt-4"> {/* Added padding-top */}
+    
+    {/* Section 1: Top Recommended Batches */}
+    <section>
+      <h2 className="text-2xl font-bold text-gray-900">Top Recommended Batches</h2>
+      <p className="text-gray-600 mt-1">Based on your focus goal and popular courses</p>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {recommendedCourses.length > 0 ? (
+          recommendedCourses.map((course) => (
+            <RecommendedBatchCard key={course.id} course={course} />
+          ))
+        ) : (
+          <p className="text-gray-500 col-span-3">No specific recommendations found. Check out all our courses!</p>
+        )}
+      </div>
+      
+      <div className="text-center mt-8">
+        <Button variant="outline" asChild className="px-8">
+          <Link to="/courses">View All Batches</Link>
+        </Button>
+      </div>
+    </section>
+    
+    {/* Section 2: Quick Access Section (Moved from EnrolledView) */}
+    <section>
         <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
-        <p className="text-gray-600 mt-1">Your personalized notes and PYQs</p>
+        <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
           {/* Notes Card */}
           <Card>
@@ -201,44 +244,13 @@ const EnrolledView = ({
           </Card>
         </div>
       </section>
-    </div>
-  );
-};
 
-
-// --- View 2: Student is NOT Enrolled ---
-const NotEnrolledView = ({ recommendedCourses } : { recommendedCourses: Course[] }) => (
-  <div className="space-y-10">
-    
-    {/* Section 1: Top Recommended Batches */}
-    <section>
-      <h2 className="text-2xl font-bold text-gray-900">Top Recommended Batches</h2>
-      <p className="text-gray-600 mt-1">Let's start with these popular courses</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {recommendedCourses.length > 0 ? (
-          recommendedCourses.map((course) => (
-            <RecommendedBatchCard key={course.id} course={course} />
-          ))
-        ) : (
-          <p className="text-gray-500 col-span-3">No specific recommendations found. Check out all our courses!</p>
-        )}
-      </div>
-      
-      <div className="text-center mt-8">
-        <Button variant="outline" asChild className="px-8">
-          <Link to="/courses">View All Batches</Link>
-        </Button>
-      </div>
-    </section>
-
-    {/* Section 2: Explore */}
+    {/* Section 3: Explore */}
     <section>
       <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
       <p className="text-gray-600 mt-1">Get Additional guidance with these exclusive features</p>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        {/* Block 1: Digital Library */}
         <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
           <CardContent className="p-6">
             <Book className="h-8 w-8 text-blue-600 mb-4" />
@@ -246,8 +258,6 @@ const NotEnrolledView = ({ recommendedCourses } : { recommendedCourses: Course[]
             <p className="text-gray-600 text-sm mt-1">Access all your free content here</p>
           </CardContent>
         </Card>
-        
-        {/* Block 2: Mentorship */}
         <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
           <CardContent className="p-6">
             <Users className="h-8 w-8 text-purple-600 mb-4" />
@@ -255,8 +265,6 @@ const NotEnrolledView = ({ recommendedCourses } : { recommendedCourses: Course[]
             <p className="text-gray-600 text-sm mt-1">Get free Guidance about your career growth, upskilling and internships</p>
           </CardContent>
         </Card>
-        
-        {/* Block 3: Ask Doubts */}
         <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
           <CardContent className="p-6">
             <MessageSquare className="h-8 w-8 text-green-600 mb-4" />
@@ -269,6 +277,70 @@ const NotEnrolledView = ({ recommendedCourses } : { recommendedCourses: Course[]
   </div>
 );
 
+// --- New Recommendation Logic ---
+/**
+ * Fetches recommended courses with a 2-level filter and fallback.
+ * Level 2: Filters by program_type AND branch/exam_type.
+ * Level 1: Filters by program_type (e.g., 'IITM BS') only.
+ * Level 0: Fetches 3 most recent courses, no filter.
+ */
+async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
+  
+  const buildQuery = (level: 0 | 1 | 2) => {
+    let query = supabase
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(3);
+    
+    if (level === 0 || !profile) return query; // Level 0 (generic) or no profile
+
+    // --- Level 1+ Filtering ---
+    if (profile.program_type === 'IITM_BS') {
+      query = query.eq('exam_category', 'IITM BS'); // Level 1 filter
+      if (level === 2 && profile.branch) {
+        query = query.eq('branch', profile.branch); // Level 2 filter
+      }
+    } else if (profile.program_type === 'COMPETITIVE_EXAM') {
+      query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1 filter
+      if (level === 2 && profile.exam_type) {
+        query = query.eq('exam_type', profile.exam_type); // Level 2 filter
+      }
+    } else {
+      // No matching program type, fall back to generic
+      return buildQuery(0);
+    }
+    
+    return query;
+  };
+
+  try {
+    // Try Level 2 (Specific)
+    const { data: level2Data, error: level2Error } = await buildQuery(2);
+    if (level2Error) throw level2Error;
+    if (level2Data && level2Data.length > 0) {
+      return level2Data;
+    }
+
+    // Try Level 1 (Broader)
+    const { data: level1Data, error: level1Error } = await buildQuery(1);
+    if (level1Error) throw level1Error;
+    if (level1Data && level1Data.length > 0) {
+      return level1Data;
+    }
+
+    // Fallback to Level 0 (Generic)
+    const { data: level0Data, error: level0Error } = await buildQuery(0);
+    if (level0Error) throw level0Error;
+    return level0Data || [];
+
+  } catch (error) {
+    console.error("Error fetching recommended courses:", error);
+    return []; // Return empty array on error
+  }
+}
+
+
 // --- Main Study Portal Component ---
 interface StudyPortalProps {
   profile: UserProfile | null;
@@ -278,18 +350,17 @@ interface StudyPortalProps {
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  // Get content filtering tools from the main backend wrapper
   const { getFilteredContent, contentLoading } = useBackend();
   
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  
+  // New state for the tabs
+  const [activeTab, setActiveTab] = useState<'enrolled' | 'recommended'>('recommended');
 
-  // Get filtered notes and PYQs
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
-
-  const hasEnrollments = groupedEnrollments.length > 0;
 
   useEffect(() => {
     if (!user || !profile) {
@@ -300,6 +371,8 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
+        // --- Fetch both enrollments and recommendations ---
+        
         // 1. Fetch Enrollments
         const { data: rawData, error: enrollError } = await supabase
           .from('enrollments')
@@ -308,11 +381,15 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
             courses (id, title, start_date, end_date, image_url, price)
           `)
           .eq('user_id', user.id);
-
+        
         if (enrollError) throw enrollError;
 
+        // 2. Fetch Recommendations (using new smart function)
+        const recCourses = await fetchRecommendedCourses(profile);
+        setRecommendedCourses(recCourses);
+
+        // 3. Process Enrollments
         if (rawData && rawData.length > 0) {
-          // --- Process Enrollments (if they exist) ---
           const today = new Date();
           const enrollmentsMap = new Map<string, GroupedEnrollment>();
           for (const enrollment of rawData as RawEnrollment[]) {
@@ -338,28 +415,14 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
               groupedEntry.subjects.push(enrollment.subject_name);
             }
           }
-          setGroupedEnrollments(Array.from(enrollmentsMap.values()));
-        } else {
-          // --- No Enrollments: Fetch Recommendations ---
-          setGroupedEnrollments([]);
-          let query = supabase
-            .from('courses')
-            .select('*')
-            .order('created_at', { ascending: false }) // Most recent
-            .limit(3); // Max 3 batches
-
-          if (profile.program_type === 'IITM_BS') {
-            query = query.eq('exam_category', 'IITM BS');
-            if (profile.branch) query = query.eq('branch', profile.branch);
-            if (profile.level) query = query.eq('level', profile.level);
-          } else if (profile.program_type === 'COMPETITIVE_EXAM') {
-            query = query.eq('exam_category', 'COMPETITIVE_EXAM');
-            if (profile.exam_type) query = query.eq('exam_type', profile.exam_type);
-          }
+          const processedEnrollments = Array.from(enrollmentsMap.values());
+          setGroupedEnrollments(processedEnrollments);
           
-          const { data: courses, error: courseError } = await query;
-          if (courseError) throw courseError;
-          setRecommendedCourses(courses || []);
+          // 4. Set default tab based on enrollments
+          setActiveTab('enrolled'); // User has enrollments, so default to that tab
+        } else {
+          setGroupedEnrollments([]);
+          setActiveTab('recommended'); // User has no enrollments, default to recommendations
         }
 
       } catch (error: any) {
@@ -388,31 +451,44 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header Nav */}
-      <div className="flex items-center justify-between mb-8">
+    // Changed to smaller spacing
+    <div className="max-w-7xl mx-auto space-y-4"> 
+      
+      {/* Header Nav - Now left-aligned and no bottom margin */}
+      <div className="flex items-center gap-2">
         <Button 
           variant="ghost" 
           size="icon" 
-          onClick={() => onViewChange('dashboard')} // Goes back to the main dashboard
+          onClick={() => onViewChange('dashboard')}
           className="mr-2"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold text-gray-900 text-center flex-1">Study Portal</h1>
-        <div className="w-10"></div> {/* Spacer to keep title centered */}
+        <h1 className="text-2xl font-bold text-gray-900">Study Portal</h1>
       </div>
 
-      {/* Conditional Rendering */}
-      {hasEnrollments ? (
+      {/* --- New Tab Bar --- */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as any)} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="enrolled" disabled={groupedEnrollments.length === 0}>
+            My Batches
+          </TabsTrigger>
+          <TabsTrigger value="recommended">Recommended</TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {/* --- Conditional Content Based on Tab --- */}
+      {activeTab === 'enrolled' && (
         <EnrolledView 
           enrollments={groupedEnrollments} 
-          notes={notes} 
-          pyqs={pyqs} 
         />
-      ) : (
+      )}
+      
+      {activeTab === 'recommended' && (
         <NotEnrolledView 
-          recommendedCourses={recommendedCourses} 
+          recommendedCourses={recommendedCourses}
+          notes={notes}
+          pyqs={pyqs}
         />
       )}
     </div>
