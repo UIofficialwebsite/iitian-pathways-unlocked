@@ -1,6 +1,3 @@
-// src/components/dashboard/RecommendedBatchesSection.tsx
-// (FINAL UPDATED FILE)
-
 import React from "react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import RecommendedBatchCard from "./RecommendedBatchCard";
@@ -9,6 +6,7 @@ import { Course } from "@/components/admin/courses/types";
 
 const RecommendedBatchesSection: React.FC = () => {
   // --- 1. GET THE NEW ARRAY FROM THE HOOK ---
+  // 'loading' here is the main global loading state
   const { recommendedCourses, loading } = useBackend();
 
   // --- 2. HANDLE LOADING STATE ---
@@ -27,7 +25,7 @@ const RecommendedBatchesSection: React.FC = () => {
 
   // --- 3. HANDLE NO RECOMMENDATIONS ---
   // If the array is empty, don't show the section at all
-  if (recommendedCourses.length === 0) {
+  if (!recommendedCourses || recommendedCourses.length === 0) {
     return null;
   }
 
