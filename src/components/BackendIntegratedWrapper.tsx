@@ -8,18 +8,19 @@ import React, {
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/hooks/useAuth";
-import { Course } from "@/components/admin/courses/types"; // Your existing type
+import { Course } from "@/components/admin/courses/types";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
+import { useToast } from "@/components/ui/use-toast";
 
-// Define your content types
+// Define content types
 type Note = Database["public"]["Tables"]["notes"]["Row"];
 type Pyq = Database["public"]["Tables"]["pyqs"]["Row"];
 type ImportantDate = Database["public"]["Tables"]["important_dates"]["Row"];
 type NewsUpdate = Database["public"]["Tables"]["news_updates"]["Row"];
 type Community = Database["public"]["Tables"]["communities"]["Row"];
-type IITMBranchNote =
-  Database["public"]["Tables"]["iitm_branch_notes"]["Row"];
-type IITMBranchPyq = Database["publics"]["Tables"]["pyqs"]["Row"]; // Assuming pyqs are used for IITM PYQs
+type IITMBranchNote = Database["public"]["Tables"]["iitm_branch_notes"]["Row"];
+type IITMBranchPyq = Pyq;
+type Job = Database["public"]["Tables"]["jobs"]["Row"];
 
 interface BackendContextType {
   courses: Course[];
@@ -30,9 +31,14 @@ interface BackendContextType {
   communities: Community[];
   iitmBranchNotes: IITMBranchNote[];
   iitmBranchPyqs: IITMBranchPyq[];
-  recommendedCourses: any[]; // <-- FIX 1: Changed from Course[] to any[]
+  recommendedCourses: any[];
+  jobs: Job[];
   loading: boolean;
+  contentLoading: boolean;
   error: Error | null;
+  isAdmin: boolean;
+  downloadCounts: Record<string, number>;
+  isDownloadCountsInitialized: boolean;
   getFilteredContent: (
     profile: Database["public"]["Tables"]["profiles"]["Row"] | null
   ) => {
@@ -48,11 +54,22 @@ interface BackendContextType {
     type: "notes" | "pyqs" | "iitm_branch_notes",
     fileUrl?: string | null
   ) => Promise<void>;
+  updateDownloadCount: (contentId: string, count: number) => void;
+  addNote: (note: any) => Promise<boolean>;
+  addPyq: (pyq: any) => Promise<boolean>;
+  updateNote: (id: string, note: any) => Promise<boolean>;
+  updatePyq: (id: string, pyq: any) => Promise<boolean>;
+  deleteNote: (id: string) => Promise<void>;
+  deletePyq: (id: string) => Promise<void>;
+  refreshNotes: () => Promise<void>;
+  refreshPyqs: () => Promise<void>;
+  createCourse: (course: any) => Promise<boolean>;
+  updateCourse: (id: string, course: any) => Promise<boolean>;
+  deleteCourse: (id: string) => Promise<void>;
 }
 
 const BackendContext = createContext<BackendContextType | undefined>(undefined);
 
-// THIS IS THE FIX: Define an empty/default state for the filtered content
 const emptyFilteredContent = {
   courses: [] as Course[],
   notes: [] as Note[],
@@ -66,8 +83,8 @@ export const BackendIntegratedWrapper: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
-  // --- FIX 2: The state type must also be any[] ---
   const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [pyqs, setPyqs] = useState<Pyq[]>([]);
@@ -76,83 +93,99 @@ export const BackendIntegratedWrapper: React.FC<{
   const [communities, setCommunities] = useState<Community[]>([]);
   const [iitmBranchNotes, setIitmBranchNotes] = useState<IITMBranchNote[]>([]);
   const [iitmBranchPyqs, setIitmBranchPyqs] = useState<IITMBranchPyq[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
+  const [contentLoading, setContentLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const { handleDownload, incrementDownloadCount } = useDownloadHandler(
-    user?.email
-  );
+  const { 
+    handleDownload, 
+    downloadCounts, 
+    updateDownloadCount,
+    isInitialized: isDownloadCountsInitialized 
+  } = useDownloadHandler();
 
-  // --- NEW FUNCTION TO FETCH RECOMMENDATIONS ---
+  // Check admin status
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user?.email) {
+        const { data } = await supabase.rpc('is_current_user_admin');
+        setIsAdmin(data || false);
+      } else {
+        setIsAdmin(false);
+      }
+    };
+    checkAdminStatus();
+  }, [user]);
+
   const fetchRecommendedCourses = useCallback(async () => {
-    if (!user) return; // Only fetch if logged in
+    if (!user) return;
 
     try {
       const { data, error } = await supabase
         .from("user_recommendations")
-        .select(
-          `
+        .select(`
           score,
           courses (
-            id,
-            title,
-            description,
-            price,
-            discounted_price,
-            duration,
-            rating,
-            features,
-            bestseller,
-            image_url,
-            created_at,
-            updated_at,
-            subject,
-            start_date,
-            course_type,
-            branch,
-            level,
-            enroll_now_link,
-            students_enrolled,
-            end_date,
-            language,
-            is_live,
-            expiry_date,
-            tags,
-            exam_category
+            id, title, description, price, discounted_price,
+            duration, rating, features, bestseller, image_url,
+            created_at, updated_at, subject, start_date, course_type,
+            branch, level, enroll_now_link, students_enrolled,
+            end_date, language, is_live, expiry_date, tags, exam_category
           )
-        `
-        )
+        `)
         .order("score", { ascending: false })
-        .limit(3); // Get the top 3 recommendations
+        .limit(3);
 
       if (error) {
-        // Log the error but don't crash the whole wrapper
         console.error("Error fetching recommended courses:", error);
-        if (error.code === '42P01') {
-          console.warn('"user_recommendations" table not found. Did you run the migration and update types?');
-        }
-        setRecommendedCourses([]); // Set empty array on error
-        return; // Don't throw, just fail silently
+        setRecommendedCourses([]);
+        return;
       }
 
       if (data) {
         const formattedData = data
           .filter((rec) => rec.courses)
           .map((rec) => rec.courses);
-        // --- FIX 3: Remove the incorrect cast. Just set the data. ---
         setRecommendedCourses(formattedData);
       }
     } catch (err) {
       console.error("Failed to fetch recommendations:", err);
-      setRecommendedCourses([]); // Set empty array on error
+      setRecommendedCourses([]);
     }
   }, [user]);
+
+  const refreshNotes = useCallback(async () => {
+    setContentLoading(true);
+    try {
+      const { data, error } = await supabase.from("notes").select("*");
+      if (error) throw error;
+      if (data) setNotes(data);
+    } catch (err) {
+      console.error("Error refreshing notes:", err);
+    } finally {
+      setContentLoading(false);
+    }
+  }, []);
+
+  const refreshPyqs = useCallback(async () => {
+    setContentLoading(true);
+    try {
+      const { data, error } = await supabase.from("pyqs").select("*");
+      if (error) throw error;
+      if (data) setPyqs(data);
+    } catch (err) {
+      console.error("Error refreshing pyqs:", err);
+    } finally {
+      setContentLoading(false);
+    }
+  }, []);
 
   const fetchInitialData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      // Fetch recommendations in parallel with all other data
       const [
         coursesRes,
         notesRes,
@@ -162,7 +195,7 @@ export const BackendIntegratedWrapper: React.FC<{
         commRes,
         iitmNotesRes,
         iitmPyqsRes,
-        _recRes, // Fetch recs, but we'll handle its state in its own function
+        jobsRes,
       ] = await Promise.allSettled([
         supabase.from("courses").select("*"),
         supabase.from("notes").select("*"),
@@ -175,10 +208,9 @@ export const BackendIntegratedWrapper: React.FC<{
           .from("pyqs")
           .select("*")
           .or("exam_type.eq.IITM_BS,exam_type.eq.IITM BS"),
-        fetchRecommendedCourses(), // <-- CALL THE NEW FUNCTION
+        supabase.from("jobs").select("*"),
       ]);
 
-      // Handle setting state from Promise.allSettled
       if (coursesRes.status === "fulfilled" && coursesRes.value.data)
         setCourses(coursesRes.value.data as unknown as Course[]);
       if (notesRes.status === "fulfilled" && notesRes.value.data)
@@ -195,22 +227,19 @@ export const BackendIntegratedWrapper: React.FC<{
         setIitmBranchNotes(iitmNotesRes.value.data);
       if (iitmPyqsRes.status === "fulfilled" && iitmPyqsRes.value.data)
         setIitmBranchPyqs(iitmPyqsRes.value.data);
+      if (jobsRes.status === "fulfilled" && jobsRes.value.data)
+        setJobs(jobsRes.value.data);
 
-      // Check for any critical errors
+      await fetchRecommendedCourses();
+
       const firstError = [
-        coursesRes,
-        notesRes,
-        pyqsRes,
-        datesRes,
-        newsRes,
-        commRes,
-        iitmNotesRes,
-        iitmPyqsRes,
+        coursesRes, notesRes, pyqsRes, datesRes,
+        newsRes, commRes, iitmNotesRes, iitmPyqsRes, jobsRes,
       ].find((res) => res.status === "rejected");
+      
       if (firstError && firstError.status === "rejected") {
         throw firstError.reason;
       }
-
     } catch (err: any) {
       setError(err);
       console.error("Error fetching initial data:", err);
@@ -223,10 +252,8 @@ export const BackendIntegratedWrapper: React.FC<{
     fetchInitialData();
   }, [fetchInitialData]);
 
-  // --- THIS IS THE FIXED FUNCTION ---
   const getFilteredContent = useCallback(
     (profile: Database["public"]["Tables"]["profiles"]["Row"] | null) => {
-      // THIS IS THE FIX: Return a valid empty object
       if (!profile) {
         return emptyFilteredContent;
       }
@@ -237,7 +264,6 @@ export const BackendIntegratedWrapper: React.FC<{
       const branch = profile.branch;
       const level = profile.level;
 
-      // This logic is based on your PersonalizedDashboard.tsx
       const filteredCourses = courses.filter((course) => {
         if (programType === "IITM_BS") {
           return (
@@ -249,16 +275,13 @@ export const BackendIntegratedWrapper: React.FC<{
         if (programType === "COMPETITIVE_EXAM") {
           return course.exam_category === examType;
         }
-        return true; // Return all if no specific program
+        return true;
       });
 
+      // Notes don't have branch/level, only exam_type and class_level
       const filteredNotes = notes.filter((note) => {
         if (programType === "IITM_BS") {
-          return (
-            (note.exam_type === "IITM_BS" || note.exam_type === "IITM BS") &&
-            note.branch === branch &&
-            note.level === level
-          );
+          return (note.exam_type === "IITM_BS" || note.exam_type === "IITM BS");
         }
         if (programType === "COMPETITIVE_EXAM") {
           return (
@@ -269,6 +292,7 @@ export const BackendIntegratedWrapper: React.FC<{
         return false;
       });
 
+      // PYQs do have branch/level
       const filteredPyqs = pyqs.filter((pyq) => {
         if (programType === "IITM_BS") {
           return (
@@ -343,6 +367,126 @@ export const BackendIntegratedWrapper: React.FC<{
     [courses, notes, pyqs, importantDates, newsUpdates, communities]
   );
 
+  const addNote = useCallback(async (note: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("notes").insert([note]);
+      if (error) throw error;
+      toast({ title: "Note added successfully" });
+      await refreshNotes();
+      return true;
+    } catch (error) {
+      console.error("Error adding note:", error);
+      toast({ title: "Error adding note", variant: "destructive" });
+      return false;
+    }
+  }, [toast, refreshNotes]);
+
+  const addPyq = useCallback(async (pyq: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("pyqs").insert([pyq]);
+      if (error) throw error;
+      toast({ title: "PYQ added successfully" });
+      await refreshPyqs();
+      return true;
+    } catch (error) {
+      console.error("Error adding PYQ:", error);
+      toast({ title: "Error adding PYQ", variant: "destructive" });
+      return false;
+    }
+  }, [toast, refreshPyqs]);
+
+  const updateNote = useCallback(async (id: string, note: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("notes").update(note).eq("id", id);
+      if (error) throw error;
+      toast({ title: "Note updated successfully" });
+      await refreshNotes();
+      return true;
+    } catch (error) {
+      console.error("Error updating note:", error);
+      toast({ title: "Error updating note", variant: "destructive" });
+      return false;
+    }
+  }, [toast, refreshNotes]);
+
+  const updatePyq = useCallback(async (id: string, pyq: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("pyqs").update(pyq).eq("id", id);
+      if (error) throw error;
+      toast({ title: "PYQ updated successfully" });
+      await refreshPyqs();
+      return true;
+    } catch (error) {
+      console.error("Error updating PYQ:", error);
+      toast({ title: "Error updating PYQ", variant: "destructive" });
+      return false;
+    }
+  }, [toast, refreshPyqs]);
+
+  const deleteNote = useCallback(async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase.from("notes").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Note deleted successfully" });
+      await refreshNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      toast({ title: "Error deleting note", variant: "destructive" });
+    }
+  }, [toast, refreshNotes]);
+
+  const deletePyq = useCallback(async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase.from("pyqs").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "PYQ deleted successfully" });
+      await refreshPyqs();
+    } catch (error) {
+      console.error("Error deleting PYQ:", error);
+      toast({ title: "Error deleting PYQ", variant: "destructive" });
+    }
+  }, [toast, refreshPyqs]);
+
+  const createCourse = useCallback(async (course: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("courses").insert([course]);
+      if (error) throw error;
+      toast({ title: "Course created successfully" });
+      await fetchInitialData();
+      return true;
+    } catch (error) {
+      console.error("Error creating course:", error);
+      toast({ title: "Error creating course", variant: "destructive" });
+      return false;
+    }
+  }, [toast, fetchInitialData]);
+
+  const updateCourse = useCallback(async (id: string, course: any): Promise<boolean> => {
+    try {
+      const { error } = await supabase.from("courses").update(course).eq("id", id);
+      if (error) throw error;
+      toast({ title: "Course updated successfully" });
+      await fetchInitialData();
+      return true;
+    } catch (error) {
+      console.error("Error updating course:", error);
+      toast({ title: "Error updating course", variant: "destructive" });
+      return false;
+    }
+  }, [toast, fetchInitialData]);
+
+  const deleteCourse = useCallback(async (id: string): Promise<void> => {
+    try {
+      const { error } = await supabase.from("courses").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Course deleted successfully" });
+      await fetchInitialData();
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      toast({ title: "Error deleting course", variant: "destructive" });
+    }
+  }, [toast, fetchInitialData]);
+
   const value = {
     courses: courses as Course[],
     notes,
@@ -352,11 +496,28 @@ export const BackendIntegratedWrapper: React.FC<{
     communities,
     iitmBranchNotes,
     iitmBranchPyqs,
-    recommendedCourses, // <-- PASS TO CONTEXT
+    recommendedCourses,
+    jobs,
     loading,
+    contentLoading,
     error,
+    isAdmin,
+    downloadCounts,
+    isDownloadCountsInitialized,
     getFilteredContent,
-    handleDownload: incrementDownloadCount,
+    handleDownload,
+    updateDownloadCount,
+    addNote,
+    addPyq,
+    updateNote,
+    updatePyq,
+    deleteNote,
+    deletePyq,
+    refreshNotes,
+    refreshPyqs,
+    createCourse,
+    updateCourse,
+    deleteCourse,
   };
 
   return (
