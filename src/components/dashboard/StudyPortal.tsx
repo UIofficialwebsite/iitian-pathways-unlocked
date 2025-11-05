@@ -51,7 +51,6 @@ type GroupedEnrollment = {
 
 // --- Re-usable Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
-  // ... (This component is unchanged)
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
       return (
@@ -130,7 +129,6 @@ const EnrolledView = ({
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
-  // ... (This component is unchanged)
   return (
     <div className="space-y-10">
       <section>
@@ -159,10 +157,14 @@ const NotEnrolledView = ({
   notes: any[], 
   pyqs: any[] 
 }) => (
-  // ... (This component is unchanged)
   <div className="space-y-10">
     
-    <RecommendedBatchesSection />
+    {/* --- THIS IS THE FIX --- */}
+    {/* Now passes the correct, in-depth filtered courses to the child component */}
+    <RecommendedBatchesSection 
+      recommendedCourses={recommendedCourses} 
+      loading={isLoading} 
+    />
     
     <section>
         <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
@@ -406,7 +408,6 @@ interface StudyPortalProps {
 }
 
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
-  // ... (This component is unchanged)
   const { user } = useAuth();
   const { toast } = useToast();
   const { getFilteredContent, contentLoading } = useBackend();
