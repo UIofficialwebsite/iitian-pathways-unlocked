@@ -28,12 +28,16 @@ interface UserProfile {
   [key: string]: any; // Allow other properties
 }
 
+// Define the view type passed from ModernDashboard
+type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
+
 interface DashboardSidebarProps {
   profile: UserProfile | null;
-  onProfileUpdate: (updatedProfile: UserProfile) => void; // Added
+  onProfileUpdate: (updatedProfile: UserProfile) => void; 
+  onViewChange: (view: ActiveView) => void; // Add onViewChange prop
 }
 
-const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile, onProfileUpdate }) => {
+const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile, onProfileUpdate, onViewChange }) => {
   const navigate = useNavigate();
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
 
@@ -95,10 +99,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile, onProfileU
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
               <div className="mt-2 space-y-1">
-                <Link to="/exam-preparation" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
+                {/* Change this from a <Link> to a <Button> that calls onViewChange */}
+                <Button 
+                  variant="ghost" 
+                  onClick={() => onViewChange('studyPortal')}
+                  className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100"
+                >
                   <BookOpen className="h-4 w-4" />
                   Study Portal
-                </Link>
+                </Button>
+                
                 <Link to="/courses" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100">
                   <Library className="h-4 w-4" />
                   Digital Library
