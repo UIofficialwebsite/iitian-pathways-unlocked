@@ -1,4 +1,4 @@
-import React, 'react';
+import React, { useState, useEffect } from 'react'; // <-- This is the corrected line
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
