@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Corrected import
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -16,9 +16,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
 import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
-// Import the universal section
 import RecommendedBatchesSection from './RecommendedBatchesSection';
 import { useBackend } from '../BackendIntegratedWrapper'; 
+import { PostgrestQueryBuilder } from '@supabase/supabase-js';
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
@@ -162,6 +162,7 @@ const NotEnrolledView = ({
 }) => (
   // ... (This component is unchanged)
   <div className="space-y-10">
+    
     <RecommendedBatchesSection 
       courses={recommendedCourses} 
       isLoading={isLoading} 
@@ -252,7 +253,7 @@ const NotEnrolledView = ({
 );
 
 
-// --- RECOMMENDATION LOGIC ---
+// --- NEW RECOMMENDATION LOGIC ---
 
 /**
  * Helper to get a numeric, sortable value for a course's level or class.
@@ -308,7 +309,10 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
 /**
  * Builds a Supabase query for Level 1 or 2 filtering.
  */
-const buildProfileQuery = (profile: UserProfile, level: 1 | 2) => {
+const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2) => {
+  // Return null if no profile to filter by
+  if (!profile) return null;
+
   let query = supabase
     .from('courses')
     .select('*, original_price');
@@ -324,70 +328,74 @@ const buildProfileQuery = (profile: UserProfile, level: 1 | 2) => {
       query = query.eq('exam_type', profile.exam_type); // Level 2
     }
   } else {
-    // If profile type is something else (e.g., 'Upskilling'), return null
-    // to skip to the generic fallback immediately.
+    // If profile type is something else (e.g., 'Upskilling' or null)
     return null;
   }
   return query;
 };
 
 /**
- * Fetches recommended courses with a 3-level filter and new sorting.
+ * Fetches recommended courses with a 3-level waterfall filter and new sorting.
  */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
-  
-  // This logic runs if profile is null (e.g., new user)
-  if (!profile) {
-    const { data, error } = await supabase
-      .from('courses')
-      .select('*, original_price')
-      .order('created_at', { ascending: false })
-      .limit(3);
-    if (error) console.error("Error fetching generic courses:", error);
+  const today = new Date().toISOString();
+
+  // Helper to get non-expired courses from a query
+  const getValidCourses = async (
+    queryBuilder: PostgrestQueryBuilder<any, any, any> | null
+  ): Promise<Course[]> => {
+    if (!queryBuilder) return [];
+    // Add the crucial filter for non-expired courses
+    const { data, error } = await queryBuilder.gt('end_date', today);
+    
+    if (error) {
+      console.error("Error fetching courses:", error.message);
+      return [];
+    }
     return (data as Course[]) || [];
-  }
+  };
 
   try {
-    // --- 1. Try Level 2 (Most Specific) ---
+    // 1. Fetch Level 2 (Specific)
     const level2Query = buildProfileQuery(profile, 2);
-    if (level2Query) {
-      const { data: level2Data, error: level2Error } = await level2Query;
-      if (level2Error) throw level2Error;
-      
-      if (level2Data && level2Data.length > 0) {
-        const sorted = sortRecommendedCourses(level2Data as Course[]);
-        return sorted.slice(0, 3);
-      }
-    }
+    const level2Courses = await getValidCourses(level2Query);
 
-    // --- 2. Try Level 1 (Broader) ---
+    // 2. Fetch Level 1 (Broader)
     const level1Query = buildProfileQuery(profile, 1);
-    if (level1Query) {
-      const { data: level1Data, error: level1Error } = await level1Query;
-      if (level1Error) throw level1Error;
-
-      if (level1Data && level1Data.length > 0) {
-        const sorted = sortRecommendedCourses(level1Data as Course[]);
-        return sorted.slice(0, 3);
-      }
-    }
+    const level1Courses = await getValidCourses(level1Query);
     
-    // --- 3. Fallback to Level 0 (Generic: 3 Most Recent) ---
-    const { data: level0Data, error: level0Error } = await supabase
+    // 3. Fetch Level 0 (Generic Fallback)
+    const level0Query = supabase
       .from('courses')
       .select('*, original_price')
-      .order('created_at', { ascending: false })
-      .limit(3);
+      .order('created_at', { ascending: false }); // Sort by newest
+    const level0Courses = await getValidCourses(level0Query);
+
+    // 4. Combine & De-duplicate, preserving priority
+    const allCourses = new Map<string, Course>();
     
-    if (level0Error) throw level0Error;
-    return (level0Data as Course[]) || [];
+    // Add in order of priority: Level 2 -> Level 1 -> Level 0
+    level2Courses.forEach(course => allCourses.set(course.id, course));
+    level1Courses.forEach(course => {
+      if (!allCourses.has(course.id)) allCourses.set(course.id, course);
+    });
+    level0Courses.forEach(course => {
+      if (!allCourses.has(course.id)) allCourses.set(course.id, course);
+    });
+
+    // 5. Apply the advanced sorting logic
+    const combinedList = Array.from(allCourses.values());
+    const sortedList = sortRecommendedCourses(combinedList);
+
+    // 6. Return the top 3
+    return sortedList.slice(0, 3);
 
   } catch (error) {
-    console.error("Error fetching recommended courses:", error);
+    console.error("Error in fetchRecommendedCourses:", error);
     return []; // Return empty on any error
   }
 }
-// --- END OF RECOMMENDATION LOGIC ---
+// --- END OF NEW RECOMMENDATION LOGIC ---
 
 
 // --- Main Study Portal Component ---
@@ -411,18 +419,16 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const hasEnrollments = groupedEnrollments.length > 0;
 
   useEffect(() => {
-    // --- THIS IS THE FIX ---
     // We only wait for the user, not the profile.
-    // fetchRecommendedCourses can handle a null profile.
     if (!user) {
       setDataLoading(false);
       return;
     }
-    // --- END OF FIX ---
 
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
+        // Fetch enrollments and recommendations in parallel
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
           supabase
             .from('enrollments')
@@ -482,17 +488,12 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     };
 
     fetchPortalData();
-  }, [user, profile, toast]); // It's correct to keep 'profile' in the dependency array
+  }, [user, profile, toast]); // 'profile' is still a dependency, so it re-fetches when it loads
 
   const isLoading = dataLoading || contentLoading;
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* This logic is now correct. 
-        If loading, and no enrollments, show loader.
-        Once loading is false, if still no enrollments, show NotEnrolledView.
-        The NotEnrolledView will receive the (now populated) recommendedCourses list.
-      */}
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-royal" />
@@ -504,7 +505,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
       ) : (
         <NotEnrolledView 
           recommendedCourses={recommendedCourses} 
-          isLoading={isLoading} // This will be false, which is correct
+          isLoading={isLoading}
           notes={notes}
           pyqs={pyqs}
         />
