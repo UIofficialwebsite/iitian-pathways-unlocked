@@ -12,10 +12,10 @@ import {
   GraduationCap, 
   FastForward,
   Home,
-  ChevronRight, // Added
-  Target // Added
+  ChevronRight,
+  Target 
 } from 'lucide-react';
-import FocusAreaModal from './FocusAreaModal'; // Added
+import FocusAreaModal from './FocusAreaModal';
 
 // Define profile type
 interface UserProfile {
@@ -179,9 +179,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile, onProfileU
             <Home className="h-4 w-4 mr-2" />
             Home
           </Button>
-          
-          {/* This button is no longer used, replaced by the Focus Area button above */}
-          {/* {getExamPrepButton()} */}
         </div>
       </nav>
 
