@@ -19,7 +19,7 @@ type NewsUpdate = Database["public"]["Tables"]["news_updates"]["Row"];
 type Community = Database["public"]["Tables"]["communities"]["Row"];
 type IITMBranchNote =
   Database["public"]["Tables"]["iitm_branch_notes"]["Row"];
-type IITMBranchPyq = Database["public"]["Tables"]["pyqs"]["Row"]; // Assuming pyqs are used for IITM PYQs
+type IITMBranchPyq = Database["publics"]["Tables"]["pyqs"]["Row"]; // Assuming pyqs are used for IITM PYQs
 
 interface BackendContextType {
   courses: Course[];
@@ -30,7 +30,7 @@ interface BackendContextType {
   communities: Community[];
   iitmBranchNotes: IITMBranchNote[];
   iitmBranchPyqs: IITMBranchPyq[];
-  recommendedCourses: Course[]; // <-- ADDED
+  recommendedCourses: any[]; // <-- FIX 1: Changed from Course[] to any[]
   loading: boolean;
   error: Error | null;
   getFilteredContent: (
@@ -67,7 +67,8 @@ export const BackendIntegratedWrapper: React.FC<{
 }> = ({ children }) => {
   const { user } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
-  const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]); // <-- ADDED
+  // --- FIX 2: The state type must also be any[] ---
+  const [recommendedCourses, setRecommendedCourses] = useState<any[]>([]);
   const [notes, setNotes] = useState<Note[]>([]);
   const [pyqs, setPyqs] = useState<Pyq[]>([]);
   const [importantDates, setImportantDates] = useState<ImportantDate[]>([]);
@@ -138,7 +139,8 @@ export const BackendIntegratedWrapper: React.FC<{
         const formattedData = data
           .filter((rec) => rec.courses)
           .map((rec) => rec.courses);
-        setRecommendedCourses(formattedData as unknown as Course[]);
+        // --- FIX 3: Remove the incorrect cast. Just set the data. ---
+        setRecommendedCourses(formattedData);
       }
     } catch (err) {
       console.error("Failed to fetch recommendations:", err);
