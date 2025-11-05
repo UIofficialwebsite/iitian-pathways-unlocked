@@ -6,9 +6,67 @@ import { Calendar, Users, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tables } from '@/integrations/supabase/types';
 
-// Use the exact type based on your schema
-type Course = Tables<'courses'> & {
-  discounted_price?: number | null; // Can be null
+// --- HELPER FUNCTIONS (MOVED TO TOP & UPDATED) ---
+
+/**
+ * Helper function (outside component)
+ * Formats a date string (YYYY-MM-DD) to a more readable format (DD Month YYYY)
+ */
+const formatDate = (dateStr: string | null | undefined): string => {
+  // --- THIS IS THE REQUESTED CHANGE ---
+  if (!dateStr) return 'To be announced'; 
+  try {
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  } catch (error) {
+    // --- THIS IS THE REQUESTED CHANGE ---
+    return 'To be announced'; 
+  }
+};
+
+/**
+ * Formats a slug-like string (e.g., 'data-science') to 'Data Science'
+ */
+const formatBranch = (branch: string | null): string => {
+  if (!branch) return '';
+  return branch
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+};
+
+/**
+ * Generates the specific audience text based on second-level filters
+ */
+const getAudienceText = (course: Course): string => {
+  const { exam_category, branch, level, student_status } = course;
+
+  if (exam_category === 'IITM BS') {
+    const parts: string[] = [];
+    if (branch) parts.push(formatBranch(branch));
+    if (level) parts.push(level); // 'Foundation', 'Diploma', etc.
+    
+    if (parts.length > 0) {
+      return `For IITM BS (${parts.join(' - ')})`;
+    }
+    return 'For IITM BS';
+  }
+
+  if (exam_category === 'COMPETITIVE_EXAM') {
+    if (student_status) {
+      return `For ${student_status}`;
+    }
+    return 'For Competitive Exams';
+  }
+
+  if (exam_category) {
+    return `For ${exam_category}`;
+  }
+
+  return 'For All Students';
 };
 
 /**
@@ -18,49 +76,52 @@ const getDiscount = (
   salePrice: number | null | undefined, 
   originalPrice: number
 ): string | null => {
-  // Ensure originalPrice is a valid number and greater than 0
   if (typeof originalPrice !== 'number' || originalPrice <= 0) {
     return null;
   }
-  // Ensure salePrice is a valid number
   if (typeof salePrice !== 'number' || salePrice === null) {
     return null;
   }
-  // No discount if sale price is higher or equal
   if (originalPrice <= salePrice) {
     return null;
   }
   const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-  // Only show discount if it's 1% or more
   return discount > 0 ? `${discount}% OFF` : null;
 };
 
+
+// --- TYPE DEFINITION ---
+type Course = Tables<'courses'> & {
+  discounted_price?: number | null; // Can be null
+};
+
+
+// --- COMPONENT ---
 export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) => {
 
   const {
     id,
     title,
     image_url,
-    price, // This is the ORIGINAL price
-    discounted_price, // This is the SALE price
+    price,
+    discounted_price,
     start_date,
     end_date,
-    exam_category,
   } = course;
 
-  // --- NEW LOGIC BASED ON SCHEMA ---
-  const originalPrice = price; // price is numeric(10, 2) not null
-  const salePrice = discounted_price; // discounted_price is numeric(10, 2) null
+  const originalPrice = price;
+  const salePrice = discounted_price;
   
   const discount = getDiscount(salePrice, originalPrice);
   const hasDiscount = !!discount;
 
   const finalPriceValue = (salePrice !== null && salePrice < originalPrice) ? salePrice : originalPrice;
   const finalPriceString = finalPriceValue === 0 ? 'Free' : `₹${Math.round(finalPriceValue)}`;
-  // --- END OF NEW LOGIC ---
-
+  
+  // Use the helper functions (now defined at the top)
   const startDate = formatDate(start_date);
   const endDate = formatDate(end_date);
+  const audienceText = getAudienceText(course);
 
   const courseUrl = `${window.location.origin}/courses/${id}`;
   const shareText = `Check out this course: ${title} on IITian Pathways!`;
@@ -81,7 +142,6 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
     >
       <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
         
-        {/* --- MODIFICATION START: Title and Share Button Row --- */}
         <div className="flex justify-between items-start gap-3">
           <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem] flex-1">
             {title || 'Unnamed Batch'}
@@ -95,9 +155,7 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
             <Share2 className="h-5 w-5" />
           </Button>
         </div>
-        {/* --- MODIFICATION END --- */}
 
-        {/* --- Inner Sub-Card --- */}
         <Card className="bg-gray-50 border border-gray-200 overflow-hidden shadow-none">
           <div className="relative aspect-video bg-gray-100 overflow-hidden">
             <img 
@@ -105,13 +163,12 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
               alt={title || 'Course Image'} 
               className="w-full h-full object-cover object-center"
             />
-            {/* Share button removed from here */}
           </div>
           
           <div className="p-4 space-y-3">
             <div className="flex items-center text-sm font-medium text-gray-600">
               <Users className="h-4 w-4 mr-2 text-blue-600" />
-              For {exam_category || 'All Students'}
+              {audienceText}
             </div>
             <div className="flex items-center text-sm font-medium text-gray-600">
               <Calendar className="h-4 w-4 mr-2 text-blue-600" />
@@ -129,7 +186,6 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
               <span className="text-3xl font-bold text-gray-900">
                 {finalPriceString} 
               </span>
-              {/* Show original price (from `price` col) if there's a discount */}
               {hasDiscount && (
                 <span className="text-md font-medium text-gray-400 line-through">
                   ₹{Math.round(originalPrice)}
@@ -168,18 +224,4 @@ export const RecommendedBatchCard: React.FC<{ course: Course }> = ({ course }) =
       </CardContent>
     </Card>
   );
-};
-
-// Helper function (outside component)
-const formatDate = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return 'TBD';
-  try {
-    return new Date(dateStr).toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
-  } catch (error) {
-    return 'TBD';
-  }
 };
