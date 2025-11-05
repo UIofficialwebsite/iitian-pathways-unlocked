@@ -145,6 +145,7 @@ export type Database = {
           duration: string
           enroll_now_link: string | null
           exam_category: string | null
+          expiry_date: string | null
           features: string[] | null
           id: string
           image_url: string | null
@@ -170,6 +171,7 @@ export type Database = {
           duration: string
           enroll_now_link?: string | null
           exam_category?: string | null
+          expiry_date?: string | null
           features?: string[] | null
           id?: string
           image_url?: string | null
@@ -195,6 +197,7 @@ export type Database = {
           duration?: string
           enroll_now_link?: string | null
           exam_category?: string | null
+          expiry_date?: string | null
           features?: string[] | null
           id?: string
           image_url?: string | null
@@ -269,6 +272,7 @@ export type Database = {
           order_id: string | null
           payment_id: string | null
           status: string
+          subject_name: string | null
           user_id: string
         }
         Insert: {
@@ -279,6 +283,7 @@ export type Database = {
           order_id?: string | null
           payment_id?: string | null
           status?: string
+          subject_name?: string | null
           user_id: string
         }
         Update: {
@@ -289,6 +294,7 @@ export type Database = {
           order_id?: string | null
           payment_id?: string | null
           status?: string
+          subject_name?: string | null
           user_id?: string
         }
         Relationships: [
@@ -297,6 +303,13 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enrollments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -744,7 +757,7 @@ export type Database = {
           recommendation_text: string
           updated_at?: string | null
         }
-        Update: {
+        Update:. {
           category?: string | null
           company?: string
           created_at?: string | null
