@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// Import for Tabs is removed, as it's the cause of the error.
 import { useAuth } from "@/hooks/useAuth";
 import AdminCheck from "@/components/admin/AdminCheck";
 import ContentManagementTab from "@/components/admin/ContentManagementTab";
@@ -43,56 +42,36 @@ const AdminDashboard = () => {
         <div className="flex flex-col flex-1 overflow-hidden">
           <AdminHeader />
           
+          {/* --- THIS IS THE FIX ---
+            The <Tabs> and <TabsContent> wrappers were removed.
+            We now use simple conditional rendering based on the 'activeTab' state,
+            which is already being managed by the AdminSidebar.
+            This eliminates the 'React.Children.only' error.
+          */}
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsContent value="content-management" className="mt-0">
-                <ContentManagementTab />
-              </TabsContent>
+            <div className="w-full">
+              {activeTab === 'content-management' && <ContentManagementTab />}
+              {activeTab === 'courses' && <CoursesManagerTab />}
+              {activeTab === 'notes' && <NotesManagerTab />}
+              {activeTab === 'pyqs' && <PYQsManagerTab />}
+              {activeTab === 'study-groups' && <StudyGroupsManagerTab />}
+              {activeTab === 'communities' && <CommunitiesManagerTab />}
+              {activeTab === 'news' && <NewsManagerTab />}
+              {activeTab === 'dates' && <DatesManagerTab />}
+              {activeTab === 'jobs' && <JobsManagerTab />}
               
-              <TabsContent value="courses" className="mt-0">
-                <CoursesManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="notes" className="mt-0">
-                <NotesManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="pyqs" className="mt-0">
-                <PYQsManagerTab />
-              </TabsContent>
-
-              <TabsContent value="study-groups" className="mt-0">
-                <StudyGroupsManagerTab />
-              </TabsContent>
-
-              <TabsContent value="communities" className="mt-0">
-                <CommunitiesManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="news" className="mt-0">
-                <NewsManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="dates" className="mt-0">
-                <DatesManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="jobs" className="mt-0">
-                <JobsManagerTab />
-              </TabsContent>
-              
-              <TabsContent value="employees" className="mt-0">
+              {activeTab === 'employees' && (
                 <AdminCheck requireSuperAdmin>
                   <EmployeeManagerTab />
                 </AdminCheck>
-              </TabsContent>
-
-              <TabsContent value="admins" className="mt-0">
+              )}
+              
+              {activeTab === 'admins' && (
                 <AdminCheck requireSuperAdmin>
                   <AdminManagementTab />
                 </AdminCheck>
-              </TabsContent>
-            </Tabs>
+              )}
+            </div>
           </main>
         </div>
       </div>
