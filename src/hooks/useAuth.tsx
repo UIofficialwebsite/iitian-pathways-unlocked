@@ -24,7 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    // We need both ID and Email for the checks
+    // We need user info for the checks
     if (!currentUser?.id || !currentUser?.email) {
       setIsAdmin(false);
       setIsSuperAdmin(false);
@@ -33,52 +33,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     try {
-      // First check the hardcoded super admin
-      if (currentUser.email === 'uiwebsite638@gmail.com') {
-        setIsAdmin(true);
-        setIsSuperAdmin(true);
-        setUserRole('super_admin');
-        return;
-      }
-
-      // Check admin_users table (this table uses 'email')
-      const { data: adminUser, error } = await supabase
-        .from('admin_users')
-        .select('is_super_admin')
-        .eq('email', currentUser.email) 
-        .maybeSingle();
+      // Use RPC function to check admin status - this bypasses RLS issues
+      const { data: isAdminResult, error: adminError } = await supabase
+        .rpc('is_current_user_admin');
       
-      if (error && error.code !== 'PGRST116') {
-         // Hide RLS errors (code 42501) as they are expected for non-admins
-        if (error.code !== '42501') {
-          console.error('useAuth: Error checking admin_users:', error);
+      if (adminError) {
+        console.error('useAuth: Error checking admin status:', adminError);
+        setIsAdmin(false);
+        setIsSuperAdmin(false);
+      } else {
+        setIsAdmin(isAdminResult || false);
+      }
+
+      // Check if super admin using RPC function
+      if (isAdminResult) {
+        const { data: isSuperAdminResult, error: superAdminError } = await supabase
+          .rpc('is_super_admin', { user_email: currentUser.email });
+        
+        if (superAdminError) {
+          console.error('useAuth: Error checking super admin status:', superAdminError);
+          setIsSuperAdmin(false);
+        } else {
+          setIsSuperAdmin(isSuperAdminResult || false);
         }
-      }
-
-      if (adminUser) {
-        setIsAdmin(true);
-        setIsSuperAdmin(adminUser.is_super_admin);
-        setUserRole(adminUser.is_super_admin ? 'super_admin' : 'admin');
-        return;
-      }
-
-      // **THE FIX IS HERE:** Check profiles table using 'id'
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', currentUser.id) // This query now matches the RLS policy from Step 1
-        .maybeSingle();
-      
-      if (profileError && profileError.code !== 'PGRST116') {
-        if (profileError.code !== '42501') { // Hide RLS errors
-          console.error('useAuth: Error checking profiles:', profileError);
+        
+        setUserRole(isSuperAdminResult ? 'super_admin' : 'admin');
+      } else {
+        setIsSuperAdmin(false);
+        
+        // Check profiles table for role using 'id'
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', currentUser.id)
+          .maybeSingle();
+        
+        if (profileError && profileError.code !== 'PGRST116') {
+          if (profileError.code !== '42501') {
+            console.error('useAuth: Error checking profiles:', profileError);
+          }
         }
-      }
 
-      const role = profile?.role || 'student';
-      setUserRole(role);
-      setIsAdmin(role === 'admin' || role === 'super_admin');
-      setIsSuperAdmin(role === 'super_admin');
+        setUserRole(profile?.role || 'student');
+      }
       
     } catch (error) {
       console.error('useAuth: Error in checkAdminStatus:', error);
