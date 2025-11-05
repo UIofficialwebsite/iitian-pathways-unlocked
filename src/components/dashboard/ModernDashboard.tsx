@@ -1,25 +1,9 @@
 import React, { useState, useEffect } from 'react';
-// Card components are no longer needed for the main dashboard view
-// import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-// Button, Separator, and some icons are no longer needed for the main dashboard view
-// import { Button } from "@/components/ui/button";
-// import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import { 
-  // BookOpen, 
-  // Download, 
-  // Calendar, 
-  // Clock,
-  // Newspaper,
-  // FileText,
-  // ExternalLink,
-  Loader2 
-} from "lucide-react";
-// Link is no longer needed for the main dashboard view
-// import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import DashboardSidebar from "./DashboardSidebar";
 import DashboardTopNav from "./DashboardTopNav"; 
 import MyProfile from "./MyProfile"; 
@@ -37,8 +21,8 @@ interface UserProfile {
   student_name?: string | null;
   full_name?: string | null;
   email?: string | null;
-  gender?: string | null; // Added gender
-  [key: string]: any; // Allow other properties
+  gender?: string | null;
+  [key: string]: any;
 }
 
 // Keep 'dashboard' in the type for compatibility with other components
@@ -53,13 +37,8 @@ const ModernDashboard = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  // --- CHANGE 1: Set default view to 'studyPortal' ---
+  // Set default view to 'studyPortal'
   const [activeView, setActiveView] = useState<ActiveView>('studyPortal');
-
-  // getFilteredContent and other variables are no longer needed here
-  // as they were only used by renderDashboardView
-  // const filteredContent = getFilteredContent(profile);
-  // const { notes, pyqs, courses, importantDates, newsUpdates } = filteredContent;
 
   useEffect(() => {
     if (user) {
@@ -94,7 +73,6 @@ const ModernDashboard = () => {
     }
   };
   
-  // Callback function to update profile in this component's state
   const handleProfileUpdate = (updatedProfile: UserProfile) => {
     setProfile(updatedProfile);
   };
@@ -107,9 +85,6 @@ const ModernDashboard = () => {
     );
   }
 
-  // --- CHANGE 2: The entire 'renderDashboardView' function is removed ---
-  // const renderDashboardView = () => ( ... );
-
   return (
     <div className="min-h-screen bg-gray-50">
       
@@ -117,7 +92,7 @@ const ModernDashboard = () => {
       <DashboardTopNav 
         profile={profile} 
         onViewChange={setActiveView} 
-        onProfileUpdate={handleProfileUpdate} // Pass updater
+        onProfileUpdate={handleProfileUpdate} 
       />
 
       {/* --- DESKTOP SIDEBAR (FIXED, BELOW TOPNAV) --- */}
@@ -133,10 +108,10 @@ const ModernDashboard = () => {
 
       {/* --- MAIN CONTENT AREA (WITH PADDING) --- */}
       <div className="lg:pl-72 pt-16">
-        <main className="py-8">
+         {/* Changed from py-8 to py-6 to reduce top/bottom spacing */}
+        <main className="py-6">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             
-            {/* --- CHANGE 3: Update rendering logic --- */}
             {/* Show StudyPortal for both 'dashboard' and 'studyPortal' active views */}
             {(activeView === 'dashboard' || activeView === 'studyPortal') && (
               <StudyPortal profile={profile} onViewChange={setActiveView} />
