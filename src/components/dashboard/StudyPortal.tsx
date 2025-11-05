@@ -18,7 +18,7 @@ import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
 import RecommendedBatchesSection from './RecommendedBatchesSection';
 import { useBackend } from '../BackendIntegratedWrapper'; 
-import { PostgrestQueryBuilder } from '@supabase/supabase-js';
+import { PostgrestQueryBuilder } from '@supabase/supabase-js'; // Import this type
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
@@ -342,14 +342,19 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 
   // Helper to get non-expired courses from a query
   const getValidCourses = async (
-    queryBuilder: PostgrestQueryBuilder<any, any, any> | null
+    // Explicitly define the type for queryBuilder
+    queryBuilder: PostgrestQueryBuilder<any, any, {'*': any, 'original_price': any}> | null
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
-    // Add the crucial filter for non-expired courses
-    const { data, error } = await queryBuilder.gt('end_date', today);
+    
+    // --- THIS IS THE FIX ---
+    // Change from .gt() to .or() to handle null dates and prevent 400 error
+    const { data, error } = await queryBuilder.or(`end_date.gt.${today},end_date.is.null`);
+    // --- END OF FIX ---
     
     if (error) {
-      console.error("Error fetching courses:", error.message);
+      // Also, log the actual error message, not just "Object"
+      console.error("Error fetching courses:", error.message); 
       return [];
     }
     return (data as Course[]) || [];
@@ -374,7 +379,6 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     // 4. Combine & De-duplicate, preserving priority
     const allCourses = new Map<string, Course>();
     
-    // Add in order of priority: Level 2 -> Level 1 -> Level 0
     level2Courses.forEach(course => allCourses.set(course.id, course));
     level1Courses.forEach(course => {
       if (!allCourses.has(course.id)) allCourses.set(course.id, course);
@@ -390,8 +394,9 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     // 6. Return the top 3
     return sortedList.slice(0, 3);
 
-  } catch (error) {
-    console.error("Error in fetchRecommendedCourses:", error);
+  } catch (error: any) { // Catch 'any' type for safety
+    // Log the actual error message
+    console.error("Error in fetchRecommendedCourses:", error.message || error);
     return []; // Return empty on any error
   }
 }
@@ -479,7 +484,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
       } catch (error: any) {
         toast({
           title: "Error",
-          description: "Could not load your study portal. " + error.message,
+          description: "Could not load your study portal. " + (error.message || "Unknown error"),
           variant: "destructive",
         });
       } finally {
