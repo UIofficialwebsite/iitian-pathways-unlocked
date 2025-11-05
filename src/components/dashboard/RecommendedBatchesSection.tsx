@@ -1,5 +1,5 @@
 import React from "react";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
+// import { useBackend } from "@/components/BackendIntegratedWrapper"; // <-- REMOVED
 import { RecommendedBatchCard } from "./RecommendedBatchCard";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import {
@@ -11,17 +11,29 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { Tables } from "@/integrations/supabase/types"; // <-- ADDED
 
-const RecommendedBatchesSection: React.FC = () => {
-  // --- 1. GET THE NEW ARRAY FROM THE HOOK ---
-  const { recommendedCourses, loading } = useBackend();
+// --- ADDED TYPE ---
+type Course = Tables<'courses'>; 
 
+// --- ADDED PROPS ---
+interface RecommendedBatchesSectionProps {
+  recommendedCourses: Course[];
+  loading: boolean;
+}
+
+const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({ 
+  recommendedCourses, 
+  loading 
+}) => {
+  // --- 1. Data now comes from props ---
+  
   // --- 2. CHECK IF WE HAVE COURSES (AFTER LOADING) ---
   const hasRecommendations = !loading && recommendedCourses && recommendedCourses.length > 0;
 
   return (
     <Card>
-      {/* --- HEADER (BUTTON REMOVED FROM HERE) --- */}
+      {/* --- HEADER --- */}
       <CardHeader>
         <div>
           <CardTitle className="text-2xl font-bold text-gray-900">
@@ -54,21 +66,27 @@ const RecommendedBatchesSection: React.FC = () => {
               <RecommendedBatchCard key={course.id} course={course} />
             ))
           ) : (
-            // --- 2c. NO RECOMMENDATIONS FOUND (BUT WE STILL RENDER) ---
+            // --- 2c. NO RECOMMENDATIONS FOUND (FALLBACK) ---
+            // This message now appears if the in-depth filter (Levels 2, 1, and 0) finds nothing
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-gray-500 py-8">
-              No specific recommendations found based on your profile.
+              No courses available at the moment.
               <br />
-              Explore all our available courses below.
+              Please check back later or explore all courses.
             </div>
           )}
         </div>
       </CardContent>
 
-      {/* --- FOOTER (NEW) --- */}
-      {/* --- ADDED FLEX JUSTIFY-CENTER TO CENTER THE BUTTON --- */}
+      {/* --- FOOTER (MODIFIED) --- */}
       <CardFooter className="flex justify-center pt-4">
-        <Button asChild size="lg" className="text-base">
-          <Link to="/courses">View All Courses</Link>
+        <Button 
+          asChild 
+          size="lg" 
+          variant="outline" // <-- CHANGED
+          // --- ADDED STYLING for black border/text ---
+          className="text-base text-black border-black hover:bg-gray-100 hover:text-black"
+        >
+          <Link to="/courses">View All</Link> {/* <-- CHANGED */}
         </Button>
       </CardFooter>
     </Card>
