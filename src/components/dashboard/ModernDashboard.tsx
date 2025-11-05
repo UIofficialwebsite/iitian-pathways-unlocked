@@ -6,9 +6,7 @@ import { Loader2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
-// --- THIS IS THE IMPORT FIX ---
-// The import for FocusAreaModal now correctly uses curly braces {}
-import { FocusAreaModal } from "./FocusAreaModal";
+import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
 
 // Import the views
@@ -83,6 +81,10 @@ const ModernDashboard: React.FC = () => {
     setIsFocusModalOpen(false);
   };
 
+  const handleProfileUpdate = (updatedProfile: any) => {
+    setProfile(updatedProfile as Profile);
+  };
+
   const isLoading = authLoading || loadingProfile;
 
   if (isLoading) {
@@ -96,9 +98,9 @@ const ModernDashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-50/50">
       <DashboardTopNav
-        activeView={activeView}
         onViewChange={setActiveView}
         profile={profile}
+        onProfileUpdate={handleProfileUpdate}
       />
 
       {/* --- THIS IS THE "WHITE SCREEN" FIX ---
@@ -111,7 +113,7 @@ const ModernDashboard: React.FC = () => {
             <StudyPortal profile={profile} onViewChange={setActiveView} />
           )}
           {activeView === 'profile' && (
-            <MyProfile profile={profile} setProfile={setProfile} />
+            <MyProfile />
           )}
           {activeView === 'enrollments' && (
             <MyEnrollments />
@@ -121,10 +123,9 @@ const ModernDashboard: React.FC = () => {
 
       <FocusAreaModal
         isOpen={isFocusModalOpen}
-        onClose={() => setIsFocusModalOpen(false)} // Allow closing if they want to browse anyway
-        onSave={handleFocusSave}
-        currentProfile={profile}
-        userId={user?.id}
+        onClose={() => setIsFocusModalOpen(false)}
+        profile={profile}
+        onProfileUpdate={handleFocusSave}
       />
     </div>
   );
