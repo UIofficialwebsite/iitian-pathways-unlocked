@@ -18,6 +18,7 @@ import { useToast } from '../ui/use-toast';
 import { Tables } from '../../integrations/supabase/types';
 import RecommendedBatchesSection from './RecommendedBatchesSection';
 import { useBackend } from '../BackendIntegratedWrapper';
+import ProfileCompletionBanner from './ProfileCompletionBanner';
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
@@ -147,108 +148,119 @@ const EnrolledView = ({
 
 // --- View 2: Student is NOT Enrolled ---
 const NotEnrolledView = ({ 
+  profile,
   recommendedCourses,
   isLoading,
   notes, 
-  pyqs 
+  pyqs,
+  onEditProfile
 } : { 
+  profile: any;
   recommendedCourses: Course[], 
   isLoading: boolean,
   notes: any[], 
-  pyqs: any[] 
-}) => (
-  <div className="space-y-10">
+  pyqs: any[];
+  onEditProfile: () => void;
+}) => {
+  const hasContent = notes.length > 0 || pyqs.length > 0;
+  
+  return (
+    <div className="space-y-10">
+      {/* Profile Completion Banner */}
+      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
+      
+      {/* Recommended Courses */}
+      <RecommendedBatchesSection 
+        recommendedCourses={recommendedCourses} 
+        loading={isLoading} 
+      />
     
-    {/* --- THIS IS THE FIX --- */}
-    {/* Now passes the correct, in-depth filtered courses to the child component */}
-    <RecommendedBatchesSection 
-      recommendedCourses={recommendedCourses} 
-      loading={isLoading} 
-    />
-    
-    <section>
-        <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
-        <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Notes Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">My Notes</CardTitle>
-              <BookOpen className="h-5 w-5 text-blue-500" />
-            </CardHeader>
-            <CardContent>
-              {notes.length > 0 ? (
-                <div className="space-y-3 pt-2">
-                  {notes.slice(0, 3).map((note: any) => (
-                    <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
-                    </div>
-                  ))}
-                  <Link to="/exam-preparation">
-                    <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
-                  </Link>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 pt-2">Your personalized notes will appear here.</p>
-              )}
+      {/* Quick Access - Only show if user has content */}
+      {hasContent && (
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
+          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Notes Card */}
+            {notes.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
+                  <BookOpen className="h-5 w-5 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {notes.slice(0, 3).map((note: any) => (
+                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* PYQs Card */}
+            {pyqs.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
+                  <FileText className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {pyqs.slice(0, 3).map((pyq: any) => (
+                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
+
+      <section>
+        <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+        <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          <Link to="/exam-preparation" className="block">
+            <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200 h-full">
+              <CardContent className="p-6">
+                <Book className="h-8 w-8 text-blue-600 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
+                <p className="text-gray-600 text-sm mt-1">Access all your free content here</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
+            <CardContent className="p-6">
+              <Users className="h-8 w-8 text-purple-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
+              <p className="text-gray-600 text-sm mt-1">Get free guidance about your career growth, upskilling and internships</p>
             </CardContent>
           </Card>
-          {/* PYQs Card */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
-              <FileText className="h-5 w-5 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              {pyqs.length > 0 ? (
-                <div className="space-y-3 pt-2">
-                  {pyqs.slice(0, 3).map((pyq: any) => (
-                    <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
-                      <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
-                    </div>
-                  ))}
-                  <Link to="/exam-preparation">
-                    <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
-                  </Link>
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 pt-2">Your personalized PYQs will appear here.</p>
-              )}
+          <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
+            <CardContent className="p-6">
+              <MessageSquare className="h-8 w-8 text-green-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900">Ask Doubts</h3>
+              <p className="text-gray-600 text-sm mt-1">Ask doubts in the class and get instantly answered</p>
             </CardContent>
           </Card>
         </div>
       </section>
-
-    <section>
-      <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
-      <p className="text-gray-600 mt-1">Get Additional guidance with these exclusive features</p>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-        <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
-          <CardContent className="p-6">
-            <Book className="h-8 w-8 text-blue-600 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
-            <p className="text-gray-600 text-sm mt-1">Access all your free content here</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
-          <CardContent className="p-6">
-            <Users className="h-8 w-8 text-purple-600 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
-            <p className="text-gray-600 text-sm mt-1">Get free Guidance about your career growth, upskilling and internships</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
-          <CardContent className="p-6">
-            <MessageSquare className="h-8 w-8 text-green-600 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900">Ask Doubts</h3>
-            <p className="text-gray-600 text-sm mt-1">Ask doubts in the class and get instantly answered</p>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
-  </div>
-);
+    </div>
+  );
+};
 
 
 // --- NEW RECOMMENDATION LOGIC ---
@@ -335,10 +347,10 @@ const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
 };
 
 /**
- * Fetches recommended courses with a 3-level waterfall filter:
+ * Fetches recommended courses with enhanced 3-level waterfall filter:
  * - Level 2: Most specific (profile + branch/exam_type)
  * - Level 1: Broader (profile only)
- * - Level 0: Fallback (all non-expired courses)
+ * - Level 0: Intelligent fallback with diverse courses
  */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
   const today = new Date().toISOString();
@@ -376,23 +388,32 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
       if (!allCourses.has(course.id)) allCourses.set(course.id, course);
     });
     
-    // Level 0: Fallback - If NO courses matched (profile is null/incomplete), show recent courses
+    // Level 0: Enhanced Fallback - Show diverse popular courses when profile incomplete
     if (allCourses.size === 0) {
-      console.log("No profile-matched courses found. Showing fallback recommendations.");
-      const level0Query = supabase
+      console.log("No profile-matched courses found. Showing diverse recommendations.");
+      
+      // Fetch a diverse set of courses: featured, popular, and recent
+      const diverseQuery = supabase
         .from('courses')
         .select('*')
-        .or(`end_date.gt.${today},end_date.is.null`) // Filter non-expired
-        .order('created_at', { ascending: false }) // Sort by newest first
-        .limit(10); // Get 10 recent courses to have more options for sorting
+        .or(`end_date.gt.${today},end_date.is.null`)
+        .limit(20); // Get more courses for better diversity
       
-      const { data: level0Data, error: level0Error } = await level0Query;
+      const { data: diverseData, error: diverseError } = await diverseQuery;
       
-      if (level0Error) {
-        console.error("Error fetching fallback courses:", level0Error.message);
-      } else if (level0Data) {
-        level0Data.forEach(course => {
-          if (!allCourses.has(course.id)) allCourses.set(course.id, course as Course);
+      if (diverseError) {
+        console.error("Error fetching diverse courses:", diverseError.message);
+      } else if (diverseData) {
+        // Prioritize: bestsellers, then featured, then recent
+        const bestsellers = diverseData.filter(c => c.bestseller);
+        const featured = diverseData.filter(c => c.is_live && !c.bestseller);
+        const recent = diverseData.filter(c => !c.bestseller && !c.is_live);
+        
+        // Add in priority order, ensuring diversity
+        [...bestsellers, ...featured, ...recent].forEach(course => {
+          if (!allCourses.has(course.id) && allCourses.size < 15) {
+            allCourses.set(course.id, course as Course);
+          }
         });
       }
     }
@@ -516,10 +537,12 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
         />
       ) : (
         <NotEnrolledView 
+          profile={profile}
           recommendedCourses={recommendedCourses} 
           isLoading={isLoading}
           notes={notes}
           pyqs={pyqs}
+          onEditProfile={() => onViewChange('profile')}
         />
       )}
     </div>
