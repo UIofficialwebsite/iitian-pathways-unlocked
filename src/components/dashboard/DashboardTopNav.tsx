@@ -89,13 +89,13 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 rounded-full p-1 h-auto">
+              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
                   <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
-              </Button>
+              </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
