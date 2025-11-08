@@ -1,4 +1,3 @@
-
 import React, { ReactNode, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -96,7 +95,10 @@ const OptimizedAuthWrapper: React.FC<OptimizedAuthWrapperProps> = ({
     );
   }
 
-  return <>{children}</>;
+  // --- THIS IS THE FIX ---
+  // We must return a single valid element, not a fragment.
+  // A div is the safest choice.
+  return <div>{children}</div>;
 };
 
 export default OptimizedAuthWrapper;
