@@ -7,7 +7,8 @@ import {
   Users, 
   MessageSquare, 
   ChevronRight, 
-  FileText
+  FileText,
+  Target // --- 1. IMPORT THE 'Target' ICON ---
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
@@ -440,6 +441,27 @@ interface StudyPortalProps {
 }
 
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
+  
+  // --- 2. THIS IS THE FIX ---
+  // Add a guard clause to handle new/incomplete profiles *before* any hooks are called.
+  // This prevents crashes from hooks like useBackend() if they rely on 'profile'.
+  if (!profile || !profile.program_type) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] p-6 bg-white rounded-lg shadow-sm border border-gray-200 text-center">
+        <Target className="h-12 w-12 text-blue-600 mb-4" />
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Welcome to your Dashboard!</h2>
+        <p className="text-gray-600">
+          Please set your "Focus Area" to unlock your personalized study portal.
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          (A pop-up should have appeared. If not, please click your profile icon in the top right.)
+        </p>
+      </div>
+    );
+  }
+  // --- END OF FIX ---
+
+  // The rest of the component's code can now safely assume 'profile' exists.
   const { user } = useAuth();
   const { toast } = useToast();
   const { getFilteredContent, contentLoading } = useBackend();
@@ -462,6 +484,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
+        // We can safely pass 'profile' here because the guard clause above checked it
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
           supabase
             .from('enrollments')
@@ -470,7 +493,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
               courses (id, title, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
-          fetchRecommendedCourses(profile)
+          fetchRecommendedCourses(profile) 
         ]);
 
         const { data: rawData, error: enrollError } = enrollmentsResult;
@@ -521,7 +544,7 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     };
 
     fetchPortalData();
-  }, [user, profile, toast]); 
+  }, [user, profile, toast]); // 'profile' is a dependency
 
   const isLoading = dataLoading || contentLoading;
 
