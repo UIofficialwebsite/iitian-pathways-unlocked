@@ -8,9 +8,9 @@ import { useToast } from "@/components/ui/use-toast";
 
 import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
-import DashboardSidebar from "./DashboardSidebar"; // --- 1. IMPORT THE SIDEBAR
-import { Button } from "@/components/ui/button"; // --- 2. IMPORT BUTTON
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // --- 3. IMPORT SHEET (for mobile menu)
+import DashboardSidebar from "./DashboardSidebar"; // 1. IMPORT THE SIDEBAR
+import { Button } from "@/components/ui/button"; // 2. IMPORT BUTTON
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // 3. IMPORT SHEET (for mobile menu)
 
 // Import the views
 import StudyPortal from "./StudyPortal";
@@ -93,60 +93,61 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
-  // --- 4. USE THE NEW 2-COLUMN GRID LAYOUT ---
+  // --- 4. NEW LAYOUT: Full-width header, then Sidebar+Content ---
   return (
-    <div className="grid min-h-screen w-full lg:grid-cols-[288px_1fr]">
+    <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
       
-      {/* --- 5. DESKTOP SIDEBAR (Permanent & Fixed) --- */}
-      <div className="hidden border-r bg-white lg:block">
-        <div className="flex h-full max-h-screen flex-col">
+      {/* --- 5. FULL-WIDTH HEADER --- */}
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-white px-4 sm:h-16 sm:px-6">
+        
+        {/* --- 6. MOBILE MENU (SHEET) --- */}
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="shrink-0 lg:hidden" // Show only on mobile
+            >
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle navigation menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="flex flex-col p-0">
+            {/* The sidebar component is rendered inside the mobile sheet */}
+            <DashboardSidebar
+              profile={profile}
+              onProfileUpdate={handleProfileUpdate}
+              onViewChange={setActiveView}
+            />
+          </SheetContent>
+        </Sheet>
+
+        {/* --- 7. TOP NAV (Profile, etc.) --- */}
+        <div className="flex-1">
+          {/* This component just holds the profile dropdown */}
+          <DashboardTopNav
+            onViewChange={setActiveView}
+            profile={profile}
+            onProfileUpdate={handleProfileUpdate}
+          />
+        </div>
+      </header>
+
+      {/* --- 8. MAIN AREA (Sidebar + Content) --- */}
+      <div className="flex-1 grid lg:grid-cols-[288px_1fr]">
+        
+        {/* --- 9. DESKTOP SIDEBAR --- */}
+        <aside className="hidden lg:block border-r bg-white">
+          {/* The sidebar is rendered directly here for desktop */}
           <DashboardSidebar
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
             onViewChange={setActiveView}
           />
-        </div>
-      </div>
+        </aside>
 
-      {/* --- 6. MAIN CONTENT AREA (Header + Content) --- */}
-      <div className="flex flex-col">
-        
-        {/* --- TOP HEADER --- */}
-        <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
-          
-          {/* --- 7. MOBILE SIDEBAR (Sheet) --- */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="outline"
-                size="icon"
-                className="shrink-0 lg:hidden" // Show only on mobile
-              >
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="flex flex-col p-0">
-              <DashboardSidebar
-                profile={profile}
-                onProfileUpdate={handleProfileUpdate}
-                onViewChange={setActiveView}
-              />
-            </SheetContent>
-          </Sheet>
-
-          {/* --- 8. TOP NAV (Profile Button, etc.) --- */}
-          <div className="w-full flex-1">
-            <DashboardTopNav
-              onViewChange={setActiveView}
-              profile={profile}
-              onProfileUpdate={handleProfileUpdate}
-            />
-          </div>
-        </header>
-
-        {/* --- 9. MAIN CONTENT (Conditional Views) --- */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gray-50/50">
+        {/* --- 10. SCROLLABLE CONTENT --- */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
           <div className="w-full max-w-7xl mx-auto">
             {activeView === 'studyPortal' && (
               <StudyPortal profile={profile} onViewChange={setActiveView} />
@@ -161,7 +162,7 @@ const ModernDashboard: React.FC = () => {
         </main>
       </div>
 
-      {/* --- FOCUS MODAL (Unchanged) --- */}
+      {/* --- 11. MODAL (Unchanged) --- */}
       <FocusAreaModal
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
