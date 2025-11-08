@@ -2,20 +2,20 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react"; // Import Menu icon
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
+import DashboardSidebar from "./DashboardSidebar"; // --- 1. IMPORT THE SIDEBAR
+import { Button } from "@/components/ui/button"; // --- 2. IMPORT BUTTON
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"; // --- 3. IMPORT SHEET (for mobile menu)
 
 // Import the views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
-
-// Remove the <Tabs> imports - they were the cause of the white screen
-// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type DashboardView = "dashboard" | "profile" | "enrollments" | "studyPortal";
@@ -53,12 +53,10 @@ const ModernDashboard: React.FC = () => {
 
         if (data) {
           setProfile(data);
-          // Check if profile is incomplete (no program_type)
           if (!data.program_type) {
             setIsFocusModalOpen(true);
           }
         } else {
-          // No profile exists, force user to create one
           setIsFocusModalOpen(true);
         }
       } catch (error: any) {
@@ -95,32 +93,75 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
+  // --- 4. USE THE NEW 2-COLUMN GRID LAYOUT ---
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50/50">
-      <DashboardTopNav
-        onViewChange={setActiveView}
-        profile={profile}
-        onProfileUpdate={handleProfileUpdate}
-      />
-
-      {/* --- THIS IS THE "WHITE SCREEN" FIX ---
-        The <Tabs> and <TabsContent> wrappers were removed.
-        We now use simple conditional rendering based on the 'activeView' state.
-      */}
-      <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-        <div className="w-full max-w-7xl mx-auto">
-          {activeView === 'studyPortal' && (
-            <StudyPortal profile={profile} onViewChange={setActiveView} />
-          )}
-          {activeView === 'profile' && (
-            <MyProfile />
-          )}
-          {activeView === 'enrollments' && (
-            <MyEnrollments />
-          )}
+    <div className="grid min-h-screen w-full lg:grid-cols-[288px_1fr]">
+      
+      {/* --- 5. DESKTOP SIDEBAR (Permanent & Fixed) --- */}
+      <div className="hidden border-r bg-white lg:block">
+        <div className="flex h-full max-h-screen flex-col">
+          <DashboardSidebar
+            profile={profile}
+            onProfileUpdate={handleProfileUpdate}
+            onViewChange={setActiveView}
+          />
         </div>
-      </main>
+      </div>
 
+      {/* --- 6. MAIN CONTENT AREA (Header + Content) --- */}
+      <div className="flex flex-col">
+        
+        {/* --- TOP HEADER --- */}
+        <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 sticky top-0 z-30">
+          
+          {/* --- 7. MOBILE SIDEBAR (Sheet) --- */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="shrink-0 lg:hidden" // Show only on mobile
+              >
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="flex flex-col p-0">
+              <DashboardSidebar
+                profile={profile}
+                onProfileUpdate={handleProfileUpdate}
+                onViewChange={setActiveView}
+              />
+            </SheetContent>
+          </Sheet>
+
+          {/* --- 8. TOP NAV (Profile Button, etc.) --- */}
+          <div className="w-full flex-1">
+            <DashboardTopNav
+              onViewChange={setActiveView}
+              profile={profile}
+              onProfileUpdate={handleProfileUpdate}
+            />
+          </div>
+        </header>
+
+        {/* --- 9. MAIN CONTENT (Conditional Views) --- */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gray-50/50">
+          <div className="w-full max-w-7xl mx-auto">
+            {activeView === 'studyPortal' && (
+              <StudyPortal profile={profile} onViewChange={setActiveView} />
+            )}
+            {activeView === 'profile' && (
+              <MyProfile />
+            )}
+            {activeView === 'enrollments' && (
+              <MyEnrollments />
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* --- FOCUS MODAL (Unchanged) --- */}
       <FocusAreaModal
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
