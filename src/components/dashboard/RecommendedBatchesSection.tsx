@@ -44,7 +44,7 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
             {loading
               ? "Loading recommendations based on your preferences..."
               : hasRecommendations
-              ? "Based on your preferences"
+              ? "Let's start with these popular courses"
               : "Check out our most popular courses"}
           </p>
         </div>
