@@ -26,7 +26,6 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
-import CourseHeader from '@/components/courses/detail/CourseHeader';
 
 // Define the TypeScript interfaces for the data we expect to fetch
 interface BatchScheduleItem {
@@ -173,8 +172,31 @@ const CourseDetail: React.FC = () => {
     <>
       <NavBar />
       <main className="min-h-screen pt-20 bg-background">
-        {/* Course Header with integrated back button */}
-        <CourseHeader course={course} />
+        {/* Header Section with dark premium design */}
+        <div className="premium-course-header border-b border-slate-700/50">
+          <div className="container mx-auto px-4 py-4">
+            <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 text-slate-300 hover:text-white hover:bg-slate-800/50">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Courses
+            </Button>
+          </div>
+          <div className="container mx-auto px-4 pb-8">
+            <div className="max-w-4xl">
+              <div className="flex flex-wrap gap-2 mb-4">
+                {course.exam_category && <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border border-blue-400/30">{course.exam_category}</Badge>}
+                {course.level && <Badge variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800/50">{course.level}</Badge>}
+                {course.bestseller && <Badge className="bg-amber-500/90 text-white border-amber-600/50">⭐ Best Seller</Badge>}
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-br from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">{course.title}</h1>
+              <p className="text-md md:text-lg text-slate-300 mb-6">{course.description}</p>
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 sm:gap-6 text-sm text-slate-200">
+                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-slate-300">rating</span></div>
+                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-400" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-slate-300">students</span></div>
+                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-blue-400" /><span className="text-slate-300">Starts: {new Date(course.start_date || "").toLocaleDateString()}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Sticky Navigation: Allows users to jump to different sections */}
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
