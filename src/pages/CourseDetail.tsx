@@ -26,6 +26,7 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
+import CourseHeader from '@/components/courses/detail/CourseHeader';
 
 // Define the TypeScript interfaces for the data we expect to fetch
 interface BatchScheduleItem {
@@ -172,40 +173,15 @@ const CourseDetail: React.FC = () => {
     <>
       <NavBar />
       <main className="min-h-screen pt-20 bg-background">
-        <div className="container mx-auto px-4 py-4">
-          <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Courses
-          </Button>
-        </div>
-
-        {/* Header Section: Displays the main course title, description, and stats */}
-        <div className="shiny-blue-bg border-b">
-          <div className="container mx-auto px-4 py-8">
-            <div className="max-w-4xl">
-              <div className="flex flex-wrap gap-2 mb-4">
-                {course.exam_category && <Badge variant="secondary">{course.exam_category}</Badge>}
-                {course.level && <Badge variant="outline">{course.level}</Badge>}
-                {course.bestseller && <Badge className="bg-amber-500 text-white">⭐ Best Seller</Badge>}
-              </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">{course.title}</h1>
-              <p className="text-md md:text-lg text-white/90 mb-6">{course.description}</p>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 sm:gap-6 text-sm text-white">
-                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-white/80">rating</span></div>
-                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-white/80" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-white/80">students</span></div>
-                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-white/80" /><span className="text-white/80">Starts: {new Date(course.start_date || "").toLocaleDateString()}</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Course Header with integrated back button */}
+        <CourseHeader course={course} />
 
         {/* Sticky Navigation: Allows users to jump to different sections */}
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
         {/* Main Content Area */}
-        <div className="bg-gradient-to-b from-slate-900 to-slate-950 py-8">
-          <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             
             {/* Right Column: Contains the sticky enrollment card. It's ordered first on mobile for better UX. */}
             <div className="lg:col-span-1 lg:order-last">
@@ -225,7 +201,6 @@ const CourseDetail: React.FC = () => {
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-24">
                 <FAQSection faqs={faqs} />
               </div>
-            </div>
             </div>
           </div>
         </div>

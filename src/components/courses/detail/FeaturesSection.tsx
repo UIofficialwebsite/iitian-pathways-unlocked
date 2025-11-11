@@ -46,7 +46,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
 
   return (
     <section id="features" className="scroll-mt-24">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8 text-slate-100">Course Features</h2>
+      <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Course Features</h2>
       {hasCustomFeatures ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {course.features!.map((feature, idx) => (

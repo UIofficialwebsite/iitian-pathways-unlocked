@@ -5,7 +5,7 @@ import { CheckCircle, HelpCircle } from 'lucide-react';
 const CourseAccessGuide = () => {
   return (
     <div className="my-8">
-        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 text-slate-100">How to Access Your Course</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6">How to Access Your Course</h2>
         <Card className="bg-gray-50 border-gray-200 overflow-hidden">
             <CardContent className="px-4 sm:px-6 md:px-8 py-8">
                 {/* Flowchart */}

@@ -32,7 +32,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
   if (scheduleData.length === 0) {
     return (
       <section id="schedule" className="py-12 scroll-mt-24">
-        <h2 className="text-3xl font-bold mb-8 text-slate-100">Schedule</h2>
+        <h2 className="text-3xl font-bold mb-8">Schedule</h2>
         <Card>
           <CardContent className="p-8 text-center text-muted-foreground">
             <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
@@ -45,7 +45,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
 
   return (
     <section id="schedule" className="py-12 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-8 text-slate-100">Schedule</h2>
+      <h2 className="text-3xl font-bold mb-8">Schedule</h2>
       
       <div className="space-y-6">
         {Object.entries(groupedSchedule).map(([batchName, items]) => (
