@@ -203,8 +203,9 @@ const CourseDetail: React.FC = () => {
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
         {/* Main Content Area */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+        <div className="bg-gradient-to-b from-slate-900 to-slate-950 py-8">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
             
             {/* Right Column: Contains the sticky enrollment card. It's ordered first on mobile for better UX. */}
             <div className="lg:col-span-1 lg:order-last">
@@ -224,6 +225,7 @@ const CourseDetail: React.FC = () => {
               <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-24">
                 <FAQSection faqs={faqs} />
               </div>
+            </div>
             </div>
           </div>
         </div>

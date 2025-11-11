@@ -37,10 +37,10 @@ const SSPPortalSection: React.FC = () => {
   ];
 
   return (
-    <section id="ssp" className="py-12 scroll-mt-24 bg-gradient-to-br from-primary/5 to-primary/10 -mx-4 px-4 rounded-2xl">
+    <section id="ssp" className="py-12 scroll-mt-24 bg-gradient-to-br from-slate-800/50 to-slate-900/50 -mx-4 px-4 rounded-2xl border border-slate-700/50">
       <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">Student Success Portal (SSP)</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+        <h2 className="text-3xl font-bold mb-3 text-slate-100">Student Success Portal (SSP)</h2>
+        <p className="text-lg text-slate-300 max-w-2xl mx-auto">
           Your all-in-one learning companion with exclusive features designed to accelerate your success
         </p>
       </div>
