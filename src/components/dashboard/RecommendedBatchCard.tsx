@@ -213,12 +213,16 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-3 pt-3">
-          <Button asChild variant="outline" className="w-full font-bold border-2">
-            <Link to={`/courses/${id}`}>Explore</Link>
-          </Button>
-          <Button asChild className="w-full font-bold bg-royal hover:bg-royal/90">
-            <Link to={`/courses/${id}`}>Buy Now</Link>
-          </Button>
+          <Link to={`/courses/${id}`}>
+            <Button variant="outline" className="w-full font-bold border-2">
+              Explore
+            </Button>
+          </Link>
+          <Link to={`/courses/${id}`}>
+            <Button className="w-full font-bold bg-royal hover:bg-royal/90">
+              Buy Now
+            </Button>
+          </Link>
         </div>
 
       </CardContent>

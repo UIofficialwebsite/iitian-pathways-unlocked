@@ -79,15 +79,15 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
 
       {/* --- FOOTER (MODIFIED) --- */}
       <CardFooter className="flex justify-center pt-4">
-        <Button 
-          asChild 
-          size="lg" 
-          variant="outline" // <-- CHANGED
-          // --- ADDED STYLING for black border/text ---
-          className="text-base text-black border-black hover:bg-gray-100 hover:text-black"
-        >
-          <Link to="/courses">View All</Link> {/* <-- CHANGED */}
-        </Button>
+        <Link to="/courses">
+          <Button 
+            size="lg" 
+            variant="outline"
+            className="text-base text-black border-black hover:bg-gray-100 hover:text-black"
+          >
+            View All
+          </Button>
+        </Link>
       </CardFooter>
     </Card>
   );

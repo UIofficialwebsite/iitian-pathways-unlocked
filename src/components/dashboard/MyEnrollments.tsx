@@ -154,12 +154,12 @@ const NoEnrollmentsPlaceholder = () => {
       <p className="text-gray-600 max-w-md mx-auto mb-6">
         It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
       </p>
-      <Button asChild size="lg">
-        <Link to="/courses" className="flex items-center">
+      <Link to="/courses">
+        <Button size="lg" className="flex items-center">
           Explore Courses
           <ArrowRight className="ml-2 h-5 w-5" />
-        </Link>
-      </Button>
+        </Button>
+      </Link>
     </div>
   );
 };
