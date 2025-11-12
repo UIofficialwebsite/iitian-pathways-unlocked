@@ -76,7 +76,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ profile, onProfileU
 
   return (
     <>
-      <nav className="flex flex-col h-full">
+      {/* ======================================================================
+        THIS IS THE CHANGED LINE
+        ======================================================================
+      */}
+      <nav className="flex flex-col h-screen sticky top-0">
+        {/* ======================================================================
+        END OF CHANGE
+        ======================================================================
+      */}
+      
         <div className="flex-1 overflow-y-auto py-4">
           <div className="px-4 space-y-4">
             
