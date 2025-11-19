@@ -7,7 +7,8 @@ import {
   Users, 
   ChevronRight, 
   FileText,
-  Target 
+  Target,
+  ArrowRight // Added ArrowRight for the hover effect
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -234,7 +235,7 @@ const NotEnrolledView = ({
         </section>
       )}
 
-      {/* Explore Section - Wrapped in a big container to match Recommendations */}
+      {/* Explore Section */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -243,27 +244,43 @@ const NotEnrolledView = ({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Digital Library - Linked */}
+            {/* Digital Library */}
             <Link to="/exam-preparation" className="block group h-full">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                {/* Hover Arrow */}
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
                 <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
                 <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
               </div>
             </Link>
             
-            {/* Mentorship - Card */}
-            <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col cursor-pointer">
-              <Users className="h-8 w-8 text-purple-600 mb-4 hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
-              <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
+            {/* Mentorship */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                {/* Hover Arrow */}
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
+                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
+              </div>
             </div>
             
-            {/* PDF Bank - Card (Replaces Ask Doubts) */}
-            <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col cursor-pointer">
-              <FileText className="h-8 w-8 text-red-600 mb-4 hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
-              <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
+            {/* PDF Bank */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                {/* Hover Arrow */}
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
+                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
+              </div>
             </div>
           </div>
         </div>
