@@ -8,9 +8,14 @@ import {
   ChevronRight, 
   FileText,
   Target,
-  ArrowRight 
+  ArrowRight,
+  ChevronDown,
+  MoreVertical,
+  Share2,
+  Info,
+  Check
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
@@ -20,6 +25,21 @@ import { Tables } from '../../integrations/supabase/types';
 import RecommendedBatchesSection from './RecommendedBatchesSection';
 import { useBackend } from '../BackendIntegratedWrapper';
 import ProfileCompletionBanner from './ProfileCompletionBanner';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
@@ -131,23 +151,213 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 };
 
 
-// --- View 1: Student IS Enrolled ---
+// --- View 1: Student IS Enrolled (NEW LAYOUT) ---
 const EnrolledView = ({ 
   enrollments
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // State for the currently selected batch (defaults to the first one)
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
+  // State for the temporary selection in the sidebar (before clicking Continue)
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
+  // Sidebar state
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  // Find the full object for the selected batch
+  const currentBatch = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+
+  // Handle opening the sheet: reset temp selection to current selection
+  const handleOpenSheet = () => {
+    setTempSelectedBatchId(selectedBatchId);
+    setIsSheetOpen(true);
+  };
+
+  // Handle "Continue": commit the temp selection
+  const handleContinue = () => {
+    setSelectedBatchId(tempSelectedBatchId);
+    setIsSheetOpen(false);
+    toast({
+      title: "Batch Switched",
+      description: `You are now viewing ${enrollments.find(e => e.course_id === tempSelectedBatchId)?.title}`,
+    });
+  };
+
+  // Context Menu Actions
+  const handleDescription = () => {
+    if (currentBatch) {
+      navigate(`/courses/${currentBatch.course_id}`);
+    }
+  };
+
+  const handleShare = () => {
+    if (currentBatch) {
+      const shareUrl = `${window.location.origin}/courses/${currentBatch.course_id}`;
+      navigator.clipboard.writeText(shareUrl);
+      toast({
+        title: "Link Copied",
+        description: "Batch link copied to clipboard!",
+      });
+    }
+  };
+
   return (
-    <div className="space-y-10">
-      <section>
-        <h2 className="text-2xl font-bold text-gray-900">My Batches</h2>
-        <p className="text-gray-600 mt-1">Continue your learning journey</p>
-        <div className="space-y-4 mt-6">
-          {enrollments.map((enrollment) => (
-            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
-          ))}
+    <div className="space-y-8">
+      {/* --- HEADER --- */}
+      <div className="flex justify-between items-start">
+        <div className="space-y-1">
+          <p className="text-sm text-gray-500 font-medium">Your batch</p>
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity group"
+            onClick={handleOpenSheet}
+          >
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+              {currentBatch?.title}
+            </h1>
+            <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 transition-colors mt-1" />
+          </div>
         </div>
+
+        {/* Three Dot Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
+              <MoreVertical className="h-6 w-6 text-gray-500" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
+              <Info className="mr-2 h-4 w-4" />
+              <span>Description</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+              <Share2 className="mr-2 h-4 w-4" />
+              <span>Share Batch</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* --- BATCH CONTENT --- */}
+      <section>
+        {currentBatch && (
+          <EnrollmentListItem enrollment={currentBatch} />
+        )}
       </section>
+
+      {/* --- SIDEBAR (SHEET) --- */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
+          <SheetHeader className="mb-6">
+            <SheetTitle className="text-xl font-bold">Select Batch</SheetTitle>
+          </SheetHeader>
+          
+          <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+            {enrollments.map((batch) => (
+              <div 
+                key={batch.course_id}
+                onClick={() => setTempSelectedBatchId(batch.course_id)}
+                className={cn(
+                  "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
+                  tempSelectedBatchId === batch.course_id 
+                    ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h4 className={cn(
+                      "font-semibold text-base",
+                      tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                    )}>
+                      {batch.title}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
+                    </p>
+                  </div>
+                  
+                  <div className={cn(
+                    "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+                    tempSelectedBatchId === batch.course_id 
+                      ? "border-blue-600 bg-blue-600" 
+                      : "border-gray-300 bg-white"
+                  )}>
+                    {tempSelectedBatchId === batch.course_id && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
+            <Button 
+              onClick={handleContinue} 
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Continue
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* --- EXPLORE SECTION (Same as NotEnrolledView) --- */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-12">
+        <div className="p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Digital Library */}
+            <Link to="/exam-preparation" className="block group h-full">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
+                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
+              </div>
+            </Link>
+            
+            {/* Mentorship */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
+                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
+              </div>
+            </div>
+            
+            {/* PDF Bank */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
+                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer Message */}
+      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
+      </div>
     </div>
   );
 };
@@ -247,7 +457,6 @@ const NotEnrolledView = ({
             {/* Digital Library */}
             <Link to="/exam-preparation" className="block group h-full">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
@@ -260,7 +469,6 @@ const NotEnrolledView = ({
             {/* Mentorship */}
             <div className="group h-full cursor-pointer">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
@@ -273,7 +481,6 @@ const NotEnrolledView = ({
             {/* PDF Bank */}
             <div className="group h-full cursor-pointer">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
