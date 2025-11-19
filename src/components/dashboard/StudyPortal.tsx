@@ -8,7 +8,7 @@ import {
   ChevronRight, 
   FileText,
   Target,
-  ArrowRight // Added ArrowRight for the hover effect
+  ArrowRight 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -284,6 +284,11 @@ const NotEnrolledView = ({
             </div>
           </div>
         </div>
+      </div>
+      
+      {/* Footer Message */}
+      <div className="flex items-center justify-center pt-4 pb-8 text-gray-500 text-sm font-medium">
+        <span className="text-red-500 mx-1">❤️</span> from UnknownIITians
       </div>
     </div>
   );
