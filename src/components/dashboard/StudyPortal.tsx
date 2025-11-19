@@ -218,7 +218,7 @@ const CustomDashboardTabNav = ({
   onTabClick: (id: string) => void 
 }) => {
   return (
-    <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30">
       <div className="flex items-center gap-1 md:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
         {tabs.map((tab) => (
           <button
@@ -258,9 +258,8 @@ const EnrolledView = ({
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loadingDetails, setLoadingDetails] = useState(false);
-
-  // State for Active Tab Highlighting
   const [activeTab, setActiveTab] = useState('features');
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const tabs = [
     { id: 'features', label: 'Features' },
@@ -300,22 +299,20 @@ const EnrolledView = ({
     fetchDetails();
   }, [selectedBatchId]);
 
-  // --- SCROLL SPY EFFECT ---
+  // --- SCROLL SPY ---
   useEffect(() => {
     if (viewMode !== 'description') return;
-
-    const mainContainer = document.querySelector('main'); // Target the dashboard's scroll container
-    if (!mainContainer) return;
+    const scrollContainer = contentRef.current;
+    if (!scrollContainer) return;
 
     const handleScroll = () => {
-      const headerOffset = 200; // Adjust based on header height
-      
       for (const tab of tabs) {
         const element = document.getElementById(tab.id);
         if (element) {
           const rect = element.getBoundingClientRect();
-          // Check if element is within the "active" zone near top of viewport
-          if (rect.top < 250 && rect.bottom > 150) {
+          const containerRect = scrollContainer.getBoundingClientRect();
+          // Offset calculation relative to the container
+          if (rect.top - containerRect.top < 150 && rect.bottom - containerRect.top > 50) {
             setActiveTab(tab.id);
             break;
           }
@@ -323,14 +320,9 @@ const EnrolledView = ({
       }
     };
 
-    mainContainer.addEventListener('scroll', handleScroll, { passive: true });
-    // Trigger once initially
-    handleScroll();
-
-    return () => {
-      mainContainer.removeEventListener('scroll', handleScroll);
-    };
-  }, [viewMode, fullCourseData]); // Re-run when data loads or mode changes
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [viewMode, fullCourseData]);
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
@@ -370,77 +362,55 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: FULL DETAIL VIEW ---
+  // --- RENDER: FULL DETAIL VIEW (Fixed Layout) ---
   if (viewMode === 'description') {
     return (
-      <div className="space-y-0 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-20">
+      // Main Container: Full Height, No Scroll on Parent
+      <div className="flex flex-col h-[calc(100vh-5rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-50">
         
-        {/* Back Button Row */}
-        <div className="flex items-center gap-2 mb-4 px-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setViewMode('main')}
-            className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" />
-            Back to List
-          </Button>
-        </div>
+        {/* --- FIXED HEADER SECTION --- */}
+        <div className="flex-none bg-white z-20 shadow-sm">
+           {/* Back Button */}
+           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setViewMode('main')}
+                className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
+              >
+                <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+                Back to List
+              </Button>
+           </div>
 
-        {/* Header Block */}
-        <div className="premium-course-header rounded-t-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg mb-0">
-          <div className="relative z-10 flex flex-col gap-6">
-            
-            {/* Top Row: Viewing Label + Switch Button */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex items-center gap-2 text-blue-200 text-sm font-medium bg-black/20 px-3 py-1 rounded-full w-fit backdrop-blur-md border border-white/10">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Currently Viewing</span>
-                </div>
-                
-                {/* FIXED: Switch Batch Button Styling */}
-                <Button 
-                  onClick={() => handleOpenSheet()} 
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm"
-                >
-                  Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-            </div>
-
-            {/* Title & Stats */}
-            <div className="space-y-4">
-               <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
-                  {fullCourseData?.title || currentBatchSummary.title}
-               </h1>
-               
-               {/* Description - Full Text */}
-               <p className="text-slate-200 max-w-3xl text-lg leading-relaxed opacity-90">
-                  {fullCourseData?.description || currentBatchSummary.description}
-               </p>
-
-               {fullCourseData && (
-                 <div className="flex flex-wrap gap-6 text-sm text-slate-200 pt-2 border-t border-white/10 mt-4">
-                    <div className="flex items-center gap-2">
-                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                        <span className="font-bold text-white">{fullCourseData.rating || 4.8} Rating</span>
+           {/* Premium Header Block */}
+           <div className="premium-course-header p-6 text-white relative overflow-hidden">
+              <div className="relative z-10 flex flex-col gap-4">
+                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="flex items-center gap-2 text-blue-200 text-xs font-medium bg-black/20 px-3 py-1 rounded-full w-fit border border-white/10">
+                        <BookOpen className="h-3 w-3" />
+                        <span>Currently Viewing</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-blue-400" />
-                        <span>{fullCourseData.students_enrolled || 450}+ Enrolled</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-purple-400" />
-                        <span>Starts {fullCourseData.start_date ? new Date(fullCourseData.start_date).toLocaleDateString() : 'Soon'}</span>
-                    </div>
+                    <Button 
+                      onClick={() => handleOpenSheet()} 
+                      className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-8 text-sm"
+                    >
+                      Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
+                    </Button>
                  </div>
-               )}
-            </div>
-          </div>
-        </div>
 
-        {/* Sticky Navigation Bar */}
-        <div className="sticky top-0 z-40 bg-white shadow-md mb-6 -mx-1 md:mx-0">
+                 <div className="space-y-2">
+                   <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                      {fullCourseData?.title || currentBatchSummary.title}
+                   </h1>
+                   <p className="text-slate-200 max-w-3xl text-sm md:text-base leading-relaxed opacity-90 line-clamp-2">
+                      {fullCourseData?.description || currentBatchSummary.description}
+                   </p>
+                 </div>
+              </div>
+           </div>
+
+           {/* Tab Navigation (Fixed below header) */}
            <CustomDashboardTabNav 
              tabs={tabs} 
              activeTab={activeTab} 
@@ -448,32 +418,99 @@ const EnrolledView = ({
            />
         </div>
 
-        {/* Content Area - Full Details */}
-        {loadingDetails ? (
-           <div className="flex items-center justify-center py-12 bg-white rounded-b-xl min-h-[400px]">
-             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-           </div>
-        ) : fullCourseData ? (
-           // FIXED: Padding restored but responsive
-           <div className="bg-white rounded-b-xl border-x border-b border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-4 md:p-6 space-y-12">
-                <div id="features" className="scroll-mt-32"><FeaturesSection course={fullCourseData} /></div>
-                <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
-                <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
-                <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
-                <div id="faqs" className="scroll-mt-32">
-                    {/* Ensure faqs prop is passed correctly even if empty initially */}
-                    <FAQSection faqs={faqs || []} />
+        {/* --- SCROLLABLE CONTENT SECTION --- */}
+        <div 
+          ref={contentRef}
+          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 p-4 md:p-6 pb-20"
+        >
+            {loadingDetails ? (
+               <div className="flex items-center justify-center h-64">
+                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+               </div>
+            ) : fullCourseData ? (
+               <div className="space-y-12 bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
+                  <div id="features" className="scroll-mt-6"><FeaturesSection course={fullCourseData} /></div>
+                  <div id="about" className="scroll-mt-6"><AboutSection course={fullCourseData} /></div>
+                  <div id="moreDetails" className="scroll-mt-6"><MoreDetailsSection /></div>
+                  <div id="schedule" className="scroll-mt-6"><ScheduleSection scheduleData={scheduleData} /></div>
+                  <div id="ssp" className="scroll-mt-6"><SSPPortalSection /></div>
+                  <div id="access" className="scroll-mt-6"><CourseAccessGuide /></div>
+                  <div id="faqs" className="scroll-mt-6"><FAQSection faqs={faqs || []} /></div>
+               </div>
+            ) : (
+               <div className="text-center py-10 text-gray-500">
+                 Failed to load details.
+               </div>
+            )}
+        </div>
+        
+        {/* --- SIDEBAR (Switch Batch) --- */}
+        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
+            <SheetHeader className="mb-6">
+              <SheetTitle className="text-xl font-bold">Select Batch</SheetTitle>
+            </SheetHeader>
+            
+            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+              {enrollments.length > 1 ? (
+                 enrollments.map((batch) => (
+                  <div 
+                    key={batch.course_id}
+                    onClick={() => setTempSelectedBatchId(batch.course_id)}
+                    className={cn(
+                      "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
+                      tempSelectedBatchId === batch.course_id 
+                        ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <h4 className={cn(
+                          "font-semibold text-base",
+                          tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                        )}>
+                          {batch.title}
+                        </h4>
+                        <p className="text-xs text-gray-500">
+                          {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
+                        </p>
+                      </div>
+                      
+                      <div className={cn(
+                        "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+                        tempSelectedBatchId === batch.course_id 
+                          ? "border-blue-600 bg-blue-600" 
+                          : "border-gray-300 bg-white"
+                      )}>
+                        {tempSelectedBatchId === batch.course_id && (
+                          <Check className="h-3 w-3 text-white" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                   <Book className="h-8 w-8 text-gray-400 mb-2" />
+                   <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
+                   <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
                 </div>
-              </div>
-           </div>
-        ) : (
-           <div className="text-center py-10 text-gray-500 bg-white rounded-b-xl border border-gray-200">
-             Failed to load details. Please try again.
-           </div>
-        )}
+              )}
+            </div>
+
+            {enrollments.length > 1 && (
+              <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
+                <Button 
+                  onClick={handleContinue} 
+                  className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Switch to Selected
+                </Button>
+              </SheetFooter>
+            )}
+          </SheetContent>
+        </Sheet>
       </div>
     );
   }
@@ -481,7 +518,6 @@ const EnrolledView = ({
   // --- RENDER: MAIN LIST VIEW ---
   return (
     <div className="space-y-8">
-      
       {/* --- Header with Background Color Block --- */}
       <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start">
@@ -534,7 +570,7 @@ const EnrolledView = ({
         )}
       </section>
 
-      {/* --- SIDEBAR (SHEET for switching batches) --- */}
+      {/* --- SIDEBAR (SHEET) --- */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
           <SheetHeader className="mb-6">
@@ -542,53 +578,63 @@ const EnrolledView = ({
           </SheetHeader>
           
           <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-            {enrollments.map((batch) => (
-              <div 
-                key={batch.course_id}
-                onClick={() => setTempSelectedBatchId(batch.course_id)}
-                className={cn(
-                  "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
-                  tempSelectedBatchId === batch.course_id 
-                    ? "border-blue-600 bg-blue-50/50 shadow-sm" 
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <h4 className={cn(
-                      "font-semibold text-base",
-                      tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
-                    )}>
-                      {batch.title}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
-                    </p>
-                  </div>
-                  
-                  <div className={cn(
-                    "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+            {enrollments.length > 1 ? (
+               enrollments.map((batch) => (
+                <div 
+                  key={batch.course_id}
+                  onClick={() => setTempSelectedBatchId(batch.course_id)}
+                  className={cn(
+                    "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
                     tempSelectedBatchId === batch.course_id 
-                      ? "border-blue-600 bg-blue-600" 
-                      : "border-gray-300 bg-white"
-                  )}>
-                    {tempSelectedBatchId === batch.course_id && (
-                      <Check className="h-3 w-3 text-white" />
-                    )}
+                      ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <h4 className={cn(
+                        "font-semibold text-base",
+                        tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                      )}>
+                        {batch.title}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
+                      </p>
+                    </div>
+                    
+                    <div className={cn(
+                      "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+                      tempSelectedBatchId === batch.course_id 
+                        ? "border-blue-600 bg-blue-600" 
+                        : "border-gray-300 bg-white"
+                    )}>
+                      {tempSelectedBatchId === batch.course_id && (
+                        <Check className="h-3 w-3 text-white" />
+                      )}
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                   <Book className="h-8 w-8 text-gray-400 mb-2" />
+                   <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
+                   <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
               </div>
-            ))}
+            )}
           </div>
 
-          <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
-            <Button 
-              onClick={handleContinue} 
-              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Continue
-            </Button>
-          </SheetFooter>
+          {enrollments.length > 1 && (
+            <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
+              <Button 
+                onClick={handleContinue} 
+                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Continue
+              </Button>
+            </SheetFooter>
+          )}
         </SheetContent>
       </Sheet>
 
