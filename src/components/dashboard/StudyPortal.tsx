@@ -14,9 +14,13 @@ import {
   Share2,
   Info,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Star,
+  Calendar,
+  GitBranch,
+  Layers
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
@@ -54,24 +58,34 @@ type RawEnrollment = {
   courses: {
     id: string;
     title: string | null;
-    description: string | null; // Added description
+    description: string | null; 
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
     price: number | null; 
+    exam_category: string | null;
+    level: string | null;
+    bestseller: boolean | null;
+    rating: number | null;
+    students_enrolled: number | null;
   } | null;
 };
 
 type GroupedEnrollment = {
   course_id: string;
   title: string;
-  description: string | null; // Added description
+  description: string | null; 
   start_date: string | null; 
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
   subjects: string[];
   image_url: string | null;
   price: number | null;
+  exam_category: string | null;
+  level: string | null;
+  bestseller: boolean | null;
+  rating: number | null;
+  students_enrolled: number | null;
 };
 
 // --- Props Interface ---
@@ -81,7 +95,13 @@ interface StudyPortalProps {
 }
 
 // --- Re-usable Enrollment List Item ---
-const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
+const EnrollmentListItem = ({ 
+  enrollment, 
+  onClick 
+}: { 
+  enrollment: GroupedEnrollment;
+  onClick?: () => void;
+}) => {
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
       return (
@@ -115,41 +135,57 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     return null;
   };
 
+  // Determine wrapper: div (with onClick) or Link
+  const Container = onClick ? 'div' : Link;
+  const containerProps = onClick 
+    ? { onClick, className: "block group cursor-pointer" } 
+    : { to: `/courses/${enrollment.course_id}`, className: "block group" };
+
   return (
-    <Link to={`/courses/${enrollment.course_id}`} className="block group">
-      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200">
-        <CardContent className="flex items-center gap-5 p-5">
-          <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50">
+    <Container {...(containerProps as any)}>
+      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
+        <CardContent className="flex items-start gap-5 p-5">
+          <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50 mt-1">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
               className="w-full h-full object-cover object-center"
             />
           </div>
-          <div className="flex-grow space-y-1.5">
+          <div className="flex-grow space-y-2">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
-              <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
+              <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4 group-hover:text-blue-600 transition-colors">
                 {enrollment.title}
               </CardTitle>
               <div className="flex-shrink-0 mt-1 sm:mt-0">
                 <StatusIndicator />
               </div>
             </div>
-            <p className="text-base text-gray-600 flex items-center gap-1.5">
-              <span>{formattedEndDate}</span>
-              <span>•</span>
-              <PriceDisplay />
-            </p>
+            
+            {/* Description added here */}
+            {enrollment.description && (
+              <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+                {enrollment.description}
+              </p>
+            )}
+
+            <div className="flex items-center gap-1.5 pt-1">
+               <p className="text-sm text-gray-500 flex items-center gap-1.5">
+                <span>Valid till: {formattedEndDate}</span>
+                <span>•</span>
+                <PriceDisplay />
+              </p>
+            </div>
           </div>
-          <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
+          <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0 self-center group-hover:text-blue-600 transition-colors" />
         </CardContent>
         {enrollment.status === 'Batch Expired' && (
-          <div className="bg-red-50 text-red-700 text-base p-4 text-center">
+          <div className="bg-red-50 text-red-700 text-base p-4 text-center border-t border-red-100">
             This batch got expired on {formattedEndDate}!
           </div>
         )}
       </Card>
-    </Link>
+    </Container>
   );
 };
 
@@ -209,7 +245,7 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: DESCRIPTION VIEW ---
+  // --- RENDER: DESCRIPTION VIEW (UPDATED WITH PREMIUM HEADER) ---
   if (viewMode === 'description' && currentBatch) {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -226,58 +262,95 @@ const EnrolledView = ({
           </Button>
         </div>
 
-        {/* Description Content */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Cover Image */}
-          <div className="w-full h-48 sm:h-64 bg-gray-100 relative">
-             <img 
-              src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
-              alt={currentBatch.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-              <div className="p-6 text-white">
-                <h1 className="text-2xl sm:text-3xl font-bold">{currentBatch.title}</h1>
+        {/* Premium Header Container */}
+        <div className="rounded-xl overflow-hidden shadow-xl border border-slate-700/20 bg-white">
+          {/* Dark Gradient Header */}
+          <div className="premium-course-header p-6 md:p-10 text-white relative overflow-hidden">
+            <div className="relative z-10 max-w-4xl">
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {currentBatch.exam_category && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-200 border border-blue-400/30 hover:bg-blue-500/30">
+                    {currentBatch.exam_category}
+                  </Badge>
+                )}
+                {currentBatch.level && (
+                  <Badge variant="outline" className="border-slate-500 text-slate-300 backdrop-blur-sm">
+                    <Layers className="h-3 w-3 mr-1" /> {currentBatch.level}
+                  </Badge>
+                )}
+                {currentBatch.bestseller && (
+                  <Badge className="bg-amber-500/90 text-white border-amber-600/50 shadow-lg shadow-amber-900/20">
+                    ⭐ Best Seller
+                  </Badge>
+                )}
+                <Badge className={cn(
+                  "font-semibold shadow-sm",
+                  currentBatch.status === 'Ongoing' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                )}>
+                  {currentBatch.status}
+                </Badge>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-br from-white via-blue-50 to-blue-100 bg-clip-text text-transparent leading-tight">
+                {currentBatch.title}
+              </h1>
+
+              {/* Description */}
+              <p className="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-3xl">
+                {currentBatch.description || "Join this comprehensive course to master your subjects with expert guidance and structured learning paths."}
+              </p>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap gap-6 text-sm md:text-base border-t border-slate-700/50 pt-6">
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                  <span className="font-bold text-white">{currentBatch.rating || 4.8}</span>
+                  <span className="text-slate-400">rating</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  <span className="font-bold text-white">
+                    {currentBatch.students_enrolled ? (currentBatch.students_enrolled + 120) : 450}+
+                  </span>
+                  <span className="text-slate-400">students</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Calendar className="h-5 w-5 text-purple-400" />
+                  <span className="text-slate-400">Started:</span>
+                  <span className="font-medium text-white">
+                    {currentBatch.start_date 
+                      ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                      : 'Recently'}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6 md:p-8 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">About this Batch</h3>
-              <div className="prose prose-blue max-w-none text-gray-600">
-                {currentBatch.description ? (
-                  <p className="whitespace-pre-line">{currentBatch.description}</p>
-                ) : (
-                  <p className="italic text-gray-500">No description available for this batch.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-               <div>
-                 <p className="text-sm text-gray-500 font-medium">Start Date</p>
-                 <p className="text-gray-900">
-                   {currentBatch.start_date 
-                     ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-                     : 'TBA'}
-                 </p>
-               </div>
-               <div>
-                 <p className="text-sm text-gray-500 font-medium">Status</p>
-                 <span className={cn(
-                   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                   currentBatch.status === 'Ongoing' ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                 )}>
-                   {currentBatch.status}
-                 </span>
-               </div>
-            </div>
-            
-             <div className="pt-4">
-               <Link to={`/courses/${currentBatch.course_id}`}>
-                <Button className="w-full sm:w-auto">
+          {/* Action Bar */}
+          <div className="bg-white p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+             <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="h-16 w-28 hidden sm:block rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                   <img 
+                    src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                   <p className="text-sm text-gray-500 font-medium">Ready to learn?</p>
+                   <p className="text-gray-900 font-semibold">Continue your progress</p>
+                </div>
+             </div>
+             
+             <div className="flex gap-3 w-full sm:w-auto">
+               <Button variant="outline" onClick={() => handleShare()} className="flex-1 sm:flex-none">
+                 <Share2 className="h-4 w-4 mr-2" /> Share
+               </Button>
+               <Link to={`/courses/${currentBatch.course_id}`} className="flex-1 sm:flex-none">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
                   Go to Class <ChevronRight className="ml-2 h-4 w-4" />
                 </Button>
                </Link>
@@ -329,7 +402,10 @@ const EnrolledView = ({
       {/* --- BATCH CONTENT --- */}
       <section>
         {currentBatch && (
-          <EnrollmentListItem enrollment={currentBatch} />
+          <EnrollmentListItem 
+            enrollment={currentBatch} 
+            onClick={() => setViewMode('description')} // Click triggers description view
+          />
         )}
       </section>
 
@@ -754,7 +830,10 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .from('enrollments')
             .select(`
               id, course_id, subject_name,
-              courses (id, title, description, start_date, end_date, image_url, price)
+              courses (
+                id, title, description, start_date, end_date, image_url, price,
+                exam_category, level, bestseller, rating, students_enrolled
+              )
             `)
             .eq('user_id', user.id),
           fetchRecommendedCourses(profile)
@@ -785,6 +864,11 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 subjects: [],
                 image_url: enrollment.courses.image_url,
                 price: enrollment.courses.price,
+                exam_category: enrollment.courses.exam_category,
+                level: enrollment.courses.level,
+                bestseller: enrollment.courses.bestseller,
+                rating: enrollment.courses.rating,
+                students_enrolled: enrollment.courses.students_enrolled,
               });
             }
             const groupedEntry = enrollmentsMap.get(course_id)!;
