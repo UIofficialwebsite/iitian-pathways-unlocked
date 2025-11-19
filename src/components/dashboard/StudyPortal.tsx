@@ -403,7 +403,7 @@ const EnrolledView = ({
                    <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                       {fullCourseData?.title || currentBatchSummary.title}
                    </h1>
-                   <p className="text-slate-200 max-w-3xl text-sm md:text-base leading-relaxed opacity-90 line-clamp-2">
+                   <p className="text-slate-200 max-w-3xl text-sm md:text-base leading-relaxed opacity-90">
                       {fullCourseData?.description || currentBatchSummary.description}
                    </p>
                  </div>
@@ -428,14 +428,25 @@ const EnrolledView = ({
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               <div className="space-y-12 bg-white rounded-xl border border-gray-200 shadow-sm p-4 md:p-6">
-                  <div id="features" className="scroll-mt-6"><FeaturesSection course={fullCourseData} /></div>
-                  <div id="about" className="scroll-mt-6"><AboutSection course={fullCourseData} /></div>
-                  <div id="moreDetails" className="scroll-mt-6"><MoreDetailsSection /></div>
-                  <div id="schedule" className="scroll-mt-6"><ScheduleSection scheduleData={scheduleData} /></div>
-                  <div id="ssp" className="scroll-mt-6"><SSPPortalSection /></div>
-                  <div id="access" className="scroll-mt-6"><CourseAccessGuide /></div>
-                  <div id="faqs" className="scroll-mt-6"><FAQSection faqs={faqs || []} /></div>
+               // UPDATED: Card structure with minimal padding for Features (Video) section
+               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="space-y-8 pb-12">
+                    
+                    {/* Video/Features Section: Minimal Padding for Wider Frame */}
+                    <div id="features" className="scroll-mt-32 px-1 md:px-2 pt-4">
+                      <FeaturesSection course={fullCourseData} />
+                    </div>
+                    
+                    {/* Text Sections: Standard Padding for Readability */}
+                    <div className="px-5 md:px-8 space-y-12">
+                        <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                        <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
+                        <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                        <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
+                        <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
+                        <div id="faqs" className="scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                    </div>
+                  </div>
                </div>
             ) : (
                <div className="text-center py-10 text-gray-500">
