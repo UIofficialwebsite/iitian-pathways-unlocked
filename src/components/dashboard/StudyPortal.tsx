@@ -245,7 +245,7 @@ const NotEnrolledView = ({
               <CardContent className="p-6">
                 <Book className="h-8 w-8 text-blue-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
-                <p className="text-gray-600 text-sm mt-1">Access all your free content here</p>
+                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
               </CardContent>
             </Card>
           </Link>
@@ -253,14 +253,14 @@ const NotEnrolledView = ({
             <CardContent className="p-6">
               <Users className="h-8 w-8 text-purple-600 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
-              <p className="text-gray-600 text-sm mt-1">Get free guidance about your career growth, upskilling and internships</p>
+              <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
             </CardContent>
           </Card>
           <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
             <CardContent className="p-6">
-              <MessageSquare className="h-8 w-8 text-green-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900">Ask Doubts</h3>
-              <p className="text-gray-600 text-sm mt-1">Ask doubts in the class and get instantly answered</p>
+              <FileText className="h-8 w-8 text-red-600 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
+              <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
             </CardContent>
           </Card>
         </div>
