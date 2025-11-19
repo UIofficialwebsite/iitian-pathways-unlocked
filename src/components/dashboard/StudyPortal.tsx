@@ -49,7 +49,6 @@ type Course = Tables<'courses'> & {
   discounted_price?: number | null;
 };
 
-// Expanded type definition to include new fields
 type RawEnrollment = {
   id: string;
   course_id: string;
@@ -192,7 +191,6 @@ const EnrolledView = ({
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
-    // Reset to main view to show the new batch card
     setViewMode('main');
     toast({
       title: "Batch Switched",
@@ -408,6 +406,145 @@ const EnrolledView = ({
 
       {/* --- EXPLORE SECTION --- */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-12">
+        <div className="p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Digital Library */}
+            <Link to="/exam-preparation" className="block group h-full">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
+                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
+              </div>
+            </Link>
+            
+            {/* Mentorship */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
+                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
+              </div>
+            </div>
+            
+            {/* PDF Bank */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
+                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer Message */}
+      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
+      </div>
+    </div>
+  );
+};
+
+
+// --- View 2: Student is NOT Enrolled (RESTORED) ---
+const NotEnrolledView = ({ 
+  profile,
+  recommendedCourses,
+  isLoading,
+  notes, 
+  pyqs,
+  onEditProfile
+} : { 
+  profile: any;
+  recommendedCourses: Course[], 
+  isLoading: boolean,
+  notes: any[], 
+  pyqs: any[];
+  onEditProfile: () => void;
+}) => {
+  const hasContent = notes.length > 0 || pyqs.length > 0;
+  
+  return (
+    <div className="space-y-10">
+      {/* Profile Completion Banner */}
+      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
+      
+      {/* Recommended Courses */}
+      <RecommendedBatchesSection 
+        recommendedCourses={recommendedCourses} 
+        loading={isLoading} 
+      />
+    
+      {/* Quick Access - Only show if user has content */}
+      {hasContent && (
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
+          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Notes Card */}
+            {notes.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
+                  <BookOpen className="h-5 w-5 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {notes.slice(0, 3).map((note: any) => (
+                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* PYQs Card */}
+            {pyqs.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
+                  <FileText className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {pyqs.slice(0, 3).map((pyq: any) => (
+                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Explore Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
