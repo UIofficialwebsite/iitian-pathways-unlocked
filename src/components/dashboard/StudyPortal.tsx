@@ -14,7 +14,9 @@ import {
   Share2,
   Info,
   Check,
-  ArrowLeft
+  ArrowLeft,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -54,7 +56,9 @@ type RawEnrollment = {
   courses: {
     id: string;
     title: string | null;
-    description: string | null; // Added description
+    description: string | null;
+    level: string | null;
+    exam_type: string | null;
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
@@ -65,7 +69,9 @@ type RawEnrollment = {
 type GroupedEnrollment = {
   course_id: string;
   title: string;
-  description: string | null; // Added description
+  description: string | null;
+  level: string | null;
+  exam_type: string | null;
   start_date: string | null; 
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
@@ -185,7 +191,6 @@ const EnrolledView = ({
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
-    // Reset to main view if we were in description, to show the new batch's card
     setViewMode('main');
     toast({
       title: "Batch Switched",
@@ -209,80 +214,88 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: DESCRIPTION VIEW ---
+  // --- RENDER: DESCRIPTION VIEW (IN-PLACE) ---
   if (viewMode === 'description' && currentBatch) {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        {/* Back Button Header */}
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => setViewMode('main')}
-            className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
-          >
-            <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" />
-            Back to Portal
-          </Button>
-        </div>
-
-        {/* Description Content */}
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Cover Image */}
-          <div className="w-full h-48 sm:h-64 bg-gray-100 relative">
-             <img 
-              src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
-              alt={currentBatch.title} 
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
-              <div className="p-6 text-white">
-                <h1 className="text-2xl sm:text-3xl font-bold">{currentBatch.title}</h1>
+          
+          {/* 1. Dark Header Section */}
+          <div className="bg-[#1e293b] p-6 sm:p-8 text-white relative">
+             {/* Back Button */}
+             <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setViewMode('main')}
+              className="absolute top-6 left-4 sm:left-6 text-gray-300 hover:text-white hover:bg-white/10 pl-2 pr-3"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+
+            <div className="mt-10 sm:mt-8">
+              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                {/* Title & Badges */}
+                <div className="space-y-4 flex-1">
+                  <div className="flex flex-wrap gap-2">
+                    {currentBatch.level && (
+                      <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border-0">
+                        {currentBatch.level}
+                      </Badge>
+                    )}
+                    {currentBatch.exam_type && (
+                      <Badge className="bg-purple-500/20 text-purple-100 hover:bg-purple-500/30 border-0">
+                        {currentBatch.exam_type}
+                      </Badge>
+                    )}
+                    <Badge className={cn(
+                      "border-0",
+                      currentBatch.status === 'Ongoing' 
+                        ? "bg-green-500/20 text-green-100" 
+                        : "bg-red-500/20 text-red-100"
+                    )}>
+                      {currentBatch.status === 'Ongoing' ? 'Active' : 'Expired'}
+                    </Badge>
+                  </div>
+                  
+                  <h1 className="text-2xl md:text-4xl font-bold leading-tight tracking-tight text-white">
+                    {currentBatch.title}
+                  </h1>
+
+                  <div className="flex items-center gap-4 text-sm text-gray-300">
+                    <div className="flex items-center gap-1.5">
+                      <Calendar className="h-4 w-4" />
+                      <span>Starts {currentBatch.start_date ? new Date(currentBatch.start_date).toLocaleDateString() : 'TBA'}</span>
+                    </div>
+                    {currentBatch.end_date && (
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4" />
+                        <span>Ends {new Date(currentBatch.end_date).toLocaleDateString()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="p-6 md:p-8 space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">About this Batch</h3>
-              <div className="prose prose-blue max-w-none text-gray-600">
+          {/* 2. White Body Section */}
+          <div className="p-6 sm:p-8 bg-white min-h-[300px]">
+            <div className="max-w-4xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">About this Batch</h3>
+              <div className="prose prose-slate max-w-none text-gray-600 leading-relaxed">
                 {currentBatch.description ? (
                   <p className="whitespace-pre-line">{currentBatch.description}</p>
                 ) : (
-                  <p className="italic text-gray-500">No description available for this batch.</p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center bg-gray-50 rounded-lg border border-dashed border-gray-200">
+                    <FileText className="h-10 w-10 text-gray-300 mb-3" />
+                    <p className="text-gray-500">No description available for this batch yet.</p>
+                  </div>
                 )}
               </div>
             </div>
-
-            {/* Info Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-               <div>
-                 <p className="text-sm text-gray-500 font-medium">Start Date</p>
-                 <p className="text-gray-900">
-                   {currentBatch.start_date 
-                     ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-                     : 'TBA'}
-                 </p>
-               </div>
-               <div>
-                 <p className="text-sm text-gray-500 font-medium">Status</p>
-                 <span className={cn(
-                   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
-                   currentBatch.status === 'Ongoing' ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
-                 )}>
-                   {currentBatch.status}
-                 </span>
-               </div>
-            </div>
-            
-             <div className="pt-4">
-               <Link to={`/courses/${currentBatch.course_id}`}>
-                <Button className="w-full sm:w-auto">
-                  Go to Class <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-               </Link>
-             </div>
           </div>
+
         </div>
       </div>
     );
@@ -440,145 +453,6 @@ const EnrolledView = ({
       </div>
       
       {/* Footer Message */}
-      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
-        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
-      </div>
-    </div>
-  );
-};
-
-
-// --- View 2: Student is NOT Enrolled ---
-const NotEnrolledView = ({ 
-  profile,
-  recommendedCourses,
-  isLoading,
-  notes, 
-  pyqs,
-  onEditProfile
-} : { 
-  profile: any;
-  recommendedCourses: Course[], 
-  isLoading: boolean,
-  notes: any[], 
-  pyqs: any[];
-  onEditProfile: () => void;
-}) => {
-  const hasContent = notes.length > 0 || pyqs.length > 0;
-  
-  return (
-    <div className="space-y-10">
-      {/* Profile Completion Banner */}
-      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
-      
-      {/* Recommended Courses */}
-      <RecommendedBatchesSection 
-        recommendedCourses={recommendedCourses} 
-        loading={isLoading} 
-      />
-    
-      {/* Quick Access - Only show if user has content */}
-      {hasContent && (
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
-          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {/* Notes Card */}
-            {notes.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {notes.slice(0, 3).map((note: any) => (
-                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* PYQs Card */}
-            {pyqs.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
-                  <FileText className="h-5 w-5 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {pyqs.slice(0, 3).map((pyq: any) => (
-                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Explore Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-6 md:p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
-            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Digital Library */}
-            <Link to="/exam-preparation" className="block group h-full">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
-                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
-              </div>
-            </Link>
-            
-            {/* Mentorship */}
-            <div className="group h-full cursor-pointer">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
-                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
-              </div>
-            </div>
-            
-            {/* PDF Bank */}
-            <div className="group h-full cursor-pointer">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
-                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Footer Message - Updated size, alignment, and content */}
       <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
       </div>
@@ -754,7 +628,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .from('enrollments')
             .select(`
               id, course_id, subject_name,
-              courses (id, title, description, start_date, end_date, image_url, price)
+              courses (id, title, description, level, exam_type, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
           fetchRecommendedCourses(profile)
@@ -779,6 +653,8 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 course_id: course_id,
                 title: enrollment.courses.title || 'Unnamed Batch',
                 description: enrollment.courses.description,
+                level: enrollment.courses.level,
+                exam_type: enrollment.courses.exam_type,
                 start_date: enrollment.courses.start_date,
                 end_date: enrollment.courses.end_date,
                 status: status,
