@@ -58,7 +58,7 @@ type RawEnrollment = {
     title: string | null;
     description: string | null;
     level: string | null;
-    exam_type: string | null;
+    exam_category: string | null; // Fixed: changed from exam_type to exam_category
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
@@ -71,7 +71,7 @@ type GroupedEnrollment = {
   title: string;
   description: string | null;
   level: string | null;
-  exam_type: string | null;
+  exam_category: string | null; // Fixed: changed from exam_type to exam_category
   start_date: string | null; 
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
@@ -243,9 +243,9 @@ const EnrolledView = ({
                         {currentBatch.level}
                       </Badge>
                     )}
-                    {currentBatch.exam_type && (
+                    {currentBatch.exam_category && (
                       <Badge className="bg-purple-500/20 text-purple-100 hover:bg-purple-500/30 border-0">
-                        {currentBatch.exam_type}
+                        {currentBatch.exam_category}
                       </Badge>
                     )}
                     <Badge className={cn(
@@ -461,7 +461,7 @@ const EnrolledView = ({
 };
 
 
-// --- View 2: Student is NOT Enrolled (RESTORED) ---
+// --- View 2: Student is NOT Enrolled ---
 const NotEnrolledView = ({ 
   profile,
   recommendedCourses,
@@ -661,9 +661,10 @@ const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
     }
   } else if (profile.program_type === 'COMPETITIVE_EXAM') {
     query = query.eq('exam_category', 'COMPETITIVE_EXAM'); 
-    if (level === 2 && profile.exam_type) {
-      query = query.eq('exam_type', profile.exam_type);
-    }
+    // Fixed: removed the query for exam_type since the column doesn't exist
+    // if (level === 2 && profile.exam_type) {
+    //   query = query.eq('exam_type', profile.exam_type);
+    // }
   } else {
     query = query.eq('exam_category', profile.program_type); 
   }
@@ -767,7 +768,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .from('enrollments')
             .select(`
               id, course_id, subject_name,
-              courses (id, title, description, level, exam_type, start_date, end_date, image_url, price)
+              courses (id, title, description, level, exam_category, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
           fetchRecommendedCourses(profile)
@@ -793,7 +794,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 title: enrollment.courses.title || 'Unnamed Batch',
                 description: enrollment.courses.description,
                 level: enrollment.courses.level,
-                exam_type: enrollment.courses.exam_type,
+                exam_category: enrollment.courses.exam_category, // Fixed
                 start_date: enrollment.courses.start_date,
                 end_date: enrollment.courses.end_date,
                 status: status,
