@@ -118,6 +118,7 @@ const ModernDashboard: React.FC = () => {
               profile={profile}
               onProfileUpdate={handleProfileUpdate}
               onViewChange={setActiveView}
+              activeView={activeView}
             />
           </SheetContent>
         </Sheet>
@@ -143,6 +144,7 @@ const ModernDashboard: React.FC = () => {
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
             onViewChange={setActiveView}
+            activeView={activeView}
           />
         </aside>
 
