@@ -5,13 +5,12 @@ import {
   Book, 
   BookOpen,
   Users, 
-  MessageSquare, 
   ChevronRight, 
   FileText,
-  Target // Added Target icon for the welcome message
+  Target 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardTitle, CardDescription, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
@@ -51,7 +50,7 @@ type GroupedEnrollment = {
   price: number | null;
 };
 
-// --- Props Interface (used by both components) ---
+// --- Props Interface ---
 interface StudyPortalProps {
   profile: UserProfile | null;
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments' | 'studyPortal') => void;
@@ -235,49 +234,50 @@ const NotEnrolledView = ({
         </section>
       )}
 
-      <section>
-        <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
-        <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <Link to="/exam-preparation" className="block">
-            <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200 h-full">
-              <CardContent className="p-6">
-                <Book className="h-8 w-8 text-blue-600 mb-4" />
+      {/* Explore Section - Wrapped in a big container to match Recommendations */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Digital Library - Linked */}
+            <Link to="/exam-preparation" className="block group h-full">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col">
+                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
                 <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
-              </CardContent>
-            </Card>
-          </Link>
-          <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
-            <CardContent className="p-6">
-              <Users className="h-8 w-8 text-purple-600 mb-4" />
+              </div>
+            </Link>
+            
+            {/* Mentorship - Card */}
+            <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col cursor-pointer">
+              <Users className="h-8 w-8 text-purple-600 mb-4 hover:scale-110 transition-transform" />
               <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
               <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-50/50 hover:bg-gray-100 transition-colors border-gray-200">
-            <CardContent className="p-6">
-              <FileText className="h-8 w-8 text-red-600 mb-4" />
+            </div>
+            
+            {/* PDF Bank - Card (Replaces Ask Doubts) */}
+            <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col cursor-pointer">
+              <FileText className="h-8 w-8 text-red-600 mb-4 hover:scale-110 transition-transform" />
               <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
               <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };
 
 
-// --- NEW RECOMMENDATION LOGIC ---
+// --- RECOMMENDATION LOGIC ---
 
-/**
- * Helper to get a numeric, sortable value for a course's level or class.
- */
 const getSortableLevel = (course: any): number => {
-  const level = course.level; // 'Foundation', 'Diploma', 'Degree'
-  const status = course.student_status; // 'Class 11', 'Class 12', 'Dropper'
+  const level = course.level; 
+  const status = course.student_status; 
 
   if (level === 'Foundation') return 1;
   if (level === 'Diploma') return 2;
@@ -290,19 +290,16 @@ const getSortableLevel = (course: any): number => {
   return 99;
 };
 
-/**
- * Sorts courses based on the new logic
- */
 const sortRecommendedCourses = (courses: Course[]): Course[] => {
   return courses.sort((a, b) => {
-    // 1. Sort by Level/Class (Ascending)
+    // 1. Sort by Level/Class 
     const levelA = getSortableLevel(a);
     const levelB = getSortableLevel(b);
     if (levelA !== levelB) {
       return levelA - levelB;
     }
 
-    // 2. Sort by Start Date (Ascending - earliest first)
+    // 2. Sort by Start Date 
     const now = new Date().getTime();
     const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity;
     const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity;
@@ -316,59 +313,44 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
       return dateA - dateB; 
     }
 
-    // 3. Sort by Created Date (Descending - newest first)
+    // 3. Sort by Created Date 
     const createdA = new Date(a.created_at).getTime();
     const createdB = new Date(b.created_at).getTime();
     return createdB - createdA;
   });
 };
 
-/**
- * Builds a Supabase query for Level 1 or 2 filtering.
- * Returns null if profile is incomplete, which triggers fallback to show all courses.
- */
 const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
-  // If no profile or program type, return null to trigger fallback
   if (!profile || !profile.program_type) return null;
 
   let query: any = supabase
     .from('courses')
     .select('*');
   
-  // STRICT FILTERING based on profile
   if (profile.program_type === 'IITM_BS') {
-    query = query.eq('exam_category', 'IITM BS'); // Level 1
+    query = query.eq('exam_category', 'IITM BS'); 
     if (level === 2 && profile.branch) {
-      query = query.eq('branch', profile.branch); // Level 2 - adds branch filter
+      query = query.eq('branch', profile.branch);
     }
   } else if (profile.program_type === 'COMPETITIVE_EXAM') {
-    query = query.eq('exam_category', 'COMPETITIVE_EXAM'); // Level 1
+    query = query.eq('exam_category', 'COMPETITIVE_EXAM'); 
     if (level === 2 && profile.exam_type) {
-      query = query.eq('exam_type', profile.exam_type); // Level 2 - adds exam_type filter
+      query = query.eq('exam_type', profile.exam_type);
     }
   } else {
-    // For 'Upskilling' or other program types
     query = query.eq('exam_category', profile.program_type); 
   }
   return query;
 };
 
-/**
- * Fetches recommended courses with enhanced 3-level waterfall filter:
- * - Level 2: Most specific (profile + branch/exam_type)
- * - Level 1: Broader (profile only)
- * - Level 0: Intelligent fallback with diverse courses
- */
 async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
   const today = new Date().toISOString();
 
-  // Helper to get non-expired courses from a query
   const getValidCourses = async (
     queryBuilder: any 
   ): Promise<Course[]> => {
     if (!queryBuilder) return [];
     
-    // Filter: (end_date > today) OR (end_date IS NULL)
     const { data, error } = await queryBuilder.or(`end_date.gt.${today},end_date.is.null`);
     
     if (error) {
@@ -379,15 +361,12 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
   };
 
   try {
-    // Level 2: Most specific filtering (profile + detailed filters)
     const level2Query = buildProfileQuery(profile, 2);
     const level2Courses = await getValidCourses(level2Query);
 
-    // Level 1: Broader filtering (profile only, no branch/exam_type)
     const level1Query = buildProfileQuery(profile, 1);
     const level1Courses = await getValidCourses(level1Query);
     
-    // Combine Level 2 and Level 1 courses, de-duplicating
     const allCourses = new Map<string, Course>();
     
     level2Courses.forEach(course => allCourses.set(course.id, course));
@@ -395,28 +374,24 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
       if (!allCourses.has(course.id)) allCourses.set(course.id, course);
     });
     
-    // Level 0: Enhanced Fallback - Show diverse popular courses when profile incomplete
     if (allCourses.size === 0) {
       console.log("No profile-matched courses found. Showing diverse recommendations.");
       
-      // Fetch a diverse set of courses: featured, popular, and recent
       const diverseQuery = supabase
         .from('courses')
         .select('*')
         .or(`end_date.gt.${today},end_date.is.null`)
-        .limit(20); // Get more courses for better diversity
+        .limit(20); 
       
       const { data: diverseData, error: diverseError } = await diverseQuery;
       
       if (diverseError) {
         console.error("Error fetching diverse courses:", diverseError.message);
       } else if (diverseData) {
-        // Prioritize: bestsellers, then featured, then recent
         const bestsellers = diverseData.filter(c => c.bestseller);
         const featured = diverseData.filter(c => c.is_live && !c.bestseller);
         const recent = diverseData.filter(c => !c.bestseller && !c.is_live);
         
-        // Add in priority order, ensuring diversity
         [...bestsellers, ...featured, ...recent].forEach(course => {
           if (!allCourses.has(course.id) && allCourses.size < 15) {
             allCourses.set(course.id, course as Course);
@@ -425,11 +400,9 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
       }
     }
 
-    // Apply advanced sorting logic
     const combinedList = Array.from(allCourses.values());
     const sortedList = sortRecommendedCourses(combinedList);
 
-    // Return top 3 recommendations
     return sortedList.slice(0, 3);
 
   } catch (error: any) { 
@@ -437,14 +410,8 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     return []; 
   }
 }
-// --- END OF NEW RECOMMENDATION LOGIC ---
 
-
-/**
- * --- NEW INTERNAL COMPONENT ---
- * This component holds all the logic that *requires* a valid profile.
- * It will only be rendered by the main StudyPortal component if the profile is valid.
- */
+// --- Internal Component (Safe) ---
 const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -454,7 +421,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  // This is now SAFE because we know 'profile' is not null here.
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
 
@@ -469,7 +435,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
-        // This is also SAFE because 'profile' is not null.
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
           supabase
             .from('enrollments')
@@ -557,18 +522,8 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   );
 };
 
-
-/**
- * --- MAIN STUDY PORTAL COMPONENT ---
- * This is the component exported. It now acts as a "guard" or "router".
- * It checks for a valid profile *before* rendering the logic-heavy component.
- */
+// --- Main Component ---
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
-
-  // --- THE ROBUST FIX ---
-  // If the profile is missing or the program_type isn't set, show a
-  // welcome/prompt message instead of trying to render the portal.
-  // This prevents all downstream hooks from crashing.
   if (!profile || !profile.program_type) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-6 bg-white rounded-lg shadow-sm border border-gray-200 text-center">
@@ -584,7 +539,6 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
     );
   }
 
-  // If the profile is valid, render the actual portal content.
   return <StudyPortalContent profile={profile} onViewChange={onViewChange} />;
 };
 
