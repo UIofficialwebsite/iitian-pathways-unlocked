@@ -3,18 +3,20 @@ import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
   Book, 
-  BookOpen,
+  BookOpen, 
   Users, 
   ChevronRight, 
-  FileText,
-  Target,
-  ArrowRight,
-  ChevronDown,
-  MoreVertical,
-  Share2,
-  Info,
-  Check,
-  ArrowLeft
+  FileText, 
+  Target, 
+  ArrowRight, 
+  ChevronDown, 
+  MoreVertical, 
+  Share2, 
+  Info, 
+  Check, 
+  ArrowLeft,
+  Calendar,
+  Star
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -42,6 +44,7 @@ import {
 import { cn } from "@/lib/utils";
 
 // --- Imports from Course Detail Page ---
+import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -56,7 +59,6 @@ type Course = Tables<'courses'> & {
   discounted_price?: number | null;
 };
 
-// Define interfaces for fetched detail data
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -153,7 +155,6 @@ const EnrollmentListItem = ({
     return null;
   };
 
-  // Determine wrapper: div (with onClick) or Link
   const Container = onClick ? 'div' : Link;
   const containerProps = onClick 
     ? { onClick, className: "block group cursor-pointer" } 
@@ -181,6 +182,9 @@ const EnrollmentListItem = ({
             </div>
             
             {enrollment.description && (
+              // Removed line-clamp-2 here if you want full text on the card too, 
+              // but usually cards have limits. Keeping it here for card layout, 
+              // but removed in the Header detailed view below.
               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                 {enrollment.description}
               </p>
@@ -207,7 +211,7 @@ const EnrollmentListItem = ({
 };
 
 
-// --- View 1: Student IS Enrolled (UPDATED WITH FULL DETAILS) ---
+// --- View 1: Student IS Enrolled ---
 const EnrolledView = ({ 
   enrollments
 } : { 
@@ -215,31 +219,46 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  // State for the currently selected batch (defaults to the first one)
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  // View Mode: 'main' (list) or 'description' (Full Detail View)
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
-  // Data states for the Full Detail View
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Find the GroupedEnrollment object for the selected batch
+  // Refs for scrolling
+  const sectionRefs = {
+    features: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
+    schedule: useRef<HTMLDivElement>(null),
+    ssp: useRef<HTMLDivElement>(null),
+    access: useRef<HTMLDivElement>(null),
+    faqs: useRef<HTMLDivElement>(null),
+  };
+
+  const tabs = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'moreDetails', label: 'Details' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'access', label: 'Access' },
+    { id: 'faqs', label: 'FAQs' },
+  ];
+
   const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
 
-  // Fetch full details when selectedBatchId changes or when viewMode becomes 'description'
   useEffect(() => {
     const fetchDetails = async () => {
       if (!selectedBatchId) return;
       
       setLoadingDetails(true);
       try {
-        // We fetch fresh data to ensure we have everything Features/Schedule/etc. need
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', selectedBatchId).maybeSingle(),
           supabase.from('batch_schedule' as any).select('*').eq('course_id', selectedBatchId),
@@ -259,7 +278,6 @@ const EnrolledView = ({
 
     fetchDetails();
   }, [selectedBatchId]);
-
 
   const handleOpenSheet = () => {
     setTempSelectedBatchId(selectedBatchId);
@@ -291,7 +309,7 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: FULL DETAIL VIEW (IN PLACE) ---
+  // --- RENDER: FULL DETAIL VIEW ---
   if (viewMode === 'description') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
@@ -309,25 +327,58 @@ const EnrolledView = ({
           </Button>
         </div>
 
-        {/* Header Block for Selected Batch (Same "Blackish" block requested) */}
+        {/* Header Block */}
         <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="space-y-2">
-               <div className="flex items-center gap-2 text-blue-200 text-sm font-medium">
-                  <BookOpen className="h-4 w-4" />
-                  <span>Currently Viewing</span>
-               </div>
-               <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+          <div className="relative z-10 flex flex-col gap-6">
+            {/* Top Row: Viewing Label + Switch Button */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex items-center gap-2 text-blue-200 text-sm font-medium bg-black/20 px-3 py-1 rounded-full w-fit">
+                    <BookOpen className="h-4 w-4" />
+                    <span>Currently Viewing</span>
+                </div>
+                
+                <Button 
+                  onClick={() => handleOpenSheet()} 
+                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm transition-all shadow-sm"
+                >
+                  Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+            </div>
+
+            {/* Title & Stats */}
+            <div className="space-y-4">
+               <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
                   {fullCourseData?.title || currentBatchSummary.title}
                </h1>
-               <p className="text-slate-300 max-w-2xl line-clamp-2">
+               
+               {/* Full Description - NO line-clamp here */}
+               <p className="text-slate-300 max-w-3xl text-lg leading-relaxed">
                   {fullCourseData?.description || currentBatchSummary.description}
                </p>
+
+               {fullCourseData && (
+                 <div className="flex flex-wrap gap-4 text-sm text-slate-200 pt-2">
+                    <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                        <span className="font-bold text-white">{fullCourseData.rating || 4.8}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Users className="h-4 w-4 text-blue-400" />
+                        <span>{fullCourseData.students_enrolled || 450}+ students</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4 text-purple-400" />
+                        <span>Starts {fullCourseData.start_date ? new Date(fullCourseData.start_date).toLocaleDateString() : 'Soon'}</span>
+                    </div>
+                 </div>
+               )}
             </div>
-            <Button onClick={() => handleOpenSheet()} variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white">
-              Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
-            </Button>
           </div>
+        </div>
+
+        {/* Sticky Navigation Bar */}
+        <div className="sticky top-0 z-20 -mx-4 sm:-mx-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
+             <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
         </div>
 
         {/* Content Area - Full Details */}
@@ -336,14 +387,17 @@ const EnrolledView = ({
              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
            </div>
         ) : fullCourseData ? (
-           <div className="space-y-12 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <FeaturesSection course={fullCourseData} />
-              <AboutSection course={fullCourseData} />
-              <MoreDetailsSection />
-              <ScheduleSection scheduleData={scheduleData} />
-              <SSPPortalSection />
-              <CourseAccessGuide />
-              <FAQSection faqs={faqs} />
+           // NO Padding here to ensure videos take full width
+           <div className="space-y-12 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={fullCourseData} /></div>
+              <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
+              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
+              <div id="access" ref={sectionRefs.access} className="scroll-mt-32"><CourseAccessGuide /></div>
+              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
+                  <FAQSection faqs={faqs} />
+              </div>
            </div>
         ) : (
            <div className="text-center py-10 text-gray-500">
@@ -374,7 +428,6 @@ const EnrolledView = ({
             </div>
           </div>
 
-          {/* Three Dot Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/10 text-white">
@@ -395,7 +448,7 @@ const EnrolledView = ({
         </div>
       </div>
 
-      {/* --- BATCH CARD (Clickable to open details) --- */}
+      {/* --- BATCH CARD --- */}
       <section>
         <div className="flex items-center justify-between mb-4">
            <h2 className="text-xl font-bold text-gray-900">Quick Access</h2>
@@ -526,146 +579,7 @@ const EnrolledView = ({
 };
 
 
-// --- View 2: Student is NOT Enrolled ---
-const NotEnrolledView = ({ 
-  profile,
-  recommendedCourses,
-  isLoading,
-  notes, 
-  pyqs,
-  onEditProfile
-} : { 
-  profile: any;
-  recommendedCourses: Course[], 
-  isLoading: boolean,
-  notes: any[], 
-  pyqs: any[];
-  onEditProfile: () => void;
-}) => {
-  const hasContent = notes.length > 0 || pyqs.length > 0;
-  
-  return (
-    <div className="space-y-10">
-      {/* Profile Completion Banner */}
-      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
-      
-      {/* Recommended Courses */}
-      <RecommendedBatchesSection 
-        recommendedCourses={recommendedCourses} 
-        loading={isLoading} 
-      />
-    
-      {/* Quick Access - Only show if user has content */}
-      {hasContent && (
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
-          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {/* Notes Card */}
-            {notes.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {notes.slice(0, 3).map((note: any) => (
-                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {/* PYQs Card */}
-            {pyqs.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
-                  <FileText className="h-5 w-5 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {pyqs.slice(0, 3).map((pyq: any) => (
-                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Explore Section */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="p-6 md:p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
-            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Digital Library */}
-            <Link to="/exam-preparation" className="block group h-full">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
-                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
-              </div>
-            </Link>
-            
-            {/* Mentorship */}
-            <div className="group h-full cursor-pointer">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
-                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
-              </div>
-            </div>
-            
-            {/* PDF Bank */}
-            <div className="group h-full cursor-pointer">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
-                </div>
-                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
-                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Footer Message - Updated size, alignment, and content */}
-      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
-        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
-      </div>
-    </div>
-  );
-};
-
-
-// --- RECOMMENDATION LOGIC ---
+// --- RECOMMENDATION LOGIC (Unchanged) ---
 
 const getSortableLevel = (course: any): number => {
   const level = course.level; 
