@@ -13,7 +13,8 @@ import {
   MoreVertical,
   Share2,
   Info,
-  Check
+  Check,
+  ArrowLeft
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -31,7 +32,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-  SheetClose,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -54,15 +54,18 @@ type RawEnrollment = {
   courses: {
     id: string;
     title: string | null;
+    description: string | null; // Added description
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
     price: number | null; 
   } | null;
 };
+
 type GroupedEnrollment = {
   course_id: string;
   title: string;
+  description: string | null; // Added description
   start_date: string | null; 
   end_date: string | null;   
   status: 'Ongoing' | 'Batch Expired' | 'Unknown';
@@ -157,7 +160,6 @@ const EnrolledView = ({
 } : { 
   enrollments: GroupedEnrollment[]
 }) => {
-  const navigate = useNavigate();
   const { toast } = useToast();
 
   // State for the currently selected batch (defaults to the first one)
@@ -166,6 +168,9 @@ const EnrolledView = ({
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   // Sidebar state
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
+  // View Mode: 'main' (list) or 'description' (preview)
+  const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
   // Find the full object for the selected batch
   const currentBatch = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
@@ -180,6 +185,8 @@ const EnrolledView = ({
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
+    // Reset to main view if we were in description, to show the new batch's card
+    setViewMode('main');
     toast({
       title: "Batch Switched",
       description: `You are now viewing ${enrollments.find(e => e.course_id === tempSelectedBatchId)?.title}`,
@@ -188,9 +195,7 @@ const EnrolledView = ({
 
   // Context Menu Actions
   const handleDescription = () => {
-    if (currentBatch) {
-      navigate(`/courses/${currentBatch.course_id}`);
-    }
+    setViewMode('description');
   };
 
   const handleShare = () => {
@@ -204,9 +209,89 @@ const EnrolledView = ({
     }
   };
 
+  // --- RENDER: DESCRIPTION VIEW ---
+  if (viewMode === 'description' && currentBatch) {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+        {/* Back Button Header */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setViewMode('main')}
+            className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
+          >
+            <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" />
+            Back to Portal
+          </Button>
+        </div>
+
+        {/* Description Content */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+          {/* Cover Image */}
+          <div className="w-full h-48 sm:h-64 bg-gray-100 relative">
+             <img 
+              src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
+              alt={currentBatch.title} 
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end">
+              <div className="p-6 text-white">
+                <h1 className="text-2xl sm:text-3xl font-bold">{currentBatch.title}</h1>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-8 space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">About this Batch</h3>
+              <div className="prose prose-blue max-w-none text-gray-600">
+                {currentBatch.description ? (
+                  <p className="whitespace-pre-line">{currentBatch.description}</p>
+                ) : (
+                  <p className="italic text-gray-500">No description available for this batch.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Info Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-gray-100">
+               <div>
+                 <p className="text-sm text-gray-500 font-medium">Start Date</p>
+                 <p className="text-gray-900">
+                   {currentBatch.start_date 
+                     ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+                     : 'TBA'}
+                 </p>
+               </div>
+               <div>
+                 <p className="text-sm text-gray-500 font-medium">Status</p>
+                 <span className={cn(
+                   "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+                   currentBatch.status === 'Ongoing' ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                 )}>
+                   {currentBatch.status}
+                 </span>
+               </div>
+            </div>
+            
+             <div className="pt-4">
+               <Link to={`/courses/${currentBatch.course_id}`}>
+                <Button className="w-full sm:w-auto">
+                  Go to Class <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+               </Link>
+             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER: MAIN LIST VIEW ---
   return (
     <div className="space-y-8">
-      {/* --- HEADER --- */}
+      {/* --- HEADER (Visible only in Main View) --- */}
       <div className="flex justify-between items-start">
         <div className="space-y-1">
           <p className="text-sm text-gray-500 font-medium">Your batch</p>
@@ -306,7 +391,7 @@ const EnrolledView = ({
         </SheetContent>
       </Sheet>
 
-      {/* --- EXPLORE SECTION (Same as NotEnrolledView) --- */}
+      {/* --- EXPLORE SECTION --- */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-12">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -669,7 +754,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
             .from('enrollments')
             .select(`
               id, course_id, subject_name,
-              courses (id, title, start_date, end_date, image_url, price)
+              courses (id, title, description, start_date, end_date, image_url, price)
             `)
             .eq('user_id', user.id),
           fetchRecommendedCourses(profile)
@@ -693,6 +778,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
               enrollmentsMap.set(course_id, {
                 course_id: course_id,
                 title: enrollment.courses.title || 'Unnamed Batch',
+                description: enrollment.courses.description,
                 start_date: enrollment.courses.start_date,
                 end_date: enrollment.courses.end_date,
                 status: status,
