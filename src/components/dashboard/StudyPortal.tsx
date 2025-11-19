@@ -16,7 +16,8 @@ import {
   Check, 
   ArrowLeft,
   Calendar,
-  Star
+  Star,
+  Layers
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -44,7 +45,6 @@ import {
 import { cn } from "@/lib/utils";
 
 // --- Imports from Course Detail Page ---
-import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -182,9 +182,6 @@ const EnrollmentListItem = ({
             </div>
             
             {enrollment.description && (
-              // Removed line-clamp-2 here if you want full text on the card too, 
-              // but usually cards have limits. Keeping it here for card layout, 
-              // but removed in the Header detailed view below.
               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                 {enrollment.description}
               </p>
@@ -210,6 +207,38 @@ const EnrollmentListItem = ({
   );
 };
 
+// --- Custom Tab Navigation Component with Scroll Spy Support ---
+const CustomDashboardTabNav = ({ 
+  tabs, 
+  activeTab, 
+  onTabClick 
+}: { 
+  tabs: { id: string, label: string }[], 
+  activeTab: string, 
+  onTabClick: (id: string) => void 
+}) => {
+  return (
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm">
+      <div className="flex items-center gap-1 md:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => onTabClick(tab.id)}
+            className={cn(
+              "py-4 px-2 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200",
+              activeTab === tab.id
+                ? "border-blue-600 text-blue-600"
+                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 // --- View 1: Student IS Enrolled ---
 const EnrolledView = ({ 
@@ -230,16 +259,8 @@ const EnrolledView = ({
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Refs for scrolling
-  const sectionRefs = {
-    features: useRef<HTMLDivElement>(null),
-    about: useRef<HTMLDivElement>(null),
-    moreDetails: useRef<HTMLDivElement>(null),
-    schedule: useRef<HTMLDivElement>(null),
-    ssp: useRef<HTMLDivElement>(null),
-    access: useRef<HTMLDivElement>(null),
-    faqs: useRef<HTMLDivElement>(null),
-  };
+  // State for Active Tab Highlighting
+  const [activeTab, setActiveTab] = useState('features');
 
   const tabs = [
     { id: 'features', label: 'Features' },
@@ -279,6 +300,46 @@ const EnrolledView = ({
     fetchDetails();
   }, [selectedBatchId]);
 
+  // --- SCROLL SPY EFFECT ---
+  useEffect(() => {
+    if (viewMode !== 'description') return;
+
+    const mainContainer = document.querySelector('main'); // Target the dashboard's scroll container
+    if (!mainContainer) return;
+
+    const handleScroll = () => {
+      const headerOffset = 200; // Adjust based on header height
+      
+      for (const tab of tabs) {
+        const element = document.getElementById(tab.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          // Check if element is within the "active" zone near top of viewport
+          if (rect.top < 250 && rect.bottom > 150) {
+            setActiveTab(tab.id);
+            break;
+          }
+        }
+      }
+    };
+
+    mainContainer.addEventListener('scroll', handleScroll, { passive: true });
+    // Trigger once initially
+    handleScroll();
+
+    return () => {
+      mainContainer.removeEventListener('scroll', handleScroll);
+    };
+  }, [viewMode, fullCourseData]); // Re-run when data loads or mode changes
+
+  const handleTabClick = (id: string) => {
+    setActiveTab(id);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const handleOpenSheet = () => {
     setTempSelectedBatchId(selectedBatchId);
     setIsSheetOpen(true);
@@ -312,10 +373,10 @@ const EnrolledView = ({
   // --- RENDER: FULL DETAIL VIEW ---
   if (viewMode === 'description') {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="space-y-0 animate-in fade-in slide-in-from-bottom-4 duration-300 pb-20">
         
-        {/* Back Button */}
-        <div className="flex items-center gap-2">
+        {/* Back Button Row */}
+        <div className="flex items-center gap-2 mb-4 px-1">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -328,18 +389,20 @@ const EnrolledView = ({
         </div>
 
         {/* Header Block */}
-        <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+        <div className="premium-course-header rounded-t-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg mb-0">
           <div className="relative z-10 flex flex-col gap-6">
+            
             {/* Top Row: Viewing Label + Switch Button */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex items-center gap-2 text-blue-200 text-sm font-medium bg-black/20 px-3 py-1 rounded-full w-fit">
+                <div className="flex items-center gap-2 text-blue-200 text-sm font-medium bg-black/20 px-3 py-1 rounded-full w-fit backdrop-blur-md border border-white/10">
                     <BookOpen className="h-4 w-4" />
                     <span>Currently Viewing</span>
                 </div>
                 
+                {/* FIXED: Switch Batch Button Styling */}
                 <Button 
                   onClick={() => handleOpenSheet()} 
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm transition-all shadow-sm"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm"
                 >
                   Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -351,22 +414,22 @@ const EnrolledView = ({
                   {fullCourseData?.title || currentBatchSummary.title}
                </h1>
                
-               {/* Full Description - NO line-clamp here */}
-               <p className="text-slate-300 max-w-3xl text-lg leading-relaxed">
+               {/* Description - Full Text */}
+               <p className="text-slate-200 max-w-3xl text-lg leading-relaxed opacity-90">
                   {fullCourseData?.description || currentBatchSummary.description}
                </p>
 
                {fullCourseData && (
-                 <div className="flex flex-wrap gap-4 text-sm text-slate-200 pt-2">
-                    <div className="flex items-center gap-1">
+                 <div className="flex flex-wrap gap-6 text-sm text-slate-200 pt-2 border-t border-white/10 mt-4">
+                    <div className="flex items-center gap-2">
                         <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                        <span className="font-bold text-white">{fullCourseData.rating || 4.8}</span>
+                        <span className="font-bold text-white">{fullCourseData.rating || 4.8} Rating</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                         <Users className="h-4 w-4 text-blue-400" />
-                        <span>{fullCourseData.students_enrolled || 450}+ students</span>
+                        <span>{fullCourseData.students_enrolled || 450}+ Enrolled</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-purple-400" />
                         <span>Starts {fullCourseData.start_date ? new Date(fullCourseData.start_date).toLocaleDateString() : 'Soon'}</span>
                     </div>
@@ -377,30 +440,37 @@ const EnrolledView = ({
         </div>
 
         {/* Sticky Navigation Bar */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
-             <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
+        <div className="sticky top-0 z-40 bg-white shadow-md mb-6 -mx-1 md:mx-0">
+           <CustomDashboardTabNav 
+             tabs={tabs} 
+             activeTab={activeTab} 
+             onTabClick={handleTabClick} 
+           />
         </div>
 
         {/* Content Area - Full Details */}
         {loadingDetails ? (
-           <div className="flex items-center justify-center py-12">
+           <div className="flex items-center justify-center py-12 bg-white rounded-b-xl min-h-[400px]">
              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
            </div>
         ) : fullCourseData ? (
-           // NO Padding here to ensure videos take full width
-           <div className="space-y-12 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={fullCourseData} /></div>
-              <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
-              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
-              <div id="access" ref={sectionRefs.access} className="scroll-mt-32"><CourseAccessGuide /></div>
-              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
-                  <FAQSection faqs={faqs} />
+           // FIXED: Padding restored but responsive
+           <div className="bg-white rounded-b-xl border-x border-b border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-4 md:p-6 space-y-12">
+                <div id="features" className="scroll-mt-32"><FeaturesSection course={fullCourseData} /></div>
+                <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
+                <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
+                <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
+                <div id="faqs" className="scroll-mt-32">
+                    {/* Ensure faqs prop is passed correctly even if empty initially */}
+                    <FAQSection faqs={faqs || []} />
+                </div>
               </div>
            </div>
         ) : (
-           <div className="text-center py-10 text-gray-500">
+           <div className="text-center py-10 text-gray-500 bg-white rounded-b-xl border border-gray-200">
              Failed to load details. Please try again.
            </div>
         )}
