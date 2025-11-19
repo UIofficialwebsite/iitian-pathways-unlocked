@@ -286,9 +286,9 @@ const NotEnrolledView = ({
         </div>
       </div>
       
-      {/* Footer Message */}
-      <div className="flex items-center justify-center pt-4 pb-8 text-gray-500 text-sm font-medium">
-        <span className="text-red-500 mx-1">❤️</span> from UnknownIITians
+      {/* Footer Message - Updated size, alignment, and content */}
+      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
       </div>
     </div>
   );
