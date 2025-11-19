@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -14,11 +14,7 @@ import {
   Share2,
   Info,
   Check,
-  ArrowLeft,
-  Star,
-  Calendar,
-  GitBranch,
-  Layers
+  ArrowLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -45,11 +41,33 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
+// --- Imports from Course Detail Page ---
+import FeaturesSection from '@/components/courses/detail/FeaturesSection';
+import AboutSection from '@/components/courses/detail/AboutSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
+import ScheduleSection from '@/components/courses/detail/ScheduleSection';
+import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
+import FAQSection from '@/components/courses/detail/FAQSection';
+import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
+
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
 type Course = Tables<'courses'> & {
   discounted_price?: number | null;
 };
+
+// Define interfaces for fetched detail data
+interface BatchScheduleItem {
+  id: string;
+  course_id: string;
+  batch_name: string;
+  subject_name: string;
+  file_link: string;
+}
+interface CourseFaq {
+  question: string;
+  answer: string;
+}
 
 type RawEnrollment = {
   id: string;
@@ -162,7 +180,6 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {/* Description added here */}
             {enrollment.description && (
               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                 {enrollment.description}
@@ -190,7 +207,7 @@ const EnrollmentListItem = ({
 };
 
 
-// --- View 1: Student IS Enrolled (NEW LAYOUT) ---
+// --- View 1: Student IS Enrolled (UPDATED WITH FULL DETAILS) ---
 const EnrolledView = ({ 
   enrollments
 } : { 
@@ -200,43 +217,72 @@ const EnrolledView = ({
 
   // State for the currently selected batch (defaults to the first one)
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
-  // State for the temporary selection in the sidebar (before clicking Continue)
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
-  // Sidebar state
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  // View Mode: 'main' (list) or 'description' (preview)
+  // View Mode: 'main' (list) or 'description' (Full Detail View)
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
-  // Find the full object for the selected batch
-  const currentBatch = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+  // Data states for the Full Detail View
+  const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
+  const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
-  // Handle opening the sheet: reset temp selection to current selection
+  // Find the GroupedEnrollment object for the selected batch
+  const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+
+  // Fetch full details when selectedBatchId changes or when viewMode becomes 'description'
+  useEffect(() => {
+    const fetchDetails = async () => {
+      if (!selectedBatchId) return;
+      
+      setLoadingDetails(true);
+      try {
+        // We fetch fresh data to ensure we have everything Features/Schedule/etc. need
+        const [courseResult, scheduleResult, faqResult] = await Promise.all([
+          supabase.from('courses').select('*').eq('id', selectedBatchId).maybeSingle(),
+          supabase.from('batch_schedule' as any).select('*').eq('course_id', selectedBatchId),
+          supabase.from('course_faqs' as any).select('question, answer').eq('course_id', selectedBatchId),
+        ]);
+
+        if (courseResult.data) setFullCourseData(courseResult.data as any);
+        if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
+        if (faqResult.data) setFaqs(faqResult.data as any);
+
+      } catch (err) {
+        console.error("Error fetching details", err);
+      } finally {
+        setLoadingDetails(false);
+      }
+    };
+
+    fetchDetails();
+  }, [selectedBatchId]);
+
+
   const handleOpenSheet = () => {
     setTempSelectedBatchId(selectedBatchId);
     setIsSheetOpen(true);
   };
 
-  // Handle "Continue": commit the temp selection
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
-    // Reset to main view if we were in description, to show the new batch's card
-    setViewMode('main');
+    setViewMode('main'); 
     toast({
       title: "Batch Switched",
       description: `You are now viewing ${enrollments.find(e => e.course_id === tempSelectedBatchId)?.title}`,
     });
   };
 
-  // Context Menu Actions
   const handleDescription = () => {
     setViewMode('description');
   };
 
   const handleShare = () => {
-    if (currentBatch) {
-      const shareUrl = `${window.location.origin}/courses/${currentBatch.course_id}`;
+    if (currentBatchSummary) {
+      const shareUrl = `${window.location.origin}/courses/${currentBatchSummary.course_id}`;
       navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Link Copied",
@@ -245,11 +291,12 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: DESCRIPTION VIEW (UPDATED WITH PREMIUM HEADER) ---
-  if (viewMode === 'description' && currentBatch) {
+  // --- RENDER: FULL DETAIL VIEW (IN PLACE) ---
+  if (viewMode === 'description') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        {/* Back Button Header */}
+        
+        {/* Back Button */}
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
@@ -258,105 +305,51 @@ const EnrolledView = ({
             className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
           >
             <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" />
-            Back to Portal
+            Back to List
           </Button>
         </div>
 
-        {/* Premium Header Container */}
-        <div className="rounded-xl overflow-hidden shadow-xl border border-slate-700/20 bg-white">
-          {/* Dark Gradient Header */}
-          <div className="premium-course-header p-6 md:p-10 text-white relative overflow-hidden">
-            <div className="relative z-10 max-w-4xl">
-              {/* Badges */}
-              <div className="flex flex-wrap gap-2 mb-6">
-                {currentBatch.exam_category && (
-                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-200 border border-blue-400/30 hover:bg-blue-500/30">
-                    {currentBatch.exam_category}
-                  </Badge>
-                )}
-                {currentBatch.level && (
-                  <Badge variant="outline" className="border-slate-500 text-slate-300 backdrop-blur-sm">
-                    <Layers className="h-3 w-3 mr-1" /> {currentBatch.level}
-                  </Badge>
-                )}
-                {currentBatch.bestseller && (
-                  <Badge className="bg-amber-500/90 text-white border-amber-600/50 shadow-lg shadow-amber-900/20">
-                    ⭐ Best Seller
-                  </Badge>
-                )}
-                <Badge className={cn(
-                  "font-semibold shadow-sm",
-                  currentBatch.status === 'Ongoing' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
-                )}>
-                  {currentBatch.status}
-                </Badge>
-              </div>
-
-              {/* Title */}
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-br from-white via-blue-50 to-blue-100 bg-clip-text text-transparent leading-tight">
-                {currentBatch.title}
-              </h1>
-
-              {/* Description */}
-              <p className="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-3xl">
-                {currentBatch.description || "Join this comprehensive course to master your subjects with expert guidance and structured learning paths."}
-              </p>
-
-              {/* Stats Row */}
-              <div className="flex flex-wrap gap-6 text-sm md:text-base border-t border-slate-700/50 pt-6">
-                <div className="flex items-center gap-2 text-slate-200">
-                  <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-                  <span className="font-bold text-white">{currentBatch.rating || 4.8}</span>
-                  <span className="text-slate-400">rating</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-200">
-                  <Users className="h-5 w-5 text-blue-400" />
-                  <span className="font-bold text-white">
-                    {currentBatch.students_enrolled ? (currentBatch.students_enrolled + 120) : 450}+
-                  </span>
-                  <span className="text-slate-400">students</span>
-                </div>
-                <div className="flex items-center gap-2 text-slate-200">
-                  <Calendar className="h-5 w-5 text-purple-400" />
-                  <span className="text-slate-400">Started:</span>
-                  <span className="font-medium text-white">
-                    {currentBatch.start_date 
-                      ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                      : 'Recently'}
-                  </span>
-                </div>
-              </div>
+        {/* Header Block for Selected Batch (Same "Blackish" block requested) */}
+        <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+          <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="space-y-2">
+               <div className="flex items-center gap-2 text-blue-200 text-sm font-medium">
+                  <BookOpen className="h-4 w-4" />
+                  <span>Currently Viewing</span>
+               </div>
+               <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                  {fullCourseData?.title || currentBatchSummary.title}
+               </h1>
+               <p className="text-slate-300 max-w-2xl line-clamp-2">
+                  {fullCourseData?.description || currentBatchSummary.description}
+               </p>
             </div>
-          </div>
-
-          {/* Action Bar */}
-          <div className="bg-white p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-             <div className="flex items-center gap-4 w-full sm:w-auto">
-                <div className="h-16 w-28 hidden sm:block rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
-                   <img 
-                    src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
-                    alt="Preview" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                   <p className="text-sm text-gray-500 font-medium">Ready to learn?</p>
-                   <p className="text-gray-900 font-semibold">Continue your progress</p>
-                </div>
-             </div>
-             
-             <div className="flex gap-3 w-full sm:w-auto">
-               <Button variant="outline" onClick={() => handleShare()} className="flex-1 sm:flex-none">
-                 <Share2 className="h-4 w-4 mr-2" /> Share
-               </Button>
-               <Link to={`/courses/${currentBatch.course_id}`} className="flex-1 sm:flex-none">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
-                  Go to Class <ChevronRight className="ml-2 h-4 w-4" />
-                </Button>
-               </Link>
-             </div>
+            <Button onClick={() => handleOpenSheet()} variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800 hover:text-white">
+              Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
           </div>
         </div>
+
+        {/* Content Area - Full Details */}
+        {loadingDetails ? (
+           <div className="flex items-center justify-center py-12">
+             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+           </div>
+        ) : fullCourseData ? (
+           <div className="space-y-12 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+              <FeaturesSection course={fullCourseData} />
+              <AboutSection course={fullCourseData} />
+              <MoreDetailsSection />
+              <ScheduleSection scheduleData={scheduleData} />
+              <SSPPortalSection />
+              <CourseAccessGuide />
+              <FAQSection faqs={faqs} />
+           </div>
+        ) : (
+           <div className="text-center py-10 text-gray-500">
+             Failed to load details. Please try again.
+           </div>
+        )}
       </div>
     );
   }
@@ -364,52 +357,61 @@ const EnrolledView = ({
   // --- RENDER: MAIN LIST VIEW ---
   return (
     <div className="space-y-8">
-      {/* --- HEADER (Visible only in Main View) --- */}
-      <div className="flex justify-between items-start">
-        <div className="space-y-1">
-          <p className="text-sm text-gray-500 font-medium">Your batch</p>
-          <div 
-            className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity group"
-            onClick={handleOpenSheet}
-          >
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
-              {currentBatch?.title}
-            </h1>
-            <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 transition-colors mt-1" />
+      
+      {/* --- Header with Background Color Block --- */}
+      <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+        <div className="relative z-10 flex justify-between items-start">
+          <div className="space-y-2">
+            <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
+            <div 
+              className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity group"
+              onClick={handleOpenSheet}
+            >
+              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                {currentBatchSummary?.title}
+              </h1>
+              <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
+            </div>
           </div>
-        </div>
 
-        {/* Three Dot Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
-              <MoreVertical className="h-6 w-6 text-gray-500" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
-              <Info className="mr-2 h-4 w-4" />
-              <span>Description</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
-              <Share2 className="mr-2 h-4 w-4" />
-              <span>Share Batch</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+          {/* Three Dot Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/10 text-white">
+                <MoreVertical className="h-6 w-6" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
+                <Info className="mr-2 h-4 w-4" />
+                <span>View Details</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+                <Share2 className="mr-2 h-4 w-4" />
+                <span>Share Batch</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
-      {/* --- BATCH CONTENT --- */}
+      {/* --- BATCH CARD (Clickable to open details) --- */}
       <section>
-        {currentBatch && (
+        <div className="flex items-center justify-between mb-4">
+           <h2 className="text-xl font-bold text-gray-900">Quick Access</h2>
+           <Button variant="link" className="text-blue-600 p-0 h-auto" onClick={() => setViewMode('description')}>
+             View Full Details <ArrowRight className="ml-1 h-4 w-4" />
+           </Button>
+        </div>
+        {currentBatchSummary && (
           <EnrollmentListItem 
-            enrollment={currentBatch} 
-            onClick={() => setViewMode('description')} // Click triggers description view
+            enrollment={currentBatchSummary} 
+            onClick={() => setViewMode('description')} 
           />
         )}
       </section>
 
-      {/* --- SIDEBAR (SHEET) --- */}
+      {/* --- SIDEBAR (SHEET for switching batches) --- */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
           <SheetHeader className="mb-6">
