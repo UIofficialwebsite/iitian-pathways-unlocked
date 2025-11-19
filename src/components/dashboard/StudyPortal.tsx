@@ -49,6 +49,7 @@ type Course = Tables<'courses'> & {
   discounted_price?: number | null;
 };
 
+// Expanded type definition to include new fields
 type RawEnrollment = {
   id: string;
   course_id: string;
@@ -191,6 +192,7 @@ const EnrolledView = ({
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
+    // Reset to main view to show the new batch card
     setViewMode('main');
     toast({
       title: "Batch Switched",
@@ -220,7 +222,7 @@ const EnrolledView = ({
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           
-          {/* 1. Dark Header Section */}
+          {/* 1. Dark Header Section (Blackish) */}
           <div className="bg-[#1e293b] p-6 sm:p-8 text-white relative">
              {/* Back Button */}
              <Button 
@@ -234,9 +236,9 @@ const EnrolledView = ({
             </Button>
 
             <div className="mt-10 sm:mt-8">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+              <div className="flex flex-col gap-6">
                 {/* Title & Badges */}
-                <div className="space-y-4 flex-1">
+                <div className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {currentBatch.level && (
                       <Badge className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border-0">
@@ -279,7 +281,7 @@ const EnrolledView = ({
             </div>
           </div>
 
-          {/* 2. White Body Section */}
+          {/* 2. White Body Section (Description Only) */}
           <div className="p-6 sm:p-8 bg-white min-h-[300px]">
             <div className="max-w-4xl">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">About this Batch</h3>
