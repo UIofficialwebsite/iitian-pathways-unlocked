@@ -263,6 +263,8 @@ const EnrolledView = ({
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  // Added state to track where the sidebar was opened from: 'main' (dashboard) or 'detail' (course detail)
+  const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
@@ -344,7 +346,9 @@ const EnrolledView = ({
     }
   };
 
-  const handleOpenSheet = () => {
+  // Updated handler to accept the source of the click
+  const handleOpenSheet = (source: 'main' | 'detail') => {
+    setSidebarSource(source);
     setTempSelectedBatchId(selectedBatchId);
     setIsSheetOpen(true);
   };
@@ -375,7 +379,6 @@ const EnrolledView = ({
   };
 
   // --- DEFINING SIDEBAR COMPONENT HERE TO REUSE IN BOTH VIEWS ---
-  // This variable holds the Sidebar UI so we can render it in both return blocks below.
   const batchSelectionSheet = (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
@@ -437,7 +440,8 @@ const EnrolledView = ({
               onClick={handleContinue} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
             >
-              Switch to Selected
+              {/* Dynamic text based on where the sidebar was opened from */}
+              {sidebarSource === 'main' ? "Continue" : "Switch to Selected"}
             </Button>
           </SheetFooter>
         )}
@@ -474,10 +478,10 @@ const EnrolledView = ({
                         <span>Currently Viewing</span>
                     </div>
                     
-                    {/* Switch Batch Button in Detail View */}
+                    {/* Switch Batch Button in Detail View - Sets source to 'detail' */}
                     {canSwitchBatch && (
                       <Button 
-                        onClick={() => handleOpenSheet()} 
+                        onClick={() => handleOpenSheet('detail')} 
                         className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-8 text-sm"
                       >
                         Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
@@ -555,7 +559,7 @@ const EnrolledView = ({
           <div className="space-y-2">
             <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
             
-            {/* Conditional Click Handler & Arrow Visibility - MAIN DASHBOARD FIX */}
+            {/* Main Dashboard Title/Arrow - Sets source to 'main' */}
             <div 
               role="button"
               tabIndex={0}
@@ -565,12 +569,12 @@ const EnrolledView = ({
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet();
+                if (canSwitchBatch) handleOpenSheet('main');
               }}
               onKeyDown={(e) => {
                 if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  handleOpenSheet();
+                  handleOpenSheet('main');
                 }
               }}
             >
