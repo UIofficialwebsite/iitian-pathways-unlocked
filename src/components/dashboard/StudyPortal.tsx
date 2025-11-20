@@ -652,7 +652,7 @@ const EnrolledView = ({
 };
 
 
-// --- View 2: Student is NOT Enrolled (Retained from user's provided code) ---
+// --- View 2: Student is NOT Enrolled (Retained from user's provided code, with prop fix) ---
 const NotEnrolledView = ({ 
   profile,
   recommendedCourses,
@@ -675,10 +675,10 @@ const NotEnrolledView = ({
       {/* Profile Completion Banner */}
       <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
       
-      {/* Recommended Courses */}
+      {/* Recommended Courses (FIX APPLIED HERE: Restored expected prop names) */}
       <RecommendedBatchesSection 
-        courses={recommendedCourses} // Changed from recommendedCourses={recommendedCourses}
-        isLoading={isLoading} // Changed from loading={isLoading}
+        recommendedCourses={recommendedCourses} // Corrected prop name
+        loading={isLoading} // Corrected prop name
       />
     
       {/* Quick Access - Only show if user has content */}
