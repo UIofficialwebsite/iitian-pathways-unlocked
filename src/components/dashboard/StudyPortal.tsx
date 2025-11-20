@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-// --- Imports from Course Detail Page (Makes the file larger) ---
+// --- Imports from Course Detail Page (Necessary for Full Detail View) ---
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -433,12 +433,12 @@ const EnrolledView = ({
                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="space-y-8 pb-12">
                     
-                    {/* Video/Features Section: ZERO Padding for full width */}
+                    {/* Video/Features Section: ZERO Padding for full width (px-0) */}
                     <div id="features" className="scroll-mt-32 px-0 pt-0">
                       <FeaturesSection course={fullCourseData} />
                     </div>
                     
-                    {/* Text Sections: Standard Padding for Readability */}
+                    {/* Text Sections: Standard Padding for Readability (px-5 md:px-8) */}
                     <div className="px-5 md:px-8 space-y-12">
                         <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
                         <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
@@ -643,8 +643,142 @@ const EnrolledView = ({
 };
 
 // --- RECOMMENDATION LOGIC (Unchanged) ---
-// ... (omitted for brevity, same as before) ...
-// ...
+const getSortableLevel = (course: any): number => {
+  const level = course.level; 
+  const status = course.student_status; 
+
+  if (level === 'Foundation') return 1;
+  if (level === 'Diploma') return 2;
+  if (level === 'Degree') return 3;
+
+  if (status === 'Class 11') return 11;
+  if (status === 'Class 12') return 12;
+  if (status === 'Dropper') return 13;
+
+  return 99;
+};
+
+const sortRecommendedCourses = (courses: Course[]): Course[] => {
+  return courses.sort((a, b) => {
+    // 1. Sort by Level/Class 
+    const levelA = getSortableLevel(a);
+    const levelB = getSortableLevel(b);
+    if (levelA !== levelB) {
+      return levelA - levelB;
+    }
+
+    // 2. Sort by Start Date 
+    const now = new Date().getTime();
+    const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity;
+    const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity;
+    const aIsFuture = dateA > now;
+    const bIsFuture = dateB > now;
+
+    if (aIsFuture && !bIsFuture) return -1; 
+    if (!aIsFuture && bIsFuture) return 1;  
+
+    if (dateA !== dateB) {
+      return dateA - dateB; 
+    }
+
+    // 3. Sort by Created Date 
+    const createdA = new Date(a.created_at).getTime();
+    const createdB = new Date(b.created_at).getTime();
+    return createdB - createdA;
+  });
+};
+
+const buildProfileQuery = (profile: UserProfile | null, level: 1 | 2): any => {
+  if (!profile || !profile.program_type) return null;
+
+  let query: any = supabase
+    .from('courses')
+    .select('*');
+  
+  if (profile.program_type === 'IITM_BS') {
+    query = query.eq('exam_category', 'IITM BS'); 
+    if (level === 2 && profile.branch) {
+      query = query.eq('branch', profile.branch);
+    }
+  } else if (profile.program_type === 'COMPETITIVE_EXAM') {
+    query = query.eq('exam_category', 'COMPETITIVE_EXAM'); 
+    if (level === 2 && profile.exam_type) {
+      query = query.eq('exam_type', profile.exam_type);
+    }
+  } else {
+    query = query.eq('exam_category', profile.program_type); 
+  }
+  return query;
+};
+
+async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Course[]> {
+  const today = new Date().toISOString();
+
+  const getValidCourses = async (
+    queryBuilder: any 
+  ): Promise<Course[]> => {
+    if (!queryBuilder) return [];
+    
+    const { data, error } = await queryBuilder.or(`end_date.gt.${today},end_date.is.null`);
+    
+    if (error) {
+      console.error("Error fetching courses:", error.message); 
+      return [];
+    }
+    return (data as Course[]) || [];
+  };
+
+  try {
+    const level2Query = buildProfileQuery(profile, 2);
+    const level2Courses = await getValidCourses(level2Query);
+
+    const level1Query = buildProfileQuery(profile, 1);
+    const level1Courses = await getValidCourses(level1Query);
+    
+    const allCourses = new Map<string, Course>();
+    
+    level2Courses.forEach(course => allCourses.set(course.id, course));
+    level1Courses.forEach(course => {
+      if (!allCourses.has(course.id)) allCourses.set(course.id, course);
+    });
+    
+    if (allCourses.size === 0) {
+      console.log("No profile-matched courses found. Showing diverse recommendations.");
+      
+      const diverseQuery = supabase
+        .from('courses')
+        .select('*')
+        .or(`end_date.gt.${today},end_date.is.null`)
+        .limit(20); 
+      
+      const { data: diverseData, error: diverseError } = await diverseQuery;
+      
+      if (diverseError) {
+        console.error("Error fetching diverse courses:", diverseError.message);
+      } else if (diverseData) {
+        const bestsellers = diverseData.filter(c => c.bestseller);
+        const featured = diverseData.filter(c => c.is_live && !c.bestseller);
+        const recent = diverseData.filter(c => !c.bestseller && !c.is_live);
+        
+        [...bestsellers, ...featured, ...recent].forEach(course => {
+          if (!allCourses.has(course.id) && allCourses.size < 15) {
+            allCourses.set(course.id, course as Course);
+          }
+        });
+      }
+    }
+
+    const combinedList = Array.from(allCourses.values());
+    const sortedList = sortRecommendedCourses(combinedList);
+
+    return sortedList.slice(0, 3);
+
+  } catch (error: any) { 
+    console.error("Error in fetchRecommendedCourses:", error.message || error);
+    return []; 
+  }
+}
+
 // --- Internal Component (Safe) ---
 const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
