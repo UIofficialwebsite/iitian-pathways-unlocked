@@ -285,6 +285,9 @@ const EnrolledView = ({
   ];
 
   const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+  
+  // Logic to determine if batch switching is available
+  const canSwitchBatch = enrollments.length > 1;
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -402,12 +405,16 @@ const EnrolledView = ({
                         <BookOpen className="h-3 w-3" />
                         <span>Currently Viewing</span>
                     </div>
-                    <Button 
-                      onClick={() => handleOpenSheet()} 
-                      className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-8 text-sm"
-                    >
-                      Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
-                    </Button>
+                    
+                    {/* Conditional Rendering: Only show Switch Batch button if multiple batches exist */}
+                    {canSwitchBatch && (
+                      <Button 
+                        onClick={() => handleOpenSheet()} 
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-8 text-sm"
+                      >
+                        Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
+                      </Button>
+                    )}
                  </div>
 
                  <div className="space-y-2">
@@ -544,14 +551,22 @@ const EnrolledView = ({
         <div className="relative z-10 flex justify-between items-start">
           <div className="space-y-2">
             <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
+            
+            {/* Conditional Click Handler & Arrow Visibility */}
             <div 
-              className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity group"
-              onClick={handleOpenSheet}
+              className={cn(
+                "flex items-center gap-2 transition-opacity group",
+                canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
+              )}
+              onClick={canSwitchBatch ? handleOpenSheet : undefined}
             >
               <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                 {currentBatchSummary?.title}
               </h1>
-              <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
+              
+              {canSwitchBatch && (
+                <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
+              )}
             </div>
           </div>
 
