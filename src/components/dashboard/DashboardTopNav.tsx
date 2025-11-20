@@ -13,9 +13,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
-import DashboardSidebar from "./DashboardSidebar";
+import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
 
-// Define profile type
+// Define profile type locally or import if available globally
 interface UserProfile {
   program_type: string | null;
   branch?: string | null;
@@ -30,11 +30,12 @@ interface UserProfile {
 
 interface DashboardTopNavProps {
   profile: UserProfile | null;
-  onViewChange: (view: 'dashboard' | 'profile' | 'enrollments') => void;
-  onProfileUpdate: (updatedProfile: UserProfile) => void; // Added for modal
+  onViewChange: (view: ActiveView) => void;
+  activeView: ActiveView; // Added to support highlighting in mobile sidebar
+  onProfileUpdate: (updatedProfile: any) => void;
 }
 
-const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTopNavProps) => {
+const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }: DashboardTopNavProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -62,8 +63,12 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0">
               <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
-                {/* Pass onProfileUpdate to mobile sidebar */}
-                <DashboardSidebar profile={profile as any} onProfileUpdate={onProfileUpdate} onViewChange={onViewChange} />
+                <DashboardSidebar 
+                  profile={profile as any} 
+                  onProfileUpdate={onProfileUpdate} 
+                  onViewChange={onViewChange}
+                  activeView={activeView} // Pass activeView to mobile sidebar
+                />
               </div>
             </SheetContent>
           </Sheet>
@@ -89,7 +94,7 @@ const DashboardTopNav = ({ profile, onViewChange, onProfileUpdate }: DashboardTo
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors">
+              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
                   <AvatarFallback>{userInitial}</AvatarFallback>
