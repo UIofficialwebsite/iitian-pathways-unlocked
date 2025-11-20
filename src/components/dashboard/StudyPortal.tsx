@@ -1,22 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
   Book, 
-  BookOpen, 
+  BookOpen,
   Users, 
   ChevronRight, 
-  FileText, 
-  Target, 
-  ArrowRight, 
-  ChevronDown, 
-  MoreVertical, 
-  Share2, 
-  Info, 
-  Check, 
+  FileText,
+  Target,
+  ArrowRight,
+  ChevronDown,
+  MoreVertical,
+  Share2,
+  Info,
+  Check,
   ArrowLeft,
+  Star,
   Calendar,
-  Star
+  GitBranch,
+  Layers
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -43,33 +45,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-// --- Imports from Course Detail Page ---
-import StickyTabNav from '@/components/courses/detail/StickyTabNav';
-import FeaturesSection from '@/components/courses/detail/FeaturesSection';
-import AboutSection from '@/components/courses/detail/AboutSection';
-import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
-import ScheduleSection from '@/components/courses/detail/ScheduleSection';
-import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
-import FAQSection from '@/components/courses/detail/FAQSection';
-import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
-
 // --- Types ---
 type UserProfile = Tables<'profiles'>;
 type Course = Tables<'courses'> & {
   discounted_price?: number | null;
 };
-
-interface BatchScheduleItem {
-  id: string;
-  course_id: string;
-  batch_name: string;
-  subject_name: string;
-  file_link: string;
-}
-interface CourseFaq {
-  question: string;
-  answer: string;
-}
 
 type RawEnrollment = {
   id: string;
@@ -155,6 +135,7 @@ const EnrollmentListItem = ({
     return null;
   };
 
+  // Determine wrapper: div (with onClick) or Link
   const Container = onClick ? 'div' : Link;
   const containerProps = onClick 
     ? { onClick, className: "block group cursor-pointer" } 
@@ -181,10 +162,8 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
+            {/* Description added here */}
             {enrollment.description && (
-              // Removed line-clamp-2 here if you want full text on the card too, 
-              // but usually cards have limits. Keeping it here for card layout, 
-              // but removed in the Header detailed view below.
               <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                 {enrollment.description}
               </p>
@@ -211,7 +190,7 @@ const EnrollmentListItem = ({
 };
 
 
-// --- View 1: Student IS Enrolled ---
+// --- View 1: Student IS Enrolled (NEW LAYOUT) ---
 const EnrolledView = ({ 
   enrollments
 } : { 
@@ -219,88 +198,45 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
+  // State for the currently selected batch (defaults to the first one)
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
+  // State for the temporary selection in the sidebar (before clicking Continue)
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
+  // Sidebar state
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
+  // View Mode: 'main' (list) or 'description' (preview)
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
-  const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
-  const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
-  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
-  const [loadingDetails, setLoadingDetails] = useState(false);
+  // Find the full object for the selected batch
+  const currentBatch = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
 
-  // Refs for scrolling
-  const sectionRefs = {
-    features: useRef<HTMLDivElement>(null),
-    about: useRef<HTMLDivElement>(null),
-    moreDetails: useRef<HTMLDivElement>(null),
-    schedule: useRef<HTMLDivElement>(null),
-    ssp: useRef<HTMLDivElement>(null),
-    access: useRef<HTMLDivElement>(null),
-    faqs: useRef<HTMLDivElement>(null),
-  };
-
-  const tabs = [
-    { id: 'features', label: 'Features' },
-    { id: 'about', label: 'About' },
-    { id: 'moreDetails', label: 'Details' },
-    { id: 'schedule', label: 'Schedule' },
-    { id: 'ssp', label: 'SSP Portal' },
-    { id: 'access', label: 'Access' },
-    { id: 'faqs', label: 'FAQs' },
-  ];
-
-  const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
-
-  useEffect(() => {
-    const fetchDetails = async () => {
-      if (!selectedBatchId) return;
-      
-      setLoadingDetails(true);
-      try {
-        const [courseResult, scheduleResult, faqResult] = await Promise.all([
-          supabase.from('courses').select('*').eq('id', selectedBatchId).maybeSingle(),
-          supabase.from('batch_schedule' as any).select('*').eq('course_id', selectedBatchId),
-          supabase.from('course_faqs' as any).select('question, answer').eq('course_id', selectedBatchId),
-        ]);
-
-        if (courseResult.data) setFullCourseData(courseResult.data as any);
-        if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
-        if (faqResult.data) setFaqs(faqResult.data as any);
-
-      } catch (err) {
-        console.error("Error fetching details", err);
-      } finally {
-        setLoadingDetails(false);
-      }
-    };
-
-    fetchDetails();
-  }, [selectedBatchId]);
-
+  // Handle opening the sheet: reset temp selection to current selection
   const handleOpenSheet = () => {
     setTempSelectedBatchId(selectedBatchId);
     setIsSheetOpen(true);
   };
 
+  // Handle "Continue": commit the temp selection
   const handleContinue = () => {
     setSelectedBatchId(tempSelectedBatchId);
     setIsSheetOpen(false);
-    setViewMode('main'); 
+    // Reset to main view if we were in description, to show the new batch's card
+    setViewMode('main');
     toast({
       title: "Batch Switched",
       description: `You are now viewing ${enrollments.find(e => e.course_id === tempSelectedBatchId)?.title}`,
     });
   };
 
+  // Context Menu Actions
   const handleDescription = () => {
     setViewMode('description');
   };
 
   const handleShare = () => {
-    if (currentBatchSummary) {
-      const shareUrl = `${window.location.origin}/courses/${currentBatchSummary.course_id}`;
+    if (currentBatch) {
+      const shareUrl = `${window.location.origin}/courses/${currentBatch.course_id}`;
       navigator.clipboard.writeText(shareUrl);
       toast({
         title: "Link Copied",
@@ -309,12 +245,11 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER: FULL DETAIL VIEW ---
-  if (viewMode === 'description') {
+  // --- RENDER: DESCRIPTION VIEW (UPDATED WITH PREMIUM HEADER) ---
+  if (viewMode === 'description' && currentBatch) {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        
-        {/* Back Button */}
+        {/* Back Button Header */}
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
@@ -323,87 +258,105 @@ const EnrolledView = ({
             className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
           >
             <ArrowLeft className="h-5 w-5 mr-1 group-hover:-translate-x-1 transition-transform" />
-            Back to List
+            Back to Portal
           </Button>
         </div>
 
-        {/* Header Block */}
-        <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-          <div className="relative z-10 flex flex-col gap-6">
-            {/* Top Row: Viewing Label + Switch Button */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                <div className="flex items-center gap-2 text-blue-200 text-sm font-medium bg-black/20 px-3 py-1 rounded-full w-fit">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Currently Viewing</span>
+        {/* Premium Header Container */}
+        <div className="rounded-xl overflow-hidden shadow-xl border border-slate-700/20 bg-white">
+          {/* Dark Gradient Header */}
+          <div className="premium-course-header p-6 md:p-10 text-white relative overflow-hidden">
+            <div className="relative z-10 max-w-4xl">
+              {/* Badges */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                {currentBatch.exam_category && (
+                  <Badge variant="secondary" className="bg-blue-500/20 text-blue-200 border border-blue-400/30 hover:bg-blue-500/30">
+                    {currentBatch.exam_category}
+                  </Badge>
+                )}
+                {currentBatch.level && (
+                  <Badge variant="outline" className="border-slate-500 text-slate-300 backdrop-blur-sm">
+                    <Layers className="h-3 w-3 mr-1" /> {currentBatch.level}
+                  </Badge>
+                )}
+                {currentBatch.bestseller && (
+                  <Badge className="bg-amber-500/90 text-white border-amber-600/50 shadow-lg shadow-amber-900/20">
+                    ⭐ Best Seller
+                  </Badge>
+                )}
+                <Badge className={cn(
+                  "font-semibold shadow-sm",
+                  currentBatch.status === 'Ongoing' ? "bg-green-500 hover:bg-green-600" : "bg-red-500 hover:bg-red-600"
+                )}>
+                  {currentBatch.status}
+                </Badge>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-br from-white via-blue-50 to-blue-100 bg-clip-text text-transparent leading-tight">
+                {currentBatch.title}
+              </h1>
+
+              {/* Description */}
+              <p className="text-lg md:text-xl text-slate-300 mb-8 leading-relaxed max-w-3xl">
+                {currentBatch.description || "Join this comprehensive course to master your subjects with expert guidance and structured learning paths."}
+              </p>
+
+              {/* Stats Row */}
+              <div className="flex flex-wrap gap-6 text-sm md:text-base border-t border-slate-700/50 pt-6">
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                  <span className="font-bold text-white">{currentBatch.rating || 4.8}</span>
+                  <span className="text-slate-400">rating</span>
                 </div>
-                
-                <Button 
-                  onClick={() => handleOpenSheet()} 
-                  className="bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-sm transition-all shadow-sm"
-                >
-                  Switch Batch <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-            </div>
-
-            {/* Title & Stats */}
-            <div className="space-y-4">
-               <h1 className="text-2xl md:text-4xl font-bold text-white leading-tight">
-                  {fullCourseData?.title || currentBatchSummary.title}
-               </h1>
-               
-               {/* Full Description - NO line-clamp here */}
-               <p className="text-slate-300 max-w-3xl text-lg leading-relaxed">
-                  {fullCourseData?.description || currentBatchSummary.description}
-               </p>
-
-               {fullCourseData && (
-                 <div className="flex flex-wrap gap-4 text-sm text-slate-200 pt-2">
-                    <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                        <span className="font-bold text-white">{fullCourseData.rating || 4.8}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4 text-blue-400" />
-                        <span>{fullCourseData.students_enrolled || 450}+ students</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4 text-purple-400" />
-                        <span>Starts {fullCourseData.start_date ? new Date(fullCourseData.start_date).toLocaleDateString() : 'Soon'}</span>
-                    </div>
-                 </div>
-               )}
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Users className="h-5 w-5 text-blue-400" />
+                  <span className="font-bold text-white">
+                    {currentBatch.students_enrolled ? (currentBatch.students_enrolled + 120) : 450}+
+                  </span>
+                  <span className="text-slate-400">students</span>
+                </div>
+                <div className="flex items-center gap-2 text-slate-200">
+                  <Calendar className="h-5 w-5 text-purple-400" />
+                  <span className="text-slate-400">Started:</span>
+                  <span className="font-medium text-white">
+                    {currentBatch.start_date 
+                      ? new Date(currentBatch.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                      : 'Recently'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Sticky Navigation Bar */}
-        <div className="sticky top-0 z-20 -mx-4 sm:-mx-0 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 shadow-sm">
-             <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
+          {/* Action Bar */}
+          <div className="bg-white p-6 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+             <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="h-16 w-28 hidden sm:block rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
+                   <img 
+                    src={currentBatch.image_url || "/lovable-uploads/logo_ui_new.png"}
+                    alt="Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                   <p className="text-sm text-gray-500 font-medium">Ready to learn?</p>
+                   <p className="text-gray-900 font-semibold">Continue your progress</p>
+                </div>
+             </div>
+             
+             <div className="flex gap-3 w-full sm:w-auto">
+               <Button variant="outline" onClick={() => handleShare()} className="flex-1 sm:flex-none">
+                 <Share2 className="h-4 w-4 mr-2" /> Share
+               </Button>
+               <Link to={`/courses/${currentBatch.course_id}`} className="flex-1 sm:flex-none">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all">
+                  Go to Class <ChevronRight className="ml-2 h-4 w-4" />
+                </Button>
+               </Link>
+             </div>
+          </div>
         </div>
-
-        {/* Content Area - Full Details */}
-        {loadingDetails ? (
-           <div className="flex items-center justify-center py-12">
-             <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-           </div>
-        ) : fullCourseData ? (
-           // NO Padding here to ensure videos take full width
-           <div className="space-y-12 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              <div id="features" ref={sectionRefs.features} className="scroll-mt-32"><FeaturesSection course={fullCourseData} /></div>
-              <div id="about" ref={sectionRefs.about} className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-32"><MoreDetailsSection /></div>
-              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-32"><SSPPortalSection /></div>
-              <div id="access" ref={sectionRefs.access} className="scroll-mt-32"><CourseAccessGuide /></div>
-              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-32">
-                  <FAQSection faqs={faqs} />
-              </div>
-           </div>
-        ) : (
-           <div className="text-center py-10 text-gray-500">
-             Failed to load details. Please try again.
-           </div>
-        )}
       </div>
     );
   }
@@ -411,60 +364,52 @@ const EnrolledView = ({
   // --- RENDER: MAIN LIST VIEW ---
   return (
     <div className="space-y-8">
-      
-      {/* --- Header with Background Color Block --- */}
-      <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-        <div className="relative z-10 flex justify-between items-start">
-          <div className="space-y-2">
-            <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
-            <div 
-              className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity group"
-              onClick={handleOpenSheet}
-            >
-              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
-                {currentBatchSummary?.title}
-              </h1>
-              <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
-            </div>
+      {/* --- HEADER (Visible only in Main View) --- */}
+      <div className="flex justify-between items-start">
+        <div className="space-y-1">
+          <p className="text-sm text-gray-500 font-medium">Your batch</p>
+          <div 
+            className="flex items-center gap-2 cursor-pointer hover:opacity-70 transition-opacity group"
+            onClick={handleOpenSheet}
+          >
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+              {currentBatch?.title}
+            </h1>
+            <ChevronDown className="h-6 w-6 text-gray-400 group-hover:text-gray-600 transition-colors mt-1" />
           </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/10 text-white">
-                <MoreVertical className="h-6 w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
-                <Info className="mr-2 h-4 w-4" />
-                <span>View Details</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
-                <Share2 className="mr-2 h-4 w-4" />
-                <span>Share Batch</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
+
+        {/* Three Dot Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-gray-100">
+              <MoreVertical className="h-6 w-6 text-gray-500" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
+              <Info className="mr-2 h-4 w-4" />
+              <span>Description</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+              <Share2 className="mr-2 h-4 w-4" />
+              <span>Share Batch</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* --- BATCH CARD --- */}
+      {/* --- BATCH CONTENT --- */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-           <h2 className="text-xl font-bold text-gray-900">Quick Access</h2>
-           <Button variant="link" className="text-blue-600 p-0 h-auto" onClick={() => setViewMode('description')}>
-             View Full Details <ArrowRight className="ml-1 h-4 w-4" />
-           </Button>
-        </div>
-        {currentBatchSummary && (
+        {currentBatch && (
           <EnrollmentListItem 
-            enrollment={currentBatchSummary} 
-            onClick={() => setViewMode('description')} 
+            enrollment={currentBatch} 
+            onClick={() => setViewMode('description')} // Click triggers description view
           />
         )}
       </section>
 
-      {/* --- SIDEBAR (SHEET for switching batches) --- */}
+      {/* --- SIDEBAR (SHEET) --- */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
           <SheetHeader className="mb-6">
@@ -579,7 +524,146 @@ const EnrolledView = ({
 };
 
 
-// --- RECOMMENDATION LOGIC (Unchanged) ---
+// --- View 2: Student is NOT Enrolled ---
+const NotEnrolledView = ({ 
+  profile,
+  recommendedCourses,
+  isLoading,
+  notes, 
+  pyqs,
+  onEditProfile
+} : { 
+  profile: any;
+  recommendedCourses: Course[], 
+  isLoading: boolean,
+  notes: any[], 
+  pyqs: any[];
+  onEditProfile: () => void;
+}) => {
+  const hasContent = notes.length > 0 || pyqs.length > 0;
+  
+  return (
+    <div className="space-y-10">
+      {/* Profile Completion Banner */}
+      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
+      
+      {/* Recommended Courses */}
+      <RecommendedBatchesSection 
+        recommendedCourses={recommendedCourses} 
+        loading={isLoading} 
+      />
+    
+      {/* Quick Access - Only show if user has content */}
+      {hasContent && (
+        <section>
+          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
+          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            {/* Notes Card */}
+            {notes.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
+                  <BookOpen className="h-5 w-5 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {notes.slice(0, 3).map((note: any) => (
+                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            
+            {/* PYQs Card */}
+            {pyqs.length > 0 && (
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
+                  <FileText className="h-5 w-5 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3 pt-2">
+                    {pyqs.slice(0, 3).map((pyq: any) => (
+                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
+                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
+                      </div>
+                    ))}
+                    <Link to="/exam-preparation">
+                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Explore Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div className="p-6 md:p-8">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+            <p className="text-gray-600 mt-1">Get additional guidance with these exclusive features</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Digital Library */}
+            <Link to="/exam-preparation" className="block group h-full">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
+                <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
+              </div>
+            </Link>
+            
+            {/* Mentorship */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
+                <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
+              </div>
+            </div>
+            
+            {/* PDF Bank */}
+            <div className="group h-full cursor-pointer">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
+                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                </div>
+                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
+                <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Footer Message - Updated size, alignment, and content */}
+      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
+      </div>
+    </div>
+  );
+};
+
+
+// --- RECOMMENDATION LOGIC ---
 
 const getSortableLevel = (course: any): number => {
   const level = course.level; 
