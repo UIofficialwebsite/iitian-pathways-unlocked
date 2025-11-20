@@ -263,7 +263,7 @@ const EnrolledView = ({
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  // Added state to track where the sidebar was opened from: 'main' (dashboard) or 'detail' (course detail)
+  // Track source of sidebar opening ('main' for dashboard dropdown, 'detail' for switch button)
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
@@ -346,7 +346,6 @@ const EnrolledView = ({
     }
   };
 
-  // Updated handler to accept the source of the click
   const handleOpenSheet = (source: 'main' | 'detail') => {
     setSidebarSource(source);
     setTempSelectedBatchId(selectedBatchId);
@@ -440,7 +439,7 @@ const EnrolledView = ({
               onClick={handleContinue} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
             >
-              {/* Dynamic text based on where the sidebar was opened from */}
+              {/* Dynamic button text based on source */}
               {sidebarSource === 'main' ? "Continue" : "Switch to Selected"}
             </Button>
           </SheetFooter>
