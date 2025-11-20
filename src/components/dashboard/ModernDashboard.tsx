@@ -15,11 +15,11 @@ import { BouncingDots } from "@/components/ui/bouncing-dots";
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
-import LibrarySection from "./LibrarySection"; // Import the new section
+import LibrarySection from "./LibrarySection"; // --- IMPORT THE NEW SECTION ---
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Reusable Loader for View Switching (Transitions only) ---
+// --- Reusable Loader for View Switching ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
@@ -102,13 +102,12 @@ const ModernDashboard: React.FC = () => {
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) return; 
     
-    // If switching to "Coming Soon" placeholder, update immediately (no transition needed)
+    // No loading transition needed for "Coming Soon" pages
     if (view === 'coming_soon') {
       setActiveView(view);
       return;
     }
 
-    // For other views, show the transition animation
     setIsViewLoading(true);
     setActiveView(view);
 
@@ -130,7 +129,6 @@ const ModernDashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
       
-      {/* --- TOP NAVIGATION --- */}
       <DashboardTopNav
         onViewChange={handleViewChange} 
         profile={profile}
@@ -138,10 +136,8 @@ const ModernDashboard: React.FC = () => {
         activeView={activeView}
       />
 
-      {/* --- MAIN AREA --- */}
       <div className="flex-1 grid lg:grid-cols-[288px_1fr]">
         
-        {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden lg:block border-r bg-white sticky top-[73px] h-[calc(100vh-73px)]">
           <DashboardSidebar
             profile={profile}
@@ -151,31 +147,33 @@ const ModernDashboard: React.FC = () => {
           />
         </aside>
 
-        {/* --- SCROLLABLE CONTENT --- */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 h-[calc(100vh-73px)]">
           <div className="w-full max-w-7xl mx-auto">
             
             {/* CONDITIONAL RENDERING */}
-            
-            {/* 1. Sidebar Placeholders (Always Loading State) */}
+
+            {/* 1. Sidebar Placeholders (Always Loading) */}
             {activeView === 'coming_soon' ? (
               <DashboardLoader />
             ) : 
             
-            /* 2. View Transition State */
+            /* 2. Library View (New Separate Section) */
+            activeView === 'library' ? (
+               <LibrarySection />
+            ) :
+
+            /* 3. Transition Loading State */
             isViewLoading ? (
               <DashboardLoader />
             ) : (
-              /* 3. Actual Content */
+              /* 4. Actual Content */
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {activeView === 'studyPortal' && (
                   <StudyPortal profile={profile} onViewChange={handleViewChange} />
                 )}
                 
-                {/* --- NEW SEPARATE SECTION FOR LIBRARY --- */}
-                {activeView === 'library' && (
-                  <LibrarySection />
-                )}
+                {/* Note: Library is handled above to skip the transition loader if preferred, 
+                    or you can move it here if you want the transition loader first. */}
 
                 {activeView === 'profile' && (
                   <MyProfile />
