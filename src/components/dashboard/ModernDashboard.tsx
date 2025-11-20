@@ -2,16 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, Menu } from "lucide-react"; 
+import { Loader2 } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
-// Import the component AND the type
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 // Import the views
 import StudyPortal from "./StudyPortal";
@@ -26,7 +23,6 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // Use the exported type for state
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   
   const navigate = useNavigate();
@@ -98,47 +94,20 @@ const ModernDashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
       
-      {/* --- FULL-WIDTH HEADER --- */}
-      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-white px-4 sm:h-16 sm:px-6">
-        
-        {/* --- MOBILE MENU (SHEET) --- */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0 lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle navigation menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col p-0">
-            <DashboardSidebar
-              profile={profile}
-              onProfileUpdate={handleProfileUpdate}
-              onViewChange={setActiveView}
-              activeView={activeView} 
-            />
-          </SheetContent>
-        </Sheet>
-
-        {/* --- TOP NAV --- */}
-        <div className="flex-1">
-          <DashboardTopNav
-            onViewChange={setActiveView}
-            profile={profile}
-            onProfileUpdate={handleProfileUpdate}
-          />
-        </div>
-      </header>
+      {/* --- TOP NAVIGATION --- */}
+      {/* Removed duplicate Header/Sheet wrapper. DashboardTopNav handles sticky positioning and mobile menu */}
+      <DashboardTopNav
+        onViewChange={setActiveView}
+        profile={profile}
+        onProfileUpdate={handleProfileUpdate}
+        activeView={activeView}
+      />
 
       {/* --- MAIN AREA --- */}
       <div className="flex-1 grid lg:grid-cols-[288px_1fr]">
         
         {/* --- DESKTOP SIDEBAR --- */}
         <aside className="hidden lg:block border-r bg-white">
-          {/* Pass the activeView prop here to fix the red line error */}
           <DashboardSidebar
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
