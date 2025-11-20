@@ -15,22 +15,17 @@ import { BouncingDots } from "@/components/ui/bouncing-dots";
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
-import ExploreTab from "./ExploreTab"; 
+import LibrarySection from "./LibrarySection"; // Import the new section
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Custom Loader for Tab Switching & Placeholders ---
+// --- Reusable Loader for View Switching (Transitions only) ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
-    {/* Bouncing Dots */}
     <BouncingDots className="bg-royal w-3 h-3" />
-    
-    {/* Main Message */}
     <h3 className="mt-6 text-xl font-bold text-gray-900 text-center tracking-tight px-4">
       Hang tight, we are preparing the best contents for you
     </h3>
-    
-    {/* Sub Message */}
     <p className="mt-2 text-base text-gray-500 font-medium text-center">
       Just wait and love the moment
     </p>
@@ -43,7 +38,7 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // View State management
+  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
@@ -103,22 +98,23 @@ const ModernDashboard: React.FC = () => {
     setProfile(updatedProfile as Profile);
   };
 
-  // --- CORE LOGIC: Handle View Switching ---
+  // --- Handle View Switching ---
   const handleViewChange = (view: ActiveView) => {
-    if (view === activeView) return;
+    if (view === activeView) return; 
     
-    // If it's the 'coming_soon' view, just set it immediately (the loader IS the view)
+    // If switching to "Coming Soon" placeholder, update immediately (no transition needed)
     if (view === 'coming_soon') {
       setActiveView(view);
       return;
     }
 
-    // For normal views, show loading animation briefly
+    // For other views, show the transition animation
     setIsViewLoading(true);
     setActiveView(view);
+
     setTimeout(() => {
       setIsViewLoading(false);
-    }, 800); 
+    }, 800);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -136,7 +132,7 @@ const ModernDashboard: React.FC = () => {
       
       {/* --- TOP NAVIGATION --- */}
       <DashboardTopNav
-        onViewChange={handleViewChange}
+        onViewChange={handleViewChange} 
         profile={profile}
         onProfileUpdate={handleProfileUpdate}
         activeView={activeView}
@@ -150,23 +146,23 @@ const ModernDashboard: React.FC = () => {
           <DashboardSidebar
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
-            onViewChange={handleViewChange}
+            onViewChange={handleViewChange} 
             activeView={activeView}
           />
         </aside>
 
-        {/* --- SCROLLABLE CONTENT AREA --- */}
+        {/* --- SCROLLABLE CONTENT --- */}
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 h-[calc(100vh-73px)]">
           <div className="w-full max-w-7xl mx-auto">
             
             {/* CONDITIONAL RENDERING */}
             
-            {/* 1. Coming Soon / Placeholder View (Infinite Loader) */}
+            {/* 1. Sidebar Placeholders (Always Loading State) */}
             {activeView === 'coming_soon' ? (
               <DashboardLoader />
             ) : 
             
-            /* 2. Normal View Loading Transition */
+            /* 2. View Transition State */
             isViewLoading ? (
               <DashboardLoader />
             ) : (
@@ -175,9 +171,12 @@ const ModernDashboard: React.FC = () => {
                 {activeView === 'studyPortal' && (
                   <StudyPortal profile={profile} onViewChange={handleViewChange} />
                 )}
+                
+                {/* --- NEW SEPARATE SECTION FOR LIBRARY --- */}
                 {activeView === 'library' && (
-                  <ExploreTab />
+                  <LibrarySection />
                 )}
+
                 {activeView === 'profile' && (
                   <MyProfile />
                 )}
