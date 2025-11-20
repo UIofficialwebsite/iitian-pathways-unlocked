@@ -642,6 +642,102 @@ const EnrolledView = ({
   );
 };
 
+// --- View 2: Student is NOT Enrolled (Added to fix ReferenceError) ---
+interface NotEnrolledViewProps {
+  profile: UserProfile | null;
+  recommendedCourses: Course[];
+  isLoading: boolean;
+  notes: any; // Type 'any' used as structure is not available in context
+  pyqs: any; // Type 'any' used as structure is not available in context
+  onEditProfile: () => void;
+}
+
+const NotEnrolledView: React.FC<NotEnrolledViewProps> = ({ 
+  profile, 
+  recommendedCourses, 
+  isLoading, 
+  notes, 
+  pyqs,
+  onEditProfile
+}) => {
+  const notesCount = notes?.length || 0;
+  const pyqsCount = pyqs?.length || 0;
+
+  return (
+    <div className="space-y-8 max-w-7xl mx-auto">
+      
+      <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
+      
+      {/* Quick Links Section */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-gray-900">Digital Resources</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Notes Card */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <Link to="/exam-preparation#notes">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium">My Notes</CardTitle>
+                <Book className="h-5 w-5 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{notesCount} Topics</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Access comprehensive study material.
+                </p>
+              </CardContent>
+            </Link>
+          </Card>
+
+          {/* PYQs Card */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <Link to="/exam-preparation#pyqs">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium">PYQs</CardTitle>
+                <FileText className="h-5 w-5 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{pyqsCount} Sets</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Practice with previous year's questions.
+                </p>
+              </CardContent>
+            </Link>
+          </Card>
+
+          {/* Explore Courses Card */}
+           <Card className="hover:shadow-lg transition-shadow">
+            <Link to="/courses">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-base font-medium">Explore All Courses</CardTitle>
+                <BookOpen className="h-5 w-5 text-gray-400" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-blue-600">Start Learning</div>
+                <p className="text-xs text-gray-500 mt-1">
+                  Find the perfect course for your journey.
+                </p>
+              </CardContent>
+            </Link>
+          </Card>
+        </div>
+      </div>
+
+      {/* Recommended Courses Section */}
+      <RecommendedBatchesSection 
+        courses={recommendedCourses} 
+        isLoading={isLoading} 
+      />
+
+      {/* Footer Message */}
+      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
+      </div>
+    </div>
+  );
+};
+
+
 // --- RECOMMENDATION LOGIC (Unchanged) ---
 const getSortableLevel = (course: any): number => {
   const level = course.level; 
