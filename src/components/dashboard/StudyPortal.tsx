@@ -18,8 +18,8 @@ import {
   Calendar,
   Star,
   Layers,
-  LayoutDashboard, // Added for My Classroom
-  Library // Added for My Classroom
+  LayoutDashboard, 
+  Library 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -46,7 +46,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-// --- Imports from Course Detail Page (Necessary for Full Detail View) ---
+// --- Imports from Course Detail Page ---
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -55,11 +55,10 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 
-// --- Types (Detailed for Enrolled View) ---
+// --- Types ---
 type UserProfile = Tables<'profiles'>;
 type Course = Tables<'courses'> & {
   discounted_price?: number | null;
-  // Added fields for better merging with full enrolled view
   exam_category?: string | null;
   level?: string | null;
   bestseller?: boolean | null;
@@ -125,7 +124,7 @@ interface StudyPortalProps {
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments' | 'studyPortal') => void;
 }
 
-// --- Re-usable Enrollment List Item (Complex version for Enrolled View) ---
+// --- Re-usable Enrollment List Item ---
 const EnrollmentListItem = ({ 
   enrollment, 
   onClick 
@@ -218,7 +217,7 @@ const EnrollmentListItem = ({
   );
 };
 
-// --- Custom Tab Navigation Component with Scroll Spy Support (Dependency for Enrolled View) ---
+// --- Custom Tab Navigation Component ---
 const CustomDashboardTabNav = ({ 
   tabs, 
   activeTab, 
@@ -251,7 +250,7 @@ const CustomDashboardTabNav = ({
 };
 
 
-// --- View 1: Student IS Enrolled (Complex View - as per user request) ---
+// --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -285,8 +284,6 @@ const EnrolledView = ({
   ];
 
   const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
-  
-  // Logic to determine if batch switching is available
   const canSwitchBatch = enrollments.length > 1;
 
   useEffect(() => {
@@ -377,6 +374,77 @@ const EnrolledView = ({
     }
   };
 
+  // --- DEFINING SIDEBAR COMPONENT HERE TO REUSE IN BOTH VIEWS ---
+  // This variable holds the Sidebar UI so we can render it in both return blocks below.
+  const batchSelectionSheet = (
+    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
+        <SheetHeader className="mb-6">
+          <SheetTitle className="text-xl font-bold">Select Batch</SheetTitle>
+        </SheetHeader>
+        
+        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+          {enrollments.length > 1 ? (
+             enrollments.map((batch) => (
+              <div 
+                key={batch.course_id}
+                onClick={() => setTempSelectedBatchId(batch.course_id)}
+                className={cn(
+                  "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
+                  tempSelectedBatchId === batch.course_id 
+                    ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                )}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h4 className={cn(
+                      "font-semibold text-base",
+                      tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                    )}>
+                      {batch.title}
+                    </h4>
+                    <p className="text-xs text-gray-500">
+                      {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
+                    </p>
+                  </div>
+                  
+                  <div className={cn(
+                    "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+                    tempSelectedBatchId === batch.course_id 
+                      ? "border-blue-600 bg-blue-600" 
+                      : "border-gray-300 bg-white"
+                  )}>
+                    {tempSelectedBatchId === batch.course_id && (
+                      <Check className="h-3 w-3 text-white" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+               <Book className="h-8 w-8 text-gray-400 mb-2" />
+               <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
+               <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
+            </div>
+          )}
+        </div>
+
+        {enrollments.length > 1 && (
+          <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
+            <Button 
+              onClick={handleContinue} 
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              Switch to Selected
+            </Button>
+          </SheetFooter>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+
   // --- RENDER: FULL DETAIL VIEW (Fixed Layout) ---
   if (viewMode === 'description') {
     return (
@@ -406,7 +474,7 @@ const EnrolledView = ({
                         <span>Currently Viewing</span>
                     </div>
                     
-                    {/* Conditional Rendering: Only show Switch Batch button if multiple batches exist */}
+                    {/* Switch Batch Button in Detail View */}
                     {canSwitchBatch && (
                       <Button 
                         onClick={() => handleOpenSheet()} 
@@ -449,12 +517,12 @@ const EnrolledView = ({
                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                   <div className="space-y-8 pb-12">
                     
-                    {/* Video/Features Section: ZERO Padding for full width (px-0) */}
+                    {/* Video/Features Section */}
                     <div id="features" className="scroll-mt-32 px-0 pt-0">
                       <FeaturesSection course={fullCourseData} />
                     </div>
                     
-                    {/* Text Sections: Standard Padding for Readability (px-5 md:px-8) */}
+                    {/* Text Sections */}
                     <div className="px-5 md:px-8 space-y-12">
                         <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
                         <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
@@ -472,73 +540,8 @@ const EnrolledView = ({
             )}
         </div>
         
-        {/* --- SIDEBAR (Switch Batch) --- */}
-        <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-          <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
-            <SheetHeader className="mb-6">
-              <SheetTitle className="text-xl font-bold">Select Batch</SheetTitle>
-            </SheetHeader>
-            
-            <div className="flex-1 overflow-y-auto space-y-3 pr-2">
-              {enrollments.length > 1 ? (
-                 enrollments.map((batch) => (
-                  <div 
-                    key={batch.course_id}
-                    onClick={() => setTempSelectedBatchId(batch.course_id)}
-                    className={cn(
-                      "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
-                      tempSelectedBatchId === batch.course_id 
-                        ? "border-blue-600 bg-blue-50/50 shadow-sm" 
-                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                    )}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-1">
-                        <h4 className={cn(
-                          "font-semibold text-base",
-                          tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
-                        )}>
-                          {batch.title}
-                        </h4>
-                        <p className="text-xs text-gray-500">
-                          {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
-                        </p>
-                      </div>
-                      
-                      <div className={cn(
-                        "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
-                        tempSelectedBatchId === batch.course_id 
-                          ? "border-blue-600 bg-blue-600" 
-                          : "border-gray-300 bg-white"
-                      )}>
-                        {tempSelectedBatchId === batch.course_id && (
-                          <Check className="h-3 w-3 text-white" />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-                   <Book className="h-8 w-8 text-gray-400 mb-2" />
-                   <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
-                   <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
-                </div>
-              )}
-            </div>
-
-            {enrollments.length > 1 && (
-              <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
-                <Button 
-                  onClick={handleContinue} 
-                  className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Switch to Selected
-                </Button>
-              </SheetFooter>
-            )}
-          </SheetContent>
-        </Sheet>
+        {/* --- SIDEBAR RENDERED HERE FOR DETAIL VIEW --- */}
+        {batchSelectionSheet}
       </div>
     );
   }
@@ -552,18 +555,30 @@ const EnrolledView = ({
           <div className="space-y-2">
             <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
             
-            {/* Conditional Click Handler & Arrow Visibility */}
+            {/* Conditional Click Handler & Arrow Visibility - MAIN DASHBOARD FIX */}
             <div 
+              role="button"
+              tabIndex={0}
               className={cn(
-                "flex items-center gap-2 transition-opacity group",
+                "flex items-center gap-2 transition-opacity group select-none outline-none",
                 canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
               )}
-              onClick={canSwitchBatch ? handleOpenSheet : undefined}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (canSwitchBatch) handleOpenSheet();
+              }}
+              onKeyDown={(e) => {
+                if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  handleOpenSheet();
+                }
+              }}
             >
               <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
                 {currentBatchSummary?.title}
               </h1>
               
+              {/* Dropdown Arrow triggers the same sheet */}
               {canSwitchBatch && (
                 <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
               )}
@@ -606,7 +621,7 @@ const EnrolledView = ({
         )}
       </section>
 
-      {/* --- MY CLASSROOM SECTION (Replaces Explore) --- */}
+      {/* --- MY CLASSROOM SECTION --- */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-12">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -616,7 +631,7 @@ const EnrolledView = ({
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* Card 1: My Batches (Redirect to Enrollment Tab) */}
+            {/* Card 1: My Batches */}
             <div 
               onClick={() => onViewChange('enrollments')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative cursor-pointer group"
@@ -629,7 +644,7 @@ const EnrolledView = ({
               <p className="text-gray-600 text-sm mt-1">View currently enrolled & ongoing courses</p>
             </div>
 
-            {/* Card 2: Dashboard (Redirect to SSP Portal) */}
+            {/* Card 2: Dashboard */}
             <div 
               onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative cursor-pointer group"
@@ -642,7 +657,7 @@ const EnrolledView = ({
               <p className="text-gray-600 text-sm mt-1">Go to SSP Portal</p>
             </div>
 
-            {/* Card 3: Library (Redirect to Exam Prep) */}
+            {/* Card 3: Library */}
             <Link to="/exam-preparation" className="block group h-full">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
@@ -662,12 +677,15 @@ const EnrolledView = ({
       <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
       </div>
+
+      {/* --- SIDEBAR RENDERED HERE FOR MAIN VIEW --- */}
+      {batchSelectionSheet}
     </div>
   );
 };
 
 
-// --- View 2: Student is NOT Enrolled (Retained from user's provided code, with prop fix) ---
+// --- View 2: Student is NOT Enrolled (No changes, full logic preserved) ---
 const NotEnrolledView = ({ 
   profile,
   recommendedCourses,
@@ -690,10 +708,10 @@ const NotEnrolledView = ({
       {/* Profile Completion Banner */}
       <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
       
-      {/* Recommended Courses (FIX APPLIED HERE: Restored expected prop names) */}
+      {/* Recommended Courses */}
       <RecommendedBatchesSection 
-        recommendedCourses={recommendedCourses} // Corrected prop name
-        loading={isLoading} // Corrected prop name
+        recommendedCourses={recommendedCourses}
+        loading={isLoading}
       />
     
       {/* Quick Access - Only show if user has content */}
