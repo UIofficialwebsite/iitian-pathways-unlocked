@@ -136,16 +136,16 @@ const EnrollmentListItem = ({
     if (enrollment.status === 'Ongoing') {
       return (
         <div className="flex items-center justify-end gap-2" title="Ongoing">
-          <span className="text-sm font-medium text-green-600">Ongoing</span>
-          <span className="relative flex h-3 w-3">
+          <span className="text-xs sm:text-sm font-medium text-green-600">Ongoing</span>
+          <span className="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-green-500"></span>
           </span>
         </div>
       );
     }
     return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium" title="Completed">
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium text-xs" title="Completed">
         SUCCESS
       </Badge>
     );
@@ -173,42 +173,48 @@ const EnrollmentListItem = ({
   return (
     <Container {...(containerProps as any)}>
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
-        <CardContent className="flex items-start gap-5 p-5">
-          <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50 mt-1">
+        <CardContent className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-5">
+          {/* Image - Full width on mobile, fixed width on desktop */}
+          <div className="w-full sm:w-48 flex-shrink-0 aspect-video overflow-hidden rounded-lg bg-gray-50">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
               className="w-full h-full object-cover object-center"
             />
           </div>
-          <div className="flex-grow space-y-2">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
-              <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4 group-hover:text-blue-600 transition-colors">
+          
+          <div className="flex-grow space-y-2 w-full">
+            <div className="flex flex-row items-start justify-between mb-0">
+              <CardTitle className="text-base sm:text-lg md:text-xl font-bold text-gray-900 pr-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                 {enrollment.title}
               </CardTitle>
-              <div className="flex-shrink-0 mt-1 sm:mt-0">
+              <div className="flex-shrink-0 ml-2">
                 <StatusIndicator />
               </div>
             </div>
             
             {enrollment.description && (
-              <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
+              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
                 {enrollment.description}
               </p>
             )}
 
             <div className="flex items-center gap-1.5 pt-1">
-               <p className="text-sm text-gray-500 flex items-center gap-1.5">
+               <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
                 <span>Valid till: {formattedEndDate}</span>
                 <span>•</span>
                 <PriceDisplay />
               </p>
             </div>
           </div>
-          <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0 self-center group-hover:text-blue-600 transition-colors" />
+          
+          {/* Arrow Icon - Hidden on very small screens if needed, or positioned absolute */}
+          <div className="hidden sm:flex self-center">
+             <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
+          </div>
         </CardContent>
         {enrollment.status === 'Batch Expired' && (
-          <div className="bg-red-50 text-red-700 text-base p-4 text-center border-t border-red-100">
+          <div className="bg-red-50 text-red-700 text-sm sm:text-base p-3 sm:p-4 text-center border-t border-red-100">
             This batch got expired on {formattedEndDate}!
           </div>
         )}
@@ -228,14 +234,14 @@ const CustomDashboardTabNav = ({
   onTabClick: (id: string) => void 
 }) => {
   return (
-    <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30">
-      <div className="flex items-center gap-1 md:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
+    <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
+      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabClick(tab.id)}
             className={cn(
-              "py-4 px-2 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200",
+              "py-3 sm:py-4 px-1 text-sm font-medium whitespace-nowrap border-b-2 transition-all duration-200 select-none",
               activeTab === tab.id
                 ? "border-blue-600 text-blue-600"
                 : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -380,12 +386,12 @@ const EnrolledView = ({
   // --- DEFINING SIDEBAR COMPONENT HERE TO REUSE IN BOTH VIEWS ---
   const batchSelectionSheet = (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col">
-        <SheetHeader className="mb-6">
-          <SheetTitle className="text-xl font-bold">Select Batch</SheetTitle>
+      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6">
+        <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
+          <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
         </SheetHeader>
         
-        <div className="flex-1 overflow-y-auto space-y-3 pr-2">
+        <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
           {enrollments.length > 1 ? (
              enrollments.map((batch) => (
               <div 
@@ -401,7 +407,7 @@ const EnrolledView = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1">
                     <h4 className={cn(
-                      "font-semibold text-base",
+                      "font-semibold text-sm sm:text-base line-clamp-2",
                       tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
                     )}>
                       {batch.title}
@@ -434,10 +440,10 @@ const EnrolledView = ({
         </div>
 
         {enrollments.length > 1 && (
-          <SheetFooter className="pt-4 mt-auto border-t border-gray-100">
+          <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
             <Button 
               onClick={handleContinue} 
-              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
               {/* Dynamic button text based on source */}
               {sidebarSource === 'main' ? "Continue" : "Switch to Selected"}
@@ -451,7 +457,7 @@ const EnrolledView = ({
   // --- RENDER: FULL DETAIL VIEW (Fixed Layout) ---
   if (viewMode === 'description') {
     return (
-      <div className="flex flex-col h-[calc(100vh-5rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-50">
+      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-50 overflow-hidden">
         
         {/* --- FIXED HEADER SECTION --- */}
         <div className="flex-none bg-white z-20 shadow-sm">
@@ -468,11 +474,11 @@ const EnrolledView = ({
               </Button>
            </div>
 
-           {/* Premium Header Block */}
-           <div className="premium-course-header p-6 text-white relative overflow-hidden">
-              <div className="relative z-10 flex flex-col gap-4">
-                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex items-center gap-2 text-blue-200 text-xs font-medium bg-black/20 px-3 py-1 rounded-full w-fit border border-white/10">
+           {/* Premium Header Block - Stacked on Mobile */}
+           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
+              <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
+                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
                         <BookOpen className="h-3 w-3" />
                         <span>Currently Viewing</span>
                     </div>
@@ -481,18 +487,18 @@ const EnrolledView = ({
                     {canSwitchBatch && (
                       <Button 
                         onClick={() => handleOpenSheet('detail')} 
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-8 text-sm"
+                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
                       >
                         Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
                       </Button>
                     )}
                  </div>
 
-                 <div className="space-y-2">
-                   <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+                 <div className="space-y-1 sm:space-y-2">
+                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
                       {fullCourseData?.title || currentBatchSummary.title}
                    </h1>
-                   <p className="text-slate-200 max-w-3xl text-sm md:text-base leading-relaxed opacity-90">
+                   <p className="text-slate-200 max-w-3xl text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
                       {fullCourseData?.description || currentBatchSummary.description}
                    </p>
                  </div>
@@ -510,31 +516,33 @@ const EnrolledView = ({
         {/* --- SCROLLABLE CONTENT SECTION --- */}
         <div 
           ref={contentRef}
-          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 p-4 md:p-6 pb-20"
+          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
         >
             {loadingDetails ? (
                <div className="flex items-center justify-center h-64">
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="space-y-8 pb-12">
-                    
-                    {/* Video/Features Section */}
-                    <div id="features" className="scroll-mt-32 px-0 pt-0">
-                      <FeaturesSection course={fullCourseData} />
+               <div className="p-3 sm:p-6">
+                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="space-y-8 pb-12">
+                      
+                      {/* Video/Features Section - No padding on mobile to be edge-to-edge if needed, or minimal padding */}
+                      <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
+                        <FeaturesSection course={fullCourseData} />
+                      </div>
+                      
+                      {/* Text Sections - Adjusted Padding */}
+                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
+                          <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                          <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
+                          <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                          <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
+                          <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
+                          <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                      </div>
                     </div>
-                    
-                    {/* Text Sections */}
-                    <div className="px-5 md:px-8 space-y-12">
-                        <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                        <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
-                        <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                        <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
-                        <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
-                        <div id="faqs" className="scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                    </div>
-                  </div>
+                 </div>
                </div>
             ) : (
                <div className="text-center py-10 text-gray-500">
@@ -551,12 +559,12 @@ const EnrolledView = ({
 
   // --- RENDER: MAIN LIST VIEW ---
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* --- Header with Background Color Block --- */}
-      <div className="premium-course-header rounded-xl p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-        <div className="relative z-10 flex justify-between items-start">
-          <div className="space-y-2">
-            <p className="text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
+      <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+        <div className="relative z-10 flex justify-between items-start gap-4">
+          <div className="space-y-1 sm:space-y-2 flex-1">
+            <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
             
             {/* Main Dashboard Title/Arrow - Sets source to 'main' */}
             <div 
@@ -577,21 +585,21 @@ const EnrolledView = ({
                 }
               }}
             >
-              <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
                 {currentBatchSummary?.title}
               </h1>
               
               {/* Dropdown Arrow triggers the same sheet */}
               {canSwitchBatch && (
-                <ChevronDown className="h-6 w-6 text-blue-200 group-hover:text-white transition-colors mt-1" />
+                <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
               )}
             </div>
           </div>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-white/10 text-white">
-                <MoreVertical className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-white/10 text-white flex-shrink-0">
+                <MoreVertical className="h-5 w-5 sm:h-6 sm:w-6" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
@@ -610,10 +618,10 @@ const EnrolledView = ({
 
       {/* --- BATCH CARD --- */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-           <h2 className="text-xl font-bold text-gray-900">Quick Access</h2>
-           <Button variant="link" className="text-blue-600 p-0 h-auto" onClick={() => setViewMode('description')}>
-             View Full Details <ArrowRight className="ml-1 h-4 w-4" />
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
+           <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
+             View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
            </Button>
         </div>
         {currentBatchSummary && (
@@ -625,50 +633,50 @@ const EnrolledView = ({
       </section>
 
       {/* --- MY CLASSROOM SECTION --- */}
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-12">
-        <div className="p-6 md:p-8">
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">My Classroom</h2>
-            <p className="text-gray-600 mt-1">Quick access to your learning tools</p>
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
+        <div className="p-5 sm:p-6 md:p-8">
+          <div className="mb-5 sm:mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Classroom</h2>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">Quick access to your learning tools</p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
             
             {/* Card 1: My Batches */}
             <div 
               onClick={() => onViewChange('enrollments')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative cursor-pointer group"
+              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
             >
-              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <Layers className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold text-gray-900">My Batches</h3>
-              <p className="text-gray-600 text-sm mt-1">View currently enrolled & ongoing courses</p>
+              <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
+              <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
             </div>
 
             {/* Card 2: Dashboard */}
             <div 
               onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative cursor-pointer group"
+              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
             >
-              <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <LayoutDashboard className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-lg font-semibold text-gray-900">Dashboard</h3>
-              <p className="text-gray-600 text-sm mt-1">Go to SSP Portal</p>
+              <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
+              <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
             </div>
 
             {/* Card 3: Library */}
-            <Link to="/exam-preparation" className="block group h-full">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+            <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
+              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
+                <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <Library className="h-8 w-8 text-green-600 mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-gray-900">Library</h3>
-                <p className="text-gray-600 text-sm mt-1">Access the Digital Library</p>
+                <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
+                <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
               </div>
             </Link>
             
@@ -677,8 +685,8 @@ const EnrolledView = ({
       </div>
       
       {/* Footer Message */}
-      <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
-        <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
+      <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
 
       {/* --- SIDEBAR RENDERED HERE FOR MAIN VIEW --- */}
