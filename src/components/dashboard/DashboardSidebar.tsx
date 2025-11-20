@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
   BookOpen, 
@@ -26,17 +26,17 @@ interface UserProfile {
   level?: string | null;
   exam_type?: string | null;
   student_status?: string | null;
-  [key: string]: any; // Allow other properties
+  [key: string]: any;
 }
 
-// Export this type so ModernDashboard can use it
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
+// Updated ActiveView to include 'coming_soon'
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'coming_soon';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
   onProfileUpdate: (updatedProfile: UserProfile) => void; 
   onViewChange: (view: ActiveView) => void;
-  activeView: ActiveView; // This prop causes the "red line" if missing in the parent
+  activeView: ActiveView;
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
@@ -48,14 +48,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   const navigate = useNavigate();
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
 
-  // Generates the dynamic display text for the focus area
   const getProfileDisplay = () => {
     if (!profile || !profile.program_type) {
-      return (
-        <span className="text-gray-500">Set your focus area</span>
-      );
+      return <span className="text-gray-500">Set your focus area</span>;
     }
-
     if (profile.program_type === 'IITM_BS') {
       const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch?';
       const level = profile.level || 'Level?';
@@ -66,7 +62,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
-
     if (profile.program_type === 'COMPETITIVE_EXAM') {
       const exam = profile.exam_type || 'Exam?';
       const status = profile.student_status || 'Class?';
@@ -77,9 +72,54 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
-
     return <span className="text-gray-500">Set your focus area</span>;
   };
+
+  // Helper for consistent button styling
+  const SidebarButton = ({ 
+    icon: Icon, 
+    label, 
+    viewName 
+  }: { 
+    icon: any, 
+    label: string, 
+    viewName: ActiveView 
+  }) => (
+    <Button 
+      variant="ghost" 
+      onClick={() => onViewChange(viewName)}
+      className={cn(
+        "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+        activeView === viewName 
+          ? "bg-teal-50 text-teal-700 border border-teal-100"
+          : "text-gray-700 hover:bg-gray-100 border border-transparent"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Button>
+  );
+
+  // Helper for Coming Soon buttons (originally links)
+  const PlaceholderButton = ({ 
+    icon: Icon, 
+    label 
+  }: { 
+    icon: any, 
+    label: string 
+  }) => (
+    <Button 
+      variant="ghost" 
+      onClick={() => onViewChange('coming_soon')}
+      className={cn(
+        "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+        "text-gray-700 hover:bg-gray-100 border border-transparent"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Button>
+  );
 
   return (
     <>
@@ -106,75 +146,34 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
               <div className="mt-2 space-y-1">
-                {/* Study Portal Button with Conditional Highlighting */}
-                <Button 
-                  variant="ghost" 
-                  onClick={() => onViewChange('studyPortal')}
-                  className={cn(
-                    "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
-                    activeView === 'studyPortal' 
-                      ? "bg-teal-50 text-teal-700 border border-teal-100" // Highlight styles
-                      : "text-gray-700 hover:bg-gray-100 border border-transparent"
-                  )}
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Study Portal
-                </Button>
-                
-                <Link to="/courses" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Library className="h-4 w-4" />
-                  Digital Library
-                </Link>
+                <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
+                <SidebarButton icon={Library} label="Digital Library" viewName="library" />
               </div>
             </div>
 
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
               <div className="mt-2 space-y-1">
-                <Link to="/courses?batch=regular" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <GraduationCap className="h-4 w-4" />
-                  Regular Batches
-                </Link>
-                <Link to="/courses?batch=fasttrack" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <FastForward className="h-4 w-4" />
-                  FastTrack Batches
-                </Link>
+                <PlaceholderButton icon={GraduationCap} label="Regular Batches" />
+                <PlaceholderButton icon={FastForward} label="FastTrack Batches" />
               </div>
             </div>
 
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Explore</h4>
               <div className="mt-2 space-y-1">
-                <Link to="/career" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Briefcase className="h-4 w-4" />
-                  Work @UI
-                </Link>
-                <Link to="/career#consult" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Users className="h-4 w-4" />
-                  Career Consult
-                </Link>
-                <Link to="/courses?category=upskilling" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <BookOpen className="h-4 w-4" />
-                  Upskilling
-                </Link>
+                <PlaceholderButton icon={Briefcase} label="Work @UI" />
+                <PlaceholderButton icon={Users} label="Career Consult" />
+                <PlaceholderButton icon={BookOpen} label="Upskilling" />
               </div>
             </div>
 
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</h4>
               <div className="mt-2 space-y-1">
-                <Link to="/contact" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Phone className="h-4 w-4" />
-                  Contact Us
-                </Link>
-                <Link to="/about" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Info className="h-4 w-4" />
-                  About Us
-                </Link>
-                <Link to="/privacy-policy" className="flex items-center gap-3 px-2 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 border border-transparent">
-                  <Shield className="h-4 w-4" />
-                  Privacy Policy
-                </Link>
+                <PlaceholderButton icon={Phone} label="Contact Us" />
+                <PlaceholderButton icon={Info} label="About Us" />
+                <PlaceholderButton icon={Shield} label="Privacy Policy" />
               </div>
             </div>
 
@@ -194,7 +193,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       </nav>
 
-      {/* --- FOCUS AREA MODAL --- */}
       <FocusAreaModal
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
