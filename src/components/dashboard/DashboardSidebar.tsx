@@ -29,7 +29,7 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// Updated ActiveView to include 'coming_soon'
+// --- UPDATED ActiveView TYPE ---
 export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'coming_soon';
 
 interface DashboardSidebarProps {
@@ -100,7 +100,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     </Button>
   );
 
-  // Helper for Coming Soon buttons (originally links)
+  // Helper for Coming Soon buttons
   const PlaceholderButton = ({ 
     icon: Icon, 
     label 
@@ -127,7 +127,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         <div className="flex-1 overflow-y-auto py-4">
           <div className="px-4 space-y-4">
             
-            {/* --- FOCUS AREA BUTTON --- */}
             <div className="px-2 py-2">
               <h4 className="px-0 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">My Focus Area</h4>
               <Button
@@ -146,8 +145,23 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
               <div className="mt-2 space-y-1">
+                {/* Study Portal Button */}
                 <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
-                <SidebarButton icon={Library} label="Digital Library" viewName="library" />
+                
+                {/* Digital Library Button - NOW LINKED TO 'library' VIEW */}
+                <Button 
+                  variant="ghost" 
+                  onClick={() => onViewChange('library')}
+                  className={cn(
+                    "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+                    activeView === 'library' 
+                      ? "bg-blue-50 text-blue-700 border border-blue-100"
+                      : "text-gray-700 hover:bg-gray-100 border border-transparent"
+                  )}
+                >
+                  <Library className="h-4 w-4" />
+                  Digital Library
+                </Button>
               </div>
             </div>
 
@@ -180,7 +194,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           </div>
         </div>
 
-        {/* --- BOTTOM BUTTONS --- */}
         <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
           <Button 
             variant="ghost" 
