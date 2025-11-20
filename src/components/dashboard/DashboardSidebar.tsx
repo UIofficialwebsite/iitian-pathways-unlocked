@@ -18,7 +18,6 @@ import {
 import FocusAreaModal from './FocusAreaModal';
 import { cn } from "@/lib/utils";
 
-// Define profile type
 interface UserProfile {
   id: string;
   program_type: string | null;
@@ -29,7 +28,6 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// --- UPDATED ActiveView TYPE ---
 export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'coming_soon';
 
 interface DashboardSidebarProps {
@@ -75,16 +73,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     return <span className="text-gray-500">Set your focus area</span>;
   };
 
-  // Helper for consistent button styling
-  const SidebarButton = ({ 
-    icon: Icon, 
-    label, 
-    viewName 
-  }: { 
-    icon: any, 
-    label: string, 
-    viewName: ActiveView 
-  }) => (
+  const SidebarButton = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange(viewName)}
@@ -100,14 +89,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
     </Button>
   );
 
-  // Helper for Coming Soon buttons
-  const PlaceholderButton = ({ 
-    icon: Icon, 
-    label 
-  }: { 
-    icon: any, 
-    label: string 
-  }) => (
+  const PlaceholderButton = ({ icon: Icon, label }: { icon: any, label: string }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange('coming_soon')}
@@ -145,10 +127,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
               <div className="mt-2 space-y-1">
-                {/* Study Portal Button */}
                 <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
                 
-                {/* Digital Library Button - NOW LINKED TO 'library' VIEW */}
+                {/* --- UPDATED DIGITAL LIBRARY BUTTON --- */}
                 <Button 
                   variant="ghost" 
                   onClick={() => onViewChange('library')}
