@@ -17,7 +17,9 @@ import {
   ArrowLeft,
   Calendar,
   Star,
-  Layers
+  Layers,
+  LayoutDashboard,
+  Library
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
@@ -242,9 +244,11 @@ const CustomDashboardTabNav = ({
 
 // --- View 1: Student IS Enrolled ---
 const EnrolledView = ({ 
-  enrollments
+  enrollments,
+  onViewChange // Added onViewChange prop
 } : { 
-  enrollments: GroupedEnrollment[]
+  enrollments: GroupedEnrollment[];
+  onViewChange: (view: 'dashboard' | 'profile' | 'enrollments' | 'studyPortal') => void;
 }) => {
   const { toast } = useToast();
 
@@ -311,7 +315,6 @@ const EnrolledView = ({
         if (element) {
           const rect = element.getBoundingClientRect();
           const containerRect = scrollContainer.getBoundingClientRect();
-          // Offset calculation relative to the container
           if (rect.top - containerRect.top < 150 && rect.bottom - containerRect.top > 50) {
             setActiveTab(tab.id);
             break;
@@ -365,7 +368,6 @@ const EnrolledView = ({
   // --- RENDER: FULL DETAIL VIEW (Fixed Layout) ---
   if (viewMode === 'description') {
     return (
-      // Main Container: Full Height, No Scroll on Parent
       <div className="flex flex-col h-[calc(100vh-5rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-50">
         
         {/* --- FIXED HEADER SECTION --- */}
@@ -410,7 +412,7 @@ const EnrolledView = ({
               </div>
            </div>
 
-           {/* Tab Navigation (Fixed below header) */}
+           {/* Tab Navigation */}
            <CustomDashboardTabNav 
              tabs={tabs} 
              activeTab={activeTab} 
@@ -428,26 +430,69 @@ const EnrolledView = ({
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               // UPDATED: Card structure with minimal padding for Features (Video) section
-               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="space-y-8 pb-12">
-                    
-                    {/* Video/Features Section: Minimal Padding for Wider Frame */}
-                    <div id="features" className="scroll-mt-32 px-1 md:px-2 pt-4">
-                      <FeaturesSection course={fullCourseData} />
+               <>
+                {/* Course Content Card */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="space-y-8 pb-12">
+                      
+                      <div id="features" className="scroll-mt-32 px-1 md:px-2 pt-4">
+                        <FeaturesSection course={fullCourseData} />
+                      </div>
+                      
+                      <div className="px-5 md:px-8 space-y-12">
+                          <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                          <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
+                          <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                          <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
+                          <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
+                          <div id="faqs" className="scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                      </div>
                     </div>
+                </div>
+
+                {/* --- MY CLASSROOM SECTION (Updated) --- */}
+                <div className="mt-12 mb-8">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6 px-1">My Classroom</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     
-                    {/* Text Sections: Standard Padding for Readability */}
-                    <div className="px-5 md:px-8 space-y-12">
-                        <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                        <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
-                        <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                        <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
-                        <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
-                        <div id="faqs" className="scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                    {/* Card 1: My Batches */}
+                    <div 
+                      onClick={() => onViewChange('enrollments')}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <Layers className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 text-lg">My Batches</h3>
+                      <p className="text-gray-500 text-sm mt-1">View enrolled & ongoing courses</p>
                     </div>
+
+                    {/* Card 2: Dashboard */}
+                    <div 
+                      onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
+                      className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                    >
+                      <div className="h-12 w-12 rounded-full bg-purple-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <LayoutDashboard className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <h3 className="font-semibold text-gray-900 text-lg">Dashboard</h3>
+                      <p className="text-gray-500 text-sm mt-1">Go to SSP Portal</p>
+                    </div>
+
+                    {/* Card 3: Library */}
+                    <Link to="/exam-preparation" className="block">
+                      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group h-full">
+                        <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                          <Library className="h-6 w-6 text-green-600" />
+                        </div>
+                        <h3 className="font-semibold text-gray-900 text-lg">Library</h3>
+                        <p className="text-gray-500 text-sm mt-1">Access Digital Library</p>
+                      </div>
+                    </Link>
+
                   </div>
-               </div>
+                </div>
+               </>
             ) : (
                <div className="text-center py-10 text-gray-500">
                  Failed to load details.
@@ -949,6 +994,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
       ) : hasEnrollments ? (
         <EnrolledView 
           enrollments={groupedEnrollments} 
+          onViewChange={onViewChange} // Pass onViewChange to EnrolledView
         />
       ) : (
         <NotEnrolledView 
