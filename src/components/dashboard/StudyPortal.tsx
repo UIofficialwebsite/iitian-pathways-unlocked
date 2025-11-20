@@ -420,7 +420,7 @@ const EnrolledView = ({
            />
         </div>
 
-        {/* --- SCROLLABLE CONTENT SECTION --- */}
+        {/* --- SCROLLABLE CONTENT SECTION (Sections are now individual cards) --- */}
         <div 
           ref={contentRef}
           className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 p-4 md:p-6 pb-20 space-y-8"
