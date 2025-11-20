@@ -15,10 +15,11 @@ import { BouncingDots } from "@/components/ui/bouncing-dots";
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
+import ExploreTab from "./ExploreTab"; 
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Custom Loader for Tab Switching ---
+// --- Custom Loader for Tab Switching & Placeholders ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     {/* Bouncing Dots */}
@@ -50,7 +51,6 @@ const ModernDashboard: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Initial Profile Fetch
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -103,22 +103,22 @@ const ModernDashboard: React.FC = () => {
     setProfile(updatedProfile as Profile);
   };
 
-  // --- CORE LOGIC: Handle View Switching with Animation ---
+  // --- CORE LOGIC: Handle View Switching ---
   const handleViewChange = (view: ActiveView) => {
-    // Prevent reloading if clicking the tab you are already on
-    if (view === activeView) return; 
+    if (view === activeView) return;
     
-    // 1. Start Loading Animation
-    setIsViewLoading(true);
-    
-    // 2. Switch the view logic immediately (behind the scenes)
-    setActiveView(view);
+    // If it's the 'coming_soon' view, just set it immediately (the loader IS the view)
+    if (view === 'coming_soon') {
+      setActiveView(view);
+      return;
+    }
 
-    // 3. Wait for a few milliseconds before revealing the new content
-    // This creates the smooth "App-like" transition feeling
+    // For normal views, show loading animation briefly
+    setIsViewLoading(true);
+    setActiveView(view);
     setTimeout(() => {
       setIsViewLoading(false);
-    }, 800); // 800ms delay
+    }, 800); 
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -136,7 +136,7 @@ const ModernDashboard: React.FC = () => {
       
       {/* --- TOP NAVIGATION --- */}
       <DashboardTopNav
-        onViewChange={handleViewChange} // Connect TopNav to animation handler
+        onViewChange={handleViewChange}
         profile={profile}
         onProfileUpdate={handleProfileUpdate}
         activeView={activeView}
@@ -150,7 +150,7 @@ const ModernDashboard: React.FC = () => {
           <DashboardSidebar
             profile={profile}
             onProfileUpdate={handleProfileUpdate}
-            onViewChange={handleViewChange} // Connect Sidebar to animation handler
+            onViewChange={handleViewChange}
             activeView={activeView}
           />
         </aside>
@@ -159,13 +159,24 @@ const ModernDashboard: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 h-[calc(100vh-73px)]">
           <div className="w-full max-w-7xl mx-auto">
             
-            {/* CONDITIONAL RENDERING: Loader vs Content */}
-            {isViewLoading ? (
+            {/* CONDITIONAL RENDERING */}
+            
+            {/* 1. Coming Soon / Placeholder View (Infinite Loader) */}
+            {activeView === 'coming_soon' ? (
+              <DashboardLoader />
+            ) : 
+            
+            /* 2. Normal View Loading Transition */
+            isViewLoading ? (
               <DashboardLoader />
             ) : (
+              /* 3. Actual Content */
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {activeView === 'studyPortal' && (
                   <StudyPortal profile={profile} onViewChange={handleViewChange} />
+                )}
+                {activeView === 'library' && (
+                  <ExploreTab />
                 )}
                 {activeView === 'profile' && (
                   <MyProfile />
