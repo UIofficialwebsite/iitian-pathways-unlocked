@@ -423,34 +423,30 @@ const EnrolledView = ({
         {/* --- SCROLLABLE CONTENT SECTION --- */}
         <div 
           ref={contentRef}
-          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 p-4 md:p-6 pb-20"
+          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 p-4 md:p-6 pb-20 space-y-8"
         >
             {loadingDetails ? (
-               <div className="flex items-center justify-center h-64">
+               <div className="flex items-center justify-center h-64 bg-white rounded-xl border border-gray-200 shadow-sm">
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                  <div className="space-y-8 pb-12">
-                    
-                    {/* Video/Features Section: ZERO Padding for full width (px-0) */}
-                    <div id="features" className="scroll-mt-32 px-0 pt-0">
+               // Render individual sections as white blocks on the gray background
+               <>
+                    {/* Video/Features Section: Full Width, Padded inside for content */}
+                    <div id="features" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden px-0 pt-0">
                       <FeaturesSection course={fullCourseData} />
                     </div>
                     
-                    {/* Text Sections: Standard Padding for Readability (px-5 md:px-8) */}
-                    <div className="px-5 md:px-8 space-y-12">
-                        <div id="about" className="scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                        <div id="moreDetails" className="scroll-mt-32"><MoreDetailsSection /></div>
-                        <div id="schedule" className="scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                        <div id="ssp" className="scroll-mt-32"><SSPPortalSection /></div>
-                        <div id="access" className="scroll-mt-32"><CourseAccessGuide /></div>
-                        <div id="faqs" className="scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                    </div>
-                  </div>
-               </div>
+                    {/* Other Sections: Standard Padding applied to the wrapping div */}
+                    <div id="about" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><AboutSection course={fullCourseData} /></div>
+                    <div id="moreDetails" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><MoreDetailsSection /></div>
+                    <div id="schedule" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><ScheduleSection scheduleData={scheduleData} /></div>
+                    <div id="ssp" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><SSPPortalSection /></div>
+                    <div id="access" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><CourseAccessGuide /></div>
+                    <div id="faqs" className="scroll-mt-32 bg-white rounded-xl border border-gray-200 shadow-sm p-5 md:p-8"><FAQSection faqs={faqs || []} /></div>
+               </>
             ) : (
-               <div className="text-center py-10 text-gray-500">
+               <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-gray-200 shadow-sm">
                  Failed to load details.
                </div>
             )}
