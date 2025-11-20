@@ -615,7 +615,7 @@ const EnrolledView = ({
               </div>
               <LayoutDashboard className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="text-lg font-semibold text-gray-900">Dashboard</h3>
-              <p className="text-gray-600 text-sm mt-1">Go to SSP Portal (ssp.unknowniitians.live)</p>
+              <p className="text-gray-600 text-sm mt-1">Go to SSP Portal</p>
             </div>
 
             {/* Card 3: Library (Redirect to Exam Prep) */}
