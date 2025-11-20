@@ -209,7 +209,7 @@ const EnrollmentListItem = ({
   );
 };
 
-// --- Custom Tab Navigation Component with Scroll Spy Support ---
+// --- Custom Tab Navigation Component with Scroll Spy Support (Unchanged) ---
 const CustomDashboardTabNav = ({ 
   tabs, 
   activeTab, 
@@ -242,7 +242,7 @@ const CustomDashboardTabNav = ({
 };
 
 
-// --- View 1: Student IS Enrolled ---
+// --- View 1: Student IS Enrolled (Unchanged) ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -642,13 +642,11 @@ const EnrolledView = ({
   );
 };
 
-// --- View 2: Student is NOT Enrolled (Added to fix ReferenceError) ---
+// --- View 2: Student is NOT Enrolled (Revised for user requirements) ---
 interface NotEnrolledViewProps {
   profile: UserProfile | null;
   recommendedCourses: Course[];
   isLoading: boolean;
-  notes: any; // Type 'any' used as structure is not available in context
-  pyqs: any; // Type 'any' used as structure is not available in context
   onEditProfile: () => void;
 }
 
@@ -656,79 +654,43 @@ const NotEnrolledView: React.FC<NotEnrolledViewProps> = ({
   profile, 
   recommendedCourses, 
   isLoading, 
-  notes, 
-  pyqs,
   onEditProfile
 }) => {
-  const notesCount = notes?.length || 0;
-  const pyqsCount = pyqs?.length || 0;
-
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       
       <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
       
-      {/* Quick Links Section */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold text-gray-900">Digital Resources</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          
-          {/* Notes Card */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <Link to="/exam-preparation#notes">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base font-medium">My Notes</CardTitle>
-                <Book className="h-5 w-5 text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{notesCount} Topics</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Access comprehensive study material.
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          {/* PYQs Card */}
-          <Card className="hover:shadow-lg transition-shadow">
-            <Link to="/exam-preparation#pyqs">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base font-medium">PYQs</CardTitle>
-                <FileText className="h-5 w-5 text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{pyqsCount} Sets</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Practice with previous year's questions.
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-
-          {/* Explore Courses Card */}
-           <Card className="hover:shadow-lg transition-shadow">
-            <Link to="/courses">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base font-medium">Explore All Courses</CardTitle>
-                <BookOpen className="h-5 w-5 text-gray-400" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-blue-600">Start Learning</div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Find the perfect course for your journey.
-                </p>
-              </CardContent>
-            </Link>
-          </Card>
-        </div>
-      </div>
-
-      {/* Recommended Courses Section */}
+      {/* Recommended Batches Section (User Requested) */}
       <RecommendedBatchesSection 
         courses={recommendedCourses} 
         isLoading={isLoading} 
       />
 
+      {/* Explore Section (User Requested) */}
+      <div className="space-y-4 pt-4">
+        <h2 className="text-2xl font-bold text-gray-900">Explore</h2>
+        <div className="grid grid-cols-1 gap-6">
+          
+          {/* Explore All Courses Card */}
+           <Link to="/courses" className="block h-full col-span-1">
+             <Card className="h-full hover:shadow-lg transition-shadow">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-base font-medium">Find Your Path</CardTitle>
+                  <BookOpen className="h-5 w-5 text-blue-600" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-gray-900">Explore All Courses</div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Browse our full catalog of batches and programs.
+                  </p>
+                </CardContent>
+             </Card>
+           </Link>
+           
+        </div>
+      </div>
+      
       {/* Footer Message */}
       <div className="flex items-center justify-start pt-6 pb-8 text-gray-600 text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> from UnknownIITians
@@ -736,7 +698,6 @@ const NotEnrolledView: React.FC<NotEnrolledViewProps> = ({
     </div>
   );
 };
-
 
 // --- RECOMMENDATION LOGIC (Unchanged) ---
 const getSortableLevel = (course: any): number => {
@@ -879,14 +840,16 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
 const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { getFilteredContent, contentLoading } = useBackend();
+  // Call to useBackend().getFilteredContent() is no longer needed here as the 
+  // notes/pyqs from it are no longer used in NotEnrolledView.
+  const { contentLoading } = useBackend(); 
   
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
 
-  const filteredContent = getFilteredContent(profile);
-  const { notes, pyqs } = filteredContent;
+  // const filteredContent = getFilteredContent(profile); 
+  // const { notes, pyqs } = filteredContent; // Removed based on user feedback
 
   const hasEnrollments = groupedEnrollments.length > 0;
 
@@ -987,8 +950,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
           profile={profile}
           recommendedCourses={recommendedCourses} 
           isLoading={isLoading}
-          notes={notes}
-          pyqs={pyqs}
           onEditProfile={() => onViewChange('profile')}
         />
       )}
@@ -996,7 +957,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   );
 };
 
-// --- Main Component ---
+// --- Main Component (Unchanged) ---
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   if (!profile || !profile.program_type) {
     return (
