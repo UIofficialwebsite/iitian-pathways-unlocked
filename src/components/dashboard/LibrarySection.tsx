@@ -17,7 +17,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
 
-  // --- 1. Fetch & Normalize Data ---
+  // --- 1. Fetch & Normalize Data based on Profile ---
   const filteredData = useMemo(() => {
     const content = getFilteredContent(profile);
     const combinedContent: any[] = [];
@@ -50,20 +50,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       });
     });
 
-    // Process Communities (Optional)
-    content.communities.forEach(comm => {
-      combinedContent.push({
-        id: comm.id,
-        type: 'Community',
-        title: comm.name,
-        subject: comm.group_type,
-        date: new Date(comm.created_at).toLocaleDateString(),
-        url: comm.group_link,
-        tag: 'Link',
-        category: 'Community'
-      });
-    });
-
     return combinedContent;
   }, [profile, getFilteredContent]);
 
@@ -73,7 +59,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                           (item.subject && item.subject.toLowerCase().includes(searchQuery.toLowerCase()));
     
     if (activeFilter === "All") return matchesSearch;
-    return matchesSearch && item.type === activeFilter; // Match 'Note' or 'PYQ' exact string
+    return matchesSearch && item.type === activeFilter;
   });
 
   const filters = ["All", "Note", "PYQ"];
@@ -85,7 +71,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   return (
     <div className="space-y-8">
       
-      {/* --- TOP BAR SECTION --- */}
+      {/* --- TOP HEADER SECTION --- */}
       <div className="flex flex-col gap-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Library</h1>
@@ -94,6 +80,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
           </p>
         </div>
 
+        {/* --- SEARCH & FILTER BAR --- */}
         <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row gap-2 md:items-center">
           {/* Search Input */}
           <div className="relative flex-grow">
@@ -106,7 +93,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
             />
           </div>
 
-          {/* Filter Divider (Desktop) */}
+          {/* Vertical Divider (Desktop only) */}
           <div className="hidden md:block w-px h-8 bg-gray-200 mx-2"></div>
 
           {/* Filter Pills */}
@@ -129,7 +116,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         </div>
       </div>
 
-      {/* --- CONTENT HOLDING SECTION --- */}
+      {/* --- CONTENT CARDS SECTION --- */}
       <div className="min-h-[400px]">
         {displayedContent.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -141,6 +128,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
               >
                 <div className="p-5 flex flex-col h-full">
                   
+                  {/* Top Row: Icon & Badge */}
                   <div className="flex justify-between items-start mb-4">
                     <div className={cn(
                       "h-12 w-12 rounded-xl flex items-center justify-center transition-colors",
@@ -155,6 +143,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                     </Badge>
                   </div>
 
+                  {/* Content Info */}
                   <div className="mb-4 flex-grow">
                     <h3 className="font-bold text-gray-900 text-lg line-clamp-2 group-hover:text-royal transition-colors mb-1">
                       {item.title}
@@ -164,6 +153,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                     </p>
                   </div>
 
+                  {/* Footer Row: Date & Action Arrow */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-auto">
                     <span className="text-xs text-gray-400 font-medium">
                       Added: {item.date}
@@ -178,7 +168,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
             ))}
           </div>
         ) : (
-          // Empty State
+          // --- Empty State ---
           <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-dashed border-gray-300">
             <div className="h-16 w-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
               <Search className="h-8 w-8 text-gray-400" />
