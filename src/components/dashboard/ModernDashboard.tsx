@@ -15,11 +15,11 @@ import { BouncingDots } from "@/components/ui/bouncing-dots";
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
-import LibrarySection from "./LibrarySection"; // --- IMPORT THE NEW SECTION ---
+import LibrarySection from "./LibrarySection"; 
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Reusable Loader ---
+// --- Reusable Loader for Transitions ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
@@ -38,6 +38,7 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
+  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
@@ -61,17 +62,25 @@ const ModernDashboard: React.FC = () => {
           .eq("id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") throw error;
-        
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
+
         if (data) {
           setProfile(data);
-          if (!data.program_type) setIsFocusModalOpen(true);
+          if (!data.program_type) {
+            setIsFocusModalOpen(true);
+          }
         } else {
           setIsFocusModalOpen(true);
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({ title: "Error", description: "Could not fetch profile", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: "Could not fetch your profile. " + error.message,
+          variant: "destructive",
+        });
       } finally {
         setLoadingProfile(false);
       }
@@ -91,10 +100,10 @@ const ModernDashboard: React.FC = () => {
 
   // --- Handle View Switching ---
   const handleViewChange = (view: ActiveView) => {
-    if (view === activeView) return;
+    if (view === activeView) return; 
     
-    // If coming soon or library, switch instantly (no loading transition needed as they ARE loading screens)
-    if (view === 'coming_soon' || view === 'library') {
+    // Special case: 'coming_soon' switches instantly
+    if (view === 'coming_soon') {
       setActiveView(view);
       return;
     }
@@ -102,7 +111,10 @@ const ModernDashboard: React.FC = () => {
     // Normal transition for other views
     setIsViewLoading(true);
     setActiveView(view);
-    setTimeout(() => setIsViewLoading(false), 800);
+
+    setTimeout(() => {
+      setIsViewLoading(false);
+    }, 800);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -117,6 +129,7 @@ const ModernDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
+      
       <DashboardTopNav
         onViewChange={handleViewChange} 
         profile={profile}
@@ -125,6 +138,7 @@ const ModernDashboard: React.FC = () => {
       />
 
       <div className="flex-1 grid lg:grid-cols-[288px_1fr]">
+        
         <aside className="hidden lg:block border-r bg-white sticky top-[73px] h-[calc(100vh-73px)]">
           <DashboardSidebar
             profile={profile}
@@ -137,10 +151,9 @@ const ModernDashboard: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 h-[calc(100vh-73px)]">
           <div className="w-full max-w-7xl mx-auto">
             
+            {/* CONDITIONAL RENDERING */}
             {activeView === 'coming_soon' ? (
               <DashboardLoader />
-            ) : activeView === 'library' ? (
-               <LibrarySection /> 
             ) : isViewLoading ? (
               <DashboardLoader />
             ) : (
@@ -148,6 +161,12 @@ const ModernDashboard: React.FC = () => {
                 {activeView === 'studyPortal' && (
                   <StudyPortal profile={profile} onViewChange={handleViewChange} />
                 )}
+                
+                {/* --- LIBRARY SECTION (Passed Profile) --- */}
+                {activeView === 'library' && (
+                   <LibrarySection profile={profile} /> 
+                )}
+
                 {activeView === 'profile' && (
                   <MyProfile />
                 )}
