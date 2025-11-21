@@ -19,7 +19,7 @@ import LibrarySection from "./LibrarySection";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Reusable Loader for Transitions ---
+// --- Reusable Loader ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
@@ -102,13 +102,13 @@ const ModernDashboard: React.FC = () => {
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) return; 
     
-    // Special case: 'coming_soon' switches instantly
+    // If coming soon, switch instantly (it's a static loader page)
     if (view === 'coming_soon') {
       setActiveView(view);
       return;
     }
 
-    // Normal transition for other views
+    // For Library and others, show the "Hang tight" transition first
     setIsViewLoading(true);
     setActiveView(view);
 
@@ -152,17 +152,23 @@ const ModernDashboard: React.FC = () => {
           <div className="w-full max-w-7xl mx-auto">
             
             {/* CONDITIONAL RENDERING */}
+
+            {/* 1. Coming Soon View */}
             {activeView === 'coming_soon' ? (
               <DashboardLoader />
-            ) : isViewLoading ? (
+            ) : 
+            
+            /* 2. Transition Loading State */
+            isViewLoading ? (
               <DashboardLoader />
             ) : (
+              /* 3. Actual Content */
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {activeView === 'studyPortal' && (
                   <StudyPortal profile={profile} onViewChange={handleViewChange} />
                 )}
                 
-                {/* --- LIBRARY SECTION (Passed Profile) --- */}
+                {/* --- LIBRARY SECTION (Now receives profile) --- */}
                 {activeView === 'library' && (
                    <LibrarySection profile={profile} /> 
                 )}
