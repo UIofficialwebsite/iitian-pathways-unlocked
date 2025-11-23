@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion } from "lucide-react";
+import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,34 +9,34 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { Separator } from "@/components/ui/separator";
 
-// --- 1. Content Categories and Mapping ---
+// --- Configuration for Categories ---
 const contentCategories = [
     'PYQs (Previous Year Questions)',
     'Short Notes and Mindmaps',
     'Free Lectures',
     'Free Question Bank',
-    'UI ki Padhai', // Special course/content
+    'UI ki Padhai',
 ];
 
-// Helper function to determine the icon, color, and background based on content type/category
+// Helper function to define visual style based on category
 const getContentVisuals = (category: string) => {
   switch (category) {
     case 'PYQs (Previous Year Questions)':
-      return { icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50' };
+      return { icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', tag: 'Paper' };
     case 'Short Notes and Mindmaps':
-      return { icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50' };
+      return { icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', tag: 'PDF/Note' };
     case 'Free Lectures':
-      return { icon: Video, color: 'text-green-600', bg: 'bg-green-50' };
+      return { icon: Video, color: 'text-green-600', bg: 'bg-green-50', tag: 'Video' };
     case 'Free Question Bank':
-      return { icon: FileQuestion, color: 'text-purple-600', bg: 'bg-purple-50' };
+      return { icon: FileQuestion, color: 'text-purple-600', bg: 'bg-purple-50', tag: 'Test' };
     case 'UI ki Padhai':
-      return { icon: Zap, color: 'text-red-600', bg: 'bg-red-50' };
+      return { icon: Zap, color: 'text-red-600', bg: 'bg-red-50', tag: 'Course' };
     default:
-      return { icon: Download, color: 'text-gray-600', bg: 'bg-gray-50' };
+      return { icon: Download, color: 'text-gray-600', bg: 'bg-gray-50', tag: 'Resource' };
   }
 };
 
-// --- 2. Generic Card Component (Similar Type of Cardings) ---
+// --- Reusable Card Component (Strictly Matching Carding Style) ---
 interface ContentItem {
   id: string | number;
   type: string;
@@ -49,28 +49,22 @@ interface ContentItem {
   color: string;
 }
 
-interface ContentCardProps {
-  item: ContentItem;
-  handleOpen: (url?: string | null) => void;
-}
-
-const ContentCard: React.FC<ContentCardProps> = ({ item, handleOpen }) => {
+const ContentCard: React.FC<{ item: ContentItem; handleOpen: (url?: string | null) => void }> = ({ item, handleOpen }) => {
     const visuals = getContentVisuals(item.category);
     
     return (
         <Card 
-            key={`${item.type}-${item.id}`} 
-            className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-xl border-gray-200 cursor-pointer"
+            className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg border-gray-200 cursor-pointer bg-white"
             onClick={() => handleOpen(item.url)}
         >
             <CardHeader className="p-4 pb-2">
                 {/* Top Row: Icon & Badge */}
                 <div className="flex justify-between items-start mb-3">
                     <div className={cn("h-10 w-10 rounded-lg flex items-center justify-center p-2", visuals.bg)}>
-                        <visuals.icon className="h-5 w-5" style={{ color: item.color }} />
+                        <visuals.icon className="h-5 w-5" style={{ color: visuals.color }} />
                     </div>
                     <Badge variant="secondary" className="bg-gray-100 text-gray-500 font-semibold border-gray-200 text-xs">
-                        {item.tag}
+                        {visuals.tag}
                     </Badge>
                 </div>
 
@@ -85,7 +79,7 @@ const ContentCard: React.FC<ContentCardProps> = ({ item, handleOpen }) => {
 
             <CardContent className="px-4 py-2 flex-grow">
                 <span className="text-xs text-gray-400 font-medium">
-                    {item.date ? `Added: ${item.date}` : 'Always Available'}
+                    {item.date ? `Added: ${item.date}` : 'Date N/A'}
                 </span>
             </CardContent>
 
@@ -96,88 +90,15 @@ const ContentCard: React.FC<ContentCardProps> = ({ item, handleOpen }) => {
                     variant="outline" 
                     className="w-full text-royal border-royal hover:bg-royal hover:text-white transition-colors flex items-center justify-center gap-1 text-sm"
                 >
-                    View <ChevronRight className="h-4 w-4 ml-1" />
+                    View Content <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
             </CardFooter>
         </Card>
     );
 };
 
-// --- 3. Content Row Component (Scrollable 2x3 Grid) ---
-interface ContentCategoryRowProps {
-    category: string;
-    items: ContentItem[];
-    handleOpen: (url?: string | null) => void;
-}
 
-const ContentCategoryRow: React.FC<ContentCategoryRowProps> = ({ category, items, handleOpen }) => {
-    // Only show the first 6 items in the initial visible grid
-    const visibleItems = items.slice(0, 6);
-    const hasMore = items.length > 6;
-
-    // Use a unique ID for the scrollable container
-    const scrollContainerId = `scroll-${category.replace(/\s/g, '-')}`;
-
-    // Simple scroll handler (for demonstration, a full-featured carousel would use refs)
-    const scroll = (direction: 'left' | 'right') => {
-        const container = document.getElementById(scrollContainerId);
-        if (container) {
-            // Adjust scroll amount based on card width (approx 3 columns worth)
-            const scrollAmount = container.offsetWidth * 0.9; 
-            container.scrollBy({
-                left: direction === 'right' ? scrollAmount : -scrollAmount,
-                behavior: 'smooth'
-            });
-        }
-    };
-
-    return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">{category}</h2>
-                <div className="flex items-center space-x-4">
-                    {hasMore && (
-                        <>
-                            {/* Side Arrows for Scrolling */}
-                            <Button variant="outline" size="icon" className="h-8 w-8 text-gray-600 hover:bg-gray-100" onClick={() => scroll('left')}>
-                                <ChevronRight className="h-4 w-4 rotate-180" />
-                            </Button>
-                            <Button variant="outline" size="icon" className="h-8 w-8 text-gray-600 hover:bg-gray-100" onClick={() => scroll('right')}>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </>
-                    )}
-                    {/* View All Link */}
-                    <Button variant="link" className="p-0 h-auto text-royal font-semibold">
-                        View All
-                    </Button>
-                </div>
-            </div>
-
-            <div 
-                id={scrollContainerId} 
-                className="grid grid-flow-col-dense auto-cols-[calc((100%/3)-1rem)] md:auto-cols-[calc((100%/3)-1rem)] lg:auto-cols-[calc((100%/3)-1rem)] gap-4 overflow-x-scroll pb-4 scrollbar-hide snap-x"
-                style={{ gridTemplateRows: 'repeat(2, auto)' }} // Force 2 rows
-            >
-                {visibleItems.map((item) => (
-                    <div key={item.id} className="snap-start">
-                         <ContentCard item={item} handleOpen={handleOpen} />
-                    </div>
-                ))}
-                
-                {/* Placeholder for remaining items to enable scrolling for demonstration */}
-                {items.length > visibleItems.length && [...Array(items.length - visibleItems.length)].map((_, index) => (
-                     <div key={`extra-${index}`} className="snap-start min-w-[250px] md:min-w-full">
-                         {/* Optional: Add a placeholder card or nothing */}
-                    </div>
-                ))}
-            </div>
-             <Separator /> {/* Separator between categories */}
-        </div>
-    );
-};
-
-// --- 4. Main Library Component ---
+// --- Main Library Component ---
 interface LibrarySectionProps {
   profile: Tables<'profiles'> | null;
 }
@@ -186,32 +107,17 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const PRIMARY_COLOR_CLASS = 'text-royal';
   const { getFilteredContent, loading } = useBackend();
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
+  const [showAll, setShowAll] = useState(false);
   
-  // --- Data Categorization based on Focus Mode (Intelligence) ---
+  // --- Data Categorization based on Focus Mode (Dynamic Content) ---
   const allCategorizedContent = useMemo(() => {
-    // This hook call is key for content filtered by profile (Focus Mode)
+    // Content is STRICTLY filtered by profile/focus goal via getFilteredContent
     const content = getFilteredContent(profile);
     const contentMap: { [key: string]: ContentItem[] } = {};
 
-    // Initialize map with empty arrays
     contentCategories.forEach(cat => contentMap[cat] = []);
 
-    // Process Notes (Mapped to Short Notes and Mindmaps)
-    content.notes.forEach(note => {
-      contentMap['Short Notes and Mindmaps'].push({
-        id: note.id,
-        type: 'Note',
-        title: note.title,
-        subject: note.subject,
-        date: new Date(note.created_at).toLocaleDateString(),
-        url: note.file_link || note.content_url,
-        tag: 'PDF/Note',
-        category: 'Short Notes and Mindmaps',
-        color: getContentVisuals('Short Notes and Mindmaps').color,
-      });
-    });
-
-    // Process PYQs (Mapped directly)
+    // 1. Map PYQs
     content.pyqs.forEach(pyq => {
       contentMap['PYQs (Previous Year Questions)'].push({
         id: pyq.id,
@@ -220,38 +126,45 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         subject: pyq.subject,
         date: new Date(pyq.created_at).toLocaleDateString(),
         url: pyq.file_link || pyq.content_url,
-        tag: 'Paper',
+        tag: getContentVisuals('PYQs (Previous Year Questions)').tag,
         category: 'PYQs (Previous Year Questions)',
         color: getContentVisuals('PYQs (Previous Year Questions)').color,
       });
     });
 
-    // --- Add Placeholder content for missing categories to demonstrate the UI (Must be replaced by proper backend fetching) ---
-    const userFocusProgram = profile?.program_type || 'General';
+    // 2. Map Notes
+    content.notes.forEach(note => {
+      contentMap['Short Notes and Mindmaps'].push({
+        id: note.id,
+        type: 'Note',
+        title: note.title,
+        subject: note.subject,
+        date: new Date(note.created_at).toLocaleDateString(),
+        url: note.file_link || note.content_url,
+        tag: getContentVisuals('Short Notes and Mindmaps').tag,
+        category: 'Short Notes and Mindmaps',
+        color: getContentVisuals('Short Notes and Mindmaps').color,
+      });
+    });
 
-    if (contentMap['Free Lectures'].length === 0) {
-         contentMap['Free Lectures'].push(
-            { id: 'mock-L1', title: `${userFocusProgram} Video Lecture: Core Concepts`, subject: 'Physics', date: 'Jul 20, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
-            { id: 'mock-L2', title: `${userFocusProgram} Class 2: Advanced Topics`, subject: 'Mathematics', date: 'Jul 22, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
-        );
-    }
-    if (contentMap['Free Question Bank'].length === 0) {
-         contentMap['Free Question Bank'].push(
-            { id: 'mock-QB1', title: `${userFocusProgram} Mock Test Series 1`, subject: 'All Subjects', date: 'Aug 01, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-            { id: 'mock-QB2', title: `${userFocusProgram} Chapter Practice Set`, subject: 'Chemistry', date: 'Aug 05, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-        );
-    }
-    if (contentMap['UI ki Padhai'].length === 0) {
-         contentMap['UI ki Padhai'].push(
-            { id: 'mock-UI1', title: `Premium Course Access: UI ki Padhai`, subject: 'Full Program', date: 'Enroll Now', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
-        );
-    }
+    // 3. Placeholders for other categories (must be replaced by actual data fetching logic)
+    const userFocusProgram = profile?.program_type || 'General';
+    // Add placeholder items for the UI to demonstrate functionality
+    contentMap['Free Lectures'].push(
+        { id: 'mock-L1', title: `${userFocusProgram} Video Lecture: Core Concepts`, subject: 'Physics', date: 'Jul 20, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
+        { id: 'mock-L2', title: `${userFocusProgram} Class 2: Advanced Topics`, subject: 'Mathematics', date: 'Jul 22, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
+    );
+    // ... add more placeholders for Question Bank and UI ki Padhai for robust UI testing
 
     return contentMap;
   }, [profile, getFilteredContent]);
 
   // Content for the currently active tab
-  const activeContent = allCategorizedContent[activeTab] || [];
+  const fullContent = allCategorizedContent[activeTab] || [];
+  
+  // Apply the 2x3 (6 item) limit unless 'View All' is clicked
+  const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
+  const hasMoreContent = fullContent.length > 6;
 
   const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
@@ -265,6 +178,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       {/* --- UPPER HEADER / BREADCRUMB SECTION (Arrow UI Library) --- */}
       <div className="flex flex-col gap-4 border-b pb-4">
         <div className="flex items-center space-x-2 text-sm font-medium">
+            {/* Arrow UI Library Text format */}
             <span className="text-gray-500 transition-colors hover:text-gray-700 cursor-pointer">Dashboard</span>
             <ChevronRight className="h-4 w-4 text-gray-400" />
             <h1 className="text-xl font-bold text-gray-900 tracking-tight">UI Library</h1>
@@ -280,7 +194,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
             {contentCategories.map((category) => (
               <button
                 key={category}
-                onClick={() => setActiveTab(category)}
+                onClick={() => { setActiveTab(category); setShowAll(false); }}
                 className={cn(
                   "px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap border-b-2",
                   activeTab === category
@@ -294,33 +208,39 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         </div>
       </div>
 
-      {/* --- CONTENT CARDS SECTION (Based on current Tab and Focus Mode) --- */}
-      <div className="min-h-[400px] space-y-6">
+      {/* --- CONTENT CARDS SECTION (2 Rows, 3 Columns Grid) --- */}
+      <div className="min-h-[400px] space-y-4">
+        {/* Content Header/Actions */}
+        <div className="flex justify-between items-center">
+             <h2 className="text-xl font-bold text-gray-900">
+                {activeTab} Content
+            </h2>
+            {/* View All / Scrolling functionality link */}
+            {fullContent.length > 0 && (
+                <Button 
+                    variant="link" 
+                    className="p-0 h-auto text-royal font-semibold flex items-center"
+                    onClick={() => setShowAll(!showAll)}
+                >
+                    {showAll ? 'Show Less' : `View All (${fullContent.length})`}
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+            )}
+        </div>
+        
         {loading ? (
-          <div className="text-center py-20 text-gray-500">Fetching resources tailored for **{userFocusText}**...</div>
+          <div className="text-center py-20 text-gray-500">Fetching **{activeTab}** resources...</div>
+        ) : displayedContent.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayedContent.map((item) => (
+                    <ContentCard key={item.id} item={item} handleOpen={handleOpen} />
+                ))}
+            </div>
         ) : (
-             <ContentCategoryRow 
-                category={activeTab} 
-                items={activeContent} 
-                handleOpen={handleOpen} 
-            />
+          <div className="text-center py-20 text-gray-500 bg-white border border-dashed rounded-lg">
+            <p>No resources found for **{activeTab}** in your **{userFocusText}** focus area.</p>
+          </div>
         )}
-
-         {/* This is the primary display area. In a single-page view, all categories might be listed one after another: 
-        {loading ? (
-           <div className="text-center py-20 text-gray-500">Fetching resources...</div>
-        ) : (
-             Object.entries(allCategorizedContent).map(([category, items]) => {
-                if (items.length === 0) return null;
-                return <ContentCategoryRow 
-                    key={category} 
-                    category={category} 
-                    items={items} 
-                    handleOpen={handleOpen} 
-                />;
-            })
-        )} 
-        */}
       </div>
     </div>
   );
