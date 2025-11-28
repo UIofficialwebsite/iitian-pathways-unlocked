@@ -37,7 +37,7 @@ const getContentVisuals = (category: string) => {
   }
 };
 
-// --- Reusable Card Component (Strictly Matching Carding Style) ---
+// --- Reusable Card Component ---
 interface ContentItem {
   id: string | number;
   type: string;
@@ -111,9 +111,8 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   
-  // --- Data Categorization based on Focus Mode (Dynamic Content) ---
+  // --- Data Categorization based on Focus Mode ---
   const allCategorizedContent = useMemo(() => {
-    // Content is STRICTLY filtered by profile/focus goal via getFilteredContent
     const content = getFilteredContent(profile);
     const contentMap: { [key: string]: ContentItem[] } = {};
 
@@ -149,7 +148,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       });
     });
 
-    // 3. Placeholders for categories (Full Content Simulation)
+    // 3. Placeholders for demo
     const userFocusProgram = profile?.program_type || 'General';
     
     // Free Lectures
@@ -179,10 +178,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
 
   // Content for the currently active tab
   const fullContent = allCategorizedContent[activeTab] || [];
-  
-  // Apply the 2x3 (6 item) limit unless 'View All' is clicked
   const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
-
   const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
   const handleOpen = (url?: string | null) => {
@@ -190,34 +186,36 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50/50">
+    // Applied negative margins to breakout of parent padding and ensure full width background
+    <div className="flex flex-col min-h-screen bg-gray-50/50 -m-4 md:-m-8">
       
       {/* --- SEPARATE NAV BAR SECTION --- */}
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
+      <div className="bg-white border-b sticky top-0 z-30 shadow-sm pt-2">
+          
           {/* Top Row: Back Arrow + Title */}
-          <div className="flex items-center gap-4 px-4 py-3 md:px-6 md:py-4">
+          <div className="flex items-center gap-4 px-4 pt-4 md:px-8 md:pt-6 mb-6">
                <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="-ml-2 h-10 w-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 rounded-full"
+                    className="-ml-2 h-10 w-10 text-black hover:text-black hover:bg-gray-100/50 rounded-full"
                     onClick={() => navigate(-1)}
                >
                   <ArrowLeft className="h-6 w-6" />
                </Button>
-               <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+               <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                    UI Library
                </h1>
           </div>
 
           {/* Bottom Row: Tabs Navigation */}
-          <div className="px-4 md:px-6">
-               <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
+          <div className="px-4 md:px-8">
+               <div className="flex space-x-8 overflow-x-auto scrollbar-hide">
                     {contentCategories.map((category) => (
                       <button
                         key={category}
                         onClick={() => { setActiveTab(category); setShowAll(false); }}
                         className={cn(
-                          "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 relative top-[1px] px-1",
+                          "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1",
                           activeTab === category
                             ? "text-royal border-royal"
                             : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
@@ -231,7 +229,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       </div>
 
       {/* --- CONTENT SECTION --- */}
-      <div className="p-4 md:p-6 md:px-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
+      <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
         
         {/* Focus Mode Information Sub-header */}
         <div className="flex items-center justify-between">
@@ -245,7 +243,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
              <h2 className="text-xl font-bold text-gray-900">
                 {activeTab} Content
             </h2>
-            {/* View All / Scrolling functionality link */}
             {fullContent.length > 0 && (
                 <Button 
                     variant="link" 
