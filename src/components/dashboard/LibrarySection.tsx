@@ -147,14 +147,30 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       });
     });
 
-    // 3. Placeholders for other categories (must be replaced by actual data fetching logic)
+    // 3. Placeholders for categories (Full Content Simulation)
     const userFocusProgram = profile?.program_type || 'General';
-    // Add placeholder items for the UI to demonstrate functionality
+    
+    // Free Lectures
     contentMap['Free Lectures'].push(
         { id: 'mock-L1', title: `${userFocusProgram} Video Lecture: Core Concepts`, subject: 'Physics', date: 'Jul 20, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
         { id: 'mock-L2', title: `${userFocusProgram} Class 2: Advanced Topics`, subject: 'Mathematics', date: 'Jul 22, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
+        { id: 'mock-L3', title: 'Problem Solving Session: Algebra', subject: 'Mathematics', date: 'Jul 24, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
     );
-    // ... add more placeholders for Question Bank and UI ki Padhai for robust UI testing
+
+    // Free Question Bank (Added to match design)
+    contentMap['Free Question Bank'].push(
+        { id: 'mock-Q1', title: `${userFocusProgram} Full Syllabus Mock Test 1`, subject: 'All Subjects', date: 'Aug 01, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
+        { id: 'mock-Q2', title: 'Chapterwise Practice: Kinematics', subject: 'Physics', date: 'Aug 03, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
+        { id: 'mock-Q3', title: 'Organic Chemistry Speed Drills', subject: 'Chemistry', date: 'Aug 05, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
+        { id: 'mock-Q4', title: 'Calculus: Limits & Continuity Quiz', subject: 'Mathematics', date: 'Aug 08, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
+    );
+
+    // UI ki Padhai (Added to match design)
+    contentMap['UI ki Padhai'].push(
+        { id: 'ui-P1', title: 'Mastering Time Management for Exams', subject: 'Strategy', date: 'Sep 01, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
+        { id: 'ui-P2', title: 'Zero to Hero: Mechanics Series', subject: 'Physics', date: 'Sep 10, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
+        { id: 'ui-P3', title: 'How to Analyze Mock Tests Effectively', subject: 'Strategy', date: 'Sep 15, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
+    );
 
     return contentMap;
   }, [profile, getFilteredContent]);
