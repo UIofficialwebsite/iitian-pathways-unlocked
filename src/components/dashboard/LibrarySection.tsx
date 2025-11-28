@@ -106,7 +106,6 @@ interface LibrarySectionProps {
 
 const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const navigate = useNavigate();
-  const PRIMARY_COLOR_CLASS = 'text-royal';
   const { getFilteredContent, loading } = useBackend();
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
@@ -186,14 +185,14 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   };
 
   return (
-    // Applied negative margins to breakout of parent padding and ensure full width background
     <div className="flex flex-col min-h-screen bg-gray-50/50 -m-4 md:-m-8">
       
       {/* --- SEPARATE NAV BAR SECTION --- */}
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm pt-2">
+      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           
           {/* Top Row: Back Arrow + Title */}
-          <div className="flex items-center gap-4 px-4 pt-4 md:px-8 md:pt-6 mb-6">
+          {/* Adjusted padding: pt-3 to shift 'UI Library' title up. Removed extra wrapper padding. */}
+          <div className="flex items-center gap-4 px-4 pt-3 md:px-8 md:pt-4 mb-6">
                <Button 
                     variant="ghost" 
                     size="icon" 
@@ -231,12 +230,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       {/* --- CONTENT SECTION --- */}
       <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
         
-        {/* Focus Mode Information Sub-header */}
-        <div className="flex items-center justify-between">
-            <p className="text-gray-500 text-sm">
-                Resources curated for your focus: <span className={cn('font-semibold', PRIMARY_COLOR_CLASS)}>{userFocusText}</span>
-            </p>
-        </div>
+        {/* Removed the 'Resources curated for your focus' paragraph line as requested */}
 
         {/* Content Header */}
         <div className="flex justify-between items-center">
