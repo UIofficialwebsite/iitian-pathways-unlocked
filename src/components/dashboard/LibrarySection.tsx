@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion, ArrowRight } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion, ArrowRight, ArrowLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -104,6 +105,7 @@ interface LibrarySectionProps {
 }
 
 const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
+  const navigate = useNavigate();
   const PRIMARY_COLOR_CLASS = 'text-royal';
   const { getFilteredContent, loading } = useBackend();
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
@@ -157,7 +159,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         { id: 'mock-L3', title: 'Problem Solving Session: Algebra', subject: 'Mathematics', date: 'Jul 24, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
     );
 
-    // Free Question Bank (Added to match design)
+    // Free Question Bank
     contentMap['Free Question Bank'].push(
         { id: 'mock-Q1', title: `${userFocusProgram} Full Syllabus Mock Test 1`, subject: 'All Subjects', date: 'Aug 01, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
         { id: 'mock-Q2', title: 'Chapterwise Practice: Kinematics', subject: 'Physics', date: 'Aug 03, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
@@ -165,7 +167,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         { id: 'mock-Q4', title: 'Calculus: Limits & Continuity Quiz', subject: 'Mathematics', date: 'Aug 08, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
     );
 
-    // UI ki Padhai (Added to match design)
+    // UI ki Padhai
     contentMap['UI ki Padhai'].push(
         { id: 'ui-P1', title: 'Mastering Time Management for Exams', subject: 'Strategy', date: 'Sep 01, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
         { id: 'ui-P2', title: 'Zero to Hero: Mechanics Series', subject: 'Physics', date: 'Sep 10, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
@@ -180,7 +182,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   
   // Apply the 2x3 (6 item) limit unless 'View All' is clicked
   const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
-  const hasMoreContent = fullContent.length > 6;
 
   const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
@@ -189,44 +190,57 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="flex flex-col min-h-screen bg-gray-50/50">
       
-      {/* --- UPPER HEADER / BREADCRUMB SECTION (Arrow UI Library) --- */}
-      <div className="flex flex-col gap-4 border-b pb-4">
-        <div className="flex items-center space-x-2 text-sm font-medium">
-            {/* Arrow UI Library Text format */}
-            <span className="text-gray-500 transition-colors hover:text-gray-700 cursor-pointer">Dashboard</span>
-            <ChevronRight className="h-4 w-4 text-gray-400" />
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">UI Library</h1>
-        </div>
+      {/* --- SEPARATE NAV BAR SECTION --- */}
+      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
+          {/* Top Row: Back Arrow + Title */}
+          <div className="flex items-center gap-4 px-4 py-3 md:px-6 md:py-4">
+               <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="-ml-2 h-10 w-10 text-gray-600 hover:text-gray-900 hover:bg-gray-100/50 rounded-full"
+                    onClick={() => navigate(-1)}
+               >
+                  <ArrowLeft className="h-6 w-6" />
+               </Button>
+               <h1 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+                   UI Library
+               </h1>
+          </div>
 
-        {/* Focus Mode Information */}
-        <p className="text-gray-500 text-sm">
-            Resources curated for your focus: <span className={cn('font-semibold', PRIMARY_COLOR_CLASS)}>{userFocusText}</span>
-        </p>
-
-        {/* --- NAVIGATION BAR OPTIONS (Tabs) --- */}
-        <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
-            {contentCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => { setActiveTab(category); setShowAll(false); }}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap border-b-2",
-                  activeTab === category
-                    ? "text-royal border-royal font-semibold bg-royal/5"
-                    : "text-gray-600 border-transparent hover:border-gray-300 hover:text-gray-800"
-                )}
-              >
-                {category}
-              </button>
-            ))}
-        </div>
+          {/* Bottom Row: Tabs Navigation */}
+          <div className="px-4 md:px-6">
+               <div className="flex space-x-6 overflow-x-auto scrollbar-hide">
+                    {contentCategories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => { setActiveTab(category); setShowAll(false); }}
+                        className={cn(
+                          "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 relative top-[1px] px-1",
+                          activeTab === category
+                            ? "text-royal border-royal"
+                            : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                        )}
+                      >
+                        {category}
+                      </button>
+                    ))}
+               </div>
+          </div>
       </div>
 
-      {/* --- CONTENT CARDS SECTION (2 Rows, 3 Columns Grid) --- */}
-      <div className="min-h-[400px] space-y-4">
-        {/* Content Header/Actions */}
+      {/* --- CONTENT SECTION --- */}
+      <div className="p-4 md:p-6 md:px-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
+        
+        {/* Focus Mode Information Sub-header */}
+        <div className="flex items-center justify-between">
+            <p className="text-gray-500 text-sm">
+                Resources curated for your focus: <span className={cn('font-semibold', PRIMARY_COLOR_CLASS)}>{userFocusText}</span>
+            </p>
+        </div>
+
+        {/* Content Header */}
         <div className="flex justify-between items-center">
              <h2 className="text-xl font-bold text-gray-900">
                 {activeTab} Content
@@ -244,6 +258,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
             )}
         </div>
         
+        {/* Cards Grid */}
         {loading ? (
           <div className="text-center py-20 text-gray-500">Fetching **{activeTab}** resources...</div>
         ) : displayedContent.length > 0 ? (
