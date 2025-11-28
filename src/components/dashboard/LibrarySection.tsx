@@ -110,7 +110,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   
-  // --- Data Categorization based on Focus Mode ---
+  // --- Data Categorization ---
   const allCategorizedContent = useMemo(() => {
     const content = getFilteredContent(profile);
     const contentMap: { [key: string]: ContentItem[] } = {};
@@ -185,18 +185,20 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   };
 
   return (
+    // Root container with negative margins to pull content up and left/right, ensuring no gray gaps
     <div className="flex flex-col min-h-screen bg-gray-50/50 -m-4 md:-m-8">
       
-      {/* --- SEPARATE NAV BAR SECTION --- */}
+      {/* HEADER SECTION - White background, Sticky */}
+      {/* sticky top-0 ensures it stays visible when scrolling */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           
           {/* Top Row: Back Arrow + Title */}
-          {/* Adjusted padding: pt-3 to shift 'UI Library' title up. Removed extra wrapper padding. */}
-          <div className="flex items-center gap-4 px-4 pt-3 md:px-8 md:pt-4 mb-6">
+          {/* pt-4 moves title up a bit. mb-8 adds space between title and tabs */}
+          <div className="flex items-center gap-4 px-4 pt-4 md:px-8 md:pt-5 mb-8">
                <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="-ml-2 h-10 w-10 text-black hover:text-black hover:bg-gray-100/50 rounded-full"
+                    className="-ml-2 h-10 w-10 text-black hover:bg-gray-100/50 rounded-full"
                     onClick={() => navigate(-1)}
                >
                   <ArrowLeft className="h-6 w-6" />
@@ -230,9 +232,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       {/* --- CONTENT SECTION --- */}
       <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
         
-        {/* Removed the 'Resources curated for your focus' paragraph line as requested */}
-
-        {/* Content Header */}
+        {/* Content Header (No 'Curated Resources' text) */}
         <div className="flex justify-between items-center">
              <h2 className="text-xl font-bold text-gray-900">
                 {activeTab} Content
