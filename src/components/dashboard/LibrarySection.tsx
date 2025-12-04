@@ -185,15 +185,14 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   };
 
   return (
-    // Root container with negative margins to pull content up and left/right, ensuring no gray gaps
-    <div className="flex flex-col min-h-screen bg-gray-50/50 -m-4 md:-m-8">
+    // Clean root container without negative margins
+    <div className="flex flex-col min-h-full bg-gray-50/50">
       
-      {/* HEADER SECTION - White background, Sticky */}
-      {/* sticky top-0 ensures it stays visible when scrolling */}
+      {/* HEADER SECTION - Sticky */}
+      {/* sticky top-0 ensures it stays visible when scrolling the MAIN container */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           
           {/* Top Row: Back Arrow + Title */}
-          {/* pt-4 moves title up a bit. mb-8 adds space between title and tabs */}
           <div className="flex items-center gap-4 px-4 pt-4 md:px-8 md:pt-5 mb-8">
                <Button 
                     variant="ghost" 
