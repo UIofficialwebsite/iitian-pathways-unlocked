@@ -130,26 +130,41 @@ const ModernDashboard: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
       
-      <DashboardTopNav
-        onViewChange={handleViewChange} 
-        profile={profile}
-        onProfileUpdate={handleProfileUpdate}
-        activeView={activeView}
-      />
+      {/* FIX: Wrapped TopNav in a sticky container with z-50 and standard white background.
+         This ensures it sits perfectly on top without manual height calculations.
+      */}
+      <div className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
+        <DashboardTopNav
+          onViewChange={handleViewChange} 
+          profile={profile}
+          onProfileUpdate={handleProfileUpdate}
+          activeView={activeView}
+        />
+      </div>
 
-      <div className="flex-1 grid lg:grid-cols-[288px_1fr]">
+      {/* FIX: Changed from grid with manual calculation to flex layout.
+         This automatically fills the remaining height below the sticky header.
+      */}
+      <div className="flex-1 flex overflow-hidden">
         
-        <aside className="hidden lg:block border-r bg-white sticky top-[73px] h-[calc(100vh-73px)]">
-          <DashboardSidebar
-            profile={profile}
-            onProfileUpdate={handleProfileUpdate}
-            onViewChange={handleViewChange} 
-            activeView={activeView}
-          />
+        {/* Sidebar Container */}
+        <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
+          {/* The internal DashboardSidebar might have h-screen. 
+             This div ensures it stays contained within the aside area. 
+          */}
+          <div className="min-h-full">
+            <DashboardSidebar
+              profile={profile}
+              onProfileUpdate={handleProfileUpdate}
+              onViewChange={handleViewChange} 
+              activeView={activeView}
+            />
+          </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 h-[calc(100vh-73px)]">
-          <div className="w-full max-w-7xl mx-auto">
+        {/* Main Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="w-full max-w-7xl mx-auto space-y-6">
             
             {/* CONDITIONAL RENDERING */}
 
