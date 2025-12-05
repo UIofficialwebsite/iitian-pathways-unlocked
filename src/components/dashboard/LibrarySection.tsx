@@ -5,10 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { Separator } from "@/components/ui/separator";
+import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 
 // --- Configuration for Categories ---
 const contentCategories = [
@@ -106,74 +106,68 @@ interface LibrarySectionProps {
 
 const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const navigate = useNavigate();
-  const { getFilteredContent, loading } = useBackend();
+  // Fetches data directly from the study_materials table
+  const { materials, loading } = useStudyMaterials(); 
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   
   // --- Data Categorization ---
   const allCategorizedContent = useMemo(() => {
-    const content = getFilteredContent(profile);
     const contentMap: { [key: string]: ContentItem[] } = {};
-
     contentCategories.forEach(cat => contentMap[cat] = []);
 
-    // 1. Map PYQs
-    content.pyqs.forEach(pyq => {
-      contentMap['PYQs (Previous Year Questions)'].push({
-        id: pyq.id,
-        type: 'PYQ',
-        title: pyq.title,
-        subject: pyq.subject,
-        date: new Date(pyq.created_at).toLocaleDateString(),
-        url: pyq.file_link || pyq.content_url,
-        tag: getContentVisuals('PYQs (Previous Year Questions)').tag,
-        category: 'PYQs (Previous Year Questions)',
-        color: getContentVisuals('PYQs (Previous Year Questions)').color,
-      });
-    });
+    if (!materials) return contentMap;
 
-    // 2. Map Notes
-    content.notes.forEach(note => {
-      contentMap['Short Notes and Mindmaps'].push({
-        id: note.id,
-        type: 'Note',
-        title: note.title,
-        subject: note.subject,
-        date: new Date(note.created_at).toLocaleDateString(),
-        url: note.file_link || note.content_url,
-        tag: getContentVisuals('Short Notes and Mindmaps').tag,
-        category: 'Short Notes and Mindmaps',
-        color: getContentVisuals('Short Notes and Mindmaps').color,
-      });
-    });
-
-    // 3. Placeholders for demo
+    // Filter materials based on the user's profile program (Focus Area)
     const userFocusProgram = profile?.program_type || 'General';
-    
-    // Free Lectures
-    contentMap['Free Lectures'].push(
-        { id: 'mock-L1', title: `${userFocusProgram} Video Lecture: Core Concepts`, subject: 'Physics', date: 'Jul 20, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
-        { id: 'mock-L2', title: `${userFocusProgram} Class 2: Advanced Topics`, subject: 'Mathematics', date: 'Jul 22, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
-        { id: 'mock-L3', title: 'Problem Solving Session: Algebra', subject: 'Mathematics', date: 'Jul 24, 2025', type: 'Video', tag: 'Video', url: '#', category: 'Free Lectures', color: getContentVisuals('Free Lectures').color },
-    );
 
-    // Free Question Bank
-    contentMap['Free Question Bank'].push(
-        { id: 'mock-Q1', title: `${userFocusProgram} Full Syllabus Mock Test 1`, subject: 'All Subjects', date: 'Aug 01, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-        { id: 'mock-Q2', title: 'Chapterwise Practice: Kinematics', subject: 'Physics', date: 'Aug 03, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-        { id: 'mock-Q3', title: 'Organic Chemistry Speed Drills', subject: 'Chemistry', date: 'Aug 05, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-        { id: 'mock-Q4', title: 'Calculus: Limits & Continuity Quiz', subject: 'Mathematics', date: 'Aug 08, 2025', type: 'Test', tag: 'Test', url: '#', category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color },
-    );
+    const filteredMaterials = materials.filter(item => {
+        // Include if the material is General/All OR specifically matches the user's program
+        if (!item.exam_category || item.exam_category === 'General') return true;
+        return item.exam_category === userFocusProgram;
+    });
 
-    // UI ki Padhai
-    contentMap['UI ki Padhai'].push(
-        { id: 'ui-P1', title: 'Mastering Time Management for Exams', subject: 'Strategy', date: 'Sep 01, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
-        { id: 'ui-P2', title: 'Zero to Hero: Mechanics Series', subject: 'Physics', date: 'Sep 10, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
-        { id: 'ui-P3', title: 'How to Analyze Mock Tests Effectively', subject: 'Strategy', date: 'Sep 15, 2025', type: 'Course', tag: 'Course', url: '#', category: 'UI ki Padhai', color: getContentVisuals('UI ki Padhai').color },
-    );
+    // Map filtered database items to UI categories
+    filteredMaterials.forEach(item => {
+        const commonProps = {
+            id: item.id,
+            title: item.title,
+            subject: item.subject || 'General',
+            date: new Date(item.created_at).toLocaleDateString(),
+            url: item.file_url,
+        };
+
+        if (item.material_type === 'pyq') {
+             contentMap['PYQs (Previous Year Questions)'].push({
+                ...commonProps,
+                type: 'PYQ',
+                tag: getContentVisuals('PYQs (Previous Year Questions)').tag,
+                category: 'PYQs (Previous Year Questions)',
+                color: getContentVisuals('PYQs (Previous Year Questions)').color,
+             });
+        } else if (item.material_type === 'note' || item.material_type === 'mindmap') {
+             contentMap['Short Notes and Mindmaps'].push({
+                ...commonProps,
+                type: item.material_type === 'mindmap' ? 'Mindmap' : 'Note',
+                tag: getContentVisuals('Short Notes and Mindmaps').tag,
+                category: 'Short Notes and Mindmaps',
+                color: getContentVisuals('Short Notes and Mindmaps').color,
+             });
+        } else if (item.material_type === 'question_bank') {
+             contentMap['Free Question Bank'].push({
+                ...commonProps,
+                type: 'Test',
+                tag: getContentVisuals('Free Question Bank').tag,
+                category: 'Free Question Bank',
+                color: getContentVisuals('Free Question Bank').color,
+             });
+        }
+        // Note: 'Free Lectures' and 'UI ki Padhai' are currently not supported types in the study_materials table,
+        // so they will remain empty until the backend supports them.
+    });
 
     return contentMap;
-  }, [profile, getFilteredContent]);
+  }, [profile, materials]);
 
   // Content for the currently active tab
   const fullContent = allCategorizedContent[activeTab] || [];
@@ -189,7 +183,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
     <div className="flex flex-col min-h-full bg-gray-50/50">
       
       {/* HEADER SECTION - Sticky */}
-      {/* sticky top-0 ensures it stays visible when scrolling the MAIN container */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           
           {/* Top Row: Back Arrow + Title */}
@@ -231,7 +224,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
       {/* --- CONTENT SECTION --- */}
       <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
         
-        {/* Content Header (No 'Curated Resources' text) */}
+        {/* Content Header */}
         <div className="flex justify-between items-center">
              <h2 className="text-xl font-bold text-gray-900">
                 {activeTab} Content
