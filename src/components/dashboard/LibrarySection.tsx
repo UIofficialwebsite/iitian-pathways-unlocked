@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion, ArrowRight, ArrowLeft } from "lucide-react";
+import { Search, FileText, BookOpen, Filter, ChevronRight, Download, Video, Zap, FileQuestion, ArrowRight, ArrowLeft, ExternalLink, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { Separator } from "@/components/ui/separator";
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 // --- Configuration for Categories ---
 const contentCategories = [
@@ -25,7 +26,8 @@ const getContentVisuals = (category: string) => {
     case 'PYQs (Previous Year Questions)':
       return { icon: FileText, color: 'text-orange-600', bg: 'bg-orange-50', tag: 'Paper' };
     case 'Short Notes and Mindmaps':
-      return { icon: BookOpen, color: 'text-blue-600', bg: 'bg-blue-50', tag: 'PDF/Note' };
+      // Changed tag to 'PDF' as requested
+      return { icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', tag: 'PDF' };
     case 'Free Lectures':
       return { icon: Video, color: 'text-green-600', bg: 'bg-green-50', tag: 'Video' };
     case 'Free Question Bank':
@@ -50,13 +52,13 @@ interface ContentItem {
   color: string;
 }
 
-const ContentCard: React.FC<{ item: ContentItem; handleOpen: (url?: string | null) => void }> = ({ item, handleOpen }) => {
+const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
     const visuals = getContentVisuals(item.category);
     
     return (
         <Card 
             className="flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg border-gray-200 cursor-pointer bg-white"
-            onClick={() => handleOpen(item.url)}
+            onClick={() => handleOpen(item)}
         >
             <CardHeader className="p-4 pb-2">
                 {/* Top Row: Icon & Badge */}
@@ -79,9 +81,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (url?: string | nul
             </CardHeader>
 
             <CardContent className="px-4 py-2 flex-grow">
-                <span className="text-xs text-gray-400 font-medium">
-                    {item.date ? `Added: ${item.date}` : 'Date N/A'}
-                </span>
+                {/* Removed Date Display as requested */}
             </CardContent>
 
             {/* Footer Row: Action Button */}
@@ -110,6 +110,9 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const { materials, loading } = useStudyMaterials(); 
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
+
+  // State for the inline viewer
+  const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
   
   // --- Data Categorization ---
   const allCategorizedContent = useMemo(() => {
@@ -162,8 +165,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                 color: getContentVisuals('Free Question Bank').color,
              });
         }
-        // Note: 'Free Lectures' and 'UI ki Padhai' are currently not supported types in the study_materials table,
-        // so they will remain empty until the backend supports them.
     });
 
     return contentMap;
@@ -174,8 +175,10 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
   const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
-  const handleOpen = (url?: string | null) => {
-    if (url) window.open(url, '_blank');
+  const handleOpen = (item: ContentItem) => {
+    if (item.url) {
+        setViewingItem(item);
+    }
   };
 
   return (
@@ -256,6 +259,47 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
           </div>
         )}
       </div>
+
+      {/* --- INLINE VIEWER DIALOG --- */}
+      <Dialog open={!!viewingItem} onOpenChange={(open) => !open && setViewingItem(null)}>
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
+             <DialogHeader className="p-4 border-b flex-shrink-0 flex flex-row items-center justify-between">
+                <div className="pr-8">
+                    <DialogTitle className="line-clamp-1 text-lg">{viewingItem?.title}</DialogTitle>
+                    <p className="text-xs text-gray-500 mt-1">{viewingItem?.subject} • {viewingItem?.tag}</p>
+                </div>
+             </DialogHeader>
+             
+             <div className="flex-1 w-full bg-gray-100 relative overflow-hidden">
+                {viewingItem?.url ? (
+                    <iframe 
+                        src={viewingItem.url} 
+                        className="w-full h-full border-0" 
+                        title="Content Viewer"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                    />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-gray-400">
+                        Content URL not available
+                    </div>
+                )}
+             </div>
+
+            <div className="p-2 bg-white border-t flex justify-end gap-2 flex-shrink-0">
+                 {viewingItem?.url && (
+                    <Button variant="outline" size="sm" onClick={() => window.open(viewingItem.url!, '_blank')}>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open in New Tab
+                    </Button>
+                 )}
+                 <Button variant="secondary" size="sm" onClick={() => setViewingItem(null)}>
+                    Close
+                 </Button>
+            </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
