@@ -200,8 +200,9 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                    >
                       <ArrowLeft className="h-6 w-6" />
                    </Button>
-                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-                       {viewingItem ? 'Viewing Content' : 'UI Library'}
+                   {/* Modified: Show file name directly in header when viewing */}
+                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight line-clamp-1">
+                       {viewingItem ? viewingItem.title : 'UI Library'}
                    </h1>
               </div>
           </div>
@@ -235,16 +236,9 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         {viewingItem ? (
             /* --- INLINE VIEWER (Replaces Grid) --- */
             <div className="flex flex-col space-y-4 animate-in fade-in zoom-in-95 duration-300">
-                <div className="flex items-center justify-between bg-white p-4 rounded-lg border shadow-sm">
-                    <div>
-                        <h2 className="text-lg font-bold text-gray-900 line-clamp-1">{viewingItem.title}</h2>
-                        <p className="text-sm text-gray-500">{viewingItem.subject} • {viewingItem.tag}</p>
-                    </div>
-                    <Button variant="outline" size="sm" onClick={() => window.open(viewingItem.url!, '_blank')} className="hidden md:flex">
-                        <ExternalLink className="h-4 w-4 mr-2" />
-                        Open New Tab
-                    </Button>
-                </div>
+                {/* Removed the top header card containing Title, Subtitle and 'Open New Tab' button.
+                   The Title is now displayed in the sticky header above.
+                */}
 
                 <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[75vh] md:h-[80vh] relative">
                      {viewingItem.url ? (
