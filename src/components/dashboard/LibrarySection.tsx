@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, Filter, X, ChevronRight, SortAsc, SortDesc } from "lucide-react";
+import { FileText, ArrowLeft, Download, Calendar, Filter, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -15,7 +15,6 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 
-// --- Tab Configuration ---
 const contentCategories = [
     'PYQs (Previous Year Questions)',
     'Short Notes and Mindmaps',
@@ -33,10 +32,8 @@ interface ContentItem {
   year?: number | null;
   session?: string | null;
   shift?: string | null;
-  created_at?: string;
 }
 
-// --- Card Component (Updated for better metadata alignment) ---
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
     const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
 
@@ -46,18 +43,18 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     };
 
     return (
-        <Card className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-lg h-[167px] cursor-default overflow-hidden">
-            <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-sm">
+        <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-5 transition-all hover:shadow-md h-[167px] cursor-default overflow-hidden">
+            <div className="w-[100px] h-[135px] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
                 <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
             </div>
 
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-1">
-                    <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
+                    <h3 className="text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
                         {item.title}
                     </h3>
                     {(item.year || item.session || item.shift) && (
-                        <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1 truncate">
+                        <p className="text-xs text-slate-500 flex items-center gap-1 mt-1 truncate">
                             <Calendar className="h-3 w-3 flex-shrink-0" />
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
@@ -65,9 +62,9 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 </div>
 
                 <div className="flex gap-1.5 mb-3 mt-auto">
-                    <span className="px-2 py-0.5 rounded-sm text-[0.7rem] font-bold uppercase bg-red-50 text-red-600 border border-red-100">PDF</span>
-                    <span className="px-2 py-0.5 rounded-sm text-[0.7rem] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate">
-                        {item.subject?.toUpperCase() || 'GENERAL'}
+                    <span className="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase bg-red-50 text-red-600 border border-red-100">PDF</span>
+                    <span className="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate">
+                        {item.subject || 'General'}
                     </span>
                 </div>
 
@@ -75,12 +72,12 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     <Button 
                         variant="outline" 
                         onClick={() => handleOpen(item)}
-                        className="flex-grow h-8 text-[0.8rem] font-semibold text-[#0f172a] border-[#e2e8f0] hover:border-[#1d4ed8] hover:text-[#1d4ed8] hover:bg-[#f0f7ff] rounded-md transition-all shadow-none"
+                        className="flex-grow h-8 text-xs font-medium text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md shadow-none"
                     >
-                        View
+                        View Content
                     </Button>
-                    <button onClick={handleDownload} className="bg-[#1d4ed8] hover:bg-[#1e3a8a] w-8 h-8 rounded-md flex items-center justify-center transition-colors">
-                        <Download className="h-4 w-4 text-white" strokeWidth={2.5} />
+                    <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
+                        <Download className="h-4 w-4 text-white" strokeWidth={2} />
                     </button>
                 </div>
             </div>
@@ -94,15 +91,13 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // --- States for Tabs and Layout ---
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
-  // --- States for Filter Logic ---
-  const [subjectFilter, setSubjectFilter] = useState<string>("all");
-  const [yearFilter, setYearFilter] = useState<string>("all");
-  const [sortOrder, setSortOrder] = useState<"new" | "old">("new");
+  // Filter States
+  const [selectedSubject, setSelectedSubject] = useState<string>("none");
+  const [selectedYear, setSelectedYear] = useState<string>("none");
 
   const focusArea = profile?.program_type || 'General';
 
@@ -122,15 +117,15 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
         const combined: ContentItem[] = [
           ...(pyqData || []).map(p => ({
             id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url,
-            category: 'PYQs (Previous Year Questions)', year: p.year, session: p.session, shift: p.shift, created_at: p.created_at
+            category: 'PYQs (Previous Year Questions)', year: p.year, session: p.session, shift: p.shift
           })),
           ...(notesData || []).map(n => ({
             id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url,
-            category: 'Short Notes and Mindmaps', created_at: n.created_at
+            category: 'Short Notes and Mindmaps'
           })),
           ...iitmData.map(i => ({
             id: i.id, title: i.title, subject: i.subject, url: i.file_link,
-            category: 'Short Notes and Mindmaps', created_at: i.created_at
+            category: 'Short Notes and Mindmaps'
           }))
         ];
         setDbMaterials(combined);
@@ -141,58 +136,62 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea]);
 
-  // --- Filter and Sort Memo ---
-  const filteredContent = useMemo(() => {
-    let list = [...dbMaterials, ...(studyMaterials || []).map(m => ({
-        id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url,
-        category: m.material_type === 'pyq' ? 'PYQs (Previous Year Questions)' : 'Short Notes and Mindmaps',
-        created_at: m.created_at
-    }))];
-
-    // 1. Category Tab Filter
-    list = list.filter(m => m.category === activeTab);
-
-    // 2. Subject Filter
-    if (subjectFilter !== "all") list = list.filter(m => m.subject === subjectFilter);
-
-    // 3. Year Filter (Only for PYQs)
-    if (activeTab.includes('PYQs') && yearFilter !== "all") {
-        list = list.filter(m => m.year?.toString() === yearFilter);
-    }
-
-    // 4. Sort Logic
-    list.sort((a, b) => {
-        const dateA = new Date(a.created_at || 0).getTime();
-        const dateB = new Date(b.created_at || 0).getTime();
-        return sortOrder === "new" ? dateB - dateA : dateA - dateB;
+  // Combined Content Logic
+  const allContent = useMemo(() => {
+    const studyMapped = (studyMaterials || [])
+      .filter(m => !m.exam_category || m.exam_category === focusArea)
+      .map(m => {
+        let cat = 'Other';
+        if (m.material_type === 'note' || m.material_type === 'mindmap') cat = 'Short Notes and Mindmaps';
+        else if (m.material_type === 'pyq') cat = 'PYQs (Previous Year Questions)';
+        else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
+        
+        if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
+        if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
+        return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat };
     });
+    return [...dbMaterials, ...studyMapped];
+  }, [dbMaterials, studyMaterials, focusArea]);
 
-    return list;
-  }, [dbMaterials, studyMaterials, activeTab, subjectFilter, yearFilter, sortOrder]);
+  // Progressive Filtering Logic
+  const filteredByCategory = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
+  
+  const subjectsAvailable = useMemo(() => Array.from(new Set(filteredByCategory.map(m => m.subject).filter(Boolean))), [filteredByCategory]);
+  
+  const filteredBySubject = useMemo(() => {
+    if (selectedSubject === "none") return filteredByCategory;
+    return filteredByCategory.filter(m => m.subject === selectedSubject);
+  }, [filteredByCategory, selectedSubject]);
 
-  // --- Dynamic Option Extraction ---
-  const availableSubjects = useMemo(() => Array.from(new Set(dbMaterials.filter(m => m.category === activeTab && m.subject).map(m => m.subject as string))), [dbMaterials, activeTab]);
-  const availableYears = useMemo(() => Array.from(new Set(dbMaterials.filter(m => m.category === activeTab && m.year).map(m => m.year?.toString() as string))).sort().reverse(), [dbMaterials, activeTab]);
+  const yearsAvailable = useMemo(() => Array.from(new Set(filteredBySubject.map(m => m.year?.toString()).filter(Boolean))).sort().reverse(), [filteredBySubject]);
 
-  const displayedContent = showAll ? filteredContent : filteredContent.slice(0, 6);
+  const finalContent = useMemo(() => {
+    if (selectedYear === "none") return filteredBySubject;
+    return filteredBySubject.filter(m => m.year?.toString() === selectedYear);
+  }, [filteredBySubject, selectedYear]);
+
+  const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
   return (
-    <div className="flex flex-col min-h-full bg-white font-sans">
-      {/* Header & Tabs */}
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
+    <div className="flex flex-col min-h-full bg-white font-sans text-slate-900">
+      <div className="bg-white border-b sticky top-0 z-30">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
                    <Button variant="ghost" size="icon" className="-ml-2 h-10 w-10 rounded-full" onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}>
                       <ArrowLeft className="h-6 w-6" />
                    </Button>
-                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{viewingItem ? viewingItem.title : 'UI Library'}</h1>
+                   <h1 className="text-xl font-bold tracking-tight">{viewingItem ? viewingItem.title : 'Library'}</h1>
               </div>
           </div>
           {!viewingItem && (
-              <div className="px-4 md:px-8">
-                   <div className="flex space-x-8 overflow-x-auto scrollbar-hide">
+              <div className="px-4 md:px-8 overflow-x-auto scrollbar-hide">
+                   <div className="flex space-x-6 border-b">
                         {contentCategories.map((category) => (
-                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSubjectFilter("all"); setYearFilter("all"); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1", activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700")}>
+                          <button 
+                            key={category} 
+                            onClick={() => { setActiveTab(category); setShowAll(false); setSelectedSubject("none"); setSelectedYear("none"); }} 
+                            className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}
+                          >
                             {category}
                           </button>
                         ))}
@@ -203,100 +202,67 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
         {viewingItem ? (
-            <div className="w-full bg-white rounded-lg border shadow-sm h-[80vh] overflow-hidden">
+            <div className="w-full bg-slate-50 rounded-lg border h-[80vh] overflow-hidden">
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-6 md:p-8">
-                {/* --- PREMIUM FILTER BAR --- */}
-                <div className="flex flex-col gap-6 mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-700 rounded-lg"><FileText className="h-5 w-5 text-white" /></div>
-                            <h2 className="text-lg font-bold text-[#0f172a] tracking-tight">{activeTab}</h2>
-                        </div>
+            <div className="space-y-6">
+                {/* Header and Initial Action */}
+                <div className="flex items-center justify-between">
+                    <h2 className="text-lg font-bold flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-blue-600" />
+                        {activeTab}
+                    </h2>
+                    {filteredByCategory.length > 6 && (
+                        <button className="text-sm font-semibold text-blue-600 hover:text-blue-700" onClick={() => setShowAll(!showAll)}>
+                            {showAll ? 'Show Less' : 'View All →'}
+                        </button>
+                    )}
+                </div>
 
-                        {/* Filter Actions */}
-                        <div className="flex flex-wrap items-center gap-3">
-                            {/* Sort Toggle */}
-                            <Button 
-                                variant="outline" size="sm" 
-                                className="h-9 gap-2 border-[#e2e8f0] bg-white text-xs font-bold"
-                                onClick={() => setSortOrder(sortOrder === "new" ? "old" : "new")}
-                            >
-                                {sortOrder === "new" ? <SortDesc className="h-4 w-4" /> : <SortAsc className="h-4 w-4" />}
-                                {sortOrder === "new" ? "Newest First" : "Oldest First"}
-                            </Button>
+                {/* Progressive Filters - Only show when "View All" is active or content is loaded */}
+                <div className="flex flex-wrap items-center gap-3 py-2">
+                    {subjectsAvailable.length > 0 && (
+                        <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedYear("none"); }}>
+                            <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                <SelectValue placeholder="Select Subject" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="none">All Subjects</SelectItem>
+                                {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    )}
 
-                            {/* Dynamic Subject Select */}
-                            {availableSubjects.length > 0 && (
-                                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                                    <SelectTrigger className="w-[140px] h-9 bg-white border-[#e2e8f0] text-xs font-bold">
-                                        <SelectValue placeholder="Subject" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Subjects</SelectItem>
-                                        {availableSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            )}
-
-                            {/* Secondary Year Filter (Appears if subject is selected or for PYQs) */}
-                            {(activeTab.includes('PYQs') && availableYears.length > 0) && (
-                                <Select value={yearFilter} onValueChange={setYearFilter}>
-                                    <SelectTrigger className="w-[120px] h-9 bg-white border-[#e2e8f0] text-xs font-bold">
-                                        <SelectValue placeholder="Year" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Years</SelectItem>
-                                        {availableYears.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            )}
-
-                            {filteredContent.length > 6 && (
-                                <button className="text-[0.85rem] font-bold text-[#1d4ed8] hover:underline uppercase" onClick={() => setShowAll(!showAll)}>
-                                    {showAll ? 'Show Less' : 'View All →'}
-                                </button>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Active Filter Chips */}
-                    {(subjectFilter !== "all" || yearFilter !== "all") && (
-                        <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest mr-2">Active:</span>
-                            {subjectFilter !== "all" && (
-                                <Badge variant="secondary" className="gap-1 bg-blue-50 text-blue-700 border-blue-100 px-3 py-1">
-                                    {subjectFilter} <X className="h-3 w-3 cursor-pointer" onClick={() => setSubjectFilter("all")} />
-                                </Badge>
-                            )}
-                            {yearFilter !== "all" && (
-                                <Badge variant="secondary" className="gap-1 bg-orange-50 text-orange-700 border-orange-100 px-3 py-1">
-                                    {yearFilter} <X className="h-3 w-3 cursor-pointer" onClick={() => setYearFilter("all")} />
-                                </Badge>
-                            )}
-                            <Button variant="ghost" size="sm" className="h-6 text-[10px] text-slate-500 hover:text-red-500" onClick={() => {setSubjectFilter("all"); setYearFilter("all");}}>
-                                Clear All
-                            </Button>
-                        </div>
+                    {/* Second filter only appears if first is used AND years are available for that selection */}
+                    {selectedSubject !== "none" && yearsAvailable.length > 0 && (
+                        <>
+                            <ChevronRight className="h-4 w-4 text-slate-300 hidden md:block" />
+                            <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                    <SelectValue placeholder="Select Year" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">All Years</SelectItem>
+                                    {yearsAvailable.map(y => <SelectItem key={y} value={y!}>{y}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </>
                     )}
                 </div>
                 
-                {/* Content Grid */}
                 {(loading || studyLoading) ? (
-                  <div className="text-center py-20 text-[#64748b] font-medium italic animate-pulse">Scanning the library...</div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1,2,3].map(i => <div key={i} className="h-[167px] bg-slate-100 animate-pulse rounded-lg" />)}
+                  </div>
                 ) : displayedContent.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} />)}
                     </div>
                 ) : (
-                  <div className="text-center py-24 bg-white/50 rounded-lg border border-dashed border-[#e2e8f0]">
-                    <div className="max-w-xs mx-auto space-y-3">
-                        <Filter className="h-10 w-10 text-slate-300 mx-auto" />
-                        <p className="text-[#64748b] font-semibold">No results found with these filters.</p>
-                        <Button variant="link" className="text-blue-700 p-0" onClick={() => {setSubjectFilter("all"); setYearFilter("all");}}>Reset Filters</Button>
-                    </div>
+                  <div className="text-center py-20 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                    <p className="text-slate-500">No resources found for the current selection.</p>
+                    <Button variant="link" onClick={() => { setSelectedSubject("none"); setSelectedYear("none"); }}>Reset Filters</Button>
                   </div>
                 )}
             </div>
