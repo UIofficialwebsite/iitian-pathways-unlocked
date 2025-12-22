@@ -2,7 +2,6 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, ArrowLeft, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
@@ -27,7 +26,7 @@ interface ContentItem {
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
-    // Educational placeholder image
+    // Professional placeholder image
     const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -42,10 +41,10 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card 
-            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:border-[#1d4ed8] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] cursor-pointer"
+            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:border-[#1d4ed8] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] cursor-pointer h-[167px]"
             onClick={() => handleOpen(item)}
         >
-            {/* Left Side: Thumbnail */}
+            {/* Left Side: Thumbnail - Spans Full Height of Card padding */}
             <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
                 <img 
                     src={thumbnailUrl} 
@@ -57,7 +56,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
             {/* Right Side: Content Area */}
             <div className="flex flex-col flex-1">
                 <div className="mb-1">
-                    <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors">
+                    <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
                         {item.title}
                     </h3>
                     <p className="text-[0.8rem] text-[#64748b]">
@@ -79,7 +78,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 <div className="mt-auto flex gap-2">
                     <Button 
                         variant="outline"
-                        className="flex-grow h-9 text-[0.85rem] font-semibold text-[#0f172a] border-[#e2e8f0] hover:border-[#1d4ed8] hover:text-[#1d4ed8] hover:bg-[#f0f7ff] rounded-md transition-all"
+                        className="flex-grow h-9 text-[0.85rem] font-semibold text-[#0f172a] border-[#e2e8f0] hover:border-[#1d4ed8] hover:text-[#1d4ed8] hover:bg-[#f0f7ff] rounded-md transition-all shadow-none"
                     >
                         View Content
                     </Button>
@@ -122,7 +121,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             subject: item.subject || 'General',
             url: item.file_url,
             category: '',
-            updated_at: item.created_at // Assuming created_at as fallback
+            updated_at: item.created_at
         };
 
         if (item.material_type === 'pyq') {
@@ -140,8 +139,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
 
   return (
-    <div className="flex flex-col min-h-full bg-white font-['Inter',_sans-serif]">
-      {/* Formal Top Navigation */}
+    <div className="flex flex-col min-h-full bg-white font-sans">
+      {/* HEADER SECTION - UNCHANGED */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -151,7 +150,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                    >
                       <ArrowLeft className="h-6 w-6" />
                    </Button>
-                   <h1 className="text-2xl font-bold text-[#0f172a] tracking-tight">
+                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                        {viewingItem ? viewingItem.title : 'UI Library'}
                    </h1>
               </div>
@@ -165,8 +164,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             key={category}
                             onClick={() => { setActiveTab(category); setShowAll(false); }}
                             className={cn(
-                              "pb-3 text-sm font-bold transition-all whitespace-nowrap border-b-[3px] px-1 uppercase tracking-wider",
-                              activeTab === category ? "text-[#1d4ed8] border-[#1d4ed8]" : "text-[#64748b] border-transparent hover:text-[#0f172a]"
+                              "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1",
+                              activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700"
                             )}
                           >
                             {category}
@@ -177,16 +176,16 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
+      {/* CONTENT GRID SECTION - UPDATED DESIGN */}
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
         {viewingItem ? (
             <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[80vh]">
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            /* Corporate Styled Container */
             <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-6 md:p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <div className="flex items-center gap-3">
+                <div className="section-header flex justify-between items-center mb-6">
+                    <div className="header-title flex items-center gap-3">
                         <FileText className="h-[22px] w-[22px] text-[#1d4ed8]" strokeWidth={2.5} />
                         <h2 className="text-[1.1rem] font-bold text-[#0f172a] uppercase tracking-wide">
                             {activeTab}
@@ -194,7 +193,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                     {fullContent.length > 0 && (
                         <button 
-                            className="text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase tracking-tight"
+                            className="view-all-btn text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase"
                             onClick={() => setShowAll(!showAll)}
                         >
                             {showAll ? 'SHOW LESS' : 'VIEW ALL →'}
@@ -212,7 +211,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                   <div className="text-center py-20 text-[#64748b]">
-                    <p>No resources found for your selected focus area.</p>
+                    <p>No resources found for your focus area.</p>
                   </div>
                 )}
             </div>
