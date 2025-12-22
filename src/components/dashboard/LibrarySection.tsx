@@ -97,74 +97,33 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
-  const focusArea = (profile?.program_type as any) || 'General';
+  // Determine Focus Area from Profile
+  const focusArea = (profile?.program_type === 'IITM_BS' ? 'IITM_BS' : profile?.exam_type) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
       try {
-        // Fetching PYQs for the specific exam type
-        const { data: pyqData } = await supabase
-          .from('pyqs')
-          .select('*')
-          .eq('exam_type', focusArea)
-          .eq('is_active', true);
-
-        // Fetching Notes based on goal
-        const { data: notesData } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('exam_type', focusArea)
-          .eq('is_active', true);
-
-        // Explicitly fetch IITM Branch Notes if the user is an IITM student
-        const { data: iitmData } = isIITM 
-          ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) 
-          : { data: [] };
+        // Fetch matching PYQs for the selected Focus Area (JEE, NEET, or IITM_BS)
+        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
+        
+        // Fetch matching Notes for JEE/NEET
+        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
+        
+        // Fetch IITM Branch Notes strictly for IITM students
+        const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
 
         const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({ 
-            id: p.id, 
-            title: p.title, 
-            subject: p.subject, 
-            url: p.file_link || p.content_url, 
-            category: 'PYQs (Previous Year Questions)', 
-            year: p.year, 
-            level: p.level || p.class_level 
-          })),
-          // Mapping standard notes
-          ...(notesData || []).map(n => ({ 
-            id: n.id, 
-            title: n.title, 
-            subject: n.subject, 
-            url: n.file_link || n.content_url, 
-            category: 'Short Notes and Mindmaps', 
-            level: n.class_level || n.level 
-          })),
-          // Connecting IITM Branch Notes to the Short Notes category for IITM students
-          ...(iitmData || []).map(i => ({ 
-            id: i.id, 
-            title: i.title, 
-            subject: i.subject, 
-            url: i.file_link, 
-            category: 'Short Notes and Mindmaps', // Map branch notes here
-            week_number: i.week_number, 
-            level: i.level 
-          }))
+          ...(pyqData || []).map(p => ({ id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level, session: p.session, shift: p.shift })),
+          ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level })),
+          ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level }))
         ];
         setDbMaterials(combined);
       } finally { setLoading(false); }
     };
     fetchTables();
   }, [focusArea, isIITM]);
-
-  const handleViewAllAction = () => {
-    if (focusArea === 'JEE') navigate('/exam-preparation/jee');
-    else if (focusArea === 'NEET') navigate('/exam-preparation/neet');
-    else if (focusArea === 'IITM_BS') navigate('/exam-preparation/iitm-bs');
-    else setShowAll(!showAll);
-  };
 
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
@@ -184,18 +143,21 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   }, [dbMaterials, studyMaterials, focusArea]);
 
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
+  
   const searchFiltered = useMemo(() => {
       if (!searchQuery) return catFiltered;
       return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [catFiltered, searchQuery]);
 
   const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
+  
   const levelFiltered = useMemo(() => {
       if (selectedLevel === "none") return searchFiltered;
       return searchFiltered.filter(m => m.level === selectedLevel);
   }, [searchFiltered, selectedLevel]);
 
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
+  
   const subjectFiltered = useMemo(() => {
       if (selectedSubject === "none") return levelFiltered;
       return levelFiltered.filter(m => m.subject === selectedSubject);
@@ -254,7 +216,12 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                             <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                         </div>
-                        <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={handleViewAllAction}>
+                        <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => {
+                            if (focusArea === 'JEE') navigate('/exam-preparation/jee');
+                            else if (focusArea === 'NEET') navigate('/exam-preparation/neet');
+                            else if (focusArea === 'IITM_BS') navigate('/exam-preparation/iitm-bs');
+                            else setShowAll(!showAll);
+                        }}>
                             {showAll ? 'Show Less' : 'View All →'}
                         </button>
                     </div>
@@ -309,7 +276,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                     </div>
                 ) : (
-                    <div className="py-12 text-center text-slate-400">No resources available.</div>
+                    <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                        <p>No resources found for this category.</p>
+                    </div>
                 )}
             </div>
         )}
