@@ -118,7 +118,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
-  // 1. Fetch DB Materials (PYQs, Notes, Branch Notes)
+  // 1. Fetch DB Materials
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
@@ -150,7 +150,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
-  // 2. Fetch YouTube Data for Lectures
+  // 2. Fetch YouTube Data
   useEffect(() => {
     if (activeTab === 'Free Lectures' && isIITM) {
       const fetchYT = async () => {
@@ -165,7 +165,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     }
   }, [activeTab, isIITM]);
 
-  // 3. Filtering Logic
+  // 3. Memoized Filters
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
         .filter(m => !m.exam_category || m.exam_category === focusArea || m.exam_category === 'General')
@@ -199,7 +199,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
-  // Derived filters for the UI
   const levelsAvailable = useMemo(() => Array.from(new Set(catFiltered.map(m => m.level))).filter(Boolean), [catFiltered]);
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject))).filter(Boolean), [levelFiltered]);
   const specificsAvailable = useMemo(() => {
@@ -240,23 +239,26 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* Main View Area */}
+      {/* Main Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
-            <div className="w-full bg-black rounded-xl border border-slate-800 h-full overflow-hidden flex items-center justify-center relative">
-                 {/* PW-STYLE PLAYER SHELL: Crops branding bars */}
+            <div className="w-full bg-black rounded-xl border border-slate-200 aspect-video overflow-hidden flex items-center justify-center relative shadow-xl">
                  <div className="relative w-full h-full overflow-hidden">
+                    {/* NO CROPPING: Use standard 100% dimensions */}
                     <iframe 
                         src={`${viewingItem.url}&modestbranding=1&rel=0&controls=1&iv_load_policy=3&disablekb=0`} 
-                        className="absolute top-[-7%] left-0 w-full h-[114%] border-0" 
-                        title="Viewer" 
+                        className="w-full h-full border-0" 
+                        title="Player" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     />
                     
-                    {/* TRANSPARENT SECURITY SHIELD: Blocks clicks to top branding bar */}
+                    {/* PW-STYLE TRANSPARENT SHIELD:
+                        Covers the top portion to prevent clicking on Title/Share branding 
+                        without physically zooming or cropping the video frame.
+                    */}
                     <div 
-                        className="absolute top-0 left-0 w-full h-[18%] z-10 bg-transparent cursor-default" 
+                        className="absolute top-0 left-0 w-full h-[15%] z-20 bg-transparent cursor-default" 
                         onContextMenu={(e) => e.preventDefault()}
                     />
                  </div>
@@ -265,10 +267,14 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             <div className="space-y-8">
                 {activeTab === 'Free Lectures' && isIITM ? (
                     <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* YouTube Search Bar */}
                         <div className="relative max-w-md mx-auto mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <Input placeholder="Search lectures..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
+                            <input 
+                              placeholder="Search lectures..." 
+                              value={ytSearchQuery} 
+                              onChange={(e) => setYtSearchQuery(e.target.value)} 
+                              className="pl-10 h-12 w-full bg-slate-50 border border-slate-200 rounded-full px-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                            />
                         </div>
 
                         {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div> : 
@@ -295,7 +301,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                                         <PlayCircle className="text-white h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 </div>
-                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600">{video.title}</h4>
+                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600 transition-colors">{video.title}</h4>
                                             </div>
                                         ))}
                                     </div>
@@ -305,7 +311,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                     <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
-                        {/* Section Header & Search */}
+                        {/* Section Header */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                                 <FileText className="h-5 w-5 text-blue-600" />
@@ -324,7 +330,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         </div>
 
-                        {/* Dropdown Filters (Restored) */}
+                        {/* Dropdown Filters */}
                         {showAll && (
                             <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
                                 {levelsAvailable.length > 0 && (
@@ -369,7 +375,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         )}
 
-                        {/* Cards Grid */}
+                        {/* Grid */}
                         {(loading || studyLoading) ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                                 {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
