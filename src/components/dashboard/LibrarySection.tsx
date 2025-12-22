@@ -48,7 +48,8 @@ interface ContentItem {
 // --- Refined Horizontal Card Design ---
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
     const visuals = getContentVisuals(item.category);
-    const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
+    // Educational placeholder image
+    const thumbnailUrl = `https://images.unsplash.com/photo-1606326666490-45213152f676?auto=format&fit=crop&w=300&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -57,51 +58,55 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card 
-            className="group bg-white border border-slate-200 rounded-md p-4 transition-all duration-200 hover:border-blue-700 hover:shadow-md cursor-pointer flex flex-col h-full"
+            className="group bg-white border border-slate-200 rounded-xl transition-all duration-300 hover:border-blue-600 hover:shadow-xl cursor-pointer flex h-[180px] overflow-hidden"
             onClick={() => handleOpen(item)}
         >
-            <div className="flex gap-4 mb-4 items-stretch">
-                {/* Thumbnail Cover - Black border removed */}
-                <div className="w-[95px] h-[130px] bg-slate-100 rounded-sm flex-shrink-0 overflow-hidden shadow-sm">
-                    <img 
-                        src={thumbnailUrl} 
-                        alt={item.title}
-                        className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                    />
-                </div>
-
-                <div className="flex flex-col flex-1">
-                    <h3 className="text-sm md:text-base font-bold text-slate-900 line-clamp-3 leading-snug mb-1">
-                        {item.title}
-                    </h3>
-                    
-                    <div className="flex gap-1.5 mt-auto">
-                        <Badge className="bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
-                            {visuals.tag}
-                        </Badge>
-                        {item.subject && (
-                            <Badge className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
-                                {item.subject.substring(0, 3)}
-                            </Badge>
-                        )}
+            {/* 1. Full-Height Thumbnail (Left Side) */}
+            <div className="w-[120px] h-full flex-shrink-0 relative overflow-hidden bg-slate-200 border-r border-slate-100">
+                <img 
+                    src={thumbnailUrl} 
+                    alt={item.title}
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors" />
+                <div className="absolute top-2 left-2">
+                    <div className={cn("p-1.5 rounded-md shadow-sm bg-white/90 backdrop-blur-sm", visuals.color)}>
+                        <visuals.icon className="h-4 w-4" />
                     </div>
                 </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-slate-100">
-                <Button 
-                    variant="ghost"
-                    className="flex-1 h-9 text-xs font-bold text-slate-900 border border-slate-200 hover:border-blue-700 hover:text-blue-700 hover:bg-blue-50 transition-all"
-                >
-                    View Content
-                </Button>
-                <button 
-                    onClick={handleDownload}
-                    className="bg-blue-700 hover:bg-blue-800 h-9 px-3 rounded-md transition-colors flex items-center justify-center"
-                    title="Download Resource"
-                >
-                    <Download className="h-4 w-4 text-white" strokeWidth={3} />
-                </button>
+            {/* 2. Content Area (Right Side) */}
+            <div className="flex flex-col flex-1 p-4 relative">
+                <div className="flex justify-between items-start mb-1">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                       {item.category.split(' ')[0]}
+                   </span>
+                   <Badge className="bg-blue-50 text-blue-700 border-none text-[9px] font-bold px-1.5 py-0 rounded-sm">
+                        {item.subject?.toUpperCase() || 'GEN'}
+                    </Badge>
+                </div>
+
+                <h3 className="text-sm md:text-base font-bold text-slate-900 line-clamp-3 leading-tight mb-2 group-hover:text-blue-700 transition-colors">
+                    {item.title}
+                </h3>
+                
+                {/* 3. Bottom Aligned Actions */}
+                <div className="mt-auto flex gap-2">
+                    <Button 
+                        variant="ghost"
+                        className="flex-1 h-9 text-xs font-bold text-slate-700 border border-slate-200 hover:border-blue-700 hover:text-blue-700 hover:bg-blue-50 transition-all rounded-lg"
+                    >
+                        View Content
+                    </Button>
+                    <button 
+                        onClick={handleDownload}
+                        className="bg-blue-700 hover:bg-blue-800 h-9 w-9 rounded-lg transition-all flex items-center justify-center shadow-sm active:scale-95"
+                        title="Download Resource"
+                    >
+                        <Download className="h-4 w-4 text-white" strokeWidth={3} />
+                    </button>
+                </div>
             </div>
         </Card>
     );
@@ -160,7 +165,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   const fullContent = allCategorizedContent[activeTab] || [];
   const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
-  const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
   return (
     <div className="flex flex-col min-h-full bg-white">
@@ -205,7 +209,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            /* Card Section Background - Updated to more whitish type (slate-50) */
             <div className="bg-slate-50/50 border border-slate-100 rounded-lg p-6 md:p-8">
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-3">
