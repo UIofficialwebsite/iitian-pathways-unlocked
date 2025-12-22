@@ -1,8 +1,9 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, ChevronRight } from "lucide-react";
+import { FileText, ArrowLeft, Download, Calendar, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { 
   Select, 
   SelectContent, 
@@ -32,9 +33,10 @@ interface ContentItem {
   year?: number | null;
   session?: string | null;
   shift?: string | null;
+  week_number?: number | null;
 }
 
-const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
+const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void; isIITM: boolean }> = ({ item, handleOpen, isIITM }) => {
     const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -63,8 +65,9 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
                 <div className="flex gap-1.5 mb-3 mt-auto">
                     <span className="px-2 py-0.5 rounded-sm text-[10px] font-semibold uppercase bg-red-50 text-red-600 border border-red-100">PDF</span>
+                    {/* Show Week No for IITM BS items, otherwise Subject */}
                     <span className="px-2 py-0.5 rounded-sm text-[10px] font-semibold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate">
-                        {item.subject || 'General'}
+                        {isIITM && item.week_number ? `Week ${item.week_number}` : (item.subject || 'General')}
                     </span>
                 </div>
 
@@ -95,10 +98,13 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedYear, setSelectedYear] = useState<string>("none");
 
   const focusArea = profile?.program_type || 'General';
+  const isIITM = focusArea === 'IITM_BS';
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -108,7 +114,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
         const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
         
         let iitmData: any[] = [];
-        if (focusArea === 'IITM_BS') {
+        if (isIITM) {
             const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
             iitmData = data || [];
         }
@@ -124,7 +130,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           })),
           ...iitmData.map(i => ({
             id: i.id, title: i.title, subject: i.subject, url: i.file_link,
-            category: 'Short Notes and Mindmaps'
+            category: 'Short Notes and Mindmaps', week_number: i.week_number
           }))
         ];
         setDbMaterials(combined);
@@ -133,8 +139,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       }
     };
     fetchTables();
-  }, [focusArea]);
+  }, [focusArea, isIITM]);
 
+  // Combined Content Logic
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
       .filter(m => !m.exam_category || m.exam_category === focusArea)
@@ -151,26 +158,33 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
+  // Progressive Filtering Logic
   const filteredByCategory = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
+  
   const subjectsAvailable = useMemo(() => Array.from(new Set(filteredByCategory.map(m => m.subject).filter(Boolean))), [filteredByCategory]);
   
-  const filteredBySubject = useMemo(() => {
-    if (selectedSubject === "none") return filteredByCategory;
-    return filteredByCategory.filter(m => m.subject === selectedSubject);
-  }, [filteredByCategory, selectedSubject]);
+  const filteredBySearchAndSubject = useMemo(() => {
+    let list = filteredByCategory;
+    if (searchQuery) {
+        list = list.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (selectedSubject !== "none") {
+        list = list.filter(m => m.subject === selectedSubject);
+    }
+    return list;
+  }, [filteredByCategory, searchQuery, selectedSubject]);
 
-  const yearsAvailable = useMemo(() => Array.from(new Set(filteredBySubject.map(m => m.year?.toString()).filter(Boolean))).sort().reverse(), [filteredBySubject]);
+  const yearsAvailable = useMemo(() => Array.from(new Set(filteredBySearchAndSubject.map(m => m.year?.toString()).filter(Boolean))).sort().reverse(), [filteredBySearchAndSubject]);
 
   const finalContent = useMemo(() => {
-    if (selectedYear === "none") return filteredBySubject;
-    return filteredBySubject.filter(m => m.year?.toString() === selectedYear);
-  }, [filteredBySubject, selectedYear]);
+    if (selectedYear === "none") return filteredBySearchAndSubject;
+    return filteredBySearchAndSubject.filter(m => m.year?.toString() === selectedYear);
+  }, [filteredBySearchAndSubject, selectedYear]);
 
   const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
   return (
     <div className="flex flex-col min-h-full bg-white font-sans text-slate-900">
-      {/* Header Tabs */}
       <div className="bg-white border-b sticky top-0 z-30">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -186,7 +200,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {contentCategories.map((category) => (
                           <button 
                             key={category} 
-                            onClick={() => { setActiveTab(category); setShowAll(false); setSelectedSubject("none"); setSelectedYear("none"); }} 
+                            onClick={() => { setActiveTab(category); setShowAll(false); setSelectedSubject("none"); setSelectedYear("none"); setSearchQuery(""); }} 
                             className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}
                           >
                             {category}
@@ -204,66 +218,80 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             </div>
         ) : (
             <div className="space-y-6">
-                {/* Fixed Section Header */}
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                        {activeTab}
-                    </h2>
-                    {filteredByCategory.length > 6 && (
-                        <button className="text-sm font-medium text-blue-600 hover:underline" onClick={() => setShowAll(!showAll)}>
-                            {showAll ? 'Show Less' : 'View All →'}
-                        </button>
-                    )}
-                </div>
+                {/* RESTORED SECTOR BACKGROUND CONTAINER */}
+                <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8">
+                    {/* Section Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
+                        <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            {activeTab}
+                        </h2>
+                        <div className="flex items-center gap-4">
+                            {/* SEARCH BAR */}
+                            <div className="relative w-full md:w-64">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                <Input 
+                                    placeholder="Search resources..." 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 h-9 bg-white border-slate-200 text-sm focus-visible:ring-blue-600"
+                                />
+                            </div>
+                            {filteredByCategory.length > 6 && (
+                                <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
+                                    {showAll ? 'Show Less' : 'View All →'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
 
-                {/* Conditional Filters: Only show when showAll is true */}
-                {showAll && (
-                  <div className="flex flex-wrap items-center gap-3 animate-in fade-in slide-in-from-top-1 duration-300">
-                      {subjectsAvailable.length > 0 && (
-                          <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedYear("none"); }}>
-                              <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder="Select Subject" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">All Subjects</SelectItem>
-                                  {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                      )}
-
-                      {/* Progressive Disclosure: Second filter appears based on availability */}
-                      {selectedSubject !== "none" && yearsAvailable.length > 0 && (
-                          <>
-                              <ChevronRight className="h-4 w-4 text-slate-300" />
-                              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                  <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
-                                      <SelectValue placeholder="Select Year" />
+                    {/* PROGRESSIVE FILTERS: Only visible when showAll is active */}
+                    {showAll && (
+                      <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in slide-in-from-top-1">
+                          {subjectsAvailable.length > 0 && (
+                              <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedYear("none"); }}>
+                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                      <SelectValue placeholder="Select Subject" />
                                   </SelectTrigger>
                                   <SelectContent>
-                                      <SelectItem value="none">All Years</SelectItem>
-                                      {yearsAvailable.map(y => <SelectItem key={y} value={y!}>{y}</SelectItem>)}
+                                      <SelectItem value="none">All Subjects</SelectItem>
+                                      {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
                                   </SelectContent>
                               </Select>
-                          </>
-                      )}
-                  </div>
-                )}
-                
-                {(loading || studyLoading) ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {[1,2,3].map(i => <div key={i} className="h-[167px] bg-slate-50 animate-pulse rounded-lg border" />)}
-                  </div>
-                ) : displayedContent.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} />)}
-                    </div>
-                ) : (
-                  <div className="text-center py-20 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                    <p className="text-slate-500 font-normal">No resources found for your current selection.</p>
-                    <Button variant="link" className="text-blue-600" onClick={() => { setSelectedSubject("none"); setSelectedYear("none"); }}>Reset Filters</Button>
-                  </div>
-                )}
+                          )}
+
+                          {selectedSubject !== "none" && yearsAvailable.length > 0 && (
+                              <>
+                                  <ChevronRight className="h-4 w-4 text-slate-300" />
+                                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                                      <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                          <SelectValue placeholder="Select Year" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                          <SelectItem value="none">All Years</SelectItem>
+                                          {yearsAvailable.map(y => <SelectItem key={y} value={y!}>{y}</SelectItem>)}
+                                      </SelectContent>
+                                  </Select>
+                              </>
+                          )}
+                      </div>
+                    )}
+                    
+                    {(loading || studyLoading) ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {[1,2,3].map(i => <div key={i} className="h-[167px] bg-slate-100 animate-pulse rounded-lg border" />)}
+                      </div>
+                    ) : displayedContent.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
+                        </div>
+                    ) : (
+                      <div className="text-center py-20 bg-white rounded-lg border border-dashed border-slate-200">
+                        <p className="text-slate-500 font-normal">No resources found matching your search or filters.</p>
+                        <Button variant="link" className="text-blue-600" onClick={() => { setSelectedSubject("none"); setSelectedYear("none"); setSearchQuery(""); }}>Reset All</Button>
+                      </div>
+                    )}
+                </div>
             </div>
         )}
       </div>
