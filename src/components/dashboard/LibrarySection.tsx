@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, Search, ChevronRight } from "lucide-react";
+import { FileText, ArrowLeft, Download, Search, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -53,12 +53,12 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-1">
-                    <h3 className="text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
                         {item.title}
                     </h3>
+                    {/* Clean metadata text without icons/emojis */}
                     {(item.year || item.session || item.shift) && (
-                        <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 truncate">
-                            <Calendar className="h-3 w-3 flex-shrink-0" />
+                        <p className="text-[10px] text-slate-500 mt-1 truncate">
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
@@ -67,7 +67,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 <div className="flex gap-1.5 mb-3 mt-auto">
                     <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-red-50 text-red-600 border border-red-100">PDF</span>
                     <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate">
-                        {isIITM && item.week_number ? `Week ${item.week_number}` : (item.subject || 'Gen')}
+                        {isIITM && item.week_number ? `Week ${item.week_number}` : (item.subject || 'General')}
                     </span>
                 </div>
 
@@ -93,7 +93,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
-  // Big to Low Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
@@ -134,7 +133,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
-  // Filtering Sequence: Category -> Search -> Level -> Subject -> Specifics
+  // Filtering Sequence: Category -> Search (matches any part) -> Level -> Subject -> Year/Week
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
   
   const searchFiltered = useMemo(() => {
@@ -142,23 +141,12 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [catFiltered, searchQuery]);
 
-  // Level Options (Foundation, Diploma, Class 11, etc)
   const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
-  
-  const levelFiltered = useMemo(() => {
-      if (selectedLevel === "none") return searchFiltered;
-      return searchFiltered.filter(m => m.level === selectedLevel);
-  }, [searchFiltered, selectedLevel]);
+  const levelFiltered = useMemo(() => selectedLevel === "none" ? searchFiltered : searchFiltered.filter(m => m.level === selectedLevel), [searchFiltered, selectedLevel]);
 
-  // Subject Options
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
-  
-  const subjectFiltered = useMemo(() => {
-      if (selectedSubject === "none") return levelFiltered;
-      return levelFiltered.filter(m => m.subject === selectedSubject);
-  }, [levelFiltered, selectedSubject]);
+  const subjectFiltered = useMemo(() => selectedSubject === "none" ? levelFiltered : levelFiltered.filter(m => m.subject === selectedSubject), [levelFiltered, selectedSubject]);
 
-  // Specific Options (Week for IITM, Year for PYQ)
   const specificsAvailable = useMemo(() => {
       const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
       return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]?.toString()).filter(Boolean))).sort().reverse();
@@ -202,7 +190,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8">
+            /* SECTOR BACKGROUND */
+            <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                         <FileText className="h-5 w-5 text-blue-600" />
@@ -211,7 +200,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="flex items-center gap-4">
                         <div className="relative w-full md:w-64">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm focus-visible:ring-blue-600" />
+                            <Input placeholder="Search resources..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                         </div>
                         {catFiltered.length > 6 && (
                             <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
@@ -221,14 +210,12 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 </div>
 
+                {/* PROGRESSIVE FILTERS: Level -> Subject -> Specifics */}
                 {showAll && (
                   <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
-                      {/* LEVEL FILTER (BIG) */}
                       {levelsAvailable.length > 0 && (
                           <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
-                              <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder="Academic Level" />
-                              </SelectTrigger>
+                              <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm"><SelectValue placeholder="Academic Level" /></SelectTrigger>
                               <SelectContent>
                                   <SelectItem value="none">All Levels</SelectItem>
                                   {levelsAvailable.map(l => <SelectItem key={l} value={l!}>{l}</SelectItem>)}
@@ -236,14 +223,11 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                           </Select>
                       )}
 
-                      {/* SUBJECT FILTER (MEDIUM) */}
                       {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
                           <>
                               <ChevronRight className="h-4 w-4 text-slate-300" />
                               <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
-                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
-                                      <SelectValue placeholder="Subject" />
-                                  </SelectTrigger>
+                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm"><SelectValue placeholder="Subject" /></SelectTrigger>
                                   <SelectContent>
                                       <SelectItem value="none">All Subjects</SelectItem>
                                       {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
@@ -252,7 +236,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                           </>
                       )}
 
-                      {/* SPECIFIC FILTER (LOW - Week/Year) */}
                       {selectedSubject !== "none" && specificsAvailable.length > 0 && (
                           <>
                               <ChevronRight className="h-4 w-4 text-slate-300" />
@@ -272,7 +255,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                 
                 {(loading || studyLoading) ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                    {[1,2,3].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
+                    {[1,2,3].map(i => <div key={i} className="h-[180px] bg-white rounded-lg border" />)}
                   </div>
                 ) : displayedContent.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
