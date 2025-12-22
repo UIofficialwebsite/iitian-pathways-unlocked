@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, Filter, Video, Zap, FileQuestion } from "lucide-react";
+import { FileText, ArrowLeft, Download, Calendar, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { 
@@ -15,14 +15,13 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 
-// --- All Tabs Restored ---
+// --- Original Header Tabs Restored ---
 const contentCategories = [
     'PYQs (Previous Year Questions)',
     'Short Notes and Mindmaps',
     'Free Lectures',
     'Free Question Bank',
     'UI ki Padhai',
-    'IITM Branch Notes',
 ];
 
 interface ContentItem {
@@ -34,7 +33,6 @@ interface ContentItem {
   year?: number | null;
   session?: string | null;
   shift?: string | null;
-  week_number?: number | null;
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
@@ -47,39 +45,31 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default overflow-hidden">
-            {/* Left Side: Thumbnail */}
             <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
                 <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
             </div>
 
-            {/* Right Side: Content Area */}
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-1">
                     <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
                         {item.title}
                     </h3>
                     
-                    {/* PYQ Metadata: Year Session Shift (Clean display) */}
                     {(item.year || item.session || item.shift) && (
                         <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1 truncate">
                             <Calendar className="h-3 w-3 flex-shrink-0" />
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
-                    {item.week_number && (
-                        <p className="text-[0.75rem] text-[#64748b] mt-1">Week {item.week_number}</p>
-                    )}
                 </div>
 
-                {/* Tags */}
                 <div className="flex gap-1.5 mb-3.5 mt-2">
                     <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]">PDF</span>
                     <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] truncate">
-                        {item.subject?.substring(0, 8).toUpperCase() || 'GENERAL'}
+                        {item.subject?.substring(0, 10).toUpperCase() || 'GENERAL'}
                     </span>
                 </div>
 
-                {/* Actions */}
                 <div className="mt-auto flex gap-2">
                     <Button 
                         variant="outline" 
@@ -107,16 +97,18 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
 
-  // Fetch from Specific Tables (PYQs, Notes, IITM)
+  const focusArea = profile?.program_type || 'General';
+
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
-      const examFilter = profile?.program_type || 'General';
       try {
-        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', examFilter).eq('is_active', true);
-        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', examFilter).eq('is_active', true);
+        // Strict Filtering by Focus Area
+        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
+        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
+        
         let iitmData: any[] = [];
-        if (examFilter === 'IITM_BS') {
+        if (focusArea === 'IITM_BS') {
             const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
             iitmData = data || [];
         }
@@ -130,9 +122,10 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url,
             category: 'Short Notes and Mindmaps'
           })),
+          // Merged IITM Branch Notes into Short Notes as requested
           ...iitmData.map(i => ({
             id: i.id, title: i.title, subject: i.subject, url: i.file_link,
-            category: 'IITM Branch Notes', week_number: i.week_number
+            category: 'Short Notes and Mindmaps'
           }))
         ];
         setDbMaterials(combined);
@@ -141,25 +134,23 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       }
     };
     fetchTables();
-  }, [profile]);
+  }, [focusArea]);
 
-  // Combine Specific Tables with Study Materials
   const allContent = useMemo(() => {
-    const studyMapped = (studyMaterials || []).map(m => {
+    const studyMapped = (studyMaterials || [])
+      .filter(m => !m.exam_category || m.exam_category === focusArea) // Focus filtering
+      .map(m => {
         let cat = 'Other';
-        if (m.material_type === 'note') cat = 'Short Notes and Mindmaps';
-        else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
+        if (m.material_type === 'note' || m.material_type === 'mindmap') cat = 'Short Notes and Mindmaps';
         else if (m.material_type === 'pyq') cat = 'PYQs (Previous Year Questions)';
+        else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
         
-        // Custom logic for Lectures/UI ki Padhai based on your study_materials tags or titles
         if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
         if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
-
         return { id: m.id, title: m.title, subject: m.subject, url: m.file_url, category: cat };
     });
-
     return [...dbMaterials, ...studyMapped];
-  }, [dbMaterials, studyMaterials]);
+  }, [dbMaterials, studyMaterials, focusArea]);
 
   const filteredContent = useMemo(() => {
     let res = allContent.filter(m => m.category === activeTab);
@@ -213,10 +204,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="flex items-center gap-4">
                         {showAll && availableSubjects.length > 0 && (
                             <div className="flex items-center gap-2">
-                                <Filter className="h-4 w-4 text-slate-400" />
                                 <Select value={subjectFilter} onValueChange={setSubjectFilter}>
                                     <SelectTrigger className="w-[160px] h-9 bg-white border-[#e2e8f0] text-xs font-semibold">
-                                        <SelectValue placeholder="Subject" />
+                                        <SelectValue placeholder="Filter Subject" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all">All Subjects</SelectItem>
@@ -240,7 +230,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} />)}
                     </div>
                 ) : (
-                  <div className="text-center py-20 text-[#64748b]"><p>No resources found for this category.</p></div>
+                  <div className="text-center py-20 text-[#64748b]"><p>No resources found for your focus area.</p></div>
                 )}
             </div>
         )}
