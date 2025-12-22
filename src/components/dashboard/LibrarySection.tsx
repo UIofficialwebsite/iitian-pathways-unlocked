@@ -113,7 +113,28 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
-  // Restore the original multi-table fetching logic
+  // Derived filter helper lists
+  const levelsAvailable = useMemo(() => {
+    const levels = Array.from(new Set(dbMaterials.filter(m => m.category === activeTab && m.level).map(m => m.level)));
+    return levels.filter(Boolean);
+  }, [dbMaterials, activeTab]);
+
+  const subjectsAvailable = useMemo(() => {
+    const filteredByLevel = dbMaterials.filter(m => m.category === activeTab && (selectedLevel === "none" || m.level === selectedLevel));
+    return Array.from(new Set(filteredByLevel.map(m => m.subject))).filter(Boolean);
+  }, [dbMaterials, activeTab, selectedLevel]);
+
+  const specificsAvailable = useMemo(() => {
+    const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
+    const filtered = dbMaterials.filter(m => 
+      m.category === activeTab && 
+      (selectedLevel === "none" || m.level === selectedLevel) && 
+      (selectedSubject === "none" || m.subject === selectedSubject)
+    );
+    return Array.from(new Set(filtered.map(m => m[field as keyof ContentItem]))).filter(Boolean).map(String);
+  }, [dbMaterials, activeTab, selectedLevel, selectedSubject]);
+
+
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
@@ -145,13 +166,12 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
-  // Sync YouTube Lectures for IITM BS via Edge Function
   useEffect(() => {
     if (activeTab === 'Free Lectures' && isIITM) {
       const fetchYT = async () => {
         setLoading(true);
         try {
-          const { data, error } = await supabase.functions.invoke('get-youtube-playlist');
+          const { data } = await supabase.functions.invoke('get-youtube-playlist');
           if (data?.playlists) setYtPlaylists(data.playlists);
         } catch (err) { console.error("YT Fetch Error:", err); }
         finally { setLoading(false); }
@@ -195,7 +215,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
-  // Standard Filtering Logic for Non-YT categories
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
   const searchFiltered = useMemo(() => searchQuery ? catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase())) : catFiltered, [catFiltered, searchQuery]);
   const levelFiltered = useMemo(() => selectedLevel === "none" ? searchFiltered : searchFiltered.filter(m => m.level === selectedLevel), [searchFiltered, selectedLevel]);
@@ -210,7 +229,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
-      {/* RESTORED FIXED HEADER STYLE */}
       <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -233,17 +251,21 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* RESTORED SCROLLABLE AREA */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
-            <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden">
-                 <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
+            <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden relative">
+                 <iframe 
+                   src={viewingItem.url || ''} 
+                   className="w-full h-full border-0" 
+                   title="Viewer" 
+                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                   allowFullScreen
+                 />
             </div>
         ) : (
             <div className="space-y-8">
                 {activeTab === 'Free Lectures' && isIITM ? (
                     <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* YouTube Search Header */}
                         <div className="relative max-w-md mx-auto mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
@@ -255,7 +277,18 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                     <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Youtube className="text-red-600 h-6 w-6" /> {playlist.title}</h3>
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                                         {playlist.videos.map((video) => (
-                                            <div key={video.id} className="min-w-[280px] w-[280px] group cursor-pointer" onClick={() => window.open(`https://youtube.com/watch?v=${video.id}`, '_blank')}>
+                                            <div 
+                                              key={video.id} 
+                                              className="min-w-[280px] w-[280px] group cursor-pointer" 
+                                              onClick={() => {
+                                                setViewingItem({
+                                                  id: video.id,
+                                                  title: video.title,
+                                                  category: 'Free Lectures',
+                                                  url: `https://www.youtube.com/embed/${video.id}?autoplay=1&modestbranding=1&rel=0`
+                                                });
+                                              }}
+                                            >
                                                 <div className="aspect-video rounded-xl overflow-hidden relative mb-3">
                                                     <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={video.title} />
                                                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-all">
@@ -272,7 +305,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                     <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
-                        {/* RESTORED SECTION HEADER */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                                 <FileText className="h-5 w-5 text-blue-600" />
@@ -291,7 +323,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         </div>
 
-                        {/* RESTORED FILTERS SECTION */}
                         {showAll && (
                             <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
                                 {levelsAvailable.length > 0 && (
@@ -336,7 +367,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         )}
 
-                        {/* RESTORED CARDS GRID */}
                         {(loading || studyLoading) ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                                 {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
