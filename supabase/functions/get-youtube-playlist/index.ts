@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-// CORS headers including the critical 'if-none-match' for ETags
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, if-none-match',
@@ -9,6 +8,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
@@ -18,50 +18,46 @@ serve(async (req) => {
     )
 
     const apiKey = Deno.env.get('YOUTUBE_DATA_API')
-    const channelId = Deno.env.get('YOUTUBE_CHANNEL_ID')
+    // We use the ID you shared: UCumQJ5yZ373WXJn7DcOJcIA
+    const channelId = 'UCumQJ5yZ373WXJn7DcOJcIA' 
 
-    // 1. Get the last stored ETag and cached data from your table
+    // 2. Fetch Cache and ETag from your table
     const { data: cache } = await supabase
       .from('youtube_cache')
       .select('data, etag')
       .eq('id', 'iitm_lectures')
-      .single()
+      .maybeSingle()
 
-    // 2. Conditional Fetch: Pass the ETag to YouTube
-    const playlistsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlists?part=snippet,status&channelId=${channelId}&maxResults=50&key=${apiKey}`,
-      { 
-        headers: cache?.etag ? { 'If-None-Match': cache.etag } : {} 
-      }
-    )
+    // 3. Conditional Fetch from YouTube
+    // We send the stored etag. If YouTube returns 304, we skip all parsing!
+    const ytUrl = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,status&channelId=${channelId}&maxResults=50&key=${apiKey}`
+    const playlistsRes = await fetch(ytUrl, { 
+      headers: cache?.etag ? { 'If-None-Match': cache.etag } : {} 
+    })
 
-    // 3. Status 304: Content is still "Fresh" on YouTube
-    if (playlistsRes.status === 304) {
-      console.log("304 Not Modified: Serving fresh data from database cache.")
+    // 4. Handle 304 Not Modified (Content is the same)
+    if (playlistsRes.status === 304 && cache) {
+      console.log("YouTube: No changes (304). Serving from DB.")
       return new Response(JSON.stringify(cache.data), { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200 
       })
     }
 
-    // 4. Status 200: Content changed! Update everything
-    console.log("200 OK: Channel changed. Fetching new videos...")
+    // 5. Handle 200 OK (Content changed or cache empty)
     const playlistsData = await playlistsRes.json()
-    const newEtag = playlistsRes.headers.get('etag')
+    if (playlistsData.error) {
+       throw new Error(`YouTube API Error: ${playlistsData.error.message}`)
+    }
 
-    if (playlistsData.error) throw new Error(playlistsData.error.message)
-
+    // Fetch videos for each public playlist
     const playlistsWithVideos = await Promise.all(
       (playlistsData.items || []).map(async (playlist: any) => {
-        // Only show public playlists
         if (playlist.status.privacyStatus !== 'public') return null
 
-        const vRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,status&playlistId=${playlist.id}&maxResults=50&key=${apiKey}`
-        )
+        const vRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,status&playlistId=${playlist.id}&maxResults=50&key=${apiKey}`)
         const vData = await vRes.json()
         
-        // Filter out private/deleted videos
         const publicVideos = (vData.items || [])
           .filter((v: any) => v.status.privacyStatus === 'public')
           .map((v: any) => ({
@@ -70,32 +66,29 @@ serve(async (req) => {
             thumbnail: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default?.url
           }))
 
-        // Don't show playlist if it's empty
         return publicVideos.length > 0 ? { title: playlist.snippet.title, videos: publicVideos } : null
       })
     )
 
-    const finalData = { 
-      playlists: playlistsWithVideos.filter(p => p !== null) 
-    }
+    const finalData = { playlists: playlistsWithVideos.filter(p => p !== null) }
+    const newEtag = playlistsRes.headers.get('etag')
 
-    // 5. Update the Database with new data and new ETag
-    await supabase
-      .from('youtube_cache')
-      .upsert({ 
-        id: 'iitm_lectures', 
-        data: finalData, 
-        etag: newEtag, 
-        last_updated: new Date().toISOString() 
-      })
+    // 6. Save NEW data and NEW ETag to Database
+    await supabase.from('youtube_cache').upsert({ 
+      id: 'iitm_lectures', 
+      data: finalData, 
+      etag: newEtag, 
+      last_updated: new Date().toISOString() 
+    })
 
+    console.log("YouTube: Data updated (200). DB Cache Refreshed.")
     return new Response(JSON.stringify(finalData), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200 
     })
 
   } catch (err: any) {
-    console.error("Error:", err.message)
+    console.error("Critical Error:", err.message)
     return new Response(JSON.stringify({ error: err.message }), { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400 
