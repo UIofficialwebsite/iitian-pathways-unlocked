@@ -10,7 +10,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/components/ui/select";
+} from "@/select";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
@@ -97,7 +97,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
-  // Determine Focus Area from Profile
   const focusArea = (profile?.program_type === 'IITM_BS' ? 'IITM_BS' : profile?.exam_type) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
@@ -105,13 +104,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     const fetchTables = async () => {
       setLoading(true);
       try {
-        // Fetch matching PYQs for the selected Focus Area (JEE, NEET, or IITM_BS)
         const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        
-        // Fetch matching Notes for JEE/NEET
         const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        
-        // Fetch IITM Branch Notes strictly for IITM students
         const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
 
         const combined: ContentItem[] = [
@@ -143,21 +137,18 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   }, [dbMaterials, studyMaterials, focusArea]);
 
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
-  
   const searchFiltered = useMemo(() => {
       if (!searchQuery) return catFiltered;
       return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [catFiltered, searchQuery]);
 
   const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
-  
   const levelFiltered = useMemo(() => {
       if (selectedLevel === "none") return searchFiltered;
       return searchFiltered.filter(m => m.level === selectedLevel);
   }, [searchFiltered, selectedLevel]);
 
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
-  
   const subjectFiltered = useMemo(() => {
       if (selectedSubject === "none") return levelFiltered;
       return levelFiltered.filter(m => m.subject === selectedSubject);
@@ -216,12 +207,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                             <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                         </div>
-                        <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => {
-                            if (focusArea === 'JEE') navigate('/exam-preparation/jee');
-                            else if (focusArea === 'NEET') navigate('/exam-preparation/neet');
-                            else if (focusArea === 'IITM_BS') navigate('/exam-preparation/iitm-bs');
-                            else setShowAll(!showAll);
-                        }}>
+                        {/* Corrected onClick to only toggle locally */}
+                        <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
                             {showAll ? 'Show Less' : 'View All →'}
                         </button>
                     </div>
