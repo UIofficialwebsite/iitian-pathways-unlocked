@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 
-// --- Original Configuration for Categories ---
+// --- Configuration for Categories ---
 const contentCategories = [
     'PYQs (Previous Year Questions)',
     'Short Notes and Mindmaps',
@@ -17,7 +17,6 @@ const contentCategories = [
     'UI ki Padhai',
 ];
 
-// Original helper function for category styles
 const getContentVisuals = (category: string) => {
   switch (category) {
     case 'PYQs (Previous Year Questions)':
@@ -46,10 +45,9 @@ interface ContentItem {
   color: string;
 }
 
-// --- New Horizontal Card Design ---
+// --- Horizontal Card Design ---
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
     const visuals = getContentVisuals(item.category);
-    // Generic placeholder image
     const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -59,11 +57,10 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card 
-            className="group bg-white border border-slate-200 rounded-md p-4 transition-all duration-200 hover:border-blue-700 hover:shadow-md cursor-pointer flex flex-col"
+            className="group bg-white border border-slate-200 rounded-md p-4 transition-all duration-200 hover:border-blue-700 hover:shadow-md cursor-pointer flex flex-col h-full"
             onClick={() => handleOpen(item)}
         >
             <div className="flex gap-4 mb-4 items-stretch">
-                {/* Thumbnail Cover */}
                 <div className="w-[95px] h-[130px] bg-slate-800 rounded-sm flex-shrink-0 overflow-hidden border border-black/5 shadow-sm">
                     <img 
                         src={thumbnailUrl} 
@@ -72,13 +69,11 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     />
                 </div>
 
-                {/* Details Column */}
                 <div className="flex flex-col flex-1">
                     <h3 className="text-sm md:text-base font-bold text-slate-900 line-clamp-3 leading-snug mb-1">
                         {item.title}
                     </h3>
                     
-                    {/* Aligned Badges at Bottom */}
                     <div className="flex gap-1.5 mt-auto">
                         <Badge className="bg-red-50 text-red-600 border border-red-100 text-[10px] font-bold px-2 py-0.5 rounded-sm uppercase">
                             {visuals.tag}
@@ -92,7 +87,6 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 </div>
             </div>
 
-            {/* Card Actions */}
             <div className="flex gap-2 pt-3 border-t border-slate-100">
                 <Button 
                     variant="ghost"
@@ -112,12 +106,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     );
 };
 
-// --- Restored Original Library Component ---
-interface LibrarySectionProps {
-  profile: Tables<'profiles'> | null;
-}
-
-const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
+const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
   const navigate = useNavigate();
   const { materials, loading } = useStudyMaterials(); 
   
@@ -125,15 +114,12 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
   
-  // Restored Original Categorization Logic
   const allCategorizedContent = useMemo(() => {
     const contentMap: { [key: string]: ContentItem[] } = {};
     contentCategories.forEach(cat => contentMap[cat] = []);
-
     if (!materials) return contentMap;
 
     const userFocusProgram = profile?.program_type || 'General';
-
     const filteredMaterials = materials.filter(item => {
         if (!item.exam_category || item.exam_category === 'General') return true;
         return item.exam_category === userFocusProgram;
@@ -150,30 +136,24 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
         if (item.material_type === 'pyq') {
              contentMap['PYQs (Previous Year Questions)'].push({
                 ...commonProps,
-                type: 'PYQ',
-                tag: getContentVisuals('PYQs (Previous Year Questions)').tag,
-                category: 'PYQs (Previous Year Questions)',
-                color: getContentVisuals('PYQs (Previous Year Questions)').color,
+                type: 'PYQ', tag: getContentVisuals('PYQs (Previous Year Questions)').tag,
+                category: 'PYQs (Previous Year Questions)', color: getContentVisuals('PYQs (Previous Year Questions)').color,
              });
         } else if (item.material_type === 'note' || item.material_type === 'mindmap') {
              contentMap['Short Notes and Mindmaps'].push({
                 ...commonProps,
                 type: item.material_type === 'mindmap' ? 'Mindmap' : 'Note',
                 tag: getContentVisuals('Short Notes and Mindmaps').tag,
-                category: 'Short Notes and Mindmaps',
-                color: getContentVisuals('Short Notes and Mindmaps').color,
+                category: 'Short Notes and Mindmaps', color: getContentVisuals('Short Notes and Mindmaps').color,
              });
         } else if (item.material_type === 'question_bank') {
              contentMap['Free Question Bank'].push({
                 ...commonProps,
-                type: 'Test',
-                tag: getContentVisuals('Free Question Bank').tag,
-                category: 'Free Question Bank',
-                color: getContentVisuals('Free Question Bank').color,
+                type: 'Test', tag: getContentVisuals('Free Question Bank').tag,
+                category: 'Free Question Bank', color: getContentVisuals('Free Question Bank').color,
              });
         }
     });
-
     return contentMap;
   }, [profile, materials]);
 
@@ -182,21 +162,18 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
   const userFocusText = profile?.program_type === 'IITM_BS' ? 'IITM BS Degree' : profile?.program_type === 'JEE' ? 'JEE Exam' : profile?.program_type === 'NEET' ? 'NEET Exam' : 'Competitive Exam';
 
   return (
-    <div className="flex flex-col min-h-full bg-gray-50/50">
-      
-      {/* RESTORED ORIGINAL STICKY HEADER */}
+    <div className="flex flex-col min-h-full bg-white">
+      {/* Header logic restored */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
                    <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="-ml-2 h-10 w-10 text-black hover:bg-gray-100/50 rounded-full"
+                        variant="ghost" size="icon" className="-ml-2 h-10 w-10 text-black rounded-full"
                         onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}
                    >
                       <ArrowLeft className="h-6 w-6" />
                    </Button>
-                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight line-clamp-1">
+                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
                        {viewingItem ? viewingItem.title : 'UI Library'}
                    </h1>
               </div>
@@ -211,7 +188,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                             onClick={() => { setActiveTab(category); setShowAll(false); }}
                             className={cn(
                               "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1",
-                              activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+                              activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700"
                             )}
                           >
                             {category}
@@ -222,31 +199,34 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
           )}
       </div>
 
-      <div className="p-4 md:p-8 space-y-6 max-w-7xl mx-auto w-full flex-1">
+      {/* Main Content Area */}
+      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
         {viewingItem ? (
-            <div className="flex flex-col space-y-4">
-                <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[75vh] md:h-[80vh] relative">
-                     <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
-                </div>
+            <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[80vh]">
+                 <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            <>
-                <div className="flex justify-between items-center">
-                     <h2 className="text-xl font-bold text-gray-900">{activeTab} Content</h2>
+            /* Card Grid inside a Section Background */
+            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-6 md:p-8">
+                <div className="flex justify-between items-center mb-8">
+                    <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-blue-700" strokeWidth={2.5} />
+                        <h2 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                            {activeTab}
+                        </h2>
+                    </div>
                     {fullContent.length > 0 && (
-                        <Button 
-                            variant="link" 
-                            className="p-0 h-auto text-royal font-semibold flex items-center"
+                        <button 
+                            className="text-xs font-bold text-blue-700 hover:opacity-70 transition-opacity uppercase"
                             onClick={() => setShowAll(!showAll)}
                         >
-                            {showAll ? 'Show Less' : `View All (${fullContent.length})`}
-                            <ArrowRight className="h-4 w-4 ml-1" />
-                        </Button>
+                            {showAll ? 'SHOW LESS' : 'VIEW ALL →'}
+                        </button>
                     )}
                 </div>
                 
                 {loading ? (
-                  <div className="text-center py-20 text-gray-500">Fetching **{activeTab}** resources...</div>
+                  <div className="text-center py-20 text-gray-500">Fetching resources...</div>
                 ) : displayedContent.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {displayedContent.map((item) => (
@@ -254,11 +234,11 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile }) => {
                         ))}
                     </div>
                 ) : (
-                  <div className="text-center py-20 text-gray-500 bg-white border border-dashed rounded-lg">
-                    <p>No resources found for **{activeTab}** in your **{userFocusText}** focus area.</p>
+                  <div className="text-center py-20 text-gray-400">
+                    <p>No resources found for your focus area.</p>
                   </div>
                 )}
-            </>
+            </div>
         )}
       </div>
     </div>
