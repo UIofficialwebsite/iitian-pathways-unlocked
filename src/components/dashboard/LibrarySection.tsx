@@ -97,7 +97,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
-  // Logic to determine focusArea from the profile goal
   const focusArea = (profile?.program_type === 'IITM_BS' ? 'IITM_BS' : profile?.exam_type) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
@@ -191,8 +190,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
   return (
-    <div className="flex flex-col min-h-full bg-white font-sans text-slate-900">
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
+    <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
+      {/* FIXED HEADER: Stays at top of the section */}
+      <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
                    <Button variant="ghost" size="icon" className="-ml-2 h-10 w-10 rounded-full" onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}>
@@ -214,14 +214,15 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
+      {/* SCROLLABLE CONTENT AREA */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
-            <div className="w-full bg-slate-50 rounded-lg border h-[80vh] overflow-hidden">
+            <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden">
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
+            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4 sticky top-0 bg-[#f8fafc] z-20">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                         {activeTab}
                     </h2>
@@ -239,7 +240,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                 </div>
 
                 {showAll && (
-                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
+                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in sticky top-[72px] bg-[#f8fafc] z-20 pb-4">
                       {levelsAvailable.length > 0 && (
                           <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
                               <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
