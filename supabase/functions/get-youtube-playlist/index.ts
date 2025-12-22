@@ -1,77 +1,104 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+// CORS headers including the critical 'if-none-match' for ETags
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, if-none-match',
   'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
 }
 
 serve(async (req) => {
-  // 1. Handle CORS Preflight request
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    // 2. Access Secret (Exact name: YOUTUBE DATA API)
-    const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_DATA_API')
-    
-    if (!YOUTUBE_API_KEY) {
-      console.error("Missing secret: YOUTUBE DATA API");
-      return new Response(
-        JSON.stringify({ error: 'YouTube API Key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
 
-    // 3. Your Channel ID
-    const CHANNEL_ID = 'UCumQJ5yZ373WXJn7DcOJcIA'; // REPLACE WITH YOUR ACTUAL CHANNEL ID
+    const apiKey = Deno.env.get('YOUTUBE_DATA_API')
+    const channelId = Deno.env.get('YOUTUBE_CHANNEL_ID')
 
-    // 4. Fetch Playlists
+    // 1. Get the last stored ETag and cached data from your table
+    const { data: cache } = await supabase
+      .from('youtube_cache')
+      .select('data, etag')
+      .eq('id', 'iitm_lectures')
+      .single()
+
+    // 2. Conditional Fetch: Pass the ETag to YouTube
     const playlistsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${CHANNEL_ID}&maxResults=50&key=${YOUTUBE_API_KEY}`
-    );
-    
-    const playlistsData = await playlistsRes.json();
+      `https://www.googleapis.com/youtube/v3/playlists?part=snippet,status&channelId=${channelId}&maxResults=50&key=${apiKey}`,
+      { 
+        headers: cache?.etag ? { 'If-None-Match': cache.etag } : {} 
+      }
+    )
 
-    if (playlistsData.error) {
-      console.error("YouTube Playlists Error:", playlistsData.error);
-      return new Response(
-        JSON.stringify({ error: playlistsData.error.message }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
+    // 3. Status 304: Content is still "Fresh" on YouTube
+    if (playlistsRes.status === 304) {
+      console.log("304 Not Modified: Serving fresh data from database cache.")
+      return new Response(JSON.stringify(cache.data), { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200 
+      })
     }
 
-    // 5. Fetch Videos for each playlist
+    // 4. Status 200: Content changed! Update everything
+    console.log("200 OK: Channel changed. Fetching new videos...")
+    const playlistsData = await playlistsRes.json()
+    const newEtag = playlistsRes.headers.get('etag')
+
+    if (playlistsData.error) throw new Error(playlistsData.error.message)
+
     const playlistsWithVideos = await Promise.all(
       (playlistsData.items || []).map(async (playlist: any) => {
-        const videosRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${playlist.id}&maxResults=20&key=${YOUTUBE_API_KEY}`
-        );
-        const videosData = await videosRes.json();
+        // Only show public playlists
+        if (playlist.status.privacyStatus !== 'public') return null
+
+        const vRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,status&playlistId=${playlist.id}&maxResults=50&key=${apiKey}`
+        )
+        const vData = await vRes.json()
         
-        return {
-          title: playlist.snippet.title,
-          videos: (videosData.items || []).map((item: any) => ({
-            id: item.snippet.resourceId.videoId,
-            title: item.snippet.title,
-            thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.default?.url
+        // Filter out private/deleted videos
+        const publicVideos = (vData.items || [])
+          .filter((v: any) => v.status.privacyStatus === 'public')
+          .map((v: any) => ({
+            id: v.snippet.resourceId.videoId,
+            title: v.snippet.title,
+            thumbnail: v.snippet.thumbnails.high?.url || v.snippet.thumbnails.default?.url
           }))
-        };
+
+        // Don't show playlist if it's empty
+        return publicVideos.length > 0 ? { title: playlist.snippet.title, videos: publicVideos } : null
       })
-    );
-
-    // 6. Return Data
-    return new Response(
-      JSON.stringify({ playlists: playlistsWithVideos }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
-  } catch (error: any) {
-    console.error("Function error:", error.message);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-    )
+    const finalData = { 
+      playlists: playlistsWithVideos.filter(p => p !== null) 
+    }
+
+    // 5. Update the Database with new data and new ETag
+    await supabase
+      .from('youtube_cache')
+      .upsert({ 
+        id: 'iitm_lectures', 
+        data: finalData, 
+        etag: newEtag, 
+        last_updated: new Date().toISOString() 
+      })
+
+    return new Response(JSON.stringify(finalData), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 200 
+    })
+
+  } catch (err: any) {
+    console.error("Error:", err.message)
+    return new Response(JSON.stringify({ error: err.message }), { 
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 400 
+    })
   }
 })
