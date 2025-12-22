@@ -191,7 +191,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
-      {/* FIXED HEADER: Stays at top of the section */}
+      {/* 1. TOP TABS: Fixed at the very top */}
       <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -214,7 +214,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* SCROLLABLE CONTENT AREA */}
+      {/* 2. SCROLLABLE AREA: Everything else scrolls here */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden">
@@ -222,7 +222,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             </div>
         ) : (
             <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
-                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4 sticky top-0 bg-[#f8fafc] z-20">
+                {/* 3. SECTION HEADER: Not fixed, will scroll away */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4 bg-transparent">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                         {activeTab}
                     </h2>
@@ -239,8 +240,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 </div>
 
+                {/* 4. FILTERS: Not fixed, will scroll away */}
                 {showAll && (
-                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in sticky top-[72px] bg-[#f8fafc] z-20 pb-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in pb-4">
                       {levelsAvailable.length > 0 && (
                           <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
                               <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
@@ -279,6 +281,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                   </div>
                 )}
                 
+                {/* 5. CARDS GRID: Natural scrolling */}
                 {(loading || studyLoading) ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                     {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
