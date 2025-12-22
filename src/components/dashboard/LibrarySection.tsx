@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -16,7 +16,14 @@ import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
 
-// --- Types & Interfaces ---
+const contentCategories = [
+    'PYQs (Previous Year Questions)',
+    'Short Notes and Mindmaps',
+    'Free Lectures',
+    'Free Question Bank',
+    'UI ki Padhai',
+];
+
 interface ContentItem {
   id: string | number;
   title: string;
@@ -41,15 +48,6 @@ interface YouTubePlaylist {
   videos: YouTubeVideo[];
 }
 
-const contentCategories = [
-    'PYQs (Previous Year Questions)',
-    'Short Notes and Mindmaps',
-    'Free Lectures',
-    'Free Question Bank',
-    'UI ki Padhai',
-];
-
-// --- Sub-component: Content Card ---
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void; isIITM: boolean }> = ({ item, handleOpen, isIITM }) => {
     const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
 
@@ -96,21 +94,18 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     );
 };
 
-// --- Main Component: LibrarySection ---
 const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
   const navigate = useNavigate();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
-  
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
+  const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
@@ -118,7 +113,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
-  // 1. Fetch DB Materials
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
@@ -150,7 +144,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
-  // 2. Fetch YouTube Data
   useEffect(() => {
     if (activeTab === 'Free Lectures' && isIITM) {
       const fetchYT = async () => {
@@ -165,10 +158,18 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     }
   }, [activeTab, isIITM]);
 
-  // 3. Memoized Filters
+  const filteredYtContent = useMemo(() => {
+    if (!ytSearchQuery) return ytPlaylists;
+    return ytPlaylists.map(playlist => ({
+      ...playlist,
+      videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
+    })).filter(playlist => playlist.videos.length > 0);
+  }, [ytPlaylists, ytSearchQuery]);
+
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
         .filter(m => !m.exam_category || m.exam_category === focusArea || m.exam_category === 'General')
+        .filter(m => m.material_type !== 'pyq') 
         .map(m => {
             let cat = 'Other';
             const materialType = (m as any).material_type;
@@ -177,7 +178,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             else if (materialType === 'note' || materialType === 'mindmap') cat = 'Short Notes and Mindmaps';
             else if (materialType === 'question_bank') cat = 'Free Question Bank';
             else if (titleLower.includes('lecture')) cat = 'Free Lectures';
-            
             return { 
                 id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, 
                 category: cat, level: m.level || m.class_level, year: m.year, week_number: m.week_number 
@@ -190,7 +190,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const searchFiltered = useMemo(() => searchQuery ? catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase())) : catFiltered, [catFiltered, searchQuery]);
   const levelFiltered = useMemo(() => selectedLevel === "none" ? searchFiltered : searchFiltered.filter(m => m.level === selectedLevel), [searchFiltered, selectedLevel]);
   const subjectFiltered = useMemo(() => selectedSubject === "none" ? levelFiltered : levelFiltered.filter(m => m.subject === selectedSubject), [levelFiltered, selectedSubject]);
-  
   const finalContent = useMemo(() => {
       if (selectedWeekOrYear === "none") return subjectFiltered;
       const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
@@ -206,17 +205,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]))).filter(Boolean).map(String);
   }, [subjectFiltered, activeTab]);
 
-  const filteredYtContent = useMemo(() => {
-    if (!ytSearchQuery) return ytPlaylists;
-    return ytPlaylists.map(playlist => ({
-      ...playlist,
-      videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
-    })).filter(playlist => playlist.videos.length > 0);
-  }, [ytPlaylists, ytSearchQuery]);
-
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
-      {/* Header Section */}
       <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -239,24 +229,25 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* Main Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full bg-black rounded-xl border border-slate-200 aspect-video overflow-hidden flex items-center justify-center relative shadow-xl">
                  <div className="relative w-full h-full overflow-hidden">
-                    {/* NO CROPPING: Use standard 100% dimensions */}
                     <iframe 
-                        src={`${viewingItem.url}&modestbranding=1&rel=0&controls=1&iv_load_policy=3&disablekb=0`} 
+                        src={`${viewingItem.url}&modestbranding=1&rel=0&controls=1&iv_load_policy=3&disablekb=0&showinfo=0`} 
                         className="w-full h-full border-0" 
                         title="Player" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     />
                     
-                    {/* PW-STYLE TRANSPARENT SHIELD:
-                        Covers the top portion to prevent clicking on Title/Share branding 
-                        without physically zooming or cropping the video frame.
-                    */}
+                    {/* BOTTOM SECURITY SHIELD: Blocks clicks to YouTube logo/branding */}
+                    <div 
+                        className="absolute bottom-0 right-0 w-[100px] h-[60px] z-20 bg-transparent cursor-default" 
+                        onContextMenu={(e) => e.preventDefault()}
+                    />
+                    
+                    {/* TOP SECURITY SHIELD: Blocks clicks to Title/Share icons */}
                     <div 
                         className="absolute top-0 left-0 w-full h-[15%] z-20 bg-transparent cursor-default" 
                         onContextMenu={(e) => e.preventDefault()}
@@ -269,12 +260,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="relative max-w-md mx-auto mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <input 
-                              placeholder="Search lectures..." 
-                              value={ytSearchQuery} 
-                              onChange={(e) => setYtSearchQuery(e.target.value)} 
-                              className="pl-10 h-12 w-full bg-slate-50 border border-slate-200 rounded-full px-4 focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                            />
+                            <Input placeholder="Search lectures..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full" />
                         </div>
 
                         {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div> : 
@@ -301,7 +287,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                                         <PlayCircle className="text-white h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                     </div>
                                                 </div>
-                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600 transition-colors">{video.title}</h4>
+                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600">{video.title}</h4>
                                             </div>
                                         ))}
                                     </div>
@@ -311,7 +297,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                     <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
-                        {/* Section Header */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                                 <FileText className="h-5 w-5 text-blue-600" />
@@ -330,7 +315,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         </div>
 
-                        {/* Dropdown Filters */}
                         {showAll && (
                             <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
                                 {levelsAvailable.length > 0 && (
@@ -375,7 +359,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         )}
 
-                        {/* Grid */}
                         {(loading || studyLoading) ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                                 {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
