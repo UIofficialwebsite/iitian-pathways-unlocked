@@ -45,7 +45,7 @@ interface ContentItem {
   color: string;
 }
 
-// --- Horizontal Card Design ---
+// --- Refined Horizontal Card Design ---
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
     const visuals = getContentVisuals(item.category);
     const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
@@ -61,7 +61,8 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
             onClick={() => handleOpen(item)}
         >
             <div className="flex gap-4 mb-4 items-stretch">
-                <div className="w-[95px] h-[130px] bg-slate-800 rounded-sm flex-shrink-0 overflow-hidden border border-black/5 shadow-sm">
+                {/* Thumbnail Cover - Black border removed */}
+                <div className="w-[95px] h-[130px] bg-slate-100 rounded-sm flex-shrink-0 overflow-hidden shadow-sm">
                     <img 
                         src={thumbnailUrl} 
                         alt={item.title}
@@ -163,7 +164,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   return (
     <div className="flex flex-col min-h-full bg-white">
-      {/* Header logic restored */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -199,15 +199,14 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* Main Content Area */}
       <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
         {viewingItem ? (
             <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[80vh]">
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            /* Card Grid inside a Section Background */
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-6 md:p-8">
+            /* Card Section Background - Updated to more whitish type (slate-50) */
+            <div className="bg-slate-50/50 border border-slate-100 rounded-lg p-6 md:p-8">
                 <div className="flex justify-between items-center mb-8">
                     <div className="flex items-center gap-3">
                         <FileText className="h-5 w-5 text-blue-700" strokeWidth={2.5} />
