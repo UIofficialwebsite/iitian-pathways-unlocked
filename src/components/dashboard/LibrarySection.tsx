@@ -104,20 +104,21 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     const fetchTables = async () => {
       setLoading(true);
       try {
-        // Corrected queries to filter by student focusArea (JEE/NEET/IITM_BS)
+        // Fetching PYQs for the specific exam type
         const { data: pyqData } = await supabase
           .from('pyqs')
           .select('*')
           .eq('exam_type', focusArea)
           .eq('is_active', true);
 
+        // Fetching Notes based on goal
         const { data: notesData } = await supabase
           .from('notes')
           .select('*')
           .eq('exam_type', focusArea)
           .eq('is_active', true);
 
-        // Branch notes logic for IITM students
+        // Explicitly fetch IITM Branch Notes if the user is an IITM student
         const { data: iitmData } = isIITM 
           ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) 
           : { data: [] };
@@ -130,10 +131,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             url: p.file_link || p.content_url, 
             category: 'PYQs (Previous Year Questions)', 
             year: p.year, 
-            level: p.level || p.class_level, // Standardize level fields
-            session: p.session, 
-            shift: p.shift 
+            level: p.level || p.class_level 
           })),
+          // Mapping standard notes
           ...(notesData || []).map(n => ({ 
             id: n.id, 
             title: n.title, 
@@ -142,12 +142,13 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             category: 'Short Notes and Mindmaps', 
             level: n.class_level || n.level 
           })),
+          // Connecting IITM Branch Notes to the Short Notes category for IITM students
           ...(iitmData || []).map(i => ({ 
             id: i.id, 
             title: i.title, 
             subject: i.subject, 
             url: i.file_link, 
-            category: 'Short Notes and Mindmaps', 
+            category: 'Short Notes and Mindmaps', // Map branch notes here
             week_number: i.week_number, 
             level: i.level 
           }))
@@ -158,17 +159,11 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
-  // Logic to redirect "View All" to specific exam prep tabs
   const handleViewAllAction = () => {
-    if (focusArea === 'JEE') {
-      navigate('/exam-preparation/jee');
-    } else if (focusArea === 'NEET') {
-      navigate('/exam-preparation/neet');
-    } else if (focusArea === 'IITM_BS') {
-      navigate('/exam-preparation/iitm-bs');
-    } else {
-      setShowAll(!showAll);
-    }
+    if (focusArea === 'JEE') navigate('/exam-preparation/jee');
+    else if (focusArea === 'NEET') navigate('/exam-preparation/neet');
+    else if (focusArea === 'IITM_BS') navigate('/exam-preparation/iitm-bs');
+    else setShowAll(!showAll);
   };
 
   const allContent = useMemo(() => {
@@ -259,7 +254,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                             <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                         </div>
-                        {/* Redirection logic added here */}
                         <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={handleViewAllAction}>
                             {showAll ? 'Show Less' : 'View All →'}
                         </button>
@@ -315,9 +309,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                        <p>No resources found for this category.</p>
-                    </div>
+                    <div className="py-12 text-center text-slate-400">No resources available.</div>
                 )}
             </div>
         )}
