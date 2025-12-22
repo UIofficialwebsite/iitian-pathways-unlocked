@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
+// Import the dedicated VideoPlayer component
+import VideoPlayer from "../VideoPlayer"; 
 
 const contentCategories = [
     'PYQs (Previous Year Questions)',
@@ -158,14 +160,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     }
   }, [activeTab, isIITM]);
 
-  const filteredYtContent = useMemo(() => {
-    if (!ytSearchQuery) return ytPlaylists;
-    return ytPlaylists.map(playlist => ({
-      ...playlist,
-      videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
-    })).filter(playlist => playlist.videos.length > 0);
-  }, [ytPlaylists, ytSearchQuery]);
-
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
         .filter(m => !m.exam_category || m.exam_category === focusArea || m.exam_category === 'General')
@@ -174,10 +168,17 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             let cat = 'Other';
             const materialType = (m as any).material_type;
             const titleLower = m.title.toLowerCase();
-            if (materialType === 'ui_ki_padhai' || titleLower.includes('ui ki padhai')) cat = 'UI ki Padhai';
-            else if (materialType === 'note' || materialType === 'mindmap') cat = 'Short Notes and Mindmaps';
-            else if (materialType === 'question_bank') cat = 'Free Question Bank';
-            else if (titleLower.includes('lecture')) cat = 'Free Lectures';
+            
+            if (materialType === 'ui_ki_padhai' || titleLower.includes('ui ki padhai')) {
+                cat = 'UI ki Padhai';
+            } else if (materialType === 'note' || materialType === 'mindmap') {
+                cat = 'Short Notes and Mindmaps';
+            } else if (materialType === 'question_bank') {
+                cat = 'Free Question Bank';
+            } else if (titleLower.includes('lecture')) {
+                cat = 'Free Lectures';
+            }
+            
             return { 
                 id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, 
                 category: cat, level: m.level || m.class_level, year: m.year, week_number: m.week_number 
@@ -196,8 +197,17 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       return subjectFiltered.filter(m => m[field as keyof ContentItem]?.toString() === selectedWeekOrYear);
   }, [subjectFiltered, selectedWeekOrYear, activeTab]);
 
+  const filteredYtContent = useMemo(() => {
+    if (!ytSearchQuery) return ytPlaylists;
+    return ytPlaylists.map(playlist => ({
+      ...playlist,
+      videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
+    })).filter(playlist => playlist.videos.length > 0);
+  }, [ytPlaylists, ytSearchQuery]);
+
   const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
+  // Filter lists for UI
   const levelsAvailable = useMemo(() => Array.from(new Set(catFiltered.map(m => m.level))).filter(Boolean), [catFiltered]);
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject))).filter(Boolean), [levelFiltered]);
   const specificsAvailable = useMemo(() => {
@@ -231,28 +241,19 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
-            <div className="w-full bg-black rounded-xl border border-slate-200 aspect-video overflow-hidden flex items-center justify-center relative shadow-xl">
-                 <div className="relative w-full h-full overflow-hidden">
-                    <iframe 
-                        src={`${viewingItem.url}&modestbranding=1&rel=0&controls=1&iv_load_policy=3&disablekb=0&showinfo=0`} 
-                        className="w-full h-full border-0" 
-                        title="Player" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    />
-                    
-                    {/* BOTTOM SECURITY SHIELD: Blocks clicks to YouTube logo/branding */}
-                    <div 
-                        className="absolute bottom-0 right-0 w-[100px] h-[60px] z-20 bg-transparent cursor-default" 
-                        onContextMenu={(e) => e.preventDefault()}
-                    />
-                    
-                    {/* TOP SECURITY SHIELD: Blocks clicks to Title/Share icons */}
-                    <div 
-                        className="absolute top-0 left-0 w-full h-[15%] z-20 bg-transparent cursor-default" 
-                        onContextMenu={(e) => e.preventDefault()}
-                    />
-                 </div>
+            <div className="w-full h-full">
+                {/* Check if current category is Free Lectures to use custom VideoPlayer */}
+                {activeTab === 'Free Lectures' ? (
+                   <VideoPlayer 
+                      videoId={String(viewingItem.id)} 
+                      title={viewingItem.title} 
+                      onClose={() => setViewingItem(null)} 
+                   />
+                ) : (
+                   <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden">
+                        <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
+                   </div>
+                )}
             </div>
         ) : (
             <div className="space-y-8">
@@ -260,7 +261,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="relative max-w-md mx-auto mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <Input placeholder="Search lectures..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full" />
+                            <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
                         </div>
 
                         {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div> : 
@@ -269,18 +270,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                     <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Youtube className="text-red-600 h-6 w-6" /> {playlist.title}</h3>
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                                         {playlist.videos.map((video) => (
-                                            <div 
-                                              key={video.id} 
-                                              className="min-w-[280px] w-[280px] group cursor-pointer" 
-                                              onClick={() => {
-                                                setViewingItem({
-                                                    id: video.id,
-                                                    title: video.title,
-                                                    category: 'Free Lectures',
-                                                    url: `https://www.youtube.com/embed/${video.id}?autoplay=1`
-                                                });
-                                              }}
-                                            >
+                                            <div key={video.id} className="min-w-[280px] w-[280px] group cursor-pointer" onClick={() => setViewingItem({ id: video.id, title: video.title, category: 'Free Lectures' })}>
                                                 <div className="aspect-video rounded-xl overflow-hidden relative mb-3">
                                                     <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={video.title} />
                                                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-all">
