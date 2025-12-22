@@ -10,7 +10,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from "@/select";
+} from "@/components/ui/select"; // Fixed import path
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
@@ -97,6 +97,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
+  // Determine Focus Area strictly from profile setup
   const focusArea = (profile?.program_type === 'IITM_BS' ? 'IITM_BS' : profile?.exam_type) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
@@ -104,17 +105,61 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     const fetchTables = async () => {
       setLoading(true);
       try {
-        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
+        // Fetch PYQs for specific focus area (JEE/NEET/IITM_BS)
+        const { data: pyqData } = await supabase
+          .from('pyqs')
+          .select('*')
+          .eq('exam_type', focusArea)
+          .eq('is_active', true);
+        
+        // Fetch Notes for specific focus area
+        const { data: notesData } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('exam_type', focusArea)
+          .eq('is_active', true);
+        
+        // Connect branch notes strictly for IITM_BS users
+        const { data: iitmData } = isIITM 
+          ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) 
+          : { data: [] };
 
         const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({ id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level, session: p.session, shift: p.shift })),
-          ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level })),
-          ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level }))
+          ...(pyqData || []).map(p => ({ 
+            id: p.id, 
+            title: p.title, 
+            subject: p.subject, 
+            url: p.file_link || p.content_url, 
+            category: 'PYQs (Previous Year Questions)', 
+            year: p.year, 
+            level: p.level || p.class_level,
+            session: p.session, 
+            shift: p.shift 
+          })),
+          ...(notesData || []).map(n => ({ 
+            id: n.id, 
+            title: n.title, 
+            subject: n.subject, 
+            url: n.file_link || n.content_url, 
+            category: 'Short Notes and Mindmaps', 
+            level: n.class_level || n.level 
+          })),
+          ...(iitmData || []).map(i => ({ 
+            id: i.id, 
+            title: i.title, 
+            subject: i.subject, 
+            url: i.file_link, 
+            category: 'Short Notes and Mindmaps', 
+            week_number: i.week_number, 
+            level: i.level 
+          }))
         ];
         setDbMaterials(combined);
-      } finally { setLoading(false); }
+      } catch (err) {
+        console.error("Library load error:", err);
+      } finally { 
+        setLoading(false); 
+      }
     };
     fetchTables();
   }, [focusArea, isIITM]);
@@ -137,18 +182,21 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   }, [dbMaterials, studyMaterials, focusArea]);
 
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
+  
   const searchFiltered = useMemo(() => {
       if (!searchQuery) return catFiltered;
       return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
   }, [catFiltered, searchQuery]);
 
   const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
+  
   const levelFiltered = useMemo(() => {
       if (selectedLevel === "none") return searchFiltered;
       return searchFiltered.filter(m => m.level === selectedLevel);
   }, [searchFiltered, selectedLevel]);
 
   const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
+  
   const subjectFiltered = useMemo(() => {
       if (selectedSubject === "none") return levelFiltered;
       return levelFiltered.filter(m => m.subject === selectedSubject);
@@ -207,7 +255,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                             <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                         </div>
-                        {/* Corrected onClick to only toggle locally */}
+                        {/* No redirection - just toggles showAll locally */}
                         <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
                             {showAll ? 'Show Less' : 'View All →'}
                         </button>
@@ -256,7 +304,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                 
                 {(loading || studyLoading) ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                    {[1,2,3].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
+                    {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
                   </div>
                 ) : displayedContent.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
