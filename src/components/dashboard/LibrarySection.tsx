@@ -113,7 +113,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
-  // Restore the original multi-table fetching logic
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
@@ -145,7 +144,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
-  // Sync YouTube Lectures
   useEffect(() => {
     if (activeTab === 'Free Lectures' && isIITM) {
       const fetchYT = async () => {
@@ -217,7 +215,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
-      {/* HEADER */}
+      {/* HEADER SECTION */}
       <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -240,21 +238,25 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* SCROLLABLE CONTENT */}
+      {/* VIEWER AREA */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full bg-black rounded-lg border h-full overflow-hidden flex items-center justify-center relative">
-                 {/* Masking container to hide YT UI */}
-                 <div className="relative w-full h-full overflow-hidden">
+                 {/* "Branding Hide" Container:
+                    We make the iframe height larger than the box (112%) and shift it up (-6%).
+                    This keeps the controls at the bottom while pushing the Title Bar out of view.
+                 */}
+                 <div className="relative w-full h-full overflow-hidden pointer-events-auto">
                     <iframe 
                         src={viewingItem.url || ''} 
-                        className="absolute top-[-5%] left-0 w-full h-[110%] border-0" 
+                        className="absolute top-[-6%] left-0 w-full h-[112%] border-0" 
                         title="Viewer" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                     />
-                    {/* Invisible top overlay to block title/share click interactions */}
-                    <div className="absolute top-0 left-0 w-full h-16 z-10 bg-transparent" />
+                    
+                    {/* Invisible shield to prevent clicking on the Title Bar area to open YouTube.com */}
+                    <div className="absolute top-0 left-0 w-full h-[12%] z-10 bg-transparent" />
                  </div>
             </div>
         ) : (
@@ -280,8 +282,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                                     id: video.id,
                                                     title: video.title,
                                                     category: 'Free Lectures',
-                                                    // rel=0 modestbranding=1 controls=1 minimizes YT interface
-                                                    url: `https://www.youtube.com/embed/${video.id}?autoplay=1&modestbranding=1&rel=0&controls=1&showinfo=0&iv_load_policy=3`
+                                                    // modtestbranding=1 removes logo, rel=0 prevents related videos, controls=1 keeps speed settings
+                                                    url: `https://www.youtube.com/embed/${video.id}?autoplay=1&modestbranding=1&rel=0&controls=1&iv_load_policy=3`
                                                 });
                                               }}
                                             >
@@ -301,6 +303,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                     <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
+                        {/* CATEGORY GRID LOGIC (PDFs, Banks, etc) */}
                         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                             <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
                                 <FileText className="h-5 w-5 text-blue-600" />
@@ -319,6 +322,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         </div>
 
+                        {/* FILTERS */}
                         {showAll && (
                             <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
                                 {levelsAvailable.length > 0 && (
@@ -363,6 +367,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             </div>
                         )}
 
+                        {/* CONTENT CARDS */}
                         {(loading || studyLoading) ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                                 {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
