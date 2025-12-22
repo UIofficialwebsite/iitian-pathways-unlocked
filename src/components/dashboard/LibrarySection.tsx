@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, Search, ChevronRight } from "lucide-react";
+import { ArrowLeft, Download, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,7 +48,6 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     return (
         <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-5 transition-all hover:shadow-md h-[180px] cursor-default overflow-hidden">
             <div className="w-[100px] h-[145px] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
-                {/* group-hover:scale-105 removed to prevent zoom */}
                 <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
             </div>
 
@@ -59,7 +58,6 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     </h3>
                     {(item.year || item.session || item.shift) && (
                         <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 truncate">
-                            <Calendar className="h-3 w-3 flex-shrink-0" />
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
@@ -201,7 +199,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                        <FileText className="h-5 w-5 text-blue-600" />
                         {activeTab}
                     </h2>
                     <div className="flex items-center gap-4">
@@ -232,33 +229,27 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                       )}
 
                       {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
-                          <>
-                              <ChevronRight className="h-4 w-4 text-slate-300" />
-                              <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
-                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
-                                      <SelectValue placeholder="Subject" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="none">All Subjects</SelectItem>
-                                      {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
-                                  </SelectContent>
-                              </Select>
-                          </>
+                          <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
+                              <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm ml-2">
+                                  <SelectValue placeholder="Subject" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="none">All Subjects</SelectItem>
+                                  {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
                       )}
 
                       {selectedSubject !== "none" && specificsAvailable.length > 0 && (
-                          <>
-                              <ChevronRight className="h-4 w-4 text-slate-300" />
-                              <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
-                                  <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
-                                      <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
-                                      {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
-                                  </SelectContent>
-                              </Select>
-                          </>
+                          <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
+                              <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm ml-2">
+                                  <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
+                                  {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
                       )}
                   </div>
                 )}
@@ -271,11 +262,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                     </div>
-                ) : (
-                  <div className="text-center py-20 bg-white rounded-lg border border-dashed border-slate-200">
-                    <p className="text-slate-500 font-normal">No resources found matching these filters.</p>
-                  </div>
-                )}
+                ) : null}
             </div>
         )}
       </div>
