@@ -1,8 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar } from "lucide-react";
+import { FileText, ArrowLeft, Download, Calendar, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
@@ -38,7 +45,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card 
-            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default"
+            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default overflow-hidden"
         >
             {/* Left Side: Thumbnail */}
             <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
@@ -50,16 +57,16 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
             </div>
 
             {/* Right Side: Content Area */}
-            <div className="flex flex-col flex-1">
+            <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-1">
                     <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
                         {item.title}
                     </h3>
                     
-                    {/* PYQ Metadata: Year, Session, Shift (Only shown if they exist) */}
+                    {/* PYQ Metadata: Year Session Shift */}
                     {(item.year || item.session || item.shift) && (
-                        <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1">
-                            <Calendar className="h-3 w-3" />
+                        <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1 truncate">
+                            <Calendar className="h-3 w-3 flex-shrink-0" />
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
@@ -73,8 +80,8 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]">
                         PDF
                     </span>
-                    <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe]">
-                        {item.subject?.substring(0, 3).toUpperCase() || 'EN'}
+                    <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] truncate">
+                        {item.subject?.substring(0, 5).toUpperCase() || 'EN'}
                     </span>
                 </div>
 
@@ -107,6 +114,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -114,31 +122,15 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       const examFilter = profile?.program_type || 'General';
       
       try {
-        // 1. Fetch from PYQs table
-        const { data: pyqData } = await supabase
-          .from('pyqs')
-          .select('*')
-          .eq('exam_type', examFilter)
-          .eq('is_active', true);
-
-        // 2. Fetch from Notes table
-        const { data: notesData } = await supabase
-          .from('notes')
-          .select('*')
-          .eq('exam_type', examFilter)
-          .eq('is_active', true);
-
-        // 3. Fetch from IITM Branch Notes (only if focus is IITM)
+        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', examFilter).eq('is_active', true);
+        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', examFilter).eq('is_active', true);
+        
         let iitmData: any[] = [];
         if (examFilter === 'IITM_BS') {
-            const { data } = await supabase
-                .from('iitm_branch_notes')
-                .select('*')
-                .eq('is_active', true);
+            const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
             iitmData = data || [];
         }
 
-        // Combine and format
         const combined: ContentItem[] = [
           ...(pyqData || []).map(p => ({
             id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url,
@@ -165,14 +157,27 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchAllData();
   }, [profile]);
 
-  const filteredContent = useMemo(() => {
-    return materials.filter(m => m.category === activeTab);
+  // Derived subjects for filtering
+  const availableSubjects = useMemo(() => {
+    const subjects = materials
+      .filter(m => m.category === activeTab && m.subject)
+      .map(m => m.subject as string);
+    return Array.from(new Set(subjects));
   }, [materials, activeTab]);
+
+  const filteredContent = useMemo(() => {
+    let result = materials.filter(m => m.category === activeTab);
+    if (subjectFilter !== "all") {
+        result = result.filter(m => m.subject === subjectFilter);
+    }
+    return result;
+  }, [materials, activeTab, subjectFilter]);
 
   const displayedContent = showAll ? filteredContent : filteredContent.slice(0, 6);
 
   return (
     <div className="flex flex-col min-h-full bg-white font-sans">
+      {/* RESTORED ORIGINAL TOP NAVIGATION */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -194,7 +199,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {contentCategories.map((category) => (
                           <button
                             key={category}
-                            onClick={() => { setActiveTab(category); setShowAll(false); }}
+                            onClick={() => { setActiveTab(category); setShowAll(false); setSubjectFilter("all"); }}
                             className={cn(
                               "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1",
                               activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700"
@@ -215,21 +220,42 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             </div>
         ) : (
             <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-6 md:p-8">
-                <div className="section-header flex justify-between items-center mb-6">
-                    <div className="header-title flex items-center gap-3">
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div className="flex items-center gap-3">
                         <FileText className="h-[22px] w-[22px] text-[#1d4ed8]" strokeWidth={2.5} />
                         <h2 className="text-[1.1rem] font-bold text-[#0f172a] uppercase tracking-wide">
                             {activeTab}
                         </h2>
                     </div>
-                    {filteredContent.length > 0 && (
-                        <button 
-                            className="view-all-btn text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase"
-                            onClick={() => setShowAll(!showAll)}
-                        >
-                            {showAll ? 'SHOW LESS' : 'VIEW ALL →'}
-                        </button>
-                    )}
+
+                    <div className="flex items-center gap-4">
+                        {/* SUBJECT FILTER - Only shows when materials exist */}
+                        {availableSubjects.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <Filter className="h-4 w-4 text-slate-400" />
+                                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+                                    <SelectTrigger className="w-[160px] h-9 bg-white border-[#e2e8f0]">
+                                        <SelectValue placeholder="Filter Subject" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Subjects</SelectItem>
+                                        {availableSubjects.map(sub => (
+                                            <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        {filteredContent.length > 6 && (
+                            <button 
+                                className="text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase"
+                                onClick={() => setShowAll(!showAll)}
+                            >
+                                {showAll ? 'SHOW LESS' : 'VIEW ALL →'}
+                            </button>
+                        )}
+                    </div>
                 </div>
                 
                 {loading ? (
@@ -242,7 +268,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                   <div className="text-center py-20 text-[#64748b]">
-                    <p>No resources found for your focus area.</p>
+                    <p>No resources found for the selected filter.</p>
                   </div>
                 )}
             </div>
