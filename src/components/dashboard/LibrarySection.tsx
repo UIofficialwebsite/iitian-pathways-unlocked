@@ -22,7 +22,6 @@ interface ContentItem {
   subject?: string;
   url?: string | null;
   category: string;
-  updated_at?: string;
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
@@ -34,15 +33,9 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
         if (item.url) window.open(item.url, '_blank');
     };
 
-    const formatDate = (dateString?: string) => {
-        if (!dateString) return "Updated Recently";
-        return `Updated ${new Date(dateString).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`;
-    };
-
     return (
         <Card 
             className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default"
-            // hover:border-[#1d4ed8] removed to prevent border highlight
         >
             {/* Left Side: Thumbnail */}
             <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
@@ -59,9 +52,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
                         {item.title}
                     </h3>
-                    <p className="text-[0.8rem] text-[#64748b]">
-                        {formatDate(item.updated_at)}
-                    </p>
+                    {/* Updated date line removed */}
                 </div>
 
                 {/* Tags Group */}
@@ -121,8 +112,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             title: item.title,
             subject: item.subject || 'General',
             url: item.file_url,
-            category: '',
-            updated_at: item.created_at
+            category: ''
         };
 
         if (item.material_type === 'pyq') {
