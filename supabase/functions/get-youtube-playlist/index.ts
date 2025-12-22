@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     // 2. Access Secret (Exact name: YOUTUBE DATA API)
-    const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE DATA API')
+    const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE_DATA_API')
     
     if (!YOUTUBE_API_KEY) {
       console.error("Missing secret: YOUTUBE DATA API");
