@@ -26,6 +26,7 @@ interface ContentItem {
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
+    // Professional placeholder image
     const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -40,8 +41,8 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card 
-            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:border-[#1d4ed8] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default"
-            // onClick removed from here to prevent whole card from triggering view
+            className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default"
+            // hover:border-[#1d4ed8] removed to prevent border highlight
         >
             {/* Left Side: Thumbnail */}
             <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
@@ -77,7 +78,6 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 <div className="mt-auto flex gap-2">
                     <Button 
                         variant="outline"
-                        // View content logic moved here
                         onClick={() => handleOpen(item)}
                         className="flex-grow h-9 text-[0.85rem] font-semibold text-[#0f172a] border-[#e2e8f0] hover:border-[#1d4ed8] hover:text-[#1d4ed8] hover:bg-[#f0f7ff] rounded-md transition-all shadow-none"
                     >
