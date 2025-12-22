@@ -25,7 +25,7 @@ serve(async (req) => {
     }
 
     // 3. Your Channel ID
-    const CHANNEL_ID = 'UCxxxxxxxxxxxxxxxxxxxxxx'; // REPLACE WITH YOUR ACTUAL CHANNEL ID
+    const CHANNEL_ID = 'UCumQJ5yZ373WXJn7DcOJcIA'; // REPLACE WITH YOUR ACTUAL CHANNEL ID
 
     // 4. Fetch Playlists
     const playlistsRes = await fetch(
