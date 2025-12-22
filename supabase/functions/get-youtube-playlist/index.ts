@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
-// CORS headers to fix "blocked by CORS policy"
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -14,25 +13,36 @@ serve(async (req) => {
   }
 
   try {
-    // 2. Access secret using the exact name you provided
+    // 2. Access Secret (Exact name: YOUTUBE DATA API)
     const YOUTUBE_API_KEY = Deno.env.get('YOUTUBE DATA API')
     
     if (!YOUTUBE_API_KEY) {
-      throw new Error('Secret "YOUTUBE DATA API" not found in Supabase')
+      console.error("Missing secret: YOUTUBE DATA API");
+      return new Response(
+        JSON.stringify({ error: 'YouTube API Key not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
     }
 
-    // Replace with your actual YouTube Channel ID
-    const CHANNEL_ID = 'UCxxxxxxxxxxxxxxxxxxxxxx'; 
-    
-    // 3. Fetch playlists from your channel
+    // 3. Your Channel ID
+    const CHANNEL_ID = 'UCxxxxxxxxxxxxxxxxxxxxxx'; // REPLACE WITH YOUR ACTUAL CHANNEL ID
+
+    // 4. Fetch Playlists
     const playlistsRes = await fetch(
       `https://www.googleapis.com/youtube/v3/playlists?part=snippet&channelId=${CHANNEL_ID}&maxResults=50&key=${YOUTUBE_API_KEY}`
     );
+    
     const playlistsData = await playlistsRes.json();
 
-    if (playlistsData.error) throw new Error(playlistsData.error.message);
+    if (playlistsData.error) {
+      console.error("YouTube Playlists Error:", playlistsData.error);
+      return new Response(
+        JSON.stringify({ error: playlistsData.error.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
+    }
 
-    // 4. Fetch videos for each playlist found
+    // 5. Fetch Videos for each playlist
     const playlistsWithVideos = await Promise.all(
       (playlistsData.items || []).map(async (playlist: any) => {
         const videosRes = await fetch(
@@ -51,22 +61,17 @@ serve(async (req) => {
       })
     );
 
-    // 5. Return success with CORS headers
+    // 6. Return Data
     return new Response(
       JSON.stringify({ playlists: playlistsWithVideos }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
 
   } catch (error: any) {
+    console.error("Function error:", error.message);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
     )
   }
 })
