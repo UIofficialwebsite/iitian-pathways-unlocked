@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Search } from "lucide-react";
+import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -35,6 +35,17 @@ interface ContentItem {
   shift?: string | null;
   week_number?: number | null;
   level?: string | null;
+}
+
+interface YouTubeVideo {
+  id: string;
+  title: string;
+  thumbnail: string;
+}
+
+interface YouTubePlaylist {
+  title: string;
+  videos: YouTubeVideo[];
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void; isIITM: boolean }> = ({ item, handleOpen, isIITM }) => {
@@ -87,6 +98,8 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const navigate = useNavigate();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
+  const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
+  const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
@@ -97,9 +110,10 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
-  const focusArea = (profile?.program_type === 'IITM_BS' ? 'IITM_BS' : profile?.exam_type) || 'General';
+  const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
+  // Restore the original multi-table fetching logic
   useEffect(() => {
     const fetchTables = async () => {
       setLoading(true);
@@ -131,6 +145,29 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     fetchTables();
   }, [focusArea, isIITM]);
 
+  // Sync YouTube Lectures for IITM BS via Edge Function
+  useEffect(() => {
+    if (activeTab === 'Free Lectures' && isIITM) {
+      const fetchYT = async () => {
+        setLoading(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('get-youtube-playlist');
+          if (data?.playlists) setYtPlaylists(data.playlists);
+        } catch (err) { console.error("YT Fetch Error:", err); }
+        finally { setLoading(false); }
+      };
+      fetchYT();
+    }
+  }, [activeTab, isIITM]);
+
+  const filteredYtContent = useMemo(() => {
+    if (!ytSearchQuery) return ytPlaylists;
+    return ytPlaylists.map(playlist => ({
+      ...playlist,
+      videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
+    })).filter(playlist => playlist.videos.length > 0);
+  }, [ytPlaylists, ytSearchQuery]);
+
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
         .filter(m => !m.exam_category || m.exam_category === focusArea || m.exam_category === 'General')
@@ -158,29 +195,11 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
+  // Standard Filtering Logic for Non-YT categories
   const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
-  const searchFiltered = useMemo(() => {
-      if (!searchQuery) return catFiltered;
-      return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [catFiltered, searchQuery]);
-
-  const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
-  const levelFiltered = useMemo(() => {
-      if (selectedLevel === "none") return searchFiltered;
-      return searchFiltered.filter(m => m.level === selectedLevel);
-  }, [searchFiltered, selectedLevel]);
-
-  const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
-  const subjectFiltered = useMemo(() => {
-      if (selectedSubject === "none") return levelFiltered;
-      return levelFiltered.filter(m => m.subject === selectedSubject);
-  }, [levelFiltered, selectedSubject]);
-
-  const specificsAvailable = useMemo(() => {
-      const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
-      return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]?.toString()).filter(Boolean))).sort().reverse();
-  }, [subjectFiltered, activeTab]);
-
+  const searchFiltered = useMemo(() => searchQuery ? catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase())) : catFiltered, [catFiltered, searchQuery]);
+  const levelFiltered = useMemo(() => selectedLevel === "none" ? searchFiltered : searchFiltered.filter(m => m.level === selectedLevel), [searchFiltered, selectedLevel]);
+  const subjectFiltered = useMemo(() => selectedSubject === "none" ? levelFiltered : levelFiltered.filter(m => m.subject === selectedSubject), [levelFiltered, selectedSubject]);
   const finalContent = useMemo(() => {
       if (selectedWeekOrYear === "none") return subjectFiltered;
       const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
@@ -191,7 +210,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
-      {/* 1. TOP TABS: Fixed at the very top */}
+      {/* RESTORED FIXED HEADER STYLE */}
       <div className="bg-white border-b flex-none z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -205,7 +224,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
               <div className="px-4 md:px-8 overflow-x-auto scrollbar-hide">
                    <div className="flex space-x-6">
                         {contentCategories.map((category) => (
-                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSelectedLevel("none"); setSelectedSubject("none"); setSelectedWeekOrYear("none"); setSearchQuery(""); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}>
+                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSelectedLevel("none"); setSelectedSubject("none"); setSelectedWeekOrYear("none"); setSearchQuery(""); setYtSearchQuery(""); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}>
                             {category}
                           </button>
                         ))}
@@ -214,85 +233,121 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           )}
       </div>
 
-      {/* 2. SCROLLABLE AREA: Everything else scrolls here */}
+      {/* RESTORED SCROLLABLE AREA */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full bg-slate-50 rounded-lg border h-full overflow-hidden">
                  <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
             </div>
         ) : (
-            <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
-                {/* 3. SECTION HEADER: Not fixed, will scroll away */}
-                <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4 bg-transparent">
-                    <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
-                        {activeTab}
-                    </h2>
-                    <div className="flex items-center gap-4">
-                        <div className="relative w-full md:w-64">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                            <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
+            <div className="space-y-8">
+                {activeTab === 'Free Lectures' && isIITM ? (
+                    <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        {/* YouTube Search Header */}
+                        <div className="relative max-w-md mx-auto mb-10">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
                         </div>
-                        {catFiltered.length > 6 && (
-                            <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
-                                {showAll ? 'Show Less' : 'View All →'}
-                            </button>
-                        )}
-                    </div>
-                </div>
 
-                {/* 4. FILTERS: Not fixed, will scroll away */}
-                {showAll && (
-                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in pb-4">
-                      {levelsAvailable.length > 0 && (
-                          <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
-                              <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder="Academic Level" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">All Levels</SelectItem>
-                                  {levelsAvailable.map(l => <SelectItem key={l} value={l!}>{l}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                      )}
-
-                      {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
-                          <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
-                              <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder="Subject" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">All Subjects</SelectItem>
-                                  {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                      )}
-
-                      {selectedSubject !== "none" && specificsAvailable.length > 0 && (
-                          <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
-                              <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
-                                  {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                      )}
-                  </div>
-                )}
-                
-                {/* 5. CARDS GRID: Natural scrolling */}
-                {(loading || studyLoading) ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-                    {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
-                  </div>
-                ) : displayedContent.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
+                        {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div> : 
+                            filteredYtContent.map((playlist, idx) => (
+                                <section key={idx} className="space-y-4">
+                                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Youtube className="text-red-600 h-6 w-6" /> {playlist.title}</h3>
+                                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                                        {playlist.videos.map((video) => (
+                                            <div key={video.id} className="min-w-[280px] w-[280px] group cursor-pointer" onClick={() => window.open(`https://youtube.com/watch?v=${video.id}`, '_blank')}>
+                                                <div className="aspect-video rounded-xl overflow-hidden relative mb-3">
+                                                    <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={video.title} />
+                                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-all">
+                                                        <PlayCircle className="text-white h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                    </div>
+                                                </div>
+                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600">{video.title}</h4>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </section>
+                            ))
+                        }
                     </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                        <p>No resources found for this category.</p>
+                    <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
+                        {/* RESTORED SECTION HEADER */}
+                        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
+                            <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                                <FileText className="h-5 w-5 text-blue-600" />
+                                {activeTab}
+                            </h2>
+                            <div className="flex items-center gap-4">
+                                <div className="relative w-full md:w-64">
+                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
+                                    <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
+                                </div>
+                                {catFiltered.length > 6 && (
+                                    <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
+                                        {showAll ? 'Show Less' : 'View All →'}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* RESTORED FILTERS SECTION */}
+                        {showAll && (
+                            <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
+                                {levelsAvailable.length > 0 && (
+                                    <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
+                                        <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
+                                            <SelectValue placeholder="Academic Level" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">All Levels</SelectItem>
+                                            {levelsAvailable.map(l => <SelectItem key={l} value={l!}>{l}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                                {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                                        <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
+                                            <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                                <SelectValue placeholder="Subject" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">All Subjects</SelectItem>
+                                                {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                                {selectedSubject !== "none" && specificsAvailable.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <ChevronRight className="h-4 w-4 text-slate-400" />
+                                        <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
+                                            <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                                <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
+                                                {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* RESTORED CARDS GRID */}
+                        {(loading || studyLoading) ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                                {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
+                            </div>
+                        ) : displayedContent.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
+                            </div>
+                        ) : (
+                            <div className="py-12 text-center text-slate-400">No resources available.</div>
+                        )}
                     </div>
                 )}
             </div>
