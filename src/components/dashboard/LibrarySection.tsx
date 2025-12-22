@@ -53,7 +53,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
             <div className="flex flex-col flex-1 min-w-0">
                 <div className="mb-1">
-                    <h3 className="text-sm md:text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
+                    <h3 className="text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">
                         {item.title}
                     </h3>
                     {(item.year || item.session || item.shift) && (
@@ -72,15 +72,11 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                 </div>
 
                 <div className="flex gap-2">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => handleOpen(item)}
-                        className="flex-grow h-8 text-xs font-normal text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md shadow-none"
-                    >
+                    <Button variant="outline" onClick={() => handleOpen(item)} className="flex-grow h-8 text-xs font-normal text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md">
                         View Content
                     </Button>
-                    <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center transition-colors">
-                        <Download className="h-4 w-4 text-white" strokeWidth={2} />
+                    <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center">
+                        <Download className="h-4 w-4 text-white" />
                     </button>
                 </div>
             </div>
@@ -93,16 +89,15 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
-  // Search & Progressive Filter States
+  // Big to Low Filters
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
-  const [selectedYear, setSelectedYear] = useState<string>("none");
+  const [selectedSubject, setSelectedSubject] = useState<string>("none");
+  const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
 
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
@@ -113,81 +108,73 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       try {
         const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
         const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
-        
-        let iitmData: any[] = [];
-        if (isIITM) {
-            const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
-            iitmData = data || [];
-        }
+        const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
 
         const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({
-            id: p.id, title: p.title, subject: p.subject || 'General', url: p.file_link || p.content_url,
-            category: 'PYQs (Previous Year Questions)', year: p.year, session: p.session, shift: p.shift
-          })),
-          ...(notesData || []).map(n => ({
-            id: n.id, title: n.title, subject: n.subject || 'General', url: n.file_link || n.content_url,
-            category: 'Short Notes and Mindmaps'
-          })),
-          ...iitmData.map(i => ({
-            id: i.id, title: i.title, subject: i.subject || 'General', url: i.file_link,
-            category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level
-          }))
+          ...(pyqData || []).map(p => ({ id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level })),
+          ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level })),
+          ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level }))
         ];
         setDbMaterials(combined);
-      } finally {
-        setLoading(false);
-      }
+      } finally { setLoading(false); }
     };
     fetchTables();
   }, [focusArea, isIITM]);
 
   const allContent = useMemo(() => {
-    const studyMapped = (studyMaterials || [])
-      .filter(m => !m.exam_category || m.exam_category === focusArea)
-      .map(m => {
+    const studyMapped = (studyMaterials || []).filter(m => !m.exam_category || m.exam_category === focusArea).map(m => {
         let cat = 'Other';
         if (m.material_type === 'note' || m.material_type === 'mindmap') cat = 'Short Notes and Mindmaps';
         else if (m.material_type === 'pyq') cat = 'PYQs (Previous Year Questions)';
         else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
-        
         if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
         if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
-        return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, year: m.year, level: m.level };
+        return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, level: m.level, year: m.year, week_number: m.week_number };
     });
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
-  // Filtering Logic
-  const filteredByCategory = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
+  // Filtering Sequence: Category -> Search -> Level -> Subject -> Specifics
+  const catFiltered = useMemo(() => allContent.filter(m => m.category === activeTab), [allContent, activeTab]);
   
-  const filteredBySearch = useMemo(() => {
-      if (!searchQuery) return filteredByCategory;
-      return filteredByCategory.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  }, [filteredByCategory, searchQuery]);
+  const searchFiltered = useMemo(() => {
+      if (!searchQuery) return catFiltered;
+      return catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [catFiltered, searchQuery]);
 
-  const subjectsAvailable = useMemo(() => Array.from(new Set(filteredBySearch.map(m => m.subject).filter(Boolean))), [filteredBySearch]);
+  // Level Options (Foundation, Diploma, Class 11, etc)
+  const levelsAvailable = useMemo(() => Array.from(new Set(searchFiltered.map(m => m.level).filter(Boolean))), [searchFiltered]);
+  
+  const levelFiltered = useMemo(() => {
+      if (selectedLevel === "none") return searchFiltered;
+      return searchFiltered.filter(m => m.level === selectedLevel);
+  }, [searchFiltered, selectedLevel]);
 
-  const filteredBySubject = useMemo(() => {
-    if (selectedSubject === "none") return filteredBySearch;
-    return filteredBySearch.filter(m => m.subject === selectedSubject);
-  }, [filteredBySearch, selectedSubject]);
+  // Subject Options
+  const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject).filter(Boolean))), [levelFiltered]);
+  
+  const subjectFiltered = useMemo(() => {
+      if (selectedSubject === "none") return levelFiltered;
+      return levelFiltered.filter(m => m.subject === selectedSubject);
+  }, [levelFiltered, selectedSubject]);
 
-  const levelsAvailable = useMemo(() => Array.from(new Set(filteredBySubject.map(m => m.level).filter(Boolean))), [filteredBySubject]);
-  const yearsAvailable = useMemo(() => Array.from(new Set(filteredBySubject.map(m => m.year?.toString()).filter(Boolean))), [filteredBySubject]);
+  // Specific Options (Week for IITM, Year for PYQ)
+  const specificsAvailable = useMemo(() => {
+      const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
+      return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]?.toString()).filter(Boolean))).sort().reverse();
+  }, [subjectFiltered, activeTab]);
 
   const finalContent = useMemo(() => {
-    let list = filteredBySubject;
-    if (selectedLevel !== "none") list = list.filter(m => m.level === selectedLevel);
-    if (selectedYear !== "none") list = list.filter(m => m.year?.toString() === selectedYear);
-    return list;
-  }, [filteredBySubject, selectedLevel, selectedYear]);
+      if (selectedWeekOrYear === "none") return subjectFiltered;
+      const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
+      return subjectFiltered.filter(m => m[field as keyof ContentItem]?.toString() === selectedWeekOrYear);
+  }, [subjectFiltered, selectedWeekOrYear, activeTab]);
 
   const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
 
   return (
     <div className="flex flex-col min-h-full bg-white font-sans text-slate-900">
-      <div className="bg-white border-b sticky top-0 z-30">
+      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
                    <Button variant="ghost" size="icon" className="-ml-2 h-10 w-10 rounded-full" onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}>
@@ -200,7 +187,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
               <div className="px-4 md:px-8 overflow-x-auto scrollbar-hide">
                    <div className="flex space-x-6">
                         {contentCategories.map((category) => (
-                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSelectedSubject("none"); setSelectedLevel("none"); setSelectedYear("none"); setSearchQuery(""); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}>
+                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSelectedLevel("none"); setSelectedSubject("none"); setSelectedWeekOrYear("none"); setSearchQuery(""); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}>
                             {category}
                           </button>
                         ))}
@@ -226,7 +213,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
                             <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm focus-visible:ring-blue-600" />
                         </div>
-                        {filteredByCategory.length > 6 && (
+                        {catFiltered.length > 6 && (
                             <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>
                                 {showAll ? 'Show Less' : 'View All →'}
                             </button>
@@ -235,44 +222,49 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                 </div>
 
                 {showAll && (
-                  <div className="flex flex-wrap items-center gap-3 mb-8">
-                      {subjectsAvailable.length > 0 && (
-                          <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedLevel("none"); setSelectedYear("none"); }}>
-                              <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
-                                  <SelectValue placeholder="Subject" />
+                  <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
+                      {/* LEVEL FILTER (BIG) */}
+                      {levelsAvailable.length > 0 && (
+                          <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
+                              <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
+                                  <SelectValue placeholder="Academic Level" />
                               </SelectTrigger>
                               <SelectContent>
-                                  <SelectItem value="none">All Subjects</SelectItem>
-                                  {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                                  <SelectItem value="none">All Levels</SelectItem>
+                                  {levelsAvailable.map(l => <SelectItem key={l} value={l!}>{l}</SelectItem>)}
                               </SelectContent>
                           </Select>
                       )}
 
-                      {selectedSubject !== "none" && (levelsAvailable.length > 0 || yearsAvailable.length > 0) && (
+                      {/* SUBJECT FILTER (MEDIUM) */}
+                      {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
                           <>
                               <ChevronRight className="h-4 w-4 text-slate-300" />
-                              {levelsAvailable.length > 0 && (
-                                  <Select value={selectedLevel} onValueChange={setSelectedLevel}>
-                                      <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
-                                          <SelectValue placeholder="Level" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="none">All Levels</SelectItem>
-                                          {levelsAvailable.map(l => <SelectItem key={l} value={l!}>{l}</SelectItem>)}
-                                      </SelectContent>
-                                  </Select>
-                              )}
-                              {yearsAvailable.length > 0 && (
-                                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                                      <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
-                                          <SelectValue placeholder="Year" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                          <SelectItem value="none">All Years</SelectItem>
-                                          {yearsAvailable.map(y => <SelectItem key={y} value={y!}>{y}</SelectItem>)}
-                                      </SelectContent>
-                                  </Select>
-                              )}
+                              <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
+                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                      <SelectValue placeholder="Subject" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="none">All Subjects</SelectItem>
+                                      {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </>
+                      )}
+
+                      {/* SPECIFIC FILTER (LOW - Week/Year) */}
+                      {selectedSubject !== "none" && specificsAvailable.length > 0 && (
+                          <>
+                              <ChevronRight className="h-4 w-4 text-slate-300" />
+                              <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
+                                  <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                      <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
+                                      {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
                           </>
                       )}
                   </div>
@@ -288,7 +280,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     </div>
                 ) : (
                   <div className="text-center py-20 bg-white rounded-lg border border-dashed border-slate-200">
-                    <p className="text-slate-500 font-normal">No results found matching your criteria.</p>
+                    <p className="text-slate-500 font-normal">No resources found matching these filters.</p>
                   </div>
                 )}
             </div>
