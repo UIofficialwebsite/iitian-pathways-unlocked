@@ -1,19 +1,17 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download } from "lucide-react";
+import { FileText, ArrowLeft, Download, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
-import { useStudyMaterials } from "@/hooks/useStudyMaterials";
+import { supabase } from '@/integrations/supabase/client';
 
 // --- Configuration ---
 const contentCategories = [
     'PYQs (Previous Year Questions)',
     'Short Notes and Mindmaps',
-    'Free Lectures',
-    'Free Question Bank',
-    'UI ki Padhai',
+    'IITM Branch Notes',
 ];
 
 interface ContentItem {
@@ -22,10 +20,15 @@ interface ContentItem {
   subject?: string;
   url?: string | null;
   category: string;
+  // PYQ Specifics
+  year?: number | null;
+  session?: string | null;
+  shift?: string | null;
+  // Branch Note Specifics
+  week_number?: number | null;
 }
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
-    // Professional placeholder image
     const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
 
     const handleDownload = (e: React.MouseEvent) => {
@@ -52,7 +55,17 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
                         {item.title}
                     </h3>
-                    {/* Updated date line removed */}
+                    
+                    {/* PYQ Metadata: Year, Session, Shift (Only shown if they exist) */}
+                    {(item.year || item.session || item.shift) && (
+                        <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1">
+                            <Calendar className="h-3 w-3" />
+                            {item.year || ''} {item.session || ''} {item.shift || ''}
+                        </p>
+                    )}
+                    {item.week_number && (
+                        <p className="text-[0.75rem] text-[#64748b] mt-1">Week {item.week_number}</p>
+                    )}
                 </div>
 
                 {/* Tags Group */}
@@ -61,7 +74,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                         PDF
                     </span>
                     <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe]">
-                        {item.subject?.substring(0, 2).toUpperCase() || 'EN'}
+                        {item.subject?.substring(0, 3).toUpperCase() || 'EN'}
                     </span>
                 </div>
 
@@ -89,49 +102,77 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
 const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
   const navigate = useNavigate();
-  const { materials, loading } = useStudyMaterials(); 
-  
+  const [loading, setLoading] = useState(true);
+  const [materials, setMaterials] = useState<ContentItem[]>([]);
   const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
-  
-  const allCategorizedContent = useMemo(() => {
-    const contentMap: { [key: string]: ContentItem[] } = {};
-    contentCategories.forEach(cat => contentMap[cat] = []);
-    if (!materials) return contentMap;
 
-    const userFocusProgram = profile?.program_type || 'General';
-    const filteredMaterials = materials.filter(item => {
-        if (!item.exam_category || item.exam_category === 'General') return true;
-        return item.exam_category === userFocusProgram;
-    });
+  useEffect(() => {
+    const fetchAllData = async () => {
+      setLoading(true);
+      const examFilter = profile?.program_type || 'General';
+      
+      try {
+        // 1. Fetch from PYQs table
+        const { data: pyqData } = await supabase
+          .from('pyqs')
+          .select('*')
+          .eq('exam_type', examFilter)
+          .eq('is_active', true);
 
-    filteredMaterials.forEach(item => {
-        const commonProps = {
-            id: item.id,
-            title: item.title,
-            subject: item.subject || 'General',
-            url: item.file_url,
-            category: ''
-        };
+        // 2. Fetch from Notes table
+        const { data: notesData } = await supabase
+          .from('notes')
+          .select('*')
+          .eq('exam_type', examFilter)
+          .eq('is_active', true);
 
-        if (item.material_type === 'pyq') {
-             contentMap['PYQs (Previous Year Questions)'].push({ ...commonProps, category: 'PYQs' });
-        } else if (item.material_type === 'note' || item.material_type === 'mindmap') {
-             contentMap['Short Notes and Mindmaps'].push({ ...commonProps, category: 'Notes' });
-        } else if (item.material_type === 'question_bank') {
-             contentMap['Free Question Bank'].push({ ...commonProps, category: 'Bank' });
+        // 3. Fetch from IITM Branch Notes (only if focus is IITM)
+        let iitmData: any[] = [];
+        if (examFilter === 'IITM_BS') {
+            const { data } = await supabase
+                .from('iitm_branch_notes')
+                .select('*')
+                .eq('is_active', true);
+            iitmData = data || [];
         }
-    });
-    return contentMap;
-  }, [profile, materials]);
 
-  const fullContent = allCategorizedContent[activeTab] || [];
-  const displayedContent = showAll ? fullContent : fullContent.slice(0, 6);
+        // Combine and format
+        const combined: ContentItem[] = [
+          ...(pyqData || []).map(p => ({
+            id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url,
+            category: 'PYQs (Previous Year Questions)', year: p.year, session: p.session, shift: p.shift
+          })),
+          ...(notesData || []).map(n => ({
+            id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url,
+            category: 'Short Notes and Mindmaps'
+          })),
+          ...iitmData.map(i => ({
+            id: i.id, title: i.title, subject: i.subject, url: i.file_link,
+            category: 'IITM Branch Notes', week_number: i.week_number
+          }))
+        ];
+
+        setMaterials(combined);
+      } catch (err) {
+        console.error("Error fetching library data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [profile]);
+
+  const filteredContent = useMemo(() => {
+    return materials.filter(m => m.category === activeTab);
+  }, [materials, activeTab]);
+
+  const displayedContent = showAll ? filteredContent : filteredContent.slice(0, 6);
 
   return (
     <div className="flex flex-col min-h-full bg-white font-sans">
-      {/* HEADER SECTION - UNCHANGED */}
       <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
           <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
               <div className="flex items-center gap-4">
@@ -181,7 +222,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                             {activeTab}
                         </h2>
                     </div>
-                    {fullContent.length > 0 && (
+                    {filteredContent.length > 0 && (
                         <button 
                             className="view-all-btn text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase"
                             onClick={() => setShowAll(!showAll)}
