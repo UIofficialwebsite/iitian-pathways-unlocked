@@ -1,252 +1,233 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { FileText, ArrowLeft, Download, Calendar, Filter, Video, Zap, FileQuestion } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { Tables } from "@/integrations/supabase/types";
+import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useStudyMaterials } from "@/hooks/useStudyMaterials";
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Button } from '@/components/ui/button';
+import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle } from 'lucide-react';
+// We no longer import the constants file
 
-// --- All Tabs Restored ---
-const contentCategories = [
-    'PYQs (Previous Year Questions)',
-    'Short Notes and Mindmaps',
-    'Free Lectures',
-    'Free Question Bank',
-    'UI ki Padhai',
-    'IITM Branch Notes',
-];
-
-interface ContentItem {
-  id: string | number;
-  title: string;
-  subject?: string;
-  url?: string | null;
-  category: string;
-  year?: number | null;
-  session?: string | null;
-  shift?: string | null;
-  week_number?: number | null;
+// Define the shape of the options we fetch
+interface FocusOption {
+  id: string;
+  parent_id: string | null;
+  label: string;
+  value_to_save: string;
+  profile_column_to_update: string;
+  icon: string | null;
+  display_order: number;
 }
 
-const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void }> = ({ item, handleOpen }) => {
-    const thumbnailUrl = `https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=200&q=80`;
+// Define profile type
+interface UserProfile {
+  id: string;
+  program_type: string | null;
+  branch?: string | null;
+  level?: string | null;
+  exam_type?: string | null;
+  student_status?: string | null;
+  [key: string]: any;
+}
 
-    const handleDownload = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        if (item.url) window.open(item.url, '_blank');
-    };
+interface FocusAreaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  profile: UserProfile | null;
+  onProfileUpdate: (updatedProfile: UserProfile) => void;
+}
 
-    return (
-        <Card className="group bg-white border-[#e2e8f0] rounded-lg p-4 flex gap-5 transition-all duration-200 hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] h-[167px] cursor-default overflow-hidden">
-            {/* Left Side: Thumbnail */}
-            <div className="w-[100px] h-[135px] bg-[#1e293b] rounded flex-shrink-0 overflow-hidden shadow-[2px_4px_8px_rgba(0,0,0,0.1)]">
-                <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
-            </div>
-
-            {/* Right Side: Content Area */}
-            <div className="flex flex-col flex-1 min-w-0">
-                <div className="mb-1">
-                    <h3 className="text-[1.05rem] font-semibold text-[#0f172a] leading-tight mb-1 group-hover:text-[#1d4ed8] transition-colors line-clamp-2">
-                        {item.title}
-                    </h3>
-                    
-                    {/* PYQ Metadata: Year Session Shift (Clean display) */}
-                    {(item.year || item.session || item.shift) && (
-                        <p className="text-[0.75rem] text-[#64748b] flex items-center gap-1 mt-1 truncate">
-                            <Calendar className="h-3 w-3 flex-shrink-0" />
-                            {item.year || ''} {item.session || ''} {item.shift || ''}
-                        </p>
-                    )}
-                    {item.week_number && (
-                        <p className="text-[0.75rem] text-[#64748b] mt-1">Week {item.week_number}</p>
-                    )}
-                </div>
-
-                {/* Tags */}
-                <div className="flex gap-1.5 mb-3.5 mt-2">
-                    <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]">PDF</span>
-                    <span className="px-2 py-0.5 rounded-[3px] text-[0.7rem] font-bold uppercase bg-[#eff6ff] text-[#1d4ed8] border border-[#dbeafe] truncate">
-                        {item.subject?.substring(0, 8).toUpperCase() || 'GENERAL'}
-                    </span>
-                </div>
-
-                {/* Actions */}
-                <div className="mt-auto flex gap-2">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => handleOpen(item)}
-                        className="flex-grow h-9 text-[0.85rem] font-semibold text-[#0f172a] border-[#e2e8f0] hover:border-[#1d4ed8] hover:text-[#1d4ed8] hover:bg-[#f0f7ff] rounded-md transition-all shadow-none"
-                    >
-                        View Content
-                    </Button>
-                    <button onClick={handleDownload} className="bg-[#1d4ed8] hover:bg-[#1e3a8a] w-9 h-9 rounded-md flex items-center justify-center transition-colors shrink-0">
-                        <Download className="h-[18px] w-[18px] text-white" strokeWidth={2.8} />
-                    </button>
-                </div>
-            </div>
-        </Card>
-    );
+// Map icon strings from database to actual components
+const iconMap: { [key: string]: React.ElementType } = {
+  GraduationCap: GraduationCap,
+  UserCheck: UserCheck,
+  Laptop: Laptop,
+  Microscope: Microscope,
+  default: Circle,
 };
 
-const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
-  const navigate = useNavigate();
-  const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
-  const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(contentCategories[0]);
-  const [showAll, setShowAll] = useState(false);
-  const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
-  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profile, onProfileUpdate }) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingOptions, setIsFetchingOptions] = useState(true);
+  
+  // State for all options fetched from DB
+  const [allOptions, setAllOptions] = useState<FocusOption[]>([]);
+  
+  // State for tracking the user's path through the tree
+  const [selectionPath, setSelectionPath] = useState<FocusOption[]>([]);
+  
+  // The ID of the current parent (null = root)
+  const [currentStepParentId, setCurrentStepParentId] = useState<string | null>(null);
 
-  // Fetch from Specific Tables (PYQs, Notes, IITM)
+  // This effect runs when the modal opens to fetch all options
   useEffect(() => {
-    const fetchTables = async () => {
-      setLoading(true);
-      const examFilter = profile?.program_type || 'General';
-      try {
-        const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', examFilter).eq('is_active', true);
-        const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', examFilter).eq('is_active', true);
-        let iitmData: any[] = [];
-        if (examFilter === 'IITM_BS') {
-            const { data } = await supabase.from('iitm_branch_notes').select('*').eq('is_active', true);
-            iitmData = data || [];
+    if (isOpen) {
+      setIsFetchingOptions(true);
+      setCurrentStepParentId(null); // Always start at the root
+      setSelectionPath([]); // Clear path
+
+      const fetchOptions = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('focus_options' as any)
+            .select('*')
+            .order('display_order', { ascending: true });
+            
+          if (error) throw error;
+          setAllOptions(data as any);
+        } catch (error: any) {
+          toast({ title: "Error", description: "Could not load program options.", variant: "destructive" });
+        } finally {
+          setIsFetchingOptions(false);
         }
+      };
+      
+      fetchOptions();
+    }
+  }, [isOpen, toast]);
+  
+  // This function is called when a user clicks an option
+  const handleOptionClick = (option: FocusOption) => {
+    // Find the depth of the clicked item to replace the correct part of the path
+    const parentIndex = selectionPath.findIndex(p => p.id === option.parent_id);
+    const newPath = [...selectionPath.slice(0, parentIndex + 1), option];
+    setSelectionPath(newPath);
 
-        const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({
-            id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url,
-            category: 'PYQs (Previous Year Questions)', year: p.year, session: p.session, shift: p.shift
-          })),
-          ...(notesData || []).map(n => ({
-            id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url,
-            category: 'Short Notes and Mindmaps'
-          })),
-          ...iitmData.map(i => ({
-            id: i.id, title: i.title, subject: i.subject, url: i.file_link,
-            category: 'IITM Branch Notes', week_number: i.week_number
-          }))
-        ];
-        setDbMaterials(combined);
-      } finally {
-        setLoading(false);
-      }
+    // Check if this option has children
+    const children = allOptions.filter(o => o.parent_id === option.id);
+    
+    if (children.length > 0) {
+      // If yes, move to the next step
+      setCurrentStepParentId(option.id);
+    } else {
+      // If no, this is the final selection, save it.
+      handleSave(newPath);
+    }
+  };
+
+  // This function builds the 'updates' object dynamically
+  const handleSave = async (path: FocusOption[]) => {
+    if (!user) {
+      toast({ title: "Error", description: "You must be logged in.", variant: "destructive" });
+      return;
+    }
+
+    setIsLoading(true);
+    
+    // Start with all relevant fields cleared
+    const updates: { [key: string]: string | null } = {
+      program_type: null,
+      branch: null,
+      level: null,
+      exam_type: null,
+      student_status: null,
     };
-    fetchTables();
-  }, [profile]);
-
-  // Combine Specific Tables with Study Materials
-  const allContent = useMemo(() => {
-    const studyMapped = (studyMaterials || []).map(m => {
-        let cat = 'Other';
-        if (m.material_type === 'note') cat = 'Short Notes and Mindmaps';
-        else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
-        else if (m.material_type === 'pyq') cat = 'PYQs (Previous Year Questions)';
-        
-        // Custom logic for Lectures/UI ki Padhai based on your study_materials tags or titles
-        if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
-        if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
-
-        return { id: m.id, title: m.title, subject: m.subject, url: m.file_url, category: cat };
+    
+    // Add the new values from the user's path
+    path.forEach(option => {
+      updates[option.profile_column_to_update] = option.value_to_save;
     });
 
-    return [...dbMaterials, ...studyMapped];
-  }, [dbMaterials, studyMaterials]);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id)
+        .select()
+        .single();
 
-  const filteredContent = useMemo(() => {
-    let res = allContent.filter(m => m.category === activeTab);
-    if (subjectFilter !== "all") res = res.filter(m => m.subject === subjectFilter);
-    return res;
-  }, [allContent, activeTab, subjectFilter]);
+      if (error) throw error;
 
-  const availableSubjects = useMemo(() => {
-    return Array.from(new Set(allContent.filter(m => m.category === activeTab && m.subject).map(m => m.subject as string)));
-  }, [allContent, activeTab]);
+      onProfileUpdate(data); // Update parent state
+      toast({ title: "Success", description: "Your focus area has been updated." });
+      onClose();
 
-  const displayedContent = showAll ? filteredContent : filteredContent.slice(0, 6);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message || "Failed to update profile.", variant: "destructive" });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Get the options for the current step
+  const currentOptions = allOptions.filter(o => o.parent_id === currentStepParentId);
+  
+  // Get the title/description for the current step
+  const currentParent = allOptions.find(o => o.id === currentStepParentId);
+  let title = "Choose your focus area";
+  let description = "Select your academic program to get personalized content.";
+  if (currentParent) {
+    // A bit of logic to make the title user-friendly
+    let stepTitle = currentParent.profile_column_to_update.replace('_', ' ');
+    if (stepTitle === 'program type') stepTitle = 'program';
+    if (stepTitle === 'exam type') stepTitle = 'exam';
+    if (stepTitle === 'student status') stepTitle = 'standard';
+
+    title = `Select ${stepTitle}`; // e.g., "Select branch"
+    description = `You selected: ${selectionPath.map(p => p.label).join(' > ')}`;
+  }
+
+  // Check if the user has a value selected at this step
+  const selectedValue = selectionPath.find(p => p.parent_id === currentStepParentId)?.value_to_save;
 
   return (
-    <div className="flex flex-col min-h-full bg-white font-sans">
-      <div className="bg-white border-b sticky top-0 z-30 shadow-sm">
-          <div className="flex items-center justify-between px-4 pt-4 md:px-8 md:pt-5 mb-4">
-              <div className="flex items-center gap-4">
-                   <Button variant="ghost" size="icon" className="-ml-2 h-10 w-10 text-black rounded-full" onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}>
-                      <ArrowLeft className="h-6 w-6" />
-                   </Button>
-                   <h1 className="text-2xl font-bold text-gray-900 tracking-tight">{viewingItem ? viewingItem.title : 'UI Library'}</h1>
-              </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        {isFetchingOptions || isLoading ? (
+          <div className="flex justify-center items-center h-40">
+            <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-          {!viewingItem && (
-              <div className="px-4 md:px-8 pb-0">
-                   <div className="flex space-x-8 overflow-x-auto scrollbar-hide">
-                        {contentCategories.map((category) => (
-                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSubjectFilter("all"); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-[3px] px-1", activeTab === category ? "text-royal border-royal" : "text-gray-500 border-transparent hover:text-gray-700")}>
-                            {category}
-                          </button>
-                        ))}
-                   </div>
-              </div>
-          )}
-      </div>
-
-      <div className="p-4 md:p-8 max-w-7xl mx-auto w-full flex-1">
-        {viewingItem ? (
-            <div className="w-full bg-white rounded-lg border shadow-sm overflow-hidden h-[80vh]">
-                 <iframe src={viewingItem.url || ''} className="w-full h-full border-0" title="Viewer" />
-            </div>
         ) : (
-            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-6 md:p-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                    <div className="flex items-center gap-3">
-                        <FileText className="h-[22px] w-[22px] text-[#1d4ed8]" strokeWidth={2.5} />
-                        <h2 className="text-[1.1rem] font-bold text-[#0f172a] uppercase tracking-wide">{activeTab}</h2>
+          <div className="space-y-4 pt-4">
+            {currentOptions.length > 0 ? (
+              currentOptions.map(option => {
+                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
+                return (
+                  <Button
+                    key={option.id}
+                    variant={selectedValue === option.value_to_save ? "default" : "outline"}
+                    className="w-full justify-between h-16 text-left"
+                    onClick={() => handleOptionClick(option)}
+                  >
+                    <div className="flex items-center">
+                      <Icon className="h-6 w-6 mr-3" />
+                      <div>
+                        <p className="font-semibold">{option.label}</p>
+                      </div>
                     </div>
+                    <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
+                  </Button>
+                );
+              })
+            ) : (
+              <p className="text-center text-gray-500">No options available for this selection.</p>
+            )}
 
-                    <div className="flex items-center gap-4">
-                        {showAll && availableSubjects.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <Filter className="h-4 w-4 text-slate-400" />
-                                <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-                                    <SelectTrigger className="w-[160px] h-9 bg-white border-[#e2e8f0] text-xs font-semibold">
-                                        <SelectValue placeholder="Subject" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Subjects</SelectItem>
-                                        {availableSubjects.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        )}
-                        {filteredContent.length > 6 && (
-                            <button className="text-[0.85rem] font-bold text-[#1d4ed8] hover:opacity-70 transition-opacity uppercase" onClick={() => setShowAll(!showAll)}>
-                                {showAll ? 'SHOW LESS' : 'VIEW ALL →'}
-                            </button>
-                        )}
-                    </div>
-                </div>
-                
-                {(loading || studyLoading) ? (
-                  <div className="text-center py-20 text-[#64748b]">Loading library...</div>
-                ) : displayedContent.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} />)}
-                    </div>
-                ) : (
-                  <div className="text-center py-20 text-[#64748b]"><p>No resources found for this category.</p></div>
-                )}
-            </div>
+            {/* Back Button */}
+            {currentStepParentId !== null && (
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const newPath = [...selectionPath.slice(0, -1)];
+                  setSelectionPath(newPath);
+                  setCurrentStepParentId(newPath.length > 0 ? newPath[newPath.length - 1].parent_id : null);
+                }}
+              >
+                Back
+              </Button>
+            )}
+          </div>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-export default LibrarySection;
+export default FocusAreaModal;
+
