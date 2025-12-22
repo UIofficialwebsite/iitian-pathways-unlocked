@@ -58,6 +58,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
                     </h3>
                     {(item.year || item.session || item.shift) && (
                         <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 truncate">
+                            {/* Calendar Emoji Removed */}
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
@@ -104,12 +105,13 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     const fetchTables = async () => {
       setLoading(true);
       try {
+        // Fetching exclusively from the 'pyqs' table
         const { data: pyqData } = await supabase.from('pyqs').select('*').eq('exam_type', focusArea).eq('is_active', true);
         const { data: notesData } = await supabase.from('notes').select('*').eq('exam_type', focusArea).eq('is_active', true);
         const { data: iitmData } = isIITM ? await supabase.from('iitm_branch_notes').select('*').eq('is_active', true) : { data: [] };
 
         const combined: ContentItem[] = [
-          ...(pyqData || []).map(p => ({ id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level })),
+          ...(pyqData || []).map(p => ({ id: p.id, title: p.title, subject: p.subject, url: p.file_link || p.content_url, category: 'PYQs (Previous Year Questions)', year: p.year, level: p.level, session: p.session, shift: p.shift })),
           ...(notesData || []).map(n => ({ id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, category: 'Short Notes and Mindmaps', level: n.class_level })),
           ...(iitmData || []).map(i => ({ id: i.id, title: i.title, subject: i.subject, url: i.file_link, category: 'Short Notes and Mindmaps', week_number: i.week_number, level: i.level }))
         ];
@@ -120,15 +122,20 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   }, [focusArea, isIITM]);
 
   const allContent = useMemo(() => {
-    const studyMapped = (studyMaterials || []).filter(m => !m.exam_category || m.exam_category === focusArea).map(m => {
-        let cat = 'Other';
-        if (m.material_type === 'note' || m.material_type === 'mindmap') cat = 'Short Notes and Mindmaps';
-        else if (m.material_type === 'pyq') cat = 'PYQs (Previous Year Questions)';
-        else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
-        if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
-        if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
-        return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, level: m.level, year: m.year, week_number: m.week_number };
-    });
+    const studyMapped = (studyMaterials || [])
+        .filter(m => !m.exam_category || m.exam_category === focusArea)
+        // EXCLUSION: We filter OUT 'pyq' type from studyMaterials as per request
+        .filter(m => m.material_type !== 'pyq') 
+        .map(m => {
+            let cat = 'Other';
+            if (m.material_type === 'note' || m.material_type === 'mindmap') cat = 'Short Notes and Mindmaps';
+            else if (m.material_type === 'question_bank') cat = 'Free Question Bank';
+            
+            if (m.title.toLowerCase().includes('lecture')) cat = 'Free Lectures';
+            if (m.title.toLowerCase().includes('ui')) cat = 'UI ki Padhai';
+            
+            return { id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, category: cat, level: m.level, year: m.year, week_number: m.week_number };
+        });
     return [...dbMaterials, ...studyMapped];
   }, [dbMaterials, studyMaterials, focusArea]);
 
@@ -199,6 +206,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8">
                 <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
                     <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                        {/* FileText Emoji Removed */}
                         {activeTab}
                     </h2>
                     <div className="flex items-center gap-4">
@@ -229,27 +237,33 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                       )}
 
                       {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
-                          <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
-                              <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm ml-2">
-                                  <SelectValue placeholder="Subject" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">All Subjects</SelectItem>
-                                  {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
+                          <>
+                              {/* ChevronRight Emoji Removed */}
+                              <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
+                                  <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                      <SelectValue placeholder="Subject" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="none">All Subjects</SelectItem>
+                                      {subjectsAvailable.map(s => <SelectItem key={s} value={s!}>{s}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </>
                       )}
 
                       {selectedSubject !== "none" && specificsAvailable.length > 0 && (
-                          <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
-                              <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm ml-2">
-                                  <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
-                              </SelectTrigger>
-                              <SelectContent>
-                                  <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
-                                  {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
-                              </SelectContent>
-                          </Select>
+                          <>
+                              {/* ChevronRight Emoji Removed */}
+                              <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
+                                  <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                      <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="none">{activeTab.includes('PYQs') ? "All Years" : "All Weeks"}</SelectItem>
+                                      {specificsAvailable.map(v => <SelectItem key={v} value={v!}>{v}</SelectItem>)}
+                                  </SelectContent>
+                              </Select>
+                          </>
                       )}
                   </div>
                 )}
@@ -262,7 +276,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                     </div>
-                ) : null}
+                ) : null /* "No resources found" text and container removed */}
             </div>
         )}
       </div>
