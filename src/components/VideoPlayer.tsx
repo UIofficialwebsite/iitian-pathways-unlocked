@@ -22,6 +22,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  
+  // Progress & Time State
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [hoverTime, setHoverTime] = useState<string | null>(null);
+  const [hoverPos, setHoverPos] = useState(0);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return h > 0 
+      ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      : `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     if (!playerRef.current && videoRef.current) {
@@ -31,25 +47,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
 
       const player = playerRef.current = videojs(videoElement, {
         autoplay: true,
-        controls: false, 
+        controls: false,
         responsive: true,
         techOrder: ["youtube"],
         sources: [{ type: "video/youtube", src: `https://www.youtube.com/watch?v=${videoId}` }],
-        youtube: { 
-          modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, showinfo: 0 
-        }
+        youtube: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, showinfo: 0 }
       });
 
       player.on('play', () => setIsPlaying(true));
       player.on('pause', () => setIsPlaying(false));
+      
+      // Update progress logic
+      player.on('timeupdate', () => {
+        const current = player.currentTime();
+        const total = player.duration();
+        setCurrentTime(current);
+        if (total > 0) {
+          setDuration(total);
+          setProgress((current / total) * 100);
+        }
+      });
+
+      player.on('loadedmetadata', () => {
+        setDuration(player.duration());
+      });
     }
     return () => playerRef.current?.dispose();
   }, [videoId]);
 
   const togglePlay = () => isPlaying ? playerRef.current.pause() : playerRef.current.play();
+  
   const skip = (seconds: number) => {
-    const currentTime = playerRef.current.currentTime();
-    playerRef.current.currentTime(currentTime + seconds);
+    const time = playerRef.current.currentTime();
+    playerRef.current.currentTime(time + seconds);
+  };
+
+  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    playerRef.current.currentTime(pos * duration);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pos = (e.clientX - rect.left) / rect.width;
+    setHoverPos(e.clientX - rect.left);
+    setHoverTime(formatTime(pos * duration));
   };
 
   return (
@@ -58,36 +101,45 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
         
         {/* TOP BAR */}
         <div className="absolute top-0 inset-x-0 p-6 z-50 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-center">
-          <button onClick={onClose} className="hover:opacity-80 transition-opacity">
-            <ArrowLeft size={24} />
-          </button>
-          
+          <button onClick={onClose} className="hover:opacity-80 transition-opacity"><ArrowLeft size={24} /></button>
           <div className="relative">
-            <button onClick={() => setShowReport(!showReport)} className="hover:opacity-80 transition-opacity">
-              <EllipsisVertical size={24} />
-            </button>
+            <button onClick={() => setShowReport(!showReport)} className="hover:opacity-80 transition-opacity"><EllipsisVertical size={24} /></button>
             {showReport && (
               <div className="absolute right-0 top-10 bg-[#1c1c1c] rounded-lg shadow-2xl min-w-[120px] overflow-hidden border border-white/10">
-                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-[#333]">
-                  <Flag size={14} /> Report
-                </button>
+                <button className="w-full flex items-center gap-3 px-4 py-3 text-sm hover:bg-[#333]"><Flag size={14} /> Report</button>
               </div>
             )}
           </div>
         </div>
 
-        {/* VIDEO CONTENT AREA */}
+        {/* VIDEO AREA */}
         <div className="flex-1 relative flex items-center justify-center">
-          <div className="w-full h-full" data-vjs-player>
-            <div ref={videoRef} className="w-full h-full" />
-          </div>
+          <div className="w-full h-full" data-vjs-player><div ref={videoRef} className="w-full h-full" /></div>
           <div className="absolute inset-0 z-20" onContextMenu={(e) => e.preventDefault()} onClick={togglePlay} />
         </div>
 
         {/* BOTTOM CONTROLS */}
         <div className="absolute bottom-0 inset-x-0 p-8 pt-20 z-50 bg-gradient-to-t from-black/80 to-transparent">
-          <div className="w-full h-1 bg-white/20 rounded-full mb-6 cursor-pointer relative">
-            <div className="absolute h-full bg-[#0056D2] rounded-full" style={{ width: '35%' }} />
+          
+          {/* Timeline Meter with Hover Time */}
+          <div 
+            className="w-full h-1.5 bg-white/20 rounded-full mb-6 cursor-pointer relative group/timeline"
+            onClick={handleSeek}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setHoverTime(null)}
+          >
+            {/* Progress Fill */}
+            <div className="absolute h-full bg-[#0056D2] rounded-full" style={{ width: `${progress}%` }} />
+            
+            {/* Hover Tooltip */}
+            {hoverTime && (
+              <div 
+                className="absolute bottom-4 bg-black/90 px-2 py-1 rounded text-[10px] border border-white/10 -translate-x-1/2"
+                style={{ left: `${hoverPos}px` }}
+              >
+                {hoverTime}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-between items-center">
@@ -95,43 +147,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
               <button onClick={togglePlay} className="hover:opacity-80">
                 {isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}
               </button>
-              
-              <button onClick={() => skip(-10)} className="relative hover:opacity-80 flex items-center justify-center">
-                <RotateCcw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span>
-              </button>
-              
-              <button onClick={() => skip(10)} className="relative hover:opacity-80 flex items-center justify-center">
-                <RotateCw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span>
-              </button>
-              
+              <button onClick={() => skip(-10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCcw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
+              <button onClick={() => skip(10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
               <button className="hover:opacity-80"><Volume2 size={24} /></button>
-              <span className="text-sm font-medium opacity-80 tabular-nums">0:49 / 45:12</span>
+              <span className="text-sm font-medium opacity-80 tabular-nums">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="relative">
-                <button onClick={() => setShowSettings(!showSettings)} className="hover:opacity-80">
-                  <Settings size={24} />
-                </button>
+                <button onClick={() => setShowSettings(!showSettings)} className="hover:opacity-80"><Settings size={24} /></button>
                 {showSettings && (
                   <div className="absolute bottom-12 right-0 bg-[#1c1c1c] rounded-lg shadow-2xl min-w-[160px] border border-white/10">
-                    <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer border-b border-white/5">
-                      Quality <span className="text-[11px] text-gray-400">1080p</span>
-                    </div>
-                    <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer">
-                      Speed <span className="text-[11px] text-gray-400">1.0x</span>
-                    </div>
+                    <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer border-b border-white/5">Quality <span className="text-[11px] text-gray-400">1080p</span></div>
+                    <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer">Speed <span className="text-[11px] text-gray-400">1.0x</span></div>
                   </div>
                 )}
               </div>
-
-              <button onClick={() => setShowPlaylist(!showPlaylist)} className={`hover:opacity-80 ${showPlaylist ? 'text-[#0056D2]' : ''}`}>
-                <List size={24} />
-              </button>
-              
-              <button onClick={() => playerRef.current.requestFullscreen()} className="hover:opacity-80">
-                <Expand size={24} />
-              </button>
+              <button onClick={() => setShowPlaylist(!showPlaylist)} className={`hover:opacity-80 ${showPlaylist ? 'text-[#0056D2]' : ''}`}><List size={24} /></button>
+              <button onClick={() => playerRef.current.requestFullscreen()} className="hover:opacity-80"><Expand size={24} /></button>
             </div>
           </div>
         </div>
