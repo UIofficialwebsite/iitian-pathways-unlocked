@@ -1,5 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -97,26 +97,50 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
 const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
-  
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
   const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
-  const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
+  
+  // Store viewing item per tab to preserve state when switching tabs
+  const [viewingItemPerTab, setViewingItemPerTab] = useState<Record<string, ContentItem | null>>({});
+  const viewingItem = viewingItemPerTab[activeTab] || null;
+  
+  const setViewingItem = (item: ContentItem | null) => {
+    setViewingItemPerTab(prev => ({ ...prev, [activeTab]: item }));
+  };
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
-
-  // Sync activeTab with URL search params
-  const activeTab = searchParams.get('tab') || contentCategories[0];
+  
+  // Track tab transition for smooth animation
+  const [isTabVisible, setIsTabVisible] = useState(true);
+  const prevTabRef = useRef(activeTab);
 
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
+
+  // Handle smooth tab transitions
+  const handleTabChange = (category: string) => {
+    if (category === activeTab) return;
+    
+    setIsTabVisible(false);
+    setTimeout(() => {
+      setActiveTab(category);
+      setShowAll(false);
+      setSelectedLevel("none");
+      setSelectedSubject("none");
+      setSelectedWeekOrYear("none");
+      setSearchQuery("");
+      setYtSearchQuery("");
+      setTimeout(() => setIsTabVisible(true), 50);
+    }, 150);
+  };
 
   useEffect(() => {
     const fetchTables = async () => {
@@ -134,7 +158,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           })),
           ...(notesData || []).map(n => ({ 
             id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, 
-            category: 'Short Notes and Mindmaps', level: n.class_level || n.level 
+            category: 'Short Notes and Mindmaps', level: n.class_level 
           })),
           ...(iitmData || []).map(i => ({ 
             id: i.id, title: i.title, subject: i.subject, url: i.file_link, 
@@ -212,17 +236,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     })).filter(playlist => playlist.videos.length > 0);
   }, [ytPlaylists, ytSearchQuery]);
 
-  // Handler for tab selection that updates the URL
-  const handleTabChange = (category: string) => {
-    setSearchParams({ tab: category });
-    setShowAll(false);
-    setSelectedLevel("none");
-    setSelectedSubject("none");
-    setSelectedWeekOrYear("none");
-    setSearchQuery("");
-    setYtSearchQuery("");
-  };
-
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
       <div className="bg-white border-b flex-none z-30 shadow-sm">
@@ -240,7 +253,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                         {contentCategories.map((category) => (
                           <button 
                             key={category} 
-                            onClick={() => handleTabChange(category)} // Use the new URL-synced handler
+                            onClick={() => handleTabChange(category)} 
                             className={cn(
                               "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", 
                               activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700"
@@ -256,7 +269,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
-            <div className="w-full h-full">
+            <div className="w-full h-full transition-opacity duration-200" style={{ opacity: isTabVisible ? 1 : 0 }}>
                 {activeTab === 'Free Lectures' ? (
                    <VideoPlayer 
                       videoId={String(viewingItem.id)} 
@@ -270,9 +283,14 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                 )}
             </div>
         ) : (
-            <div className="space-y-8">
+            <div 
+              className={cn(
+                "space-y-8 transition-all duration-200 ease-out",
+                isTabVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+              )}
+            >
                 {activeTab === 'Free Lectures' && isIITM ? (
-                    <div className="space-y-10 mb-20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="space-y-10 mb-20">
                         <div className="relative max-w-md mx-auto mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
