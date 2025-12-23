@@ -5,7 +5,7 @@ import 'videojs-youtube';
 import { 
   ArrowLeft, EllipsisVertical, Play, Pause, 
   RotateCcw, RotateCw, Volume2, Settings, 
-  ListUl, Expand, Flag, X 
+  List, Expand, Flag, X 
 } from 'lucide-react';
 
 interface VideoPlayerProps {
@@ -31,7 +31,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
 
       const player = playerRef.current = videojs(videoElement, {
         autoplay: true,
-        controls: false, // Custom UI used instead
+        controls: false, 
         responsive: true,
         techOrder: ["youtube"],
         sources: [{ type: "video/youtube", src: `https://www.youtube.com/watch?v=${videoId}` }],
@@ -54,7 +54,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-row overflow-hidden font-sans select-none text-white">
-      {/* MAIN PLAYER AREA */}
       <div className="relative flex-1 bg-black flex flex-col overflow-hidden">
         
         {/* TOP BAR */}
@@ -78,25 +77,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
         </div>
 
         {/* VIDEO CONTENT AREA */}
-        <div className="flex-1 relative flex items-center justify-center pointer-events-none">
-          <div className="w-full h-full pointer-events-auto" data-vjs-player>
+        <div className="flex-1 relative flex items-center justify-center">
+          <div className="w-full h-full" data-vjs-player>
             <div ref={videoRef} className="w-full h-full" />
           </div>
-          {/* Security Shield (Blocks YouTube interactions/watermarks) */}
           <div className="absolute inset-0 z-20" onContextMenu={(e) => e.preventDefault()} onClick={togglePlay} />
         </div>
 
         {/* BOTTOM CONTROLS */}
         <div className="absolute bottom-0 inset-x-0 p-8 pt-20 z-50 bg-gradient-to-t from-black/80 to-transparent">
-          {/* Progress Bar */}
-          <div className="w-full h-1 bg-white/20 rounded-full mb-6 cursor-pointer relative group/bar">
+          <div className="w-full h-1 bg-white/20 rounded-full mb-6 cursor-pointer relative">
             <div className="absolute h-full bg-[#0056D2] rounded-full" style={{ width: '35%' }} />
           </div>
 
           <div className="flex justify-between items-center">
-            {/* Left Console Group */}
             <div className="flex items-center gap-6">
-              <button onClick={togglePlay} className="hover:opacity-80"><Play size={24} fill="white" /></button>
+              <button onClick={togglePlay} className="hover:opacity-80">
+                {isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}
+              </button>
               
               <button onClick={() => skip(-10)} className="relative hover:opacity-80 flex items-center justify-center">
                 <RotateCcw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span>
@@ -107,11 +105,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
               </button>
               
               <button className="hover:opacity-80"><Volume2 size={24} /></button>
-              
               <span className="text-sm font-medium opacity-80 tabular-nums">0:49 / 45:12</span>
             </div>
 
-            {/* Right Console Group */}
             <div className="flex items-center gap-6">
               <div className="relative">
                 <button onClick={() => setShowSettings(!showSettings)} className="hover:opacity-80">
@@ -130,7 +126,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
               </div>
 
               <button onClick={() => setShowPlaylist(!showPlaylist)} className={`hover:opacity-80 ${showPlaylist ? 'text-[#0056D2]' : ''}`}>
-                <ListUl size={24} />
+                <List size={24} />
               </button>
               
               <button onClick={() => playerRef.current.requestFullscreen()} className="hover:opacity-80">
