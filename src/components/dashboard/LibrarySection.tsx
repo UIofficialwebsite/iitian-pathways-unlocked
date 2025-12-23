@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { 
   Select, 
@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
-// Import the dedicated VideoPlayer component
+// Import the professional VideoPlayer component
 import VideoPlayer from "../VideoPlayer"; 
 
 const contentCategories = [
@@ -168,16 +168,10 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
             let cat = 'Other';
             const materialType = (m as any).material_type;
             const titleLower = m.title.toLowerCase();
-            
-            if (materialType === 'ui_ki_padhai' || titleLower.includes('ui ki padhai')) {
-                cat = 'UI ki Padhai';
-            } else if (materialType === 'note' || materialType === 'mindmap') {
-                cat = 'Short Notes and Mindmaps';
-            } else if (materialType === 'question_bank') {
-                cat = 'Free Question Bank';
-            } else if (titleLower.includes('lecture')) {
-                cat = 'Free Lectures';
-            }
+            if (materialType === 'ui_ki_padhai' || titleLower.includes('ui ki padhai')) cat = 'UI ki Padhai';
+            else if (materialType === 'note' || materialType === 'mindmap') cat = 'Short Notes and Mindmaps';
+            else if (materialType === 'question_bank') cat = 'Free Question Bank';
+            else if (titleLower.includes('lecture')) cat = 'Free Lectures';
             
             return { 
                 id: m.id, title: m.title, subject: m.subject || 'General', url: m.file_url, 
@@ -191,11 +185,21 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const searchFiltered = useMemo(() => searchQuery ? catFiltered.filter(m => m.title.toLowerCase().includes(searchQuery.toLowerCase())) : catFiltered, [catFiltered, searchQuery]);
   const levelFiltered = useMemo(() => selectedLevel === "none" ? searchFiltered : searchFiltered.filter(m => m.level === selectedLevel), [searchFiltered, selectedLevel]);
   const subjectFiltered = useMemo(() => selectedSubject === "none" ? levelFiltered : levelFiltered.filter(m => m.subject === selectedSubject), [levelFiltered, selectedSubject]);
+  
   const finalContent = useMemo(() => {
       if (selectedWeekOrYear === "none") return subjectFiltered;
       const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
       return subjectFiltered.filter(m => m[field as keyof ContentItem]?.toString() === selectedWeekOrYear);
   }, [subjectFiltered, selectedWeekOrYear, activeTab]);
+
+  const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
+
+  const levelsAvailable = useMemo(() => Array.from(new Set(catFiltered.map(m => m.level))).filter(Boolean), [catFiltered]);
+  const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject))).filter(Boolean), [levelFiltered]);
+  const specificsAvailable = useMemo(() => {
+      const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
+      return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]))).filter(Boolean).map(String);
+  }, [subjectFiltered, activeTab]);
 
   const filteredYtContent = useMemo(() => {
     if (!ytSearchQuery) return ytPlaylists;
@@ -204,16 +208,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       videos: playlist.videos.filter(v => v.title.toLowerCase().includes(ytSearchQuery.toLowerCase()))
     })).filter(playlist => playlist.videos.length > 0);
   }, [ytPlaylists, ytSearchQuery]);
-
-  const displayedContent = showAll ? finalContent : finalContent.slice(0, 6);
-
-  // Filter lists for UI
-  const levelsAvailable = useMemo(() => Array.from(new Set(catFiltered.map(m => m.level))).filter(Boolean), [catFiltered]);
-  const subjectsAvailable = useMemo(() => Array.from(new Set(levelFiltered.map(m => m.subject))).filter(Boolean), [levelFiltered]);
-  const specificsAvailable = useMemo(() => {
-      const field = activeTab.includes('PYQs') ? 'year' : 'week_number';
-      return Array.from(new Set(subjectFiltered.map(m => m[field as keyof ContentItem]))).filter(Boolean).map(String);
-  }, [subjectFiltered, activeTab]);
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
@@ -242,7 +236,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full h-full">
-                {/* Check if current category is Free Lectures to use custom VideoPlayer */}
+                {/* Check if current category is Free Lectures to use the branded VideoPlayer */}
                 {activeTab === 'Free Lectures' ? (
                    <VideoPlayer 
                       videoId={String(viewingItem.id)} 
@@ -270,7 +264,11 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
                                     <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Youtube className="text-red-600 h-6 w-6" /> {playlist.title}</h3>
                                     <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
                                         {playlist.videos.map((video) => (
-                                            <div key={video.id} className="min-w-[280px] w-[280px] group cursor-pointer" onClick={() => setViewingItem({ id: video.id, title: video.title, category: 'Free Lectures' })}>
+                                            <div 
+                                              key={video.id} 
+                                              className="min-w-[280px] w-[280px] group cursor-pointer" 
+                                              onClick={() => setViewingItem({ id: video.id, title: video.title, category: 'Free Lectures' })}
+                                            >
                                                 <div className="aspect-video rounded-xl overflow-hidden relative mb-3">
                                                     <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={video.title} />
                                                     <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-all">
