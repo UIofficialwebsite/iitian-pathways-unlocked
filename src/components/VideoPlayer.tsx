@@ -1,50 +1,55 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   ArrowLeft, Play, Pause, RotateCcw, RotateCw, 
-  Volume2, VolumeX, List, Expand, X, Settings, Check 
+  List, Expand, X, Settings, Volume2, VolumeX, Check
 } from 'lucide-react';
 
-const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
+interface VideoPlayerProps {
+  videoId: string;
+  title: string;
+  onClose: () => void;
+  timelines?: { time: number; label: string }[];
+}
+
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, timelines = [] }) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // PW PERSISTENCE: Save UI state to SessionStorage so tab changes don't reset placement
+  // PW PERSISTENCE: Maintain UI state across tab changes/refreshes
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [showHUD, setShowHUD] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [showTimeline, setShowTimeline] = useState(() => {
-    return sessionStorage.getItem('pw_timeline_active') === 'true';
+    return sessionStorage.getItem('pw_active_timeline') === 'true';
   });
   
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [playbackRate, setPlaybackRate] = useState(1);
 
-  // Persistent Toggle
   const toggleTimeline = () => {
     const next = !showTimeline;
     setShowTimeline(next);
-    sessionStorage.setItem('pw_timeline_active', String(next));
+    sessionStorage.setItem('pw_active_timeline', String(next));
   };
 
-  // PW EXACT AUTO-HIDE: Controls hide after 3s of inactivity, cursor also hides
-  const handleInactivity = () => {
+  // PW AUTO-HIDE: Physical HUD and cursor hide after 3s of inactivity
+  const handleMouseMove = () => {
     setShowHUD(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (isPlaying) {
-      hideTimer.current = setTimeout(() => {
-        // If mouse is over Header or Footer area, don't hide
-        setShowHUD(false);
-      }, 3000);
+      hideTimer.current = setTimeout(() => setShowHUD(false), 3000);
     }
   };
 
   useEffect(() => {
     const initPlayer = () => {
-      playerRef.current = new (window as any).YT.Player('pw-strict-engine', {
+      playerRef.current = new (window as any).YT.Player('pw-stream-engine', {
         videoId: videoId,
-        host: 'https://www.youtube.com', // Fixes Origin Error
+        host: 'https://www.youtube.com', // Fixes origin/postMessage errors
         playerVars: {
           autoplay: 1,
           controls: 0,
@@ -53,19 +58,18 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
           iv_load_policy: 3,
           disablekb: 1,
           fs: 0,
-          origin: window.location.origin // Essential for Vercel
+          origin: window.location.origin
         },
         events: {
-          onReady: (e) => e.target.playVideo(),
-          onStateChange: (e) => {
+          onReady: (e: any) => e.target.playVideo(),
+          onStateChange: (e: any) => {
             const state = e.data;
             setIsPlaying(state === 1);
             if (state === 1) {
-              setHasStarted(true);
-              // Trigger hide timer on first play
+              setHasStarted(true); // Hide the YouTube loading logo flash
               hideTimer.current = setTimeout(() => setShowHUD(false), 3000);
             } else {
-              setShowHUD(true); // Always show when paused
+              setShowHUD(true); // HUD stays visible on pause
             }
           }
         }
@@ -81,7 +85,7 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
       initPlayer();
     }
 
-    const syncProgress = setInterval(() => {
+    const sync = setInterval(() => {
       if (playerRef.current?.getCurrentTime) {
         const curr = playerRef.current.getCurrentTime();
         const total = playerRef.current.getDuration();
@@ -92,7 +96,7 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
     }, 400);
 
     return () => {
-      clearInterval(syncProgress);
+      clearInterval(sync);
       if (hideTimer.current) clearTimeout(hideTimer.current);
       playerRef.current?.destroy();
     };
@@ -101,86 +105,95 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
   return (
     <div 
       ref={containerRef}
-      onMouseMove={handleInactivity}
-      className={`fixed inset-0 z-[1000] bg-black flex overflow-hidden font-sans select-none text-white ${showHUD ? 'cursor-default' : 'cursor-none'}`}
+      onMouseMove={handleMouseMove}
+      className={`fixed inset-0 z-[2000] bg-black flex overflow-hidden font-sans select-none text-white ${showHUD ? 'cursor-default' : 'cursor-none'}`}
     >
-      <div className="relative flex-1 bg-black overflow-hidden flex flex-col items-center justify-center">
+      <div className="video-player-app relative flex-1 bg-black overflow-hidden flex flex-col items-center justify-center">
         
-        {/* 1. THE ENGINE (Isolated pointer events) */}
+        {/* 1. THE STREAM ENGINE (Physically Isolated) */}
         <div className={`absolute inset-0 transition-opacity duration-1000 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* This pointer-events-none is what kills the YouTube branding forever */}
-          <div id="pw-strict-engine" className="w-full h-full pointer-events-none scale-100" />
+          {/* pointer-events-none ensures YouTube never detects a human "hover" */}
+          <div id="pw-stream-engine" className="w-full h-full pointer-events-none scale-100" />
         </div>
 
-        {/* 2. THE DITTO PW INTERACTION LAYER (vjs-play-toggle-layer)
-            This is the physical wall. Mouse never touches the iframe. */}
+        {/* 2. THE DITTO PW VIRTUAL SHIELD (Interaction layer)
+            This is the physical wall. Mouse never touches the iframe engine. */}
         <div 
           className="absolute inset-0 z-10 cursor-pointer" 
           onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}
         />
 
-        {/* 3. PHYSICAL HUD BARRIERS (Z-20) */}
+        {/* 3. PHYSICAL HUD BARRIERS (High Z-Index Opaque Guards) */}
         <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
           
-          {/* TOP BAR BARRIER (Solid Opaque) */}
+          {/* TOP GUARD (Blocks Title/Share Forever) */}
           <div className={`w-full bg-black h-20 flex items-center px-8 border-b border-white/5 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
             <div className="flex items-center gap-6 pointer-events-auto w-full">
               <button onClick={onClose} className="hover:opacity-60 transition-opacity"><ArrowLeft size={28} /></button>
-              <h1 className="text-xl font-bold tracking-tight truncate max-w-2xl">{title}</h1>
+              <h1 className="text-xl font-bold tracking-tight truncate max-w-3xl">{title}</h1>
             </div>
           </div>
 
-          {/* BOTTOM BAR BARRIER (Solid Opaque) */}
-          <div className={`w-full bg-black h-36 flex flex-col justify-center px-10 border-t border-white/5 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+          {/* BOTTOM GUARD (Blocks Watermark Forever) */}
+          <div className={`w-full bg-black h-40 flex flex-col justify-center px-10 border-t border-white/5 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
             <div className="w-full pointer-events-auto">
               
-              {/* Progress Scrubber */}
+              {/* Custom PW Progress Scrubber */}
               <div className="relative w-full h-1.5 bg-white/10 rounded-full mb-8 cursor-pointer group" onClick={(e) => {
                  const rect = e.currentTarget.getBoundingClientRect();
-                 const pos = (e.clientX - rect.left) / rect.width;
-                 playerRef.current.seekTo(pos * duration);
+                 playerRef.current.seekTo(((e.clientX - rect.left) / rect.width) * duration);
               }}>
-                <div className="absolute h-full bg-blue-600 rounded-full" style={{ width: `${progress}%` }}>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-xl scale-0 group-hover:scale-100 transition-transform" />
+                <div className="absolute h-full bg-[#5a4bda] rounded-full" style={{ width: `${progress}%` }}>
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-2xl scale-0 group-hover:scale-100 transition-transform" />
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-10">
+                <div className="flex items-center gap-12">
                   <button onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}>
-                    {isPlaying ? <Pause size={38} fill="white" /> : <Play size={38} fill="white" />}
+                    {isPlaying ? <Pause size={44} fill="white" /> : <Play size={44} fill="white" />}
                   </button>
-                  <div className="flex gap-8">
-                    <RotateCcw size={28} className="hover:text-blue-500" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
-                    <RotateCw size={28} className="hover:text-blue-500" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
+                  <div className="flex gap-10">
+                    <RotateCcw size={32} className="hover:text-[#5a4bda] transition-colors" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
+                    <RotateCw size={32} className="hover:text-[#5a4bda] transition-colors" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
                   </div>
-                  <span className="text-sm font-bold opacity-60 tabular-nums">
-                    {Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2, '0')} / {Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2, '0')}
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <button onClick={() => {
+                        const muted = !isMuted;
+                        setIsMuted(muted);
+                        muted ? playerRef.current.mute() : playerRef.current.unMute();
+                    }}>
+                        {isMuted ? <VolumeX size={30} /> : <Volume2 size={30} />}
+                    </button>
+                    <span className="text-sm font-bold opacity-60 tabular-nums">
+                        {Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2, '0')} / {Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
                 </div>
                 <div className="flex items-center gap-10">
-                  <Settings size={26} className="opacity-40" />
-                  <List size={26} className={`cursor-pointer ${showTimeline ? 'text-blue-500' : ''}`} onClick={toggleTimeline} />
-                  <Expand size={26} className="cursor-pointer" onClick={() => containerRef.current?.requestFullscreen()} />
+                  <div className="bg-white/10 px-4 py-1 rounded-lg text-sm font-black text-[#5a4bda]">{playbackRate}x</div>
+                  <List size={30} className={`cursor-pointer ${showTimeline ? 'text-[#5a4bda]' : 'opacity-40'}`} onClick={toggleTimeline} />
+                  <Expand size={30} className="cursor-pointer opacity-40 hover:opacity-100" onClick={() => containerRef.current?.requestFullscreen()} />
                 </div>
               </div>
             </div>
           </div>
+
         </div>
       </div>
 
-      {/* PERSISTENT SIDEBAR */}
+      {/* PERSISTENT TAB-STAY TIMELINE */}
       {showTimeline && (
-        <aside className="w-[420px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 border-l border-gray-200">
-          <div className="p-6 border-b flex justify-between items-center">
-            <span className="font-black text-xl tracking-tighter">Timeline</span>
+        <aside className="w-[450px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 border-l border-gray-200">
+          <div className="p-8 border-b flex justify-between items-center">
+            <span className="font-black text-2xl tracking-tighter uppercase">Timeline</span>
             <X size={24} className="cursor-pointer opacity-30 hover:opacity-100" onClick={toggleTimeline} />
           </div>
-          <div className="p-4 space-y-2 overflow-y-auto max-h-[calc(100vh-100px)]">
+          <div className="p-6 space-y-3 overflow-y-auto max-h-[calc(100vh-100px)]">
             {timelines.map((t, i) => (
-              <div key={i} className="p-4 hover:bg-gray-50 cursor-pointer rounded-2xl flex justify-between items-center transition-all" onClick={() => playerRef.current.seekTo(t.time)}>
-                <span className="font-semibold text-gray-700">{t.label}</span>
-                <span className="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs">{Math.floor(t.time/60)}:{(t.time%60).toString().padStart(2, '0')}</span>
+              <div key={i} className="p-5 hover:bg-gray-50 cursor-pointer rounded-2xl flex justify-between items-center transition-all border border-transparent hover:border-gray-100 shadow-sm" onClick={() => playerRef.current.seekTo(t.time)}>
+                <span className="font-bold text-gray-700">{t.label}</span>
+                <span className="text-[#5a4bda] font-black bg-[#f1efff] px-3 py-1 rounded-lg text-xs">{Math.floor(t.time/60)}:{(t.time%60).toString().padStart(2, '0')}</span>
               </div>
             ))}
           </div>
