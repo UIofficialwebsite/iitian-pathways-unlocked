@@ -99,9 +99,17 @@ interface LibrarySectionProps {
   profile: Tables<'profiles'> | null;
   activeTab: string;
   onTabChange: (tab: string) => void;
+  persistedVideo: ContentItem | null;
+  onVideoChange: (item: ContentItem | null) => void;
 }
 
-const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onTabChange }) => {
+const LibrarySection: React.FC<LibrarySectionProps> = ({ 
+  profile, 
+  activeTab, 
+  onTabChange,
+  persistedVideo,
+  onVideoChange 
+}) => {
   const navigate = useNavigate();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
@@ -110,11 +118,11 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   
-  const [viewingItemPerTab, setViewingItemPerTab] = useState<Record<string, ContentItem | null>>({});
-  const viewingItem = viewingItemPerTab[activeTab] || null;
+  // Use the persisted state from props instead of local Record
+  const viewingItem = persistedVideo;
   
   const setViewingItem = (item: ContentItem | null) => {
-    setViewingItemPerTab(prev => ({ ...prev, [activeTab]: item }));
+    onVideoChange(item);
   };
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -271,7 +279,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full h-full transition-opacity duration-200" style={{ opacity: isTabVisible ? 1 : 0 }}>
-                {activeTab === 'Free Lectures' ? (
+                {viewingItem.category === 'Free Lectures' ? (
                    <VideoPlayer 
                       videoId={String(viewingItem.id)} 
                       title={viewingItem.title} 
