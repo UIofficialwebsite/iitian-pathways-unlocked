@@ -19,6 +19,14 @@ import LibrarySection from "./LibrarySection";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
+// Define a shared content item interface for the video player state
+interface ContentItem {
+  id: string | number;
+  title: string;
+  category: string;
+  url?: string | null;
+}
+
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
@@ -41,8 +49,9 @@ const ModernDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
-  // Persisted Library Tab State
+  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
+  const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -189,7 +198,9 @@ const ModernDashboard: React.FC = () => {
                    <LibrarySection 
                     profile={profile} 
                     activeTab={activeLibraryTab} 
-                    onTabChange={setActiveLibraryTab} 
+                    onTabChange={setActiveLibraryTab}
+                    persistedVideo={activeVideo}
+                    onVideoChange={setActiveVideo}
                    /> 
                 )}
               </div>
