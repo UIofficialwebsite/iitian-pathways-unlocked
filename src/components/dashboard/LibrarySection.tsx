@@ -95,17 +95,21 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     );
 };
 
-const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
+interface LibrarySectionProps {
+  profile: Tables<'profiles'> | null;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onTabChange }) => {
   const navigate = useNavigate();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
   const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   
-  // Store viewing item per tab to preserve state when switching tabs
   const [viewingItemPerTab, setViewingItemPerTab] = useState<Record<string, ContentItem | null>>({});
   const viewingItem = viewingItemPerTab[activeTab] || null;
   
@@ -118,20 +122,17 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
   
-  // Track tab transition for smooth animation
   const [isTabVisible, setIsTabVisible] = useState(true);
-  const prevTabRef = useRef(activeTab);
 
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
 
-  // Handle smooth tab transitions
   const handleTabChange = (category: string) => {
     if (category === activeTab) return;
     
     setIsTabVisible(false);
     setTimeout(() => {
-      setActiveTab(category);
+      onTabChange(category);
       setShowAll(false);
       setSelectedLevel("none");
       setSelectedSubject("none");
