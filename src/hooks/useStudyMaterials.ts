@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-export type MaterialType = 'note' | 'question_bank' | 'mindmap' | 'pyq';
+export type MaterialType = 'note' | 'pyq' | 'question_bank' | 'ui_ki_padhai';
 
 export interface StudyMaterial {
   id: string;
