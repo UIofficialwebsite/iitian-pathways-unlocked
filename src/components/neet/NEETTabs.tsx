@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
 import NEETNotesTab from "./NEETNotesTab";
@@ -16,9 +16,16 @@ interface NEETTabsProps {
 
 const NEETTabs = ({ navigate, location }: NEETTabsProps) => {
   // Initialize state from URL
-  const initialTab = getTabFromUrl(location.pathname);
-  const initialParams = getParamsFromUrl(location.pathname);
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
+  const [initialParams, setInitialParams] = useState(() => getParamsFromUrl(location.pathname));
+
+  // Sync tab state with URL when location changes
+  useEffect(() => {
+    const tabFromUrl = getTabFromUrl(location.pathname);
+    const paramsFromUrl = getParamsFromUrl(location.pathname);
+    setActiveTab(tabFromUrl);
+    setInitialParams(paramsFromUrl);
+  }, [location.pathname]);
 
   // Update URL when filters change
   const updateUrl = (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => {

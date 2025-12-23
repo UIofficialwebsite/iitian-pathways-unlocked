@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -16,12 +16,17 @@ const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize state from URL (this part was correct)
-  const initialTab = getTabFromUrl(location.pathname);
-  const [activeTab, setActiveTab] = useState(initialTab);
-  
-  // **NEW:** Get the filter params from the URL on load
-  const initialParams = getParamsFromUrl(location.pathname);
+  // Initialize state from URL
+  const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
+  const [initialParams, setInitialParams] = useState(() => getParamsFromUrl(location.pathname));
+
+  // Sync tab state with URL when location changes
+  useEffect(() => {
+    const tabFromUrl = getTabFromUrl(location.pathname);
+    const paramsFromUrl = getParamsFromUrl(location.pathname);
+    setActiveTab(tabFromUrl);
+    setInitialParams(paramsFromUrl);
+  }, [location.pathname]);
 
   // Update URL when tab changes
   const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string, subject?: string) => {
