@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 import { supabase } from '@/integrations/supabase/client';
 import { useStudyMaterials } from "@/hooks/useStudyMaterials";
-// Import the professional VideoPlayer component
 import VideoPlayer from "../VideoPlayer"; 
 
 const contentCategories = [
@@ -98,12 +97,13 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
 const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ profile }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
+  
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
   const [ytSearchQuery, setYtSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState(contentCategories[0]);
   const [showAll, setShowAll] = useState(false);
   const [viewingItem, setViewingItem] = useState<ContentItem | null>(null);
 
@@ -111,6 +111,9 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
   const [selectedLevel, setSelectedLevel] = useState<string>("none");
   const [selectedSubject, setSelectedSubject] = useState<string>("none");
   const [selectedWeekOrYear, setSelectedWeekOrYear] = useState<string>("none");
+
+  // Sync activeTab with URL search params
+  const activeTab = searchParams.get('tab') || contentCategories[0];
 
   const focusArea = (profile?.program_type as any) || 'General';
   const isIITM = focusArea === 'IITM_BS';
@@ -131,7 +134,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           })),
           ...(notesData || []).map(n => ({ 
             id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, 
-            category: 'Short Notes and Mindmaps', level: n.class_level 
+            category: 'Short Notes and Mindmaps', level: n.class_level || n.level 
           })),
           ...(iitmData || []).map(i => ({ 
             id: i.id, title: i.title, subject: i.subject, url: i.file_link, 
@@ -209,6 +212,17 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
     })).filter(playlist => playlist.videos.length > 0);
   }, [ytPlaylists, ytSearchQuery]);
 
+  // Handler for tab selection that updates the URL
+  const handleTabChange = (category: string) => {
+    setSearchParams({ tab: category });
+    setShowAll(false);
+    setSelectedLevel("none");
+    setSelectedSubject("none");
+    setSelectedWeekOrYear("none");
+    setSearchQuery("");
+    setYtSearchQuery("");
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-slate-900 overflow-hidden">
       <div className="bg-white border-b flex-none z-30 shadow-sm">
@@ -224,7 +238,14 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
               <div className="px-4 md:px-8 overflow-x-auto scrollbar-hide">
                    <div className="flex space-x-6">
                         {contentCategories.map((category) => (
-                          <button key={category} onClick={() => { setActiveTab(category); setShowAll(false); setSelectedLevel("none"); setSelectedSubject("none"); setSelectedWeekOrYear("none"); setSearchQuery(""); setYtSearchQuery(""); }} className={cn("pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700")}>
+                          <button 
+                            key={category} 
+                            onClick={() => handleTabChange(category)} // Use the new URL-synced handler
+                            className={cn(
+                              "pb-3 text-sm font-medium transition-all whitespace-nowrap border-b-2 px-1", 
+                              activeTab === category ? "text-blue-600 border-blue-600" : "text-slate-500 border-transparent hover:text-slate-700"
+                            )}
+                          >
                             {category}
                           </button>
                         ))}
@@ -236,7 +257,6 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
       <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full h-full">
-                {/* Check if current category is Free Lectures to use the branded VideoPlayer */}
                 {activeTab === 'Free Lectures' ? (
                    <VideoPlayer 
                       videoId={String(viewingItem.id)} 
