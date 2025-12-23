@@ -20,7 +20,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastTap = useRef<number>(0); // PW Double-tap tracking
+  const lastTap = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -40,34 +40,38 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     sessionStorage.setItem('pw_timeline_state', String(next));
   };
 
-  const resetHUDTimer = () => {
+  // Standardized PW HUD Logic
+  const handleMouseMove = () => {
     setShowHUD(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
+    // Auto-hide only if the video is currently playing
     if (isPlaying) {
       hideTimer.current = setTimeout(() => setShowHUD(false), 3000);
     }
   };
 
-  // PW Logic: Functional toggle that doesn't trigger re-renders of the Effect
   const togglePlayPause = () => {
     if (!playerRef.current) return;
-    if (playerRef.current.getPlayerState() === 1) {
+    const state = playerRef.current.getPlayerState();
+    if (state === 1) { // 1 is Playing
       playerRef.current.pauseVideo();
     } else {
       playerRef.current.playVideo();
     }
   };
 
-  // PW Logic: Double-tap to seek (100% copy from chunk 4269)
+  // PW Double-tap to seek logic
   const handleInteractionClick = (e: React.MouseEvent) => {
     const now = Date.now();
     const DOUBLE_TAP_DELAY = 300;
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       const rect = e.currentTarget.getBoundingClientRect();
       const x = e.clientX - rect.left;
-      // Seek Right if clicked right half, Left otherwise
-      if (x > rect.width / 2) playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10);
-      else playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10);
+      if (x > rect.width / 2) {
+        playerRef.current?.seekTo(playerRef.current.getCurrentTime() + 10);
+      } else {
+        playerRef.current?.seekTo(playerRef.current.getCurrentTime() - 10);
+      }
     } else {
       togglePlayPause();
     }
@@ -81,12 +85,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         host: 'https://www.youtube.com',
         playerVars: {
           autoplay: 1,
-          controls: 0,          // Kills native UI
-          modestbranding: 1,   // Kills logo
-          rel: 0,               // Kills related
-          iv_load_policy: 3,    // Kills annotations
-          disablekb: 1,         // Kills shortcuts
-          fs: 0,                // Kills native fullscr
+          controls: 0,
+          modestbranding: 1,
+          rel: 0,
+          iv_load_policy: 3,
+          disablekb: 1,
+          fs: 0,
           enablejsapi: 1,
           origin: window.location.origin
         },
@@ -100,9 +104,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
             setIsPlaying(state === 1);
             if (state === 1) {
               setHasStarted(true);
-              resetHUDTimer();
+              handleMouseMove(); // Start auto-hide timer
             } else {
-              setShowHUD(true);
+              setShowHUD(true); // Keep UI visible when paused
             }
           }
         }
@@ -112,15 +116,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     if (!(window as any).YT) {
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+      document.body.appendChild(tag);
       (window as any).onYouTubeIframeAPIReady = initPlayer;
     } else {
       initPlayer();
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '');
+      const isTyping = ['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || '') || 
+                       (document.activeElement as HTMLElement)?.isContentEditable;
       if (isTyping) return;
 
       if (e.code === 'Space') {
@@ -147,21 +151,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
       if (hideTimer.current) clearTimeout(hideTimer.current);
       if (playerRef.current) playerRef.current.destroy();
     };
-    // videoId is the ONLY dependency. isPlaying is removed to stop the restart bug.
-  }, [videoId]); 
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    playerRef.current.seekTo((x / rect.width) * duration);
-  };
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
+  }, [videoId, duration]); // Removed isPlaying to fix the pause-restart bug
 
   return (
     <div 
@@ -172,21 +162,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     >
       <div className="relative flex-1 bg-black overflow-hidden flex flex-col items-center justify-center">
         
-        {/* LAYER 1: THE ENGINE - Scale slightly reduced to 1.12 for better framing */}
+        {/* LAYER 1: ENGINE (Strict Crop) */}
         <div className={`absolute inset-0 pointer-events-none transition-opacity duration-700 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
-          <div id="pw-strict-engine" className="w-full h-full pointer-events-none scale-[1.12]" />
+          <div className="w-full h-full scale-[1.12] origin-center">
+            <div id="pw-strict-engine" className="w-full h-full pointer-events-none" />
+          </div>
         </div>
 
-        {/* LAYER 2: INTERACTION CLICK-SURFACE */}
+        {/* LAYER 2: INTERACTION SHIELD */}
         <div 
           className="absolute inset-0 z-10 cursor-pointer" 
           onClick={handleInteractionClick}
         />
 
-        {/* LAYER 3: OPAQUE HUD MASKING */}
+        {/* LAYER 3: OPAQUE HUD */}
         <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
           
-          {/* SLIM HEADER - Corrected from h-24 to h-16 */}
+          {/* HEADER */}
           <div className={`w-full bg-black/80 h-16 flex items-center px-8 border-b border-white/10 transition-all duration-500 transform ${showHUD ? 'translate-y-0' : '-translate-y-full'}`}>
             <div className="flex items-center gap-6 pointer-events-auto w-full">
               <button onClick={onClose} className="hover:text-[#5a4bda] transition-colors">
@@ -196,14 +188,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
             </div>
           </div>
 
-          {/* SLIM FOOTER - Corrected from h-48 to h-32 */}
+          {/* FOOTER */}
           <div className={`w-full bg-black/80 h-32 flex flex-col justify-center px-10 border-t border-white/10 transition-all duration-500 transform ${showHUD ? 'translate-y-0' : 'translate-y-full'}`}>
             <div className="w-full pointer-events-auto">
               
-              <div className="relative w-full h-1 bg-white/20 rounded-full mb-6 cursor-pointer group" onClick={handleSeek}>
-                <div className="absolute h-full bg-[#5a4bda] rounded-full transition-all" style={{ width: `${progress}%` }}>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full scale-0 group-hover:scale-100 transition-transform" />
-                </div>
+              <div className="relative w-full h-1 bg-white/20 rounded-full mb-6 cursor-pointer group" onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                playerRef.current?.seekTo(((e.clientX - rect.left) / rect.width) * duration);
+              }}>
+                <div className="absolute h-full bg-[#5a4bda] rounded-full transition-all" style={{ width: `${progress}%` }} />
               </div>
 
               <div className="flex justify-between items-center">
@@ -213,13 +206,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
                   </button>
 
                   <div className="flex gap-8 items-center">
-                    <RotateCcw size={28} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
-                    <RotateCw size={28} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
+                    <RotateCcw size={28} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current?.seekTo(currentTime - 10)} />
+                    <RotateCw size={28} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current?.seekTo(currentTime + 10)} />
                     <div className="flex items-center gap-4 ml-2">
                         <button onClick={() => {
-                            const n = !isMuted;
-                            setIsMuted(n);
-                            n ? playerRef.current.mute() : playerRef.current.unMute();
+                            setIsMuted(!isMuted);
+                            !isMuted ? playerRef.current?.mute() : playerRef.current?.unMute();
                         }}>
                             {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
                         </button>
@@ -251,20 +243,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
 
       {showTimeline && (
         <aside className="w-[400px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 border-l border-gray-100 flex flex-col">
-          <div className="p-6 border-b flex justify-between items-center bg-gray-50/50">
-            <span className="font-extrabold text-xl tracking-tight">Timeline</span>
-            <button onClick={toggleTimeline} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
-              <X size={20} className="opacity-40" />
-            </button>
+          <div className="p-6 border-b flex justify-between items-center">
+            <span className="font-extrabold text-xl">Timeline</span>
+            <X size={20} className="cursor-pointer opacity-40" onClick={toggleTimeline} />
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {timelines.map((item, i) => (
               <div 
                 key={i} 
                 className="group p-4 hover:bg-[#f8f7ff] cursor-pointer rounded-2xl flex justify-between items-center transition-all"
-                onClick={() => playerRef.current.seekTo(item.time)}
+                onClick={() => playerRef.current?.seekTo(item.time)}
               >
-                <span className="font-bold text-gray-700 group-hover:text-black">{item.label}</span>
+                <span className="font-bold text-gray-700">{item.label}</span>
                 <span className="text-[#5a4bda] font-black bg-[#5a4bda]/5 px-3 py-1 rounded-lg text-xs">
                   {formatTime(item.time)}
                 </span>
