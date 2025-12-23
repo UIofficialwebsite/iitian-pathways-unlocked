@@ -1,37 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { 
   ArrowLeft, Play, Pause, RotateCcw, RotateCw, 
-  List, Expand, X, Volume2, VolumeX, Settings 
+  List, Expand, X, Settings, Volume2, VolumeX 
 } from 'lucide-react';
 
-interface TimelineItem {
-  time: number;
-  label: string;
-}
-
-interface VideoPlayerProps {
-  videoId: string;
-  title: string;
-  onClose: () => void;
-  timelines?: TimelineItem[];
-}
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, timelines = [] }) => {
+const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<NodeJS.Timeout | null>(null);
+  
+  // PW Logic: Tracking double-taps for seeking (from 4269.chunk.js)
+  const lastTap = useRef<number>(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [showHUD, setShowHUD] = useState(true);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [currentTime, setCurrentTime] = useState(0);
-  
   const [showTimeline, setShowTimeline] = useState(() => {
     return sessionStorage.getItem('pw_timeline_state') === 'true';
   });
+  
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
 
   const toggleTimeline = () => {
     const next = !showTimeline;
@@ -39,17 +30,42 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     sessionStorage.setItem('pw_timeline_state', String(next));
   };
 
-  const resetHUDTimer = () => {
+  // PW EXACT AUTO-HIDE logic (from 4269.chunk.js)
+  const handleMouseMove = () => {
     setShowHUD(true);
     if (hideTimer.current) clearTimeout(hideTimer.current);
     if (isPlaying) {
-      hideTimer.current = setTimeout(() => setShowHUD(false), 3000);
+      hideTimer.current = setTimeout(() => {
+        setShowHUD(false);
+      }, 3000);
     }
+  };
+
+  // PW Logic: Double-Tap to Seek on the interaction layer
+  const handleInteractionClick = (e: React.MouseEvent) => {
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+    
+    if (now - lastTap.current < DOUBLE_TAP_DELAY) {
+      // Double tap detected
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      if (x > rect.width / 2) {
+        playerRef.current.seekTo(playerRef.current.getCurrentTime() + 10);
+      } else {
+        playerRef.current.seekTo(playerRef.current.getCurrentTime() - 10);
+      }
+    } else {
+      // Single tap logic
+      if (isPlaying) playerRef.current.pauseVideo();
+      else playerRef.current.playVideo();
+    }
+    lastTap.current = now;
   };
 
   useEffect(() => {
     const initPlayer = () => {
-      playerRef.current = new (window as any).YT.Player('pw-strict-engine', {
+      playerRef.current = new (window as any).YT.Player('pw-strict-stream', {
         videoId: videoId,
         host: 'https://www.youtube.com',
         playerVars: {
@@ -62,19 +78,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
           fs: 0,
           enablejsapi: 1,
           widget_referrer: window.location.origin,
-          origin: window.location.origin
+          origin: window.location.origin 
         },
         events: {
-          onReady: (e: any) => {
-            e.target.playVideo();
-            setDuration(e.target.getDuration());
-          },
-          onStateChange: (e: any) => {
+          onReady: (e) => e.target.playVideo(),
+          onStateChange: (e) => {
             const state = e.data;
             setIsPlaying(state === 1);
             if (state === 1) {
               setHasStarted(true);
-              resetHUDTimer();
+              if (hideTimer.current) clearTimeout(hideTimer.current);
+              hideTimer.current = setTimeout(() => setShowHUD(false), 3000);
             } else {
               setShowHUD(true);
             }
@@ -86,21 +100,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     if (!(window as any).YT) {
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
-      const firstScriptTag = document.getElementsByTagName('script')[0];
-      firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+      document.body.appendChild(tag);
       (window as any).onYouTubeIframeAPIReady = initPlayer;
     } else {
       initPlayer();
     }
 
-    // PW Keyboard Capture Priority Logic
+    // PW Keyboard Capture Priority (from 6165.chunk.js)
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Check if user is typing in a search/doubt box
+      // Don't trigger shortcuts if user is typing in sidebar/search
       const isTyping = document.activeElement?.tagName === 'INPUT' || 
-                       document.activeElement?.tagName === 'TEXTAREA' || 
+                       document.activeElement?.tagName === 'TEXTAREA' ||
                        (document.activeElement as HTMLElement)?.isContentEditable;
-
-      if (isTyping) return; // Prevent play/pause while typing
+      if (isTyping) return;
 
       if (e.code === 'Space') {
         e.preventDefault();
@@ -114,148 +126,118 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     window.addEventListener('keydown', handleKeyDown);
 
     const tracker = setInterval(() => {
-      if (playerRef.current && playerRef.current.getCurrentTime) {
+      if (playerRef.current?.getCurrentTime) {
         const curr = playerRef.current.getCurrentTime();
         const total = playerRef.current.getDuration();
         setCurrentTime(curr);
+        setDuration(total);
         if (total > 0) setProgress((curr / total) * 100);
       }
-    }, 500);
+    }, 400);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       clearInterval(tracker);
       if (hideTimer.current) clearTimeout(hideTimer.current);
-      if (playerRef.current) playerRef.current.destroy();
+      playerRef.current?.destroy();
     };
   }, [videoId, isPlaying]);
-
-  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    playerRef.current.seekTo((x / rect.width) * duration);
-  };
-
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = Math.floor(seconds % 60);
-    return `${h > 0 ? h + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
 
   return (
     <div 
       ref={containerRef}
-      onMouseMove={resetHUDTimer}
-      // PW CONTEXT MENU HARDENING: Completely block browser right-click menu
+      onMouseMove={handleMouseMove}
+      // PW Logic: Block right-click to hide YT context menu (from 6165.chunk.js)
       onContextMenu={(e) => e.preventDefault()}
-      className={`fixed inset-0 z-[9999] bg-black flex overflow-hidden font-sans select-none text-white ${showHUD ? 'cursor-default' : 'cursor-none'}`}
+      className={`fixed inset-0 z-[2000] bg-black flex overflow-hidden font-sans select-none text-white transition-all duration-300 ${showHUD ? 'cursor-default' : 'cursor-none'}`}
     >
-      <div className="relative flex-1 bg-black overflow-hidden flex flex-col items-center justify-center">
+      <div className="video-player-app relative flex-1 bg-black overflow-hidden flex flex-col items-center justify-center">
         
-        {/* LAYER 1: THE ENGINE (PW EDGE-CROP SCALE) */}
-        <div className={`absolute inset-0 transition-opacity duration-700 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
-          {/* scale-[1.04] ensures watermark/title area artifacts are outside the viewport bounds */}
-          <div id="pw-strict-engine" className="w-full h-full pointer-events-none scale-[1.04]" />
+        {/* 1. THE STREAM ENGINE (Physically Isolated) */}
+        <div className={`absolute inset-0 transition-opacity duration-1000 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}>
+          {/* PW Scale Logic: scale-[1.04] pushes the 1px branding lines outside the overflow-hidden container */}
+          <div id="pw-strict-stream" className="w-full h-full pointer-events-none scale-[1.04]" />
         </div>
 
-        {/* LAYER 2: INTERACTION CLICK-SURFACE (PW PlayToggleLayer) */}
+        {/* 2. THE PW CLICK LAYER */}
         <div 
           className="absolute inset-0 z-10 cursor-pointer" 
-          onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}
+          onClick={handleInteractionClick}
         />
 
-        {/* LAYER 3: OPAQUE HUD MASKING */}
+        {/* 3. PHYSICAL BARRIER HUD (z-20) */}
         <div className="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between">
           
-          {/* HEADER (Solid Mask) */}
-          <div className={`w-full bg-black h-24 flex items-center px-10 border-b border-white/10 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
-            <div className="flex items-center gap-8 pointer-events-auto w-full">
-              <button onClick={onClose} className="hover:scale-110 transition-transform">
-                <ArrowLeft size={32} />
-              </button>
-              <h1 className="text-2xl font-bold truncate max-w-4xl">{title}</h1>
+          {/* HEADER (PW uses standard h-16 or h-20 for masking) */}
+          <div className={`w-full bg-black h-16 flex items-center px-8 border-b border-white/5 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+            <div className="flex items-center gap-6 pointer-events-auto w-full">
+              <button onClick={onClose} className="hover:opacity-60 transition-opacity"><ArrowLeft size={28} /></button>
+              <h1 className="text-lg font-bold truncate max-w-3xl">{title}</h1>
             </div>
           </div>
 
-          {/* FOOTER (Solid Mask) */}
-          <div className={`w-full bg-black h-48 flex flex-col justify-center px-12 border-t border-white/10 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+          {/* FOOTER (Opaque masking for YT progress bar/watermark) */}
+          <div className={`w-full bg-black h-32 flex flex-col justify-center px-10 border-t border-white/5 transition-all duration-500 transform ${showHUD ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
             <div className="w-full pointer-events-auto">
               
-              <div className="relative w-full h-1.5 bg-white/20 rounded-full mb-10 cursor-pointer group" onClick={handleSeek}>
-                <div className="absolute h-full bg-[#5a4bda] rounded-full transition-all" style={{ width: `${progress}%` }}>
-                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg scale-0 group-hover:scale-100 transition-transform" />
+              <div className="relative w-full h-1 bg-white/10 rounded-full mb-6 cursor-pointer group" onClick={(e) => {
+                 const rect = e.currentTarget.getBoundingClientRect();
+                 playerRef.current.seekTo(((e.clientX - rect.left) / rect.width) * duration);
+              }}>
+                <div className="absolute h-full bg-[#5a4bda] rounded-full transition-all duration-150" style={{ width: `${progress}%` }}>
+                  <div className="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-2xl scale-0 group-hover:scale-100 transition-transform" />
                 </div>
               </div>
 
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-14">
+                <div className="flex items-center gap-10">
                   <button onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}>
-                    {isPlaying ? <Pause size={48} fill="white" /> : <Play size={48} fill="white" />}
+                    {isPlaying ? <Pause size={38} fill="white" /> : <Play size={38} fill="white" />}
                   </button>
-
-                  <div className="flex gap-10 items-center">
-                    <RotateCcw size={36} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
-                    <RotateCw size={36} className="cursor-pointer hover:text-[#5a4bda]" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
+                  <div className="flex gap-8">
+                    <RotateCcw size={28} className="hover:text-[#5a4bda] transition-colors" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
+                    <RotateCw size={28} className="hover:text-[#5a4bda] transition-colors" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
                   </div>
-
-                  <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-4">
                     <button onClick={() => {
-                        const nextMuted = !isMuted;
-                        setIsMuted(nextMuted);
-                        nextMuted ? playerRef.current.mute() : playerRef.current.unMute();
+                        const muted = !isMuted;
+                        setIsMuted(muted);
+                        muted ? playerRef.current.mute() : playerRef.current.unMute();
                     }}>
-                        {isMuted ? <VolumeX size={32} /> : <Volume2 size={32} />}
+                        {isMuted ? <VolumeX size={26} /> : <Volume2 size={26} />}
                     </button>
-                    <span className="text-lg font-medium opacity-80 tabular-nums">
-                        {formatTime(currentTime)} / {formatTime(duration)}
+                    <span className="text-xs font-bold opacity-60 tabular-nums">
+                        {Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2, '0')} / {Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2, '0')}
                     </span>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-12 text-white/60">
-                   <Settings size={34} className="cursor-pointer hover:text-white" />
-                   <List 
-                     size={34} 
-                     className={`cursor-pointer transition-colors ${showTimeline ? 'text-[#5a4bda]' : 'hover:text-white'}`} 
-                     onClick={toggleTimeline} 
-                   />
-                   <Expand 
-                     size={34} 
-                     className="cursor-pointer hover:text-white" 
-                     onClick={() => {
-                        if (!document.fullscreenElement) containerRef.current?.requestFullscreen();
-                        else document.exitFullscreen();
-                     }} 
-                   />
+                <div className="flex items-center gap-8">
+                  <Settings size={26} className="cursor-pointer opacity-40 hover:opacity-100" />
+                  <List size={26} className={`cursor-pointer transition-colors ${showTimeline ? 'text-[#5a4bda]' : 'opacity-40 hover:opacity-100'}`} onClick={toggleTimeline} />
+                  <Expand size={26} className="cursor-pointer opacity-40 hover:opacity-100" onClick={() => {
+                    if (!document.fullscreenElement) containerRef.current?.requestFullscreen();
+                    else document.exitFullscreen();
+                  }} />
                 </div>
               </div>
+
             </div>
           </div>
         </div>
       </div>
 
-      {/* SIDEBAR: PERSISTENT TIMELINE */}
+      {/* PERSISTENT TIMELINE (State shared with PW SessionStorage) */}
       {showTimeline && (
-        <aside className="w-[480px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 shadow-2xl border-l border-gray-100 flex flex-col">
-          <div className="p-10 border-b flex justify-between items-center bg-gray-50/50">
-            <span className="font-extrabold text-3xl tracking-tight">Timeline</span>
-            <button onClick={toggleTimeline} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-              <X size={28} className="opacity-40" />
-            </button>
+        <aside className="w-[420px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 border-l border-gray-200 flex flex-col">
+          <div className="p-8 border-b flex justify-between items-center bg-gray-50">
+            <span className="font-black text-2xl tracking-tighter uppercase">Timeline</span>
+            <X size={24} className="cursor-pointer opacity-30 hover:opacity-100" onClick={toggleTimeline} />
           </div>
-          
-          <div className="flex-1 overflow-y-auto p-8 space-y-4">
-            {timelines.map((item, i) => (
-              <div 
-                key={i} 
-                className="group p-6 hover:bg-[#f8f7ff] cursor-pointer rounded-3xl flex justify-between items-center border border-transparent hover:border-[#5a4bda]/10 transition-all"
-                onClick={() => playerRef.current.seekTo(item.time)}
-              >
-                <span className="font-bold text-xl text-gray-700 group-hover:text-black">{item.label}</span>
-                <span className="text-[#5a4bda] font-black bg-[#5a4bda]/5 px-4 py-2 rounded-xl text-sm">
-                  {formatTime(item.time)}
-                </span>
+          <div className="flex-1 p-6 space-y-3 overflow-y-auto">
+            {timelines.map((t, i) => (
+              <div key={i} className="p-5 hover:bg-[#f1efff]/50 cursor-pointer rounded-2xl flex justify-between items-center group transition-all" onClick={() => playerRef.current.seekTo(t.time)}>
+                <span className="font-bold text-gray-700 group-hover:text-black">{t.label}</span>
+                <span className="text-[#5a4bda] font-black bg-[#f1efff] px-3 py-1 rounded-lg text-xs">{Math.floor(t.time/60)}:{(t.time%60).toString().padStart(2, '0')}</span>
               </div>
             ))}
           </div>
