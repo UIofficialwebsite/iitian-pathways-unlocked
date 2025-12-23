@@ -19,7 +19,6 @@ import LibrarySection from "./LibrarySection";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// --- Reusable Loader ---
 const DashboardLoader = () => (
   <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
@@ -41,6 +40,9 @@ const ModernDashboard: React.FC = () => {
   // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
+  
+  // Persisted Library Tab State
+  const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -98,17 +100,14 @@ const ModernDashboard: React.FC = () => {
     setProfile(updatedProfile as Profile);
   };
 
-  // --- Handle View Switching ---
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) return; 
     
-    // If coming soon, switch instantly (it's a static loader page)
     if (view === 'coming_soon') {
       setActiveView(view);
       return;
     }
 
-    // For Library and others, show the "Hang tight" transition first
     setIsViewLoading(true);
     setActiveView(view);
 
@@ -127,7 +126,6 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
-  // --- Helper to wrap standard content with padding ---
   const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
       {children}
@@ -136,8 +134,6 @@ const ModernDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
-      
-      {/* Sticky Top Nav */}
       <div className="sticky top-0 z-50 w-full bg-white border-b border-gray-200 shadow-sm">
         <DashboardTopNav
           onViewChange={handleViewChange} 
@@ -148,8 +144,6 @@ const ModernDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        
-        {/* Sidebar */}
         <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
           <div className="min-h-full">
             <DashboardSidebar
@@ -161,28 +155,18 @@ const ModernDashboard: React.FC = () => {
           </div>
         </aside>
 
-        {/* Main Content - No Default Padding Here Now */}
         <main className="flex-1 overflow-y-auto bg-gray-50/50">
-          
-            {/* CONDITIONAL RENDERING */}
-
-            {/* 1. Coming Soon View */}
             {activeView === 'coming_soon' ? (
               <ContentWrapper>
                 <DashboardLoader />
               </ContentWrapper>
             ) : 
-            
-            /* 2. Transition Loading State */
             isViewLoading ? (
                <ContentWrapper>
                  <DashboardLoader />
                </ContentWrapper>
             ) : (
-              /* 3. Actual Content */
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full">
-                
-                {/* Standard Views (Need Padding) */}
                 {activeView === 'studyPortal' && (
                   <ContentWrapper>
                     <StudyPortal profile={profile} onViewChange={handleViewChange} />
@@ -201,16 +185,15 @@ const ModernDashboard: React.FC = () => {
                   </ContentWrapper>
                 )}
 
-                {/* --- LIBRARY SECTION (No Padding Wrapper) --- 
-                    This allows the library header to span full width and stick properly 
-                */}
                 {activeView === 'library' && (
-                   <LibrarySection profile={profile} /> 
+                   <LibrarySection 
+                    profile={profile} 
+                    activeTab={activeLibraryTab} 
+                    onTabChange={setActiveLibraryTab} 
+                   /> 
                 )}
-                
               </div>
             )}
-
         </main>
       </div>
 
