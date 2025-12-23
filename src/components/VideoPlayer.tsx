@@ -5,27 +5,40 @@ import {
   List, Expand, X, Settings, Check
 } from 'lucide-react';
 
-interface VideoPlayerProps {
-  videoId: string;
-  title: string;
-  onClose: () => void;
-  timelines?: { time: number; label: string }[];
-}
-
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, timelines = [] }) => {
+const VideoPlayerShield = ({ videoId, title, onClose, timelines = [] }) => {
   const playerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const hideTimeout = useRef<NodeJS.Timeout | null>(null);
+  
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVideoVisible, setIsVideoVisible] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [showControls, setShowControls] = useState(true);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [showTimeline, setShowTimeline] = useState(false);
+
+  // Auto-hide logic: Triggered on mouse move
+  const handleMouseMove = () => {
+    setShowControls(true);
+    if (hideTimeout.current) clearTimeout(hideTimeout.current);
+    
+    // Only start the timer to hide if the video is actually playing
+    if (isPlaying) {
+      hideTimeout.current = setTimeout(() => {
+        setShowControls(false);
+      }, 3000); // Hides after 3 seconds of no movement
+    }
+  };
+
+  const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60);
+    const secs = Math.floor(s % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     const initPlayer = () => {
-      playerRef.current = new (window as any).YT.Player('yt-player-headless', {
+      playerRef.current = new (window as any).YT.Player('yt-shield-player', {
         videoId: videoId,
         playerVars: {
           autoplay: 1,
@@ -39,10 +52,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         events: {
           onReady: (e: any) => e.target.playVideo(),
           onStateChange: (e: any) => {
-            const YTState = (window as any).YT.PlayerState;
-            setIsPlaying(e.data === YTState.PLAYING);
-            // Wait for playing to start before revealing to hide initial YT logos
-            if (e.data === YTState.PLAYING) setIsVideoVisible(true);
+            const state = e.data;
+            setIsPlaying(state === 1);
+            if (state === 1) {
+              setIsVideoVisible(true);
+              // Start the hide timer immediately when video starts
+              hideTimeout.current = setTimeout(() => setShowControls(false), 3000);
+            } else {
+              // Always show controls when paused
+              setShowControls(true);
+              if (hideTimeout.current) clearTimeout(hideTimeout.current);
+            }
           }
         }
       });
@@ -69,96 +89,69 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
 
     return () => {
       clearInterval(interval);
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
       playerRef.current?.destroy();
     };
   }, [videoId]);
 
   return (
-    <div ref={containerRef} className="fixed inset-0 z-[100] bg-black flex text-white overflow-hidden font-sans select-none">
-      <div className="relative flex-1 overflow-hidden bg-black">
-        
-        {/* 1. THE VIDEO: Forced scale-100 and pointer-events-none */}
+    <div 
+      ref={containerRef} 
+      onMouseMove={handleMouseMove} 
+      className={`fixed inset-0 z-[100] bg-black flex overflow-hidden transition-all duration-300 ${showControls ? 'cursor-default' : 'cursor-none'}`}
+    >
+      <div className="relative flex-1">
+        {/* THE VIDEO: Physically blocked from receiving pointer events */}
         <div className={`absolute inset-0 transition-opacity duration-1000 ${isVideoVisible ? 'opacity-100' : 'opacity-0'}`}>
-          <div id="yt-player-headless" className="w-full h-full scale-100 pointer-events-none" />
+          <div id="yt-shield-player" className="w-full h-full pointer-events-none scale-100" />
         </div>
 
-        {/* 2. THE INTERACTIVE SHIELD (Z-20): 
-            This layer sits over the video. Since the video has pointer-events-none, 
-            the user only interacts with this DIV. The YT title and watermark 
-            NEVER receive a hover event, so they stay hidden. */}
+        {/* INTERACTION SHIELD: The user clicks this, NOT the YouTube iframe */}
         <div 
-          className="absolute inset-0 z-20 cursor-pointer" 
-          onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}
+          className="absolute inset-0 z-20" 
+          onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()} 
         />
 
-        {/* 3. THE CUSTOM SHELL HUD (Z-30): Physical Barriers */}
-        <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between">
-          
-          {/* TOP BAR BARRIER: Solid black background at the very top to mask the 'Watch Later/Share' area */}
-          <div className="w-full bg-black/90 pointer-events-auto border-b border-white/5 shadow-2xl">
-            <div className="p-5 flex justify-between items-center bg-gradient-to-b from-black to-transparent">
-              <button onClick={onClose} className="flex items-center gap-4 hover:opacity-80 transition">
-                <ArrowLeft size={24} />
-                <span className="font-bold text-lg">{title}</span>
-              </button>
-              <div className="flex gap-4 opacity-50">
-                <EllipsisVertical size={24} />
-              </div>
+        {/* HEADER BARRIER */}
+        <div className={`absolute top-0 inset-x-0 z-30 transition-all duration-500 transform ${showControls ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}>
+          <div className="bg-gradient-to-b from-black via-black/80 to-transparent p-6 flex justify-between items-center pointer-events-auto">
+            <div className="flex items-center gap-4">
+              <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition"><ArrowLeft size={24} /></button>
+              <span className="font-bold text-lg text-white drop-shadow-md">{title}</span>
             </div>
+            <EllipsisVertical size={24} className="opacity-40" />
           </div>
+        </div>
 
-          {/* BOTTOM BAR BARRIER: Solid black area to physically block the YouTube Watermark */}
-          <div className="w-full bg-black/90 pointer-events-auto border-t border-white/5">
-            <div className="p-6 bg-gradient-to-t from-black to-transparent">
-              {/* Custom Scrubber */}
-              <div className="w-full h-1 bg-white/20 rounded-full mb-6 overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: `${progress}%` }} />
+        {/* FOOTER BARRIER */}
+        <div className={`absolute bottom-0 inset-x-0 z-30 transition-all duration-500 transform ${showControls ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'}`}>
+          <div className="bg-gradient-to-t from-black via-black/80 to-transparent p-8 pointer-events-auto">
+            <div className="w-full h-1.5 bg-white/20 rounded-full mb-6 overflow-hidden cursor-pointer" onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              playerRef.current.seekTo(((e.clientX - rect.left) / rect.width) * duration);
+            }}>
+              <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${progress}%` }} />
+            </div>
+            <div className="flex justify-between items-center text-white">
+              <div className="flex items-center gap-8">
+                <button onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}>
+                  {isPlaying ? <Pause size={30} fill="white" /> : <Play size={30} fill="white" />}
+                </button>
+                <div className="flex gap-6 opacity-70">
+                  <RotateCcw size={24} onClick={() => playerRef.current.seekTo(currentTime - 10)} />
+                  <RotateCw size={24} onClick={() => playerRef.current.seekTo(currentTime + 10)} />
+                </div>
+                <span className="text-sm font-medium tabular-nums opacity-60">{formatTime(currentTime)} / {formatTime(duration)}</span>
               </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-8">
-                  <button onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}>
-                    {isPlaying ? <Pause size={32} fill="white" /> : <Play size={32} fill="white" />}
-                  </button>
-                  <div className="flex gap-6">
-                    <RotateCcw size={24} className="hover:text-blue-400" onClick={() => playerRef.current.seekTo(currentTime - 10)} />
-                    <RotateCw size={24} className="hover:text-blue-400" onClick={() => playerRef.current.seekTo(currentTime + 10)} />
-                  </div>
-                  <span className="text-sm font-bold tabular-nums opacity-60">
-                    {Math.floor(currentTime/60)}:{Math.floor(currentTime%60).toString().padStart(2, '0')} / {Math.floor(duration/60)}:{Math.floor(duration%60).toString().padStart(2, '0')}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-6">
-                  <Settings size={22} className="opacity-50" />
-                  <List size={22} className="cursor-pointer hover:text-blue-400" onClick={() => setShowTimeline(!showTimeline)} />
-                  <Expand size={22} className="hover:text-blue-400" onClick={() => containerRef.current?.requestFullscreen()} />
-                </div>
+              <div className="flex items-center gap-6">
+                <Settings size={22} className="opacity-40" />
+                <List size={22} className="cursor-pointer" />
+                <Expand size={22} onClick={() => containerRef.current?.requestFullscreen()} />
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Chapter Sidebar */}
-      {showTimeline && (
-        <aside className="w-[400px] h-full bg-white text-black z-40 animate-in slide-in-from-right duration-300 border-l border-gray-200">
-          <div className="p-6 border-b flex justify-between items-center">
-            <span className="font-black text-xl tracking-tight">Timeline</span>
-            <X size={24} className="cursor-pointer opacity-40 hover:opacity-100" onClick={() => setShowTimeline(false)} />
-          </div>
-          <div className="p-4 space-y-2">
-            {timelines.map((t, i) => (
-              <div key={i} className="p-4 hover:bg-gray-50 cursor-pointer rounded-xl border border-transparent hover:border-gray-200 flex justify-between items-center font-medium transition-all" onClick={() => playerRef.current.seekTo(t.time)}>
-                <span className="text-gray-700">{t.label}</span>
-                <span className="text-blue-600 font-bold bg-blue-50 px-2 py-1 rounded text-xs">{Math.floor(t.time/60)}:{(t.time%60).toString().padStart(2, '0')}</span>
-              </div>
-            ))}
-          </div>
-        </aside>
-      )}
     </div>
   );
 };
-
-export default VideoPlayer;
