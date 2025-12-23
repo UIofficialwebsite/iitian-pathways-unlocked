@@ -23,7 +23,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isVideoVisible, setIsVideoVisible] = useState(false); // Fix for 2-3 sec branding flicker
+  const [isVideoVisible, setIsVideoVisible] = useState(false);
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -36,7 +36,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
   };
 
   useEffect(() => {
-    // 1. Load YouTube API Script if not present
     if (!window.YT) {
       const tag = document.createElement('script');
       tag.src = "https://www.youtube.com/iframe_api";
@@ -55,7 +54,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
           iv_load_policy: 3,
           disablekb: 1,
           showinfo: 0,
-          autohide: 1
+          autohide: 1,
+          origin: window.location.origin
         },
         events: {
           onReady: (event: any) => {
@@ -80,8 +80,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         const curr = playerRef.current.getCurrentTime();
         const total = playerRef.current.getDuration();
         
-        // Fix branding flicker: Only show video after 1 second of actual playback
-        if (curr > 1.0) setIsVideoVisible(true);
+        // Hide initial 1.5s to wait for YouTube overlays to fade naturally
+        if (curr > 1.5) setIsVideoVisible(true);
         
         setCurrentTime(curr);
         if (total > 0) {
@@ -97,30 +97,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     };
   }, [videoId]);
 
-  const togglePlay = () => {
-    if (!isReady || !playerRef.current) return;
-    isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo();
-  };
-
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-row overflow-hidden font-sans select-none text-white">
-      {/* MAIN VIDEO AREA */}
-      <div className="relative flex-1 bg-black flex flex-col group overflow-hidden">
+      <div className="relative flex-1 bg-black flex flex-col overflow-hidden">
         
-        {/* head-less player */}
-        <div className={`absolute inset-0 transition-opacity duration-1000 ${isVideoVisible ? 'opacity-100' : 'opacity-0'}`}>
-           <div id="yt-player-headless" className="w-full h-full pointer-events-none scale-110" />
+        {/* SCALE & MASK CONTAINER */}
+        <div className={`absolute inset-0 overflow-hidden transition-opacity duration-700 ${isVideoVisible ? 'opacity-100' : 'opacity-0'}`}>
+           {/* Scale up slightly to push branding (title/watermark) outside the overflow-hidden parent */}
+           <div id="yt-player-headless" className="w-full h-full scale-[1.15] pointer-events-none" />
         </div>
 
-        {/* SECURITY & BRANDING SHIELDS */}
-        <div className="absolute inset-0 z-10 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
-        <div className="absolute top-0 right-0 w-64 h-24 z-20 bg-black pointer-events-none" /> {/* Mask Watch Later/Share */}
-        <div className="absolute bottom-0 right-0 w-32 h-20 z-20 bg-black pointer-events-none" /> {/* Mask Watermark */}
+        {/* INTERACTION LAYER */}
+        <div className="absolute inset-0 z-10 cursor-pointer" onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()} onContextMenu={(e) => e.preventDefault()} />
 
+        {/* LOADING MASK */}
         {!isVideoVisible && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center bg-black">
-                <div className="w-10 h-10 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-            </div>
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-black">
+            <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          </div>
         )}
 
         {/* TOP HUD */}
@@ -133,13 +127,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
 
         {/* BOTTOM HUD */}
         <div className="absolute bottom-0 inset-x-0 p-8 pt-20 z-40 bg-gradient-to-t from-black/90 to-transparent">
-          <div className="w-full h-1 bg-white/20 rounded-full mb-6 relative overflow-hidden">
-            <div className="absolute h-full bg-[#0056D2] rounded-full" style={{ width: `${progress}%` }} />
+          <div className="w-full h-1 bg-white/20 rounded-full mb-6 relative overflow-hidden cursor-pointer" onClick={(e) => {
+             const rect = e.currentTarget.getBoundingClientRect();
+             const pos = (e.clientX - rect.left) / rect.width;
+             playerRef.current.seekTo(pos * duration);
+          }}>
+            <div className="absolute h-full bg-white" style={{ width: `${progress}%` }} />
           </div>
 
           <div className="flex justify-between items-center">
-            <div className="group flex items-center gap-6">
-              <button onClick={togglePlay} className="hover:opacity-80">{isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}</button>
+            <div className="flex items-center gap-6">
+              <button onClick={() => isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo()}>
+                {isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}
+              </button>
               <button onClick={() => playerRef.current.seekTo(currentTime - 10)} className="relative flex items-center justify-center"><RotateCcw size={26} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
               <button onClick={() => playerRef.current.seekTo(currentTime + 10)} className="relative flex items-center justify-center"><RotateCw size={26} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
               <button><Volume2 size={24} /></button>
@@ -148,19 +148,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
 
             <div className="flex items-center gap-6">
               <button onClick={() => setShowSettings(!showSettings)}><Settings size={24} /></button>
-              <button onClick={() => setShowTimeline(!showTimeline)} className={showTimeline ? 'text-[#0056D2]' : ''}><List size={24} /></button>
+              <button onClick={() => setShowTimeline(!showTimeline)} className={showTimeline ? 'text-blue-400' : ''}><List size={24} /></button>
               <button onClick={() => playerRef.current.getIframe().requestFullscreen()}><Expand size={24} /></button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* TIMELINE SIDEBAR (Requested Design) */}
+      {/* TIMELINE SIDEBAR (White Theme) */}
       {showTimeline && (
-        <aside className="w-[350px] h-full bg-white flex flex-col z-[50] border-l border-gray-300 shadow-[-2px_0_10px_rgba(0,0,0,0.05)] animate-in slide-in-from-right duration-300">
+        <aside className="w-[350px] h-full bg-white flex flex-col z-[50] border-l border-gray-300 animate-in slide-in-from-right duration-300">
           <div className="flex justify-between items-center p-4 border-b border-[#efefef]">
             <h3 className="text-[#1a1a1a] text-base font-semibold m-0">Timeline</h3>
-            <button onClick={() => setShowTimeline(false)} className="text-[#333] hover:opacity-60 transition-opacity"><X size={20} /></button>
+            <button onClick={() => setShowTimeline(false)} className="text-[#333] hover:opacity-60 transition-opacity font-bold"><X size={20} /></button>
           </div>
 
           <div className="flex-1 flex flex-col">
