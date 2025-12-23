@@ -5,25 +5,30 @@ import 'videojs-youtube';
 import { 
   ArrowLeft, EllipsisVertical, Play, Pause, 
   RotateCcw, RotateCw, Volume2, Settings, 
-  List, Expand, Flag, X 
+  List, Expand, Flag, X, ChevronRight
 } from 'lucide-react';
+
+interface TimelineItem {
+  time: number;
+  label: string;
+}
 
 interface VideoPlayerProps {
   videoId: string;
   title: string;
   onClose: () => void;
-  playlist?: { id: string; title: string }[];
+  // Replaced playlist with timelines
+  timelines?: TimelineItem[];
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, playlist = [] }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, timelines = [] }) => {
   const videoRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [showPlaylist, setShowPlaylist] = useState(false);
+  const [showTimeline, setShowTimeline] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showReport, setShowReport] = useState(false);
   
-  // Progress & Time State
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -31,12 +36,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
   const [hoverPos, setHoverPos] = useState(0);
 
   const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
+    const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
-    return h > 0 
-      ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
-      : `${m}:${s.toString().padStart(2, '0')}`;
+    return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
   useEffect(() => {
@@ -51,13 +53,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
         responsive: true,
         techOrder: ["youtube"],
         sources: [{ type: "video/youtube", src: `https://www.youtube.com/watch?v=${videoId}` }],
-        youtube: { modestbranding: 1, rel: 0, iv_load_policy: 3, controls: 0, showinfo: 0 }
+        youtube: { 
+          modestbranding: 1, 
+          rel: 0, 
+          iv_load_policy: 3, 
+          controls: 0, 
+          showinfo: 0,
+          // Specifically removing related videos/suggestive content
+          disablekb: 1
+        }
       });
 
       player.on('play', () => setIsPlaying(true));
       player.on('pause', () => setIsPlaying(false));
-      
-      // Update progress logic
       player.on('timeupdate', () => {
         const current = player.currentTime();
         const total = player.duration();
@@ -67,39 +75,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
           setProgress((current / total) * 100);
         }
       });
-
-      player.on('loadedmetadata', () => {
-        setDuration(player.duration());
-      });
     }
     return () => playerRef.current?.dispose();
   }, [videoId]);
 
   const togglePlay = () => isPlaying ? playerRef.current.pause() : playerRef.current.play();
-  
-  const skip = (seconds: number) => {
-    const time = playerRef.current.currentTime();
-    playerRef.current.currentTime(time + seconds);
-  };
-
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
     playerRef.current.currentTime(pos * duration);
   };
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pos = (e.clientX - rect.left) / rect.width;
-    setHoverPos(e.clientX - rect.left);
-    setHoverTime(formatTime(pos * duration));
+  const seekToTimeline = (time: number) => {
+    playerRef.current.currentTime(time);
+    if (!isPlaying) playerRef.current.play();
   };
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-row overflow-hidden font-sans select-none text-white">
       <div className="relative flex-1 bg-black flex flex-col overflow-hidden">
         
-        {/* TOP BAR */}
+        {/* TOP HUD */}
         <div className="absolute top-0 inset-x-0 p-6 z-50 bg-gradient-to-b from-black/70 to-transparent flex justify-between items-center">
           <button onClick={onClose} className="hover:opacity-80 transition-opacity"><ArrowLeft size={24} /></button>
           <div className="relative">
@@ -115,79 +111,86 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, play
         {/* VIDEO AREA */}
         <div className="flex-1 relative flex items-center justify-center">
           <div className="w-full h-full" data-vjs-player><div ref={videoRef} className="w-full h-full" /></div>
-          <div className="absolute inset-0 z-20" onContextMenu={(e) => e.preventDefault()} onClick={togglePlay} />
+          {/* Security Shield to block suggested videos clicks */}
+          <div className="absolute inset-0 z-20" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
         </div>
 
-        {/* BOTTOM CONTROLS */}
+        {/* BOTTOM HUD */}
         <div className="absolute bottom-0 inset-x-0 p-8 pt-20 z-50 bg-gradient-to-t from-black/80 to-transparent">
-          
-          {/* Timeline Meter with Hover Time */}
-          <div 
-            className="w-full h-1.5 bg-white/20 rounded-full mb-6 cursor-pointer relative group/timeline"
-            onClick={handleSeek}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setHoverTime(null)}
-          >
-            {/* Progress Fill */}
+          <div className="w-full h-1.5 bg-white/20 rounded-full mb-6 cursor-pointer relative group/timeline" onClick={handleSeek}>
             <div className="absolute h-full bg-[#0056D2] rounded-full" style={{ width: `${progress}%` }} />
-            
-            {/* Hover Tooltip */}
-            {hoverTime && (
-              <div 
-                className="absolute bottom-4 bg-black/90 px-2 py-1 rounded text-[10px] border border-white/10 -translate-x-1/2"
-                style={{ left: `${hoverPos}px` }}
-              >
-                {hoverTime}
-              </div>
-            )}
           </div>
 
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-6">
-              <button onClick={togglePlay} className="hover:opacity-80">
-                {isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}
-              </button>
-              <button onClick={() => skip(-10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCcw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
-              <button onClick={() => skip(10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
+              <button onClick={togglePlay} className="hover:opacity-80">{isPlaying ? <Pause size={24} fill="white" /> : <Play size={24} fill="white" />}</button>
+              <button onClick={() => playerRef.current.currentTime(currentTime - 10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCcw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
+              <button onClick={() => playerRef.current.currentTime(currentTime + 10)} className="relative hover:opacity-80 flex items-center justify-center"><RotateCw size={28} /><span className="absolute text-[8px] font-black mt-1">10</span></button>
               <button className="hover:opacity-80"><Volume2 size={24} /></button>
-              <span className="text-sm font-medium opacity-80 tabular-nums">
-                {formatTime(currentTime)} / {formatTime(duration)}
-              </span>
+              <span className="text-sm font-medium opacity-80 tabular-nums">{formatTime(currentTime)} / {formatTime(duration)}</span>
             </div>
 
             <div className="flex items-center gap-6">
               <div className="relative">
                 <button onClick={() => setShowSettings(!showSettings)} className="hover:opacity-80"><Settings size={24} /></button>
                 {showSettings && (
-                  <div className="absolute bottom-12 right-0 bg-[#1c1c1c] rounded-lg shadow-2xl min-w-[160px] border border-white/10">
+                  <div className="absolute bottom-12 right-0 bg-[#1c1c1c] rounded-lg shadow-2xl min-w-[160px] border border-white/10 z-[60]">
                     <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer border-b border-white/5">Quality <span className="text-[11px] text-gray-400">1080p</span></div>
                     <div className="flex justify-between px-4 py-3 text-sm hover:bg-[#333] cursor-pointer">Speed <span className="text-[11px] text-gray-400">1.0x</span></div>
                   </div>
                 )}
               </div>
-              <button onClick={() => setShowPlaylist(!showPlaylist)} className={`hover:opacity-80 ${showPlaylist ? 'text-[#0056D2]' : ''}`}><List size={24} /></button>
+              {/* Timeline Toggle Button */}
+              <button onClick={() => setShowTimeline(!showTimeline)} className={`hover:opacity-80 ${showTimeline ? 'text-[#0056D2]' : ''}`}><List size={24} /></button>
               <button onClick={() => playerRef.current.requestFullscreen()} className="hover:opacity-80"><Expand size={24} /></button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* SIDEBAR PLAYLIST */}
-      {showPlaylist && (
-        <div className="w-80 bg-[#1c1c1c] border-l border-white/10 flex flex-col z-[60] animate-in slide-in-from-right">
-          <div className="p-6 border-b border-white/10 flex justify-between items-center">
-            <h3 className="text-sm font-bold uppercase tracking-widest">Playlist</h3>
-            <button onClick={() => setShowPlaylist(false)} className="text-gray-400 hover:text-white"><X size={20}/></button>
+      {/* TIMELINE SIDEBAR (Using requested Design) */}
+      {showTimeline && (
+        <aside className="w-[350px] h-full bg-white flex flex-col z-[60] border-l border-gray-300 shadow-[-2px_0_10px_rgba(0,0,0,0.05)] animate-in slide-in-from-right duration-300">
+          <div className="flex justify-between items-center p-4 border-b border-[#efefef]">
+            <h3 className="text-[#1a1a1a] text-base font-semibold m-0">Timeline</h3>
+            <button onClick={() => setShowTimeline(false)} className="bg-none border-none text-[22px] cursor-pointer text-[#333] p-0 hover:opacity-60 transition-opacity">
+              <X size={20} />
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-2">
-            {playlist.map((item, index) => (
-              <div key={item.id} className={`p-4 rounded-lg cursor-pointer flex gap-4 items-center mb-1 ${item.id === videoId ? 'bg-[#0056D2]' : 'hover:bg-white/5'}`}>
-                <span className="text-[10px] font-black opacity-50">{index + 1}</span>
-                <p className="text-xs font-bold truncate">{item.title}</p>
+
+          <div className="flex-1 flex flex-col">
+            {timelines.length > 0 ? (
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                {timelines.map((item, idx) => (
+                  <button 
+                    key={idx}
+                    onClick={() => seekToTimeline(item.time)}
+                    className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex justify-between items-center group transition-colors border border-transparent hover:border-gray-200"
+                  >
+                    <span className="text-sm font-medium text-gray-700">{item.label}</span>
+                    <span className="text-xs font-bold text-[#7d84d1]">{formatTime(item.time)}</span>
+                  </button>
+                ))}
               </div>
-            ))}
+            ) : (
+              /* EMPTY STATE DESIGN */
+              <div className="flex-1 flex flex-col items-center justify-center pb-20">
+                <div className="w-[130px] h-[130px] mb-5">
+                  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M25 40L50 28L75 40V65L50 77L25 65V40Z" stroke="#7d84d1" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <path d="M25 40L50 52L75 40" stroke="#7d84d1" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <path d="M50 52V77" stroke="#7d84d1" strokeWidth="2.5" strokeLinejoin="round"/>
+                    <circle cx="72" cy="32" r="10" fill="white" stroke="#7d84d1" strokeWidth="2.5"/>
+                    <line x1="68" y1="28" x2="76" y2="36" stroke="#7d84d1" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="76" y1="28" x2="68" y2="36" stroke="#7d84d1" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M78 40L86 48" stroke="#7d84d1" strokeWidth="3" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <p className="text-[15px] font-semibold text-[#1a1a1a] m-0">No timeline yet!</p>
+              </div>
+            )}
           </div>
-        </div>
+        </aside>
       )}
     </div>
   );
