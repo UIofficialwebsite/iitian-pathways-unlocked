@@ -22,7 +22,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
-  const [isVideoLocked, setIsVideoLocked] = useState(true); // Mask for first 1.5s branding flicker
+  const [isVideoLocked, setIsVideoLocked] = useState(true); // Masks initial branding flicker
 
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -41,11 +41,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         playerVars: {
           autoplay: 1,
           controls: 0,
-          modestbranding: 1,
-          rel: 0,
-          iv_load_policy: 3,
+          modestbranding: 1, // Minimizes logo
+          rel: 0,            // Limits related videos to same channel
+          iv_load_policy: 3, // Disables annotations/watermarks
           disablekb: 1,
-          showinfo: 0,
+          showinfo: 0,       // Deprecated but included for fallback
           autohide: 1,
           origin: window.location.origin
         },
@@ -72,7 +72,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         const curr = playerRef.current.getCurrentTime();
         const total = playerRef.current.getDuration();
         
-        // UNLOCK logic: Wait 1.5s for initial title/watermark to fade naturally
+        // UNLOCK: Show video only after 1.5s to wait out YouTube's title animation
         if (curr > 1.5 && isVideoLocked) setIsVideoLocked(false);
         
         setCurrentTime(curr);
@@ -94,7 +94,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     isPlaying ? playerRef.current.pauseVideo() : playerRef.current.playVideo();
   };
 
-  // FIXED SEEKING: Uses the second parameter 'true' to force a server request
+  // FIXED: seekTo(time, true) allows jumping backward even to non-buffered segments
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
@@ -107,19 +107,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
     <div className="fixed inset-0 z-[100] bg-black flex flex-row overflow-hidden font-sans select-none text-white">
       <div className="relative flex-1 bg-black flex flex-col overflow-hidden">
         
-        {/* head-less player */}
+        {/* head-less player layer */}
         <div className={`absolute inset-0 transition-opacity duration-1000 ${isVideoLocked ? 'opacity-0' : 'opacity-100'}`}>
            <div id="yt-player-headless" className="w-full h-full pointer-events-none" />
         </div>
 
-        {/* SECURITY & PAUSE SHIELD - Blocks "More Videos" on pause */}
-        <div 
-          className="absolute inset-0 z-20 cursor-pointer" 
-          onClick={togglePlay} 
-          onContextMenu={(e) => e.preventDefault()} 
-        />
+        {/* SECURITY & PAUSE SHIELD: Blocks "More Videos" tray on pause */}
+        <div className="absolute inset-0 z-20 cursor-pointer" onClick={togglePlay} onContextMenu={(e) => e.preventDefault()} />
         
-        {/* LOADING MASK (Blocks flickering title) */}
+        {/* INITIAL LOADING MASK */}
         {isVideoLocked && (
           <div className="absolute inset-0 z-30 flex items-center justify-center bg-black">
             <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -128,7 +124,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
 
         {/* BOTTOM HUD */}
         <div className="absolute bottom-0 inset-x-0 p-8 pt-20 z-40 bg-gradient-to-t from-black/90 to-transparent">
-          {/* Timeline Meter with Seeking Fix */}
+          {/* Progress Bar with Correct Seek Logic */}
           <div className="w-full h-1 bg-white/20 rounded-full mb-6 relative cursor-pointer" onClick={handleSeek}>
             <div className="absolute h-full bg-[#0056D2]" style={{ width: `${progress}%` }} />
           </div>
@@ -152,18 +148,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
         </div>
       </div>
 
-      {/* SIDEBAR TIMELINE */}
+      {/* TIMELINE SIDEBAR */}
       {showTimeline && (
         <aside className="w-[350px] h-full bg-white flex flex-col z-[50] border-l border-gray-300 animate-in slide-in-from-right duration-300">
           <div className="flex justify-between items-center p-4 border-b border-[#efefef]">
             <h3 className="text-[#1a1a1a] text-base font-semibold m-0 tracking-tight">Timeline</h3>
-            <button onClick={() => setShowTimeline(false)} className="text-[#333] hover:opacity-60 transition-opacity"><X size={20} /></button>
+            <button onClick={() => setShowTimeline(false)} className="text-[#333] hover:opacity-60 transition-opacity font-bold text-[22px]">&times;</button>
           </div>
           <div className="flex-1 flex flex-col">
             {timelines.length > 0 ? (
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
                 {timelines.map((item, idx) => (
-                  <button key={idx} onClick={() => playerRef.current.seekTo(item.time, true)} className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex justify-between items-center transition-colors border border-transparent hover:border-gray-200">
+                  <button key={idx} onClick={() => playerRef.current.seekTo(item.time, true)} className="w-full text-left p-3 rounded-lg hover:bg-gray-50 flex justify-between items-center transition-colors border border-transparent hover:border-gray-200 text-black">
                     <span className="text-sm font-medium text-gray-700">{item.label}</span>
                     <span className="text-xs font-bold text-[#7d84d1]">{formatTime(item.time)}</span>
                   </button>
@@ -171,7 +167,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoId, title, onClose, time
               </div>
             ) : (
               <div className="flex-1 flex flex-col items-center justify-center pb-20 px-10 text-center text-black">
-                <p className="font-semibold">No timeline yet!</p>
+                <p className="font-semibold text-[15px]">No timeline yet!</p>
               </div>
             )}
           </div>
