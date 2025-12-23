@@ -131,7 +131,7 @@ const LibrarySection: React.FC<{ profile: Tables<'profiles'> | null }> = ({ prof
           })),
           ...(notesData || []).map(n => ({ 
             id: n.id, title: n.title, subject: n.subject, url: n.file_link || n.content_url, 
-            category: 'Short Notes and Mindmaps', level: n.class_level || n.level 
+            category: 'Short Notes and Mindmaps', level: n.class_level 
           })),
           ...(iitmData || []).map(i => ({ 
             id: i.id, title: i.title, subject: i.subject, url: i.file_link, 
