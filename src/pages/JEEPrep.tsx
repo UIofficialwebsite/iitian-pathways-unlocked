@@ -20,9 +20,16 @@ const JEEPrep = () => {
   const location = useLocation();
   
   // Initialize state from URL
-  const initialTab = getTabFromUrl(location.pathname);
-  const urlParams = getParamsFromUrl(location.pathname);
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
+  const [urlParams, setUrlParams] = useState(() => getParamsFromUrl(location.pathname));
+
+  // Sync tab state with URL when location changes
+  useEffect(() => {
+    const tabFromUrl = getTabFromUrl(location.pathname);
+    const paramsFromUrl = getParamsFromUrl(location.pathname);
+    setActiveTab(tabFromUrl);
+    setUrlParams(paramsFromUrl);
+  }, [location.pathname]);
 
   const jeeNotes = useMemo(() => notes.filter(note => note.exam_type === 'JEE'), [notes]);
 

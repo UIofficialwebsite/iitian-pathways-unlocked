@@ -80,6 +80,38 @@ export type Database = {
         }
         Relationships: []
       }
+      batch_schedule: {
+        Row: {
+          batch_name: string
+          course_id: string
+          file_link: string
+          id: string
+          subject_name: string
+        }
+        Insert: {
+          batch_name: string
+          course_id: string
+          file_link: string
+          id?: string
+          subject_name: string
+        }
+        Update: {
+          batch_name?: string
+          course_id?: string
+          file_link?: string
+          id?: string
+          subject_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "batch_schedule_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           branch: string | null
@@ -134,6 +166,38 @@ export type Database = {
         }
         Relationships: []
       }
+      course_faqs: {
+        Row: {
+          answer: string
+          course_id: string
+          created_at: string
+          id: string
+          question: string
+        }
+        Insert: {
+          answer: string
+          course_id: string
+          created_at?: string
+          id?: string
+          question: string
+        }
+        Update: {
+          answer?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_faqs_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           bestseller: boolean | null
@@ -143,6 +207,7 @@ export type Database = {
           description: string
           discounted_price: number | null
           duration: string
+          end_date: string | null
           enroll_now_link: string | null
           exam_category: string | null
           expiry_date: string | null
@@ -169,6 +234,7 @@ export type Database = {
           description: string
           discounted_price?: number | null
           duration: string
+          end_date?: string | null
           enroll_now_link?: string | null
           exam_category?: string | null
           expiry_date?: string | null
@@ -195,6 +261,7 @@ export type Database = {
           description?: string
           discounted_price?: number | null
           duration?: string
+          end_date?: string | null
           enroll_now_link?: string | null
           exam_category?: string | null
           expiry_date?: string | null
@@ -265,35 +332,23 @@ export type Database = {
       }
       enrollments: {
         Row: {
-          amount: number
           course_id: string
           created_at: string | null
           id: string
-          order_id: string | null
-          payment_id: string | null
-          status: string
           subject_name: string | null
           user_id: string
         }
         Insert: {
-          amount: number
           course_id: string
           created_at?: string | null
           id?: string
-          order_id?: string | null
-          payment_id?: string | null
-          status?: string
           subject_name?: string | null
           user_id: string
         }
         Update: {
-          amount?: number
           course_id?: string
           created_at?: string | null
           id?: string
-          order_id?: string | null
-          payment_id?: string | null
-          status?: string
           subject_name?: string | null
           user_id?: string
         }
@@ -310,6 +365,47 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      focus_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          icon: string | null
+          id: string
+          label: string
+          parent_id: string | null
+          profile_column_to_update: string
+          value_to_save: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          icon?: string | null
+          id?: string
+          label: string
+          parent_id?: string | null
+          profile_column_to_update: string
+          value_to_save: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          icon?: string | null
+          id?: string
+          label?: string
+          parent_id?: string | null
+          profile_column_to_update?: string
+          value_to_save?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_options_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "focus_options"
             referencedColumns: ["id"]
           },
         ]
@@ -359,6 +455,36 @@ export type Database = {
           title?: string
           updated_at?: string
           week_number?: number
+        }
+        Relationships: []
+      }
+      iitm_bs_subjects: {
+        Row: {
+          branch: string
+          created_at: string | null
+          display_order: number | null
+          id: number
+          level: string
+          specialization: string | null
+          subject_name: string
+        }
+        Insert: {
+          branch: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          level: string
+          specialization?: string | null
+          subject_name: string
+        }
+        Update: {
+          branch?: string
+          created_at?: string | null
+          display_order?: number | null
+          id?: number
+          level?: string
+          specialization?: string | null
+          subject_name?: string
         }
         Relationships: []
       }
@@ -821,6 +947,78 @@ export type Database = {
         }
         Relationships: []
       }
+      study_materials: {
+        Row: {
+          branch: string | null
+          class_level: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          download_count: number | null
+          exam_category: string | null
+          file_url: string
+          id: string
+          is_free: boolean | null
+          level: string | null
+          material_type: Database["public"]["Enums"]["material_type"]
+          preview_image_url: string | null
+          session: string | null
+          shift: string | null
+          subject: string | null
+          title: string
+          topic: string | null
+          updated_at: string | null
+          week_number: number | null
+          year: number | null
+        }
+        Insert: {
+          branch?: string | null
+          class_level?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          download_count?: number | null
+          exam_category?: string | null
+          file_url: string
+          id?: string
+          is_free?: boolean | null
+          level?: string | null
+          material_type?: Database["public"]["Enums"]["material_type"]
+          preview_image_url?: string | null
+          session?: string | null
+          shift?: string | null
+          subject?: string | null
+          title: string
+          topic?: string | null
+          updated_at?: string | null
+          week_number?: number | null
+          year?: number | null
+        }
+        Update: {
+          branch?: string | null
+          class_level?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          download_count?: number | null
+          exam_category?: string | null
+          file_url?: string
+          id?: string
+          is_free?: boolean | null
+          level?: string | null
+          material_type?: Database["public"]["Enums"]["material_type"]
+          preview_image_url?: string | null
+          session?: string | null
+          shift?: string | null
+          subject?: string | null
+          title?: string
+          topic?: string | null
+          updated_at?: string | null
+          week_number?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           company: string | null
@@ -875,6 +1073,7 @@ export type Database = {
           exam: string | null
           exam_type: string | null
           full_name: string | null
+          gender: string | null
           id: string
           level: string | null
           phone: string | null
@@ -894,6 +1093,7 @@ export type Database = {
           exam?: string | null
           exam_type?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
           level?: string | null
           phone?: string | null
@@ -913,6 +1113,7 @@ export type Database = {
           exam?: string | null
           exam_type?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
           level?: string | null
           phone?: string | null
@@ -965,13 +1166,43 @@ export type Database = {
           },
         ]
       }
+      youtube_cache: {
+        Row: {
+          channel_id: string | null
+          data: Json
+          etag: string | null
+          id: string
+          last_updated: string | null
+        }
+        Insert: {
+          channel_id?: string | null
+          data: Json
+          etag?: string | null
+          id?: string
+          last_updated?: string | null
+        }
+        Update: {
+          channel_id?: string | null
+          data?: Json
+          etag?: string | null
+          id?: string
+          last_updated?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      generate_all_recommendations: { Args: never; Returns: string }
+      generate_content_recs_for_user: {
+        Args: { user_id_input: string }
+        Returns: undefined
+      }
+      get_my_role: { Args: never; Returns: string }
       get_public_testimonials: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           company: string
           created_at: string
@@ -990,25 +1221,13 @@ export type Database = {
         Args: { content_id: string; table_name: string; user_email?: string }
         Returns: undefined
       }
-      is_admin: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
-      is_admin_user: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
-      is_current_user_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
-      is_super_admin: {
-        Args: { user_email: string }
-        Returns: boolean
-      }
+      is_admin: { Args: { user_email: string }; Returns: boolean }
+      is_admin_user: { Args: { user_email: string }; Returns: boolean }
+      is_current_user_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: { user_email: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      material_type: "note" | "pyq" | "question_bank" | "ui_ki_padhai"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1135,6 +1354,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      material_type: ["note", "pyq", "question_bank", "ui_ki_padhai"],
+    },
   },
 } as const
