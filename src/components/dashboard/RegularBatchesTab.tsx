@@ -21,11 +21,11 @@ const CourseCard: React.FC<{
   return (
     <>
       <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-        {/* Simplified Header Image Section */}
+        {/* Simple Course Image Section */}
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <img 
             src={course.image_url || "https://i.imgur.com/eBf29iE.png"} 
-            alt="Course" 
+            alt={course.title} 
             className="w-full block aspect-video object-cover" 
           />
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -36,7 +36,7 @@ const CourseCard: React.FC<{
         {/* Content Section */}
         <div className="p-5 flex flex-col flex-1">
           <div className="flex justify-between items-center mb-[10px]">
-            <span className="text-[#f97316] font-bold text-base">{course.level || 'Academic'}</span>
+            <span className="text-[#f97316] font-bold text-base uppercase">{course.level || 'Academic'}</span>
             <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
               {course.language || 'Hinglish'}
             </span>
@@ -57,7 +57,7 @@ const CourseCard: React.FC<{
             </div>
           </div>
 
-          {/* Footer Pricing */}
+          {/* Pricing and Action Buttons */}
           <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
             <div>
               <div className="flex items-baseline gap-1.5">
@@ -70,10 +70,16 @@ const CourseCard: React.FC<{
             </div>
             
             <div className="flex gap-2">
-              <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black transition-colors">
+              <button 
+                onClick={() => onSelect(course.id)} 
+                className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black transition-colors"
+              >
                 Enroll Now
               </button>
-              <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => onSelect(course.id)} 
+                className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center hover:bg-gray-50 transition-colors"
+              >
                 <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
               </button>
             </div>
@@ -81,10 +87,14 @@ const CourseCard: React.FC<{
         </div>
       </div>
 
+      {/* Image Preview Overlay */}
       {isPreviewOpen && (
-        <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
-          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg" alt="Preview" />
-          <button className="absolute top-6 right-6 text-white"><X className="w-8 h-8" /></button>
+        <div 
+          className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
+          <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" onClick={() => setIsPreviewOpen(false)} />
         </div>
       )}
     </>
@@ -116,14 +126,14 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* FIXED HEADER */}
+      {/* Sticky Header with Search */}
       <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-3 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
           <div className="relative w-full max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder="Search batches..."
+              placeholder="Search by batch name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-10 bg-white border-[#e0e0e0] rounded-lg text-sm"
@@ -132,13 +142,16 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
+      {/* Scrollable Batch List */}
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-orange-500" /></div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
-              {filtered.map(batch => <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />)}
+              {filtered.map(batch => (
+                <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
+              ))}
             </div>
           )}
         </div>
