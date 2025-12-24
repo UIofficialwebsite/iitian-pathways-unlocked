@@ -183,7 +183,7 @@ interface LibrarySectionProps {
 
 const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onTabChange, persistedVideo, onVideoChange }) => {
   const navigate = useNavigate();
-  const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials(); 
+  const { materials: studyMaterials, loading: studyLoading } = useStudyMaterials();
   const [dbMaterials, setDbMaterials] = useState<ContentItem[]>([]);
   const [ytPlaylists, setYtPlaylists] = useState<YouTubePlaylist[]>([]);
   const [ytSearchQuery, setYtSearchQuery] = useState("");
@@ -256,7 +256,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
   const allContent = useMemo(() => {
     const studyMapped = (studyMaterials || [])
         .filter(m => !m.exam_category || m.exam_category === focusArea || m.exam_category === 'General')
-        .filter(m => m.material_type !== 'pyq') 
+        .filter(m => m.material_type !== 'pyq')
         .map(m => {
             let cat = 'Other';
             const materialType = (m as any).material_type;
@@ -292,6 +292,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
   const sortedAndFilteredPlaylists = useMemo(() => {
     let list = [...ytPlaylists];
     
+    // logic to keep the playlist row on top where recently a video is added
     if (viewingItem && viewingItem.category === 'Free Lectures') {
         const activePlaylistIndex = list.findIndex(pl => 
             pl.videos.some(v => String(v.id) === String(viewingItem.id))
