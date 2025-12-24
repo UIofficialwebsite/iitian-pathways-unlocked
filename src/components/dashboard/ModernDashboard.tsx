@@ -11,7 +11,6 @@ import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 
-// Import all original views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
@@ -45,15 +44,9 @@ const ModernDashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
-  
-  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
-  
-  // Floating Detail State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  
-  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -87,19 +80,13 @@ const ModernDashboard: React.FC = () => {
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
       } finally {
         setLoadingProfile(false);
       }
     };
 
     fetchProfile();
-  }, [user, authLoading, navigate, location, toast]);
-
-  const handleFocusSave = (updatedProfile: Profile) => {
-    setProfile(updatedProfile);
-    setIsFocusModalOpen(false);
-  };
+  }, [user, authLoading, navigate, location]);
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
@@ -143,17 +130,15 @@ const ModernDashboard: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
-          <div className="min-h-full">
-            <DashboardSidebar
-              profile={profile}
-              onProfileUpdate={handleProfileUpdate}
-              onViewChange={handleViewChange} 
-              activeView={activeView}
-            />
-          </div>
+          <DashboardSidebar
+            profile={profile}
+            onProfileUpdate={handleProfileUpdate}
+            onViewChange={handleViewChange} 
+            activeView={activeView}
+          />
         </aside>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
+        <main className="flex-1 overflow-y-auto relative">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
@@ -173,27 +158,27 @@ const ModernDashboard: React.FC = () => {
                 )}
 
                 {activeView === 'regularBatches' && (
-                  <div className="flex-1 relative h-full">
-                    {/* The list stays in background */}
+                  <div className="flex-1 relative">
+                    {/* The list with its fixed header remains aligned with other sections */}
                     <RegularBatchesTab 
                       focusArea={profile?.program_type || 'General'} 
                       onSelectCourse={setSelectedCourseId}
                     />
 
-                    {/* Floating Detail Overlay */}
+                    {/* Floating Floating Detail Section with Round Corners */}
                     {selectedCourseId && (
-                      <div className="absolute inset-0 z-50 bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[60] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
+                      <div className="absolute inset-4 z-50 bg-white shadow-2xl rounded-[32px] border border-gray-100 overflow-hidden animate-in slide-in-from-right-8 duration-500 flex flex-col">
+                        <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-sm border-b px-8 py-4 flex items-center justify-between">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-all"
                           >
                             <ArrowLeft className="w-5 h-5" />
-                            Back to All Batches
+                            Back to Batches
                           </button>
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                           >
                             <X className="w-6 h-6 text-gray-400" />
                           </button>
@@ -224,7 +209,7 @@ const ModernDashboard: React.FC = () => {
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
         profile={profile}
-        onProfileUpdate={handleFocusSave}
+        onProfileUpdate={(p) => { setProfile(p); setIsFocusModalOpen(false); }}
       />
     </div>
   );
