@@ -126,32 +126,37 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* Sticky Header with Search */}
-      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-3 shadow-sm">
+      {/* Sticky Header Aligned with ContentWrapper */}
+      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-          <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
-          <div className="relative w-full max-w-md">
+          <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
+          <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
               placeholder="Search by batch name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-10 bg-white border-[#e0e0e0] rounded-lg text-sm"
+              className="pl-9 h-11 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
             />
           </div>
         </div>
       </div>
 
-      {/* Scrollable Batch List */}
-      <div className="flex-1 overflow-y-auto p-6 md:p-8">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="flex items-center justify-center py-20"><Loader2 className="animate-spin text-orange-500" /></div>
-          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
+            </div>
+          ) : filtered.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
               {filtered.map(batch => (
                 <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
               ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+              <p className="text-gray-400 text-lg font-medium">No paid regular batches found.</p>
             </div>
           )}
         </div>
