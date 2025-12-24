@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight } from "lucide-react";
+import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight, Play, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,97 @@ interface YouTubePlaylist {
   title: string;
   videos: YouTubeVideo[];
 }
+
+/**
+ * Professional Playlist Row Component
+ * Translated from the provided HTML/CSS design
+ */
+const PlaylistRow: React.FC<{ 
+  playlist: YouTubePlaylist; 
+  onVideoSelect: (video: ContentItem) => void;
+}> = ({ playlist, onVideoSelect }) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollStep = 370; // 350px width + 20px gap
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollStep : scrollStep,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-6 mb-8 w-full shadow-sm">
+      {/* Playlist Header */}
+      <div className="flex items-center mb-6">
+        <div className="bg-blue-600 w-7 h-7 rounded-full flex items-center justify-center mr-3 shrink-0">
+          <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+        </div>
+        <h2 className="text-[19px] font-semibold text-slate-900 tracking-tight m-0">
+          {playlist.title}
+        </h2>
+      </div>
+
+      {/* Carousel Container */}
+      <div className="relative flex items-center group">
+        {/* Navigation Buttons */}
+        <button 
+          onClick={() => scroll('left')}
+          className="absolute -left-5 z-10 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <ChevronLeft className="w-5 h-5 text-slate-700" />
+        </button>
+
+        {/* Video Track */}
+        <div 
+          ref={scrollRef}
+          className="flex gap-5 overflow-x-auto scrollbar-hide py-1 scroll-smooth w-full"
+        >
+          {playlist.videos.map((video) => (
+            <div 
+              key={video.id}
+              className="min-w-[350px] max-w-[350px] bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-slate-300 hover:shadow-lg cursor-pointer flex-shrink-0"
+              onClick={() => onVideoSelect({ id: video.id, title: video.title, category: 'Free Lectures' })}
+            >
+              {/* Thumbnail Container */}
+              <div className="relative h-[140px] bg-slate-100 flex items-center justify-center border-b-[3px] border-slate-500">
+                <img 
+                  src={video.thumbnail} 
+                  alt={video.title} 
+                  className="w-full h-full object-cover" 
+                />
+                <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
+                  <div className="w-[54px] h-[54px] bg-black/45 rounded-full flex items-center justify-center text-white backdrop-blur-[2px]">
+                    <Play className="w-5 h-5 fill-white" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Card Body */}
+              <div className="p-4">
+                <h3 className="text-[15px] font-semibold text-slate-900 leading-[1.5] mb-2 line-clamp-2 m-0 h-[45px]">
+                  {video.title}
+                </h3>
+                <p className="text-[13px] text-slate-500 font-normal m-0">
+                  {playlist.title}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button 
+          onClick={() => scroll('right')}
+          className="absolute -right-5 z-10 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <ChevronRight className="w-5 h-5 text-slate-700" />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem) => void; isIITM: boolean }> = ({ item, handleOpen, isIITM }) => {
     const thumbnailUrl = `https://images.unsplash.com/photo-1516979187457-637abb4f9353?auto=format&fit=crop&w=200&q=80`;
@@ -275,7 +366,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
           )}
       </div>
 
-      {/* UPDATED: Removed max-w-7xl and mx-auto to allow full left alignment */}
       <div className="flex-1 overflow-y-auto p-4 md:px-8 py-8 w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full h-full transition-opacity duration-200" style={{ opacity: isTabVisible ? 1 : 0 }}>
@@ -300,35 +390,29 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
             >
                 {activeTab === 'Free Lectures' && isIITM ? (
                     <div className="space-y-10 mb-20">
-                        <div className="relative max-w-md mb-10">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                            <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
+                        {/* Search Bar - Kept professional and consistent */}
+                        <div className="relative max-w-md mx-auto mb-12">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
+                            <Input 
+                              placeholder="Search lectures by title..." 
+                              value={ytSearchQuery} 
+                              onChange={(e) => setYtSearchQuery(e.target.value)} 
+                              className="pl-11 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" 
+                            />
                         </div>
 
-                        {loading ? <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div> : 
-                            filteredYtContent.map((playlist, idx) => (
-                                <section key={idx} className="space-y-4">
-                                    <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2"><Youtube className="text-red-600 h-6 w-6" /> {playlist.title}</h3>
-                                    <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                                        {playlist.videos.map((video) => (
-                                            <div 
-                                              key={video.id} 
-                                              className="min-w-[280px] w-[280px] group cursor-pointer" 
-                                              onClick={() => setViewingItem({ id: video.id, title: video.title, category: 'Free Lectures' })}
-                                            >
-                                                <div className="aspect-video rounded-xl overflow-hidden relative mb-3">
-                                                    <img src={video.thumbnail} className="w-full h-full object-cover group-hover:scale-105 transition-transform" alt={video.title} />
-                                                    <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 flex items-center justify-center transition-all">
-                                                        <PlayCircle className="text-white h-12 w-12 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                    </div>
-                                                </div>
-                                                <h4 className="font-semibold text-sm line-clamp-2 text-slate-700 group-hover:text-blue-600">{video.title}</h4>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </section>
-                            ))
-                        }
+                        {loading ? (
+                          <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div>
+                        ) : (
+                          // NEW Professional Playlist Rows
+                          filteredYtContent.map((playlist, idx) => (
+                              <PlaylistRow 
+                                key={idx} 
+                                playlist={playlist} 
+                                onVideoSelect={setViewingItem} 
+                              />
+                          ))
+                        )}
                     </div>
                 ) : (
                     <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
