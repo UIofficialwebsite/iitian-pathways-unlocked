@@ -30,7 +30,6 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   return (
     <>
       <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-        {/* Header Section - Cleaned to show Image Only */}
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <img 
             src={courseImage} 
@@ -44,7 +43,6 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
           </div>
         </div>
 
-        {/* Content Section */}
         <div className="p-5 flex flex-col flex-1">
           <div className="flex justify-between items-center mb-[10px]">
             <span className="text-[#f97316] font-bold text-base">{course.level || 'Academic'}</span>
@@ -59,7 +57,7 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
             {!showDetails ? (
               <>
                 <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
-                  < BookOpen className="w-[18px] h-[18px] text-[#666]" />
+                  <BookOpen className="w-[18px] h-[18px] text-[#666]" />
                   {course.subject || 'Foundation'}
                 </div>
                 <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
@@ -83,7 +81,6 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
             )}
           </div>
 
-          {/* Footer Pricing */}
           <div className="flex justify-between items-center mt-auto pt-[15px]">
             <div className="leading-tight">
               <div className="flex items-baseline gap-1.5">
@@ -115,7 +112,6 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
         </div>
       </div>
 
-      {/* Image Preview Overlay */}
       {isPreviewOpen && (
         <div 
           className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -174,16 +170,17 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-6 shadow-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <h1 className="text-[32px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
+      {/* Reduced Height Sticky Header */}
+      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-3 shadow-sm">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
+          <div className="relative w-full max-w-xs md:max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder={`Search for batch name...`}
+              placeholder="Search batches..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 h-12 bg-white border-[#e0e0e0] rounded-xl focus:ring-2 focus:ring-orange-500 transition-all shadow-none text-base"
+              className="pl-9 h-10 bg-white border-[#e0e0e0] rounded-lg focus:ring-1 focus:ring-orange-500 transition-all shadow-none text-sm"
             />
           </div>
         </div>
