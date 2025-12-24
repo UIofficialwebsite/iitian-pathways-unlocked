@@ -11,7 +11,7 @@ import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 
-// Original Dashboard Views
+// Import the views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
@@ -46,10 +46,14 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
+  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
+  
+  // Floating Detail State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
+  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -74,6 +78,7 @@ const ModernDashboard: React.FC = () => {
           .single();
 
         if (error && error.code !== "PGRST116") throw error;
+
         if (data) {
           setProfile(data);
           if (!data.program_type) setIsFocusModalOpen(true);
@@ -82,12 +87,19 @@ const ModernDashboard: React.FC = () => {
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
+        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
       } finally {
         setLoadingProfile(false);
       }
     };
+
     fetchProfile();
-  }, [user, authLoading, navigate, location]);
+  }, [user, authLoading, navigate, location, toast]);
+
+  const handleFocusSave = (updatedProfile: Profile) => {
+    setProfile(updatedProfile);
+    setIsFocusModalOpen(false);
+  };
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
@@ -102,7 +114,9 @@ const ModernDashboard: React.FC = () => {
     setTimeout(() => setIsViewLoading(false), 800);
   };
 
-  if (authLoading || loadingProfile) {
+  const isLoading = authLoading || loadingProfile;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-royal" />
@@ -129,70 +143,78 @@ const ModernDashboard: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
-          <DashboardSidebar
-            profile={profile}
-            onProfileUpdate={handleProfileUpdate}
-            onViewChange={handleViewChange} 
-            activeView={activeView}
-          />
+          <div className="min-h-full">
+            <DashboardSidebar
+              profile={profile}
+              onProfileUpdate={handleProfileUpdate}
+              onViewChange={handleViewChange} 
+              activeView={activeView}
+            />
+          </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto bg-white relative">
-          {isViewLoading ? (
-             <ContentWrapper><DashboardLoader /></ContentWrapper>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
-              {activeView === 'studyPortal' && (
-                <ContentWrapper>
-                  <StudyPortal profile={profile} onViewChange={handleViewChange} />
-                </ContentWrapper>
-              )}
-              
-              {activeView === 'profile' && <ContentWrapper><MyProfile /></ContentWrapper>}
-              {activeView === 'enrollments' && <ContentWrapper><MyEnrollments /></ContentWrapper>}
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
+            {isViewLoading ? (
+               <ContentWrapper><DashboardLoader /></ContentWrapper>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+                {activeView === 'studyPortal' && (
+                  <ContentWrapper>
+                    <StudyPortal profile={profile} onViewChange={handleViewChange} />
+                  </ContentWrapper>
+                )}
+                
+                {activeView === 'profile' && (
+                  <ContentWrapper><MyProfile /></ContentWrapper>
+                )}
 
-              {activeView === 'regularBatches' && (
-                <div className="flex-1 relative h-full">
-                  <RegularBatchesTab 
-                    focusArea={profile?.program_type || 'General'} 
-                    onSelectCourse={setSelectedCourseId}
-                  />
+                {activeView === 'enrollments' && (
+                  <ContentWrapper><MyEnrollments /></ContentWrapper>
+                )}
 
-                  {/* Sliding Detail Overlay */}
-                  {selectedCourseId && (
-                    <div className="absolute inset-0 z-[40] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                      <div className="sticky top-0 z-[60] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
-                        <button 
-                          onClick={() => setSelectedCourseId(null)}
-                          className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
-                        >
-                          <ArrowLeft className="w-5 h-5" />
-                          Back to Batches
-                        </button>
-                        <X 
-                          className="w-6 h-6 text-gray-400 cursor-pointer hover:text-gray-600" 
-                          onClick={() => setSelectedCourseId(null)}
-                        />
+                {activeView === 'regularBatches' && (
+                  <div className="flex-1 relative h-full">
+                    {/* FIXED HEADER BATCH LIST */}
+                    <RegularBatchesTab 
+                      focusArea={profile?.program_type || 'General'} 
+                      onSelectCourse={setSelectedCourseId}
+                    />
+
+                    {/* FLOATING DETAIL OVERLAY */}
+                    {selectedCourseId && (
+                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
+                        <div className="sticky top-0 z-[90] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
+                          <button 
+                            onClick={() => setSelectedCourseId(null)}
+                            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
+                          >
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to Batches
+                          </button>
+                          <X 
+                            className="w-6 h-6 text-gray-400 cursor-pointer hover:text-gray-600" 
+                            onClick={() => setSelectedCourseId(null)}
+                          />
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                        </div>
                       </div>
-                      <div className="flex-1 overflow-y-auto">
-                        <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
 
-              {activeView === 'library' && (
-                 <LibrarySection 
-                  profile={profile} 
-                  activeTab={activeLibraryTab} 
-                  onTabChange={setActiveLibraryTab}
-                  persistedVideo={activeVideo}
-                  onVideoChange={setActiveVideo}
-                 /> 
-              )}
-            </div>
-          )}
+                {activeView === 'library' && (
+                   <LibrarySection 
+                    profile={profile} 
+                    activeTab={activeLibraryTab} 
+                    onTabChange={setActiveLibraryTab}
+                    persistedVideo={activeVideo}
+                    onVideoChange={setActiveVideo}
+                   /> 
+                )}
+              </div>
+            )}
         </main>
       </div>
 
@@ -200,7 +222,7 @@ const ModernDashboard: React.FC = () => {
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
         profile={profile}
-        onProfileUpdate={(p) => { setProfile(p); setIsFocusModalOpen(false); }}
+        onProfileUpdate={handleFocusSave}
       />
     </div>
   );
