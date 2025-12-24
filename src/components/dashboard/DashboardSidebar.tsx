@@ -28,7 +28,8 @@ interface UserProfile {
   [key: string]: any;
 }
 
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'coming_soon';
+// Added 'regularBatches' to the ActiveView type
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'coming_soon';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
@@ -128,28 +129,15 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
               <div className="mt-2 space-y-1">
                 <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
-                
-                {/* --- UPDATED DIGITAL LIBRARY BUTTON --- */}
-                <Button 
-                  variant="ghost" 
-                  onClick={() => onViewChange('library')}
-                  className={cn(
-                    "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
-                    activeView === 'library' 
-                      ? "bg-blue-50 text-blue-700 border border-blue-100"
-                      : "text-gray-700 hover:bg-gray-100 border border-transparent"
-                  )}
-                >
-                  <Library className="h-4 w-4" />
-                  Digital Library
-                </Button>
+                <SidebarButton icon={Library} label="Digital Library" viewName="library" />
               </div>
             </div>
 
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
               <div className="mt-2 space-y-1">
-                <PlaceholderButton icon={GraduationCap} label="Regular Batches" />
+                {/* Changed from Placeholder to SidebarButton */}
+                <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
                 <PlaceholderButton icon={FastForward} label="FastTrack Batches" />
               </div>
             </div>
