@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2 } from "lucide-react"; 
+import { Loader2, ArrowLeft } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -16,7 +16,8 @@ import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
-import RegularBatchesTab from "./RegularBatchesTab"; //
+import RegularBatchesTab from "./RegularBatchesTab";
+import CourseDetail from "@/pages/CourseDetail"; // Import the detail component
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -48,6 +49,9 @@ const ModernDashboard: React.FC = () => {
   // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
+  
+  // Detail View State
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
   // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
@@ -100,8 +104,12 @@ const ModernDashboard: React.FC = () => {
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
   const handleViewChange = (view: ActiveView) => {
-    if (view === activeView) return; 
+    if (view === activeView) {
+      setSelectedCourseId(null); // Reset detail view if clicking same tab
+      return; 
+    }
     setIsViewLoading(true);
+    setSelectedCourseId(null); // Reset detail view on tab change
     setActiveView(view);
     setTimeout(() => setIsViewLoading(false), 800);
   };
@@ -164,10 +172,27 @@ const ModernDashboard: React.FC = () => {
                   <ContentWrapper><MyEnrollments /></ContentWrapper>
                 )}
 
-                {/* REGULAR BATCHES INTEGRATION */}
                 {activeView === 'regularBatches' && (
                   <div className="flex-1">
-                    <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
+                    {selectedCourseId ? (
+                      <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="bg-white border-b px-6 py-3 sticky top-0 z-10 flex items-center">
+                          <button 
+                            onClick={() => setSelectedCourseId(null)}
+                            className="flex items-center gap-2 text-gray-600 hover:text-royal font-medium transition-colors"
+                          >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back to Batches
+                          </button>
+                        </div>
+                        <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                      </div>
+                    ) : (
+                      <RegularBatchesTab 
+                        focusArea={profile?.program_type || 'General'} 
+                        onSelectCourse={setSelectedCourseId}
+                      />
+                    )}
                   </div>
                 )}
 
