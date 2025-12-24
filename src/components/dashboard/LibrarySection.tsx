@@ -58,7 +58,7 @@ const PlaylistRow: React.FC<{
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollStep = 370; 
+      const scrollStep = 300; 
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollStep : scrollStep,
         behavior: 'smooth'
@@ -68,21 +68,21 @@ const PlaylistRow: React.FC<{
 
   return (
     <div className={cn(
-      "bg-white border rounded-xl p-6 mb-8 w-full shadow-sm transition-all duration-300",
+      "bg-white border rounded-xl p-4 mb-6 w-full shadow-sm transition-all duration-300",
       isActive ? "border-blue-400 ring-1 ring-blue-100 bg-blue-50/10" : "border-slate-200"
     )}>
-      <div className="flex items-center mb-6">
+      <div className="flex items-center mb-4">
         <div className={cn(
-          "w-7 h-7 rounded-full flex items-center justify-center mr-3 shrink-0",
+          "w-6 h-6 rounded-full flex items-center justify-center mr-2 shrink-0",
           isActive ? "bg-blue-600" : "bg-slate-700"
         )}>
-          <Play className="w-3.5 h-3.5 text-white fill-white ml-0.5" />
+          <Play className="w-3 h-3 text-white fill-white ml-0.5" />
         </div>
-        <h2 className="text-[19px] font-semibold text-slate-900 tracking-tight m-0">
+        <h2 className="text-base font-semibold text-slate-900 tracking-tight m-0">
           {playlist.title} 
           {isActive && (
-            <span className="ml-2 text-xs font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
-              Now Playing From
+            <span className="ml-2 text-[10px] font-normal text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+              Active
             </span>
           )}
         </h2>
@@ -91,34 +91,34 @@ const PlaylistRow: React.FC<{
       <div className="relative flex items-center group">
         <button 
           onClick={() => scroll('left')}
-          className="absolute -left-5 z-10 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
+          className="absolute -left-3 z-10 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
         >
-          <ChevronLeft className="w-5 h-5 text-slate-700" />
+          <ChevronLeft className="w-4 h-4 text-slate-700" />
         </button>
 
         <div 
           ref={scrollRef}
-          className="flex gap-5 overflow-x-auto scrollbar-hide py-1 scroll-smooth w-full"
+          className="flex gap-4 overflow-x-auto scrollbar-hide py-1 scroll-smooth w-full"
         >
           {playlist.videos.map((video) => (
             <div 
               key={video.id}
-              className="min-w-[300px] sm:min-w-[350px] bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-slate-300 hover:shadow-lg cursor-pointer flex-shrink-0"
+              className="min-w-[260px] max-w-[260px] bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-slate-300 hover:shadow-md cursor-pointer flex-shrink-0"
               onClick={() => onVideoSelect({ id: video.id, title: video.title, category: 'Free Lectures' })}
             >
-              <div className="relative aspect-video bg-slate-100 flex items-center justify-center border-b-[3px] border-slate-500">
+              <div className="relative aspect-video bg-slate-100 flex items-center justify-center border-b-[2px] border-slate-400">
                 <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
-                  <div className="w-[54px] h-[54px] bg-black/45 rounded-full flex items-center justify-center text-white backdrop-blur-[2px]">
-                    <Play className="w-5 h-5 fill-white" />
+                  <div className="w-9 h-9 bg-black/40 rounded-full flex items-center justify-center text-white backdrop-blur-[1px]">
+                    <Play className="w-3.5 h-3.5 fill-white" />
                   </div>
                 </div>
               </div>
-              <div className="p-4">
-                <h3 className="text-[15px] font-semibold text-slate-900 leading-[1.5] mb-2 line-clamp-2 h-[45px]">
+              <div className="p-3">
+                <h3 className="text-sm font-medium text-slate-900 leading-snug mb-1 line-clamp-2 h-[40px]">
                   {video.title}
                 </h3>
-                <p className="text-[13px] text-slate-500 font-normal truncate">{playlist.title}</p>
+                <p className="text-[11px] text-slate-500 font-normal truncate">{playlist.title}</p>
               </div>
             </div>
           ))}
@@ -126,9 +126,9 @@ const PlaylistRow: React.FC<{
 
         <button 
           onClick={() => scroll('right')}
-          className="absolute -right-5 z-10 w-10 h-10 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
+          className="absolute -right-3 z-10 w-8 h-8 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-md hover:bg-slate-50 transition-colors opacity-0 group-hover:opacity-100"
         >
-          <ChevronRight className="w-5 h-5 text-slate-700" />
+          <ChevronRight className="w-4 h-4 text-slate-700" />
         </button>
       </div>
     </div>
@@ -144,7 +144,7 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
 
     return (
         <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-4 transition-all hover:shadow-md min-h-[160px] h-full cursor-default overflow-hidden">
-            <div className="w-[80px] sm:w-[100px] aspect-[2/3] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
+            <div className="w-[80px] sm:w-[95px] aspect-[2/3] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
                 <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
             </div>
             <div className="flex flex-col flex-1 min-w-0">
