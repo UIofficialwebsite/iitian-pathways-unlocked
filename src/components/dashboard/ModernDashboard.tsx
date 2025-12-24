@@ -16,7 +16,7 @@ import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
-import RegularBatchesTab from "./RegularBatchesTab"; // Imported component
+import RegularBatchesTab from "./RegularBatchesTab"; // 1. IMPORT REGULAR BATCHES TAB
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -45,9 +45,11 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
+  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
+  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -71,17 +73,25 @@ const ModernDashboard: React.FC = () => {
           .eq("id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") throw error;
+        if (error && error.code !== "PGRST116") {
+          throw error;
+        }
 
         if (data) {
           setProfile(data);
-          if (!data.program_type) setIsFocusModalOpen(true);
+          if (!data.program_type) {
+            setIsFocusModalOpen(true);
+          }
         } else {
           setIsFocusModalOpen(true);
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
+        toast({
+          title: "Error",
+          description: "Could not fetch your profile. " + error.message,
+          variant: "destructive",
+        });
       } finally {
         setLoadingProfile(false);
       }
@@ -101,9 +111,18 @@ const ModernDashboard: React.FC = () => {
 
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) return; 
+    
+    if (view === 'coming_soon') {
+      setActiveView(view);
+      return;
+    }
+
     setIsViewLoading(true);
     setActiveView(view);
-    setTimeout(() => setIsViewLoading(false), 800);
+
+    setTimeout(() => {
+      setIsViewLoading(false);
+    }, 800);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -146,8 +165,15 @@ const ModernDashboard: React.FC = () => {
         </aside>
 
         <main className="flex-1 overflow-y-auto bg-gray-50/50">
-            {isViewLoading ? (
-               <ContentWrapper><DashboardLoader /></ContentWrapper>
+            {activeView === 'coming_soon' ? (
+              <ContentWrapper>
+                <DashboardLoader />
+              </ContentWrapper>
+            ) : 
+            isViewLoading ? (
+               <ContentWrapper>
+                 <DashboardLoader />
+               </ContentWrapper>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full">
                 {activeView === 'studyPortal' && (
@@ -156,17 +182,21 @@ const ModernDashboard: React.FC = () => {
                   </ContentWrapper>
                 )}
                 
+                {/* 2. REGULAR BATCHES INTEGRATION */}
+                {activeView === 'regularBatches' && (
+                  <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
+                )}
+
                 {activeView === 'profile' && (
-                  <ContentWrapper><MyProfile /></ContentWrapper>
+                  <ContentWrapper>
+                    <MyProfile />
+                  </ContentWrapper>
                 )}
 
                 {activeView === 'enrollments' && (
-                  <ContentWrapper><MyEnrollments /></ContentWrapper>
-                )}
-
-                {/* Integration point for Regular Batches */}
-                {activeView === 'regularBatches' && (
-                  <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
+                  <ContentWrapper>
+                    <MyEnrollments />
+                  </ContentWrapper>
                 )}
 
                 {activeView === 'library' && (
