@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useLayoutEffect } from 'react';
 import { 
   ArrowLeft, Play, Pause, RotateCcw, RotateCw, 
   List, Expand, X, Volume2, VolumeX, Settings 
@@ -17,6 +17,7 @@ interface PlayerState {
   isPlaying: boolean;
   volume: number;
   showTimeline: boolean;
+  isFullscreen: boolean;
   timestamp: number;
 }
 
@@ -27,9 +28,11 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
   const lastTap = useRef<number>(0);
   const isRestoringRef = useRef(false);
   const wasPlayingBeforeHiddenRef = useRef(false);
+  const wasFullscreenBeforeHiddenRef = useRef(false);
   const savedTimeRef = useRef<number>(0);
   const playerReadyRef = useRef(false);
-  const layoutStableRef = useRef(true);
+  const isTabSwitchingRef = useRef(false);
+  const freezeLayoutRef = useRef(false);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
@@ -40,6 +43,7 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
+  const [layoutFrozen, setLayoutFrozen] = useState(false);
 
   const formatTime = (seconds: number) => {
     const h = Math.floor(seconds / 3600);
@@ -75,6 +79,7 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
       const time = playerRef.current.getCurrentTime?.() || 0;
       const volume = playerRef.current.getVolume?.() || 100;
       const playing = playerRef.current.getPlayerState?.() === 1;
+      const isFullscreen = !!document.fullscreenElement;
       
       const state: PlayerState = {
         videoId,
@@ -82,11 +87,13 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
         isPlaying: playing,
         volume,
         showTimeline,
+        isFullscreen,
         timestamp: Date.now(),
       };
       
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
       savedTimeRef.current = time;
+      wasFullscreenBeforeHiddenRef.current = isFullscreen;
     } catch (e) {
       // Ignore storage errors
     }
@@ -110,11 +117,18 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
     return null;
   }, [videoId]);
 
-  // Handle visibility change (tab switch)
+  // Handle visibility change (tab switch) - with layout freeze
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        // Tab is being hidden - save state immediately
+        // Tab is being hidden - freeze layout and save state
+        isTabSwitchingRef.current = true;
+        freezeLayoutRef.current = true;
+        setLayoutFrozen(true);
+        
+        // Save fullscreen state before it might be lost
+        wasFullscreenBeforeHiddenRef.current = !!document.fullscreenElement;
+        
         if (playerRef.current && playerReadyRef.current) {
           const state = playerRef.current.getPlayerState?.();
           wasPlayingBeforeHiddenRef.current = state === 1;
@@ -128,7 +142,7 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
         }
         setIsVisible(false);
       } else if (document.visibilityState === 'visible') {
-        // Tab is visible again - restore state
+        // Tab is visible again - keep layout frozen during restore
         setIsVisible(true);
         
         if (playerRef.current && playerReadyRef.current) {
@@ -145,14 +159,32 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
           
           // Resume playback if it was playing before
           if (wasPlayingBeforeHiddenRef.current) {
-            // Small delay to ensure seek completes
             setTimeout(() => {
               playerRef.current?.playVideo();
-              isRestoringRef.current = false;
-            }, 100);
-          } else {
-            isRestoringRef.current = false;
+            }, 50);
           }
+          
+          // Restore fullscreen if it was active before
+          if (wasFullscreenBeforeHiddenRef.current && !document.fullscreenElement && containerRef.current) {
+            containerRef.current.requestFullscreen?.().catch(() => {
+              // Fullscreen request may fail, ignore
+            });
+          }
+          
+          // Unfreeze layout after restoration is complete
+          setTimeout(() => {
+            isRestoringRef.current = false;
+            isTabSwitchingRef.current = false;
+            freezeLayoutRef.current = false;
+            setLayoutFrozen(false);
+          }, 200);
+        } else {
+          // No player, just unfreeze
+          setTimeout(() => {
+            isTabSwitchingRef.current = false;
+            freezeLayoutRef.current = false;
+            setLayoutFrozen(false);
+          }, 100);
         }
       }
     };
@@ -161,9 +193,29 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [duration, savePlayerState]);
 
+  // Prevent fullscreen exit during tab switches
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      // If we're in a tab switch and fullscreen was exited, try to restore it
+      if (isTabSwitchingRef.current && wasFullscreenBeforeHiddenRef.current && !document.fullscreenElement) {
+        // Prevent the exit by re-requesting fullscreen
+        if (containerRef.current && document.visibilityState === 'visible') {
+          containerRef.current.requestFullscreen?.().catch(() => {});
+        }
+      }
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
+
   // Handle window blur/focus
   useEffect(() => {
     const handleBlur = () => {
+      freezeLayoutRef.current = true;
+      setLayoutFrozen(true);
+      wasFullscreenBeforeHiddenRef.current = !!document.fullscreenElement;
+      
       if (playerRef.current && playerReadyRef.current) {
         const state = playerRef.current.getPlayerState?.();
         wasPlayingBeforeHiddenRef.current = state === 1;
@@ -184,11 +236,24 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
         if (wasPlayingBeforeHiddenRef.current) {
           setTimeout(() => {
             playerRef.current?.playVideo();
-            isRestoringRef.current = false;
-          }, 100);
-        } else {
-          isRestoringRef.current = false;
+          }, 50);
         }
+        
+        // Restore fullscreen if needed
+        if (wasFullscreenBeforeHiddenRef.current && !document.fullscreenElement && containerRef.current) {
+          containerRef.current.requestFullscreen?.().catch(() => {});
+        }
+        
+        setTimeout(() => {
+          isRestoringRef.current = false;
+          freezeLayoutRef.current = false;
+          setLayoutFrozen(false);
+        }, 200);
+      } else {
+        setTimeout(() => {
+          freezeLayoutRef.current = false;
+          setLayoutFrozen(false);
+        }, 100);
       }
     };
 
@@ -313,26 +378,41 @@ const VideoPlayer = ({ videoId, title, onClose, timelines = [] }) => {
       className={`fixed inset-0 z-[9999] bg-black flex overflow-hidden font-sans select-none text-white ${showHUD ? '' : 'cursor-none'}`}
       style={{ 
         // Prevent layout shifts during visibility changes
-        contain: 'layout style paint',
-        willChange: 'auto',
+        contain: 'layout style paint size',
+        willChange: layoutFrozen ? 'contents' : 'auto',
+        // Keep dimensions locked during tab switch
+        ...(layoutFrozen && {
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+        }),
       }}
     >
       <div 
         className="relative flex-1 bg-black overflow-hidden flex items-center justify-center"
         style={{
-          // Maintain stable dimensions
+          // Maintain stable dimensions - never collapse
           minHeight: '100%',
           minWidth: 0,
+          height: '100%',
+          width: '100%',
+          contain: 'strict',
         }}
       >
         
-        {/* Video container with stable layout */}
+        {/* Video container with stable layout - no transitions during restore */}
         <div 
-          className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${hasStarted ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 pointer-events-none ${layoutFrozen ? '' : 'transition-opacity duration-300'} ${hasStarted ? 'opacity-100' : 'opacity-0'}`}
           style={{
             // Prevent reflow during tab switches
             contain: 'strict',
-            willChange: isVisible ? 'auto' : 'opacity',
+            // Disable will-change during frozen state to prevent repaints
+            willChange: layoutFrozen ? 'auto' : (isVisible ? 'auto' : 'opacity'),
+            // Lock dimensions
+            position: 'absolute',
+            inset: 0,
           }}
         >
           <div className="w-full h-full scale-[1.35] origin-center pointer-events-none">
