@@ -118,7 +118,7 @@ const ModernDashboard: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="h-screen w-full flex items-center justify-center bg-white">
         <Loader2 className="h-8 w-8 animate-spin text-royal" />
       </div>
     );
@@ -131,8 +131,9 @@ const ModernDashboard: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-gray-50/50">
-      <div className="sticky top-0 z-[100] w-full bg-white border-b border-gray-200 shadow-sm">
+    <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden">
+      {/* GLOBAL TOP NAV: Fixed at the very top */}
+      <div className="z-[100] w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
           profile={profile}
@@ -142,8 +143,9 @@ const ModernDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
-          <div className="min-h-full">
+        {/* SIDEBAR: Remains perfectly still */}
+        <aside className="hidden lg:block w-[288px] border-r bg-white shrink-0">
+          <div className="h-full">
             <DashboardSidebar
               profile={profile}
               onProfileUpdate={handleProfileUpdate}
@@ -153,7 +155,8 @@ const ModernDashboard: React.FC = () => {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
+        {/* MAIN CONTENT AREA: Only this scrolls */}
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
@@ -180,16 +183,17 @@ const ModernDashboard: React.FC = () => {
                       onSelectCourse={setSelectedCourseId}
                     />
 
-                    {/* FLOATING DETAIL OVERLAY */}
+                    {/* SLIDING DETAIL OVERLAY */}
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[90] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
+                        {/* BACK HEADER: Sticks exactly below the Global TopNav */}
+                        <div className="sticky top-0 z-[100] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm shrink-0">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
                             className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
                           >
                             <ArrowLeft className="w-5 h-5" />
-                            Back to Batches
+                            Back to All Batches
                           </button>
                           <X 
                             className="w-6 h-6 text-gray-400 cursor-pointer hover:text-gray-600" 
