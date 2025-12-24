@@ -3,7 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ChevronRight, Users, Star, Clock, Sparkles, Languages, CalendarDays, CheckCircle2 } from "lucide-react";
+import { 
+  Search, 
+  ChevronRight, 
+  Languages, 
+  CalendarDays, 
+  CheckCircle2,
+  Sparkles 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -13,6 +20,7 @@ interface RegularBatchesTabProps {
 
 const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   const [showDetails, setShowDetails] = useState(false);
+  // Assume a tag 'dark-theme' exists for dark variation
   const isDark = course.tags?.includes('dark-theme');
 
   return (
@@ -81,7 +89,7 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
               <div className="flex items-center gap-2">
                 <span className="text-xs line-through opacity-50">₹{course.price}</span>
                 <span className="text-xs font-bold text-green-600">
-                  {Math.round(((course.price - course.discounted_price) / course.price) * 100)}% OFF
+                  {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
                 </span>
               </div>
             )}
@@ -97,7 +105,10 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
             <Button 
               variant="outline" 
               size="icon"
-              onClick={() => setShowDetails(!showDetails)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDetails(!showDetails);
+              }}
               className={cn(
                 "h-10 w-10 rounded-lg border-slate-200 transition-transform",
                 showDetails && "rotate-90 bg-slate-100"
@@ -108,6 +119,12 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
           </div>
         </div>
       </div>
+      
+      {isDark && (
+        <div className="bg-[#121e20] text-white p-2.5 text-center text-[11px] font-semibold flex items-center justify-center gap-2 border-t border-white/10">
+          🛡️ Limited time offer: Up to 40% OFF
+        </div>
+      )}
     </div>
   );
 };
@@ -138,7 +155,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
   return (
     <div className="relative">
       {/* Consolidated Sticky Header */}
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 -mx-4 md:-mx-8 px-4 md:px-8 py-6 mb-8">
+      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 -mx-4 md:-mx-8 px-4 md:px-8 py-6 mb-8">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Regular Batches</h1>
@@ -157,7 +174,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 md:px-0">
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[1,2,3].map(i => <div key={i} className="h-[450px] bg-slate-100 animate-pulse rounded-[20px]" />)}
