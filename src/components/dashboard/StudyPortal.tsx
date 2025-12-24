@@ -221,6 +221,7 @@ const EnrollmentListItem = ({
   );
 };
 
+// --- Custom Tab Navigation Component ---
 const CustomDashboardTabNav = ({ 
   tabs, 
   activeTab, 
@@ -232,7 +233,6 @@ const CustomDashboardTabNav = ({
 }) => {
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
-      {/* Updated: px-4 md:px-8 to match header tabs alignment */}
       <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-8">
         {tabs.map((tab) => (
           <button
@@ -254,6 +254,7 @@ const CustomDashboardTabNav = ({
 };
 
 
+// --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -449,11 +450,9 @@ const EnrolledView = ({
 
   if (viewMode === 'description') {
     return (
-      {/* Updated: -m-4 md:-m-8 to match outer library section alignment */}
       <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] -m-4 md:-m-8 bg-gray-50 overflow-hidden">
         
         <div className="flex-none bg-white z-20 shadow-sm">
-           {/* Updated: px-4 md:px-8 to match header tabs alignment */}
            <div className="px-4 md:px-8 py-2 border-b border-gray-100">
               <Button 
                 variant="ghost" 
@@ -466,7 +465,6 @@ const EnrolledView = ({
               </Button>
            </div>
 
-           {/* Updated: px-4 md:px-8 to match header tabs alignment */}
            <div className="premium-course-header p-4 sm:p-6 md:px-8 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -512,7 +510,6 @@ const EnrolledView = ({
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               {/* Updated: md:p-8 to match outer library section alignment */}
                <div className="p-4 md:p-8">
                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="space-y-8 pb-12">
@@ -520,7 +517,6 @@ const EnrolledView = ({
                         <FeaturesSection course={fullCourseData} />
                       </div>
                       
-                      {/* Updated: md:px-8 to match outer library section alignment */}
                       <div className="px-4 sm:px-6 md:px-8 space-y-10 sm:space-y-12">
                           <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
                           <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
@@ -546,7 +542,6 @@ const EnrolledView = ({
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
@@ -615,7 +610,6 @@ const EnrolledView = ({
         )}
       </section>
 
-      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
         <div className="p-5 sm:p-6 md:p-8">
           <div className="mb-5 sm:mb-6">
@@ -624,6 +618,7 @@ const EnrolledView = ({
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+            
             <div 
               onClick={() => onViewChange('enrollments')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
@@ -658,6 +653,7 @@ const EnrolledView = ({
                 <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
               </div>
             </Link>
+            
           </div>
         </div>
       </div>
@@ -672,6 +668,7 @@ const EnrolledView = ({
 };
 
 
+// --- View 2: Student is NOT Enrolled ---
 const NotEnrolledView = ({ 
   profile,
   recommendedCourses,
@@ -748,7 +745,6 @@ const NotEnrolledView = ({
         </section>
       )}
 
-      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -797,6 +793,7 @@ const NotEnrolledView = ({
 };
 
 
+// --- RECOMMENDATION LOGIC ---
 const getSortableLevel = (course: any): number => {
   const level = course.level; 
   const status = course.student_status; 
@@ -1024,7 +1021,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const isLoading = dataLoading || contentLoading;
 
   return (
-    {/* Removed: max-w-7xl mx-auto to allow full width alignment */}
     <div className="w-full">
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
