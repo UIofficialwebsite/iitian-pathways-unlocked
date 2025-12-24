@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom'; //
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
 import { 
@@ -18,7 +19,7 @@ interface RegularBatchesTabProps {
 }
 
 const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
-  const [showDetails, setShowDetails] = useState(false);
+  const navigate = useNavigate(); //
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const discount = course.discounted_price 
@@ -26,6 +27,11 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
     : 0;
 
   const courseImage = course.image_url || "https://i.imgur.com/eBf29iE.png";
+
+  // Navigation handler for the detail page
+  const handleViewDetail = () => {
+    navigate(`/course/${course.id}`); // Navigates to the CourseDetail route
+  };
 
   return (
     <>
@@ -54,31 +60,16 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
           <h2 className="text-[20px] font-bold text-[#1f2937] m-0 mb-[15px] line-clamp-1">{course.title}</h2>
 
           <div className="min-h-[70px]">
-            {!showDetails ? (
-              <>
-                <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
-                  <BookOpen className="w-[18px] h-[18px] text-[#666]" />
-                  {course.subject || 'Foundation'}
-                </div>
-                <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
-                  <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
-                  <span className="font-bold">Ongoing</span> 
-                  <span className="text-[#d1d5db] mx-1">|</span> 
-                  Started on {course.start_date || "17th Dec'25"}
-                </div>
-              </>
-            ) : (
-              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-                <ul className="space-y-1.5">
-                  {(course.features || ['Live Classes', 'DPPs', 'Doubt Support']).slice(0, 3).map((f, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-[#4b5563]">
-                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                      <span className="line-clamp-1">{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
+              <BookOpen className="w-[18px] h-[18px] text-[#666]" />
+              {course.subject || 'Foundation'}
+            </div>
+            <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
+              <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
+              <span className="font-bold">Ongoing</span> 
+              <span className="text-[#d1d5db] mx-1">|</span> 
+              Started on {course.start_date || "17th Dec'25"}
+            </div>
           </div>
 
           <div className="flex justify-between items-center mt-auto pt-[15px]">
@@ -95,15 +86,15 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
             </div>
             
             <div className="flex gap-2.5">
-              <button className="bg-[#1f2937] text-white border-none py-2.5 px-6 rounded-[10px] font-bold text-[15px] hover:bg-[#111827] transition-colors">
+              <button 
+                onClick={handleViewDetail}
+                className="bg-[#1f2937] text-white border-none py-2.5 px-6 rounded-[10px] font-bold text-[15px] hover:bg-[#111827] transition-colors"
+              >
                 Buy Now
               </button>
               <button 
-                onClick={() => setShowDetails(!showDetails)}
-                className={cn(
-                  "bg-white border border-[#e5e7eb] w-11 h-11 rounded-[10px] flex items-center justify-center transition-all",
-                  showDetails && "rotate-90 bg-slate-50"
-                )}
+                onClick={handleViewDetail}
+                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-[10px] flex items-center justify-center transition-all hover:bg-slate-50"
               >
                 <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
               </button>
@@ -170,7 +161,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* Reduced Height Sticky Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-3 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
