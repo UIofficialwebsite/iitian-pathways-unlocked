@@ -174,7 +174,6 @@ const EnrollmentListItem = ({
     <Container {...(containerProps as any)}>
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
         <CardContent className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-5">
-          {/* Image - Full width on mobile, fixed width on desktop */}
           <div className="w-full sm:w-48 flex-shrink-0 aspect-video overflow-hidden rounded-lg bg-gray-50">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
@@ -208,7 +207,6 @@ const EnrollmentListItem = ({
             </div>
           </div>
           
-          {/* Arrow Icon - Hidden on very small screens if needed, or positioned absolute */}
           <div className="hidden sm:flex self-center">
              <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-blue-600 transition-colors" />
           </div>
@@ -223,7 +221,6 @@ const EnrollmentListItem = ({
   );
 };
 
-// --- Custom Tab Navigation Component ---
 const CustomDashboardTabNav = ({ 
   tabs, 
   activeTab, 
@@ -235,7 +232,8 @@ const CustomDashboardTabNav = ({
 }) => {
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
-      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
+      {/* Updated: px-4 md:px-8 to match header tabs alignment */}
+      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-8">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -256,7 +254,6 @@ const CustomDashboardTabNav = ({
 };
 
 
-// --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -269,7 +266,6 @@ const EnrolledView = ({
   const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  // Track source of sidebar opening ('main' for dashboard dropdown, 'detail' for switch button)
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
@@ -320,7 +316,6 @@ const EnrolledView = ({
     fetchDetails();
   }, [selectedBatchId]);
 
-  // --- SCROLL SPY ---
   useEffect(() => {
     if (viewMode !== 'description') return;
     const scrollContainer = contentRef.current;
@@ -383,7 +378,6 @@ const EnrolledView = ({
     }
   };
 
-  // --- DEFINING SIDEBAR COMPONENT HERE TO REUSE IN BOTH VIEWS ---
   const batchSelectionSheet = (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6">
@@ -445,7 +439,6 @@ const EnrolledView = ({
               onClick={handleContinue} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
-              {/* Dynamic button text based on source */}
               {sidebarSource === 'main' ? "Continue" : "Switch to Selected"}
             </Button>
           </SheetFooter>
@@ -454,15 +447,14 @@ const EnrolledView = ({
     </Sheet>
   );
 
-  // --- RENDER: FULL DETAIL VIEW (Fixed Layout) ---
   if (viewMode === 'description') {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] -m-4 md:-m-6 lg:-m-8 bg-gray-50 overflow-hidden">
+      {/* Updated: -m-4 md:-m-8 to match outer library section alignment */}
+      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] -m-4 md:-m-8 bg-gray-50 overflow-hidden">
         
-        {/* --- FIXED HEADER SECTION --- */}
         <div className="flex-none bg-white z-20 shadow-sm">
-           {/* Back Button */}
-           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
+           {/* Updated: px-4 md:px-8 to match header tabs alignment */}
+           <div className="px-4 md:px-8 py-2 border-b border-gray-100">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -474,8 +466,8 @@ const EnrolledView = ({
               </Button>
            </div>
 
-           {/* Premium Header Block - Stacked on Mobile */}
-           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
+           {/* Updated: px-4 md:px-8 to match header tabs alignment */}
+           <div className="premium-course-header p-4 sm:p-6 md:px-8 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
@@ -483,7 +475,6 @@ const EnrolledView = ({
                         <span>Currently Viewing</span>
                     </div>
                     
-                    {/* Switch Batch Button in Detail View - Sets source to 'detail' */}
                     {canSwitchBatch && (
                       <Button 
                         onClick={() => handleOpenSheet('detail')} 
@@ -498,14 +489,13 @@ const EnrolledView = ({
                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
                       {fullCourseData?.title || currentBatchSummary.title}
                    </h1>
-                   <p className="text-slate-200 max-w-3xl text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
+                   <p className="text-slate-200 max-w-full text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
                       {fullCourseData?.description || currentBatchSummary.description}
                    </p>
                  </div>
               </div>
            </div>
 
-           {/* Tab Navigation */}
            <CustomDashboardTabNav 
              tabs={tabs} 
              activeTab={activeTab} 
@@ -513,7 +503,6 @@ const EnrolledView = ({
            />
         </div>
 
-        {/* --- SCROLLABLE CONTENT SECTION --- */}
         <div 
           ref={contentRef}
           className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
@@ -523,17 +512,16 @@ const EnrolledView = ({
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               <div className="p-3 sm:p-6">
+               {/* Updated: md:p-8 to match outer library section alignment */}
+               <div className="p-4 md:p-8">
                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="space-y-8 pb-12">
-                      
-                      {/* Video/Features Section - No padding on mobile to be edge-to-edge if needed, or minimal padding */}
                       <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
                         <FeaturesSection course={fullCourseData} />
                       </div>
                       
-                      {/* Text Sections - Adjusted Padding */}
-                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
+                      {/* Updated: md:px-8 to match outer library section alignment */}
+                      <div className="px-4 sm:px-6 md:px-8 space-y-10 sm:space-y-12">
                           <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
                           <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
                           <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
@@ -551,22 +539,19 @@ const EnrolledView = ({
             )}
         </div>
         
-        {/* --- SIDEBAR RENDERED HERE FOR DETAIL VIEW --- */}
         {batchSelectionSheet}
       </div>
     );
   }
 
-  // --- RENDER: MAIN LIST VIEW ---
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* --- Header with Background Color Block --- */}
+      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
             <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
             
-            {/* Main Dashboard Title/Arrow - Sets source to 'main' */}
             <div 
               role="button"
               tabIndex={0}
@@ -589,7 +574,6 @@ const EnrolledView = ({
                 {currentBatchSummary?.title}
               </h1>
               
-              {/* Dropdown Arrow triggers the same sheet */}
               {canSwitchBatch && (
                 <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
               )}
@@ -616,7 +600,6 @@ const EnrolledView = ({
         </div>
       </div>
 
-      {/* --- BATCH CARD --- */}
       <section>
         <div className="flex items-center justify-between mb-3 sm:mb-4">
            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
@@ -632,7 +615,7 @@ const EnrolledView = ({
         )}
       </section>
 
-      {/* --- MY CLASSROOM SECTION --- */}
+      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
         <div className="p-5 sm:p-6 md:p-8">
           <div className="mb-5 sm:mb-6">
@@ -641,8 +624,6 @@ const EnrolledView = ({
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            
-            {/* Card 1: My Batches */}
             <div 
               onClick={() => onViewChange('enrollments')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
@@ -655,7 +636,6 @@ const EnrolledView = ({
               <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
             </div>
 
-            {/* Card 2: Dashboard */}
             <div 
               onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
               className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
@@ -668,7 +648,6 @@ const EnrolledView = ({
               <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
             </div>
 
-            {/* Card 3: Library */}
             <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
                 <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
@@ -679,24 +658,20 @@ const EnrolledView = ({
                 <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
               </div>
             </Link>
-            
           </div>
         </div>
       </div>
       
-      {/* Footer Message */}
       <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
 
-      {/* --- SIDEBAR RENDERED HERE FOR MAIN VIEW --- */}
       {batchSelectionSheet}
     </div>
   );
 };
 
 
-// --- View 2: Student is NOT Enrolled (No changes, full logic preserved) ---
 const NotEnrolledView = ({ 
   profile,
   recommendedCourses,
@@ -716,22 +691,18 @@ const NotEnrolledView = ({
   
   return (
     <div className="space-y-10">
-      {/* Profile Completion Banner */}
       <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
       
-      {/* Recommended Courses */}
       <RecommendedBatchesSection 
         recommendedCourses={recommendedCourses}
         loading={isLoading}
       />
     
-      {/* Quick Access - Only show if user has content */}
       {hasContent && (
         <section>
           <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
           <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {/* Notes Card */}
             {notes.length > 0 && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -753,7 +724,6 @@ const NotEnrolledView = ({
               </Card>
             )}
             
-            {/* PYQs Card */}
             {pyqs.length > 0 && (
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -778,7 +748,7 @@ const NotEnrolledView = ({
         </section>
       )}
 
-      {/* Explore Section */}
+      {/* Updated: md:p-8 to match outer library section alignment */}
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -787,10 +757,8 @@ const NotEnrolledView = ({
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Digital Library */}
             <Link to="/exam-preparation" className="block group h-full">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
@@ -800,10 +768,8 @@ const NotEnrolledView = ({
               </div>
             </Link>
             
-            {/* Mentorship */}
             <div className="group h-full cursor-pointer">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
@@ -813,10 +779,8 @@ const NotEnrolledView = ({
               </div>
             </div>
             
-            {/* PDF Bank */}
             <div className="group h-full cursor-pointer">
               <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-6 h-full flex flex-col relative">
-                {/* Hover Arrow */}
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
@@ -833,7 +797,6 @@ const NotEnrolledView = ({
 };
 
 
-// --- RECOMMENDATION LOGIC (Unchanged) ---
 const getSortableLevel = (course: any): number => {
   const level = course.level; 
   const status = course.student_status; 
@@ -851,14 +814,12 @@ const getSortableLevel = (course: any): number => {
 
 const sortRecommendedCourses = (courses: Course[]): Course[] => {
   return courses.sort((a, b) => {
-    // 1. Sort by Level/Class 
     const levelA = getSortableLevel(a);
     const levelB = getSortableLevel(b);
     if (levelA !== levelB) {
       return levelA - levelB;
     }
 
-    // 2. Sort by Start Date 
     const now = new Date().getTime();
     const dateA = a.start_date ? new Date(a.start_date).getTime() : Infinity;
     const dateB = b.start_date ? new Date(b.start_date).getTime() : Infinity;
@@ -872,7 +833,6 @@ const sortRecommendedCourses = (courses: Course[]): Course[] => {
       return dateA - dateB; 
     }
 
-    // 3. Sort by Created Date 
     const createdA = new Date(a.created_at).getTime();
     const createdB = new Date(b.created_at).getTime();
     return createdB - createdA;
@@ -934,8 +894,6 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
     });
     
     if (allCourses.size === 0) {
-      console.log("No profile-matched courses found. Showing diverse recommendations.");
-      
       const diverseQuery = supabase
         .from('courses')
         .select('*')
@@ -970,11 +928,9 @@ async function fetchRecommendedCourses(profile: UserProfile | null): Promise<Cou
   }
 }
 
-// --- Internal Component (Safe) ---
 const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   const { user } = useAuth();
   const { toast } = useToast();
-  // We need to call getFilteredContent for the detailed NotEnrolledView to work
   const { getFilteredContent, contentLoading } = useBackend(); 
   
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
@@ -1068,7 +1024,8 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const isLoading = dataLoading || contentLoading;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    {/* Removed: max-w-7xl mx-auto to allow full width alignment */}
+    <div className="w-full">
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-royal" />
@@ -1092,7 +1049,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   );
 };
 
-// --- Main Component (Unchanged) ---
 const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
   if (!profile || !profile.program_type) {
     return (
