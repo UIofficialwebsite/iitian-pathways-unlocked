@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, X } from "lucide-react"; 
+import { Loader2, ArrowLeft } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -11,6 +11,7 @@ import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 
+// Import all original views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
@@ -44,9 +45,11 @@ const ModernDashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -80,13 +83,19 @@ const ModernDashboard: React.FC = () => {
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
+        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
       } finally {
         setLoadingProfile(false);
       }
     };
 
     fetchProfile();
-  }, [user, authLoading, navigate, location]);
+  }, [user, authLoading, navigate, location, toast]);
+
+  const handleFocusSave = (updatedProfile: Profile) => {
+    setProfile(updatedProfile);
+    setIsFocusModalOpen(false);
+  };
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
@@ -130,19 +139,21 @@ const ModernDashboard: React.FC = () => {
 
       <div className="flex-1 flex overflow-hidden">
         <aside className="hidden lg:block w-[288px] border-r bg-white overflow-y-auto">
-          <DashboardSidebar
-            profile={profile}
-            onProfileUpdate={handleProfileUpdate}
-            onViewChange={handleViewChange} 
-            activeView={activeView}
-          />
+          <div className="min-h-full">
+            <DashboardSidebar
+              profile={profile}
+              onProfileUpdate={handleProfileUpdate}
+              onViewChange={handleViewChange} 
+              activeView={activeView}
+            />
+          </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto relative bg-[#f9f9f9]">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
-              <div className="h-full flex flex-col">
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
                 {activeView === 'studyPortal' && (
                   <ContentWrapper>
                     <StudyPortal profile={profile} onViewChange={handleViewChange} />
@@ -158,30 +169,27 @@ const ModernDashboard: React.FC = () => {
                 )}
 
                 {activeView === 'regularBatches' && (
-                  <div className="flex-1 flex flex-col relative h-full">
-                    {/* FIXED HEADER (Standard, No Rounding) */}
-                    <RegularBatchesTab 
-                      focusArea={profile?.program_type || 'General'} 
-                      onSelectCourse={setSelectedCourseId}
-                    />
-
-                    {/* FLOATING DETAIL SECTION (Rounded top corners, no separate header) */}
-                    {selectedCourseId && (
-                      <div className="absolute top-[65px] left-0 right-0 bottom-0 z-50 bg-white rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-bottom-8 duration-500 flex flex-col border-t border-gray-100">
-                        {/* Minimal Close Handle/Button */}
-                        <div className="absolute top-4 right-8 z-[70]">
+                  <div className="flex-1 relative h-full">
+                    {selectedCourseId ? (
+                      <div className="absolute inset-0 z-50 bg-white animate-in slide-in-from-right duration-300 flex flex-col">
+                        <div className="sticky top-0 z-[60] bg-white border-b px-6 py-3 flex items-center shadow-sm">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="bg-gray-100/80 hover:bg-gray-200 p-2.5 rounded-full backdrop-blur-sm transition-all shadow-sm group"
+                            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
                           >
-                            <X className="w-6 h-6 text-gray-500 group-hover:text-gray-900" />
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to Batches
                           </button>
                         </div>
-                        
                         <div className="flex-1 overflow-y-auto">
                           <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
                         </div>
                       </div>
+                    ) : (
+                      <RegularBatchesTab 
+                        focusArea={profile?.program_type || 'General'} 
+                        onSelectCourse={setSelectedCourseId}
+                      />
                     )}
                   </div>
                 )}
@@ -204,7 +212,7 @@ const ModernDashboard: React.FC = () => {
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
         profile={profile}
-        onProfileUpdate={(p) => { setProfile(p); setIsFocusModalOpen(false); }}
+        onProfileUpdate={handleFocusSave}
       />
     </div>
   );
