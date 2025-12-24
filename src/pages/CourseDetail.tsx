@@ -2,21 +2,22 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
+import { cn } from "@/lib/utils";
 
-// Import UI components for building the page layout
+// Import UI components
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-// Import icons for a richer user experience
+// Import icons
 import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
 
-// Import layout components like NavBar and Footer
+// Import layout components
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
 
-// Import specialized components for the course detail page
+// Import specialized components
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
@@ -27,7 +28,7 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 
-// Define the TypeScript interfaces for the data we expect to fetch
+// Interfaces
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -40,19 +41,24 @@ interface CourseFaq {
   answer: string;
 }
 
-const CourseDetail: React.FC = () => {
-  // Get the courseId from the URL parameters
-  const { courseId } = useParams<{ courseId: string }>();
+// Added Props for Dashboard Integration
+interface CourseDetailProps {
+  customCourseId?: string; 
+  isDashboardView?: boolean;
+}
+
+const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboardView }) => {
+  // Use customCourseId from props if provided, otherwise use URL params
+  const { courseId: urlCourseId } = useParams<{ courseId: string }>();
+  const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
 
-  // State hooks to manage course data, loading status, and errors
   const [course, setCourse] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Refs for each content section to enable smooth scrolling with the sticky navigation
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
@@ -63,11 +69,10 @@ const CourseDetail: React.FC = () => {
     faqs: useRef<HTMLDivElement>(null),
   };
 
-  // useEffect hook to fetch all course data when the component mounts or courseId changes
   useEffect(() => {
     const fetchCourseData = async () => {
       if (!courseId) {
-        setError('Course ID is missing from the URL.');
+        setError('Course ID is missing.');
         setLoading(false);
         return;
       }
@@ -76,17 +81,17 @@ const CourseDetail: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch course, schedule, and FAQs data in parallel for better performance
+        // Fetches data in parallel as per your original design
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
-          supabase.from('batch_schedule' as any).select('*').eq('course_id', courseId),
-          supabase.from('course_faqs' as any).select('question, answer').eq('course_id', courseId),
+          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
         ]);
 
-        if (courseResult.error) throw new Error(`Backend Error: ${courseResult.error.message}`);
+        if (courseResult.error) throw new Error(courseResult.error.message);
         
         if (!courseResult.data) {
-          setError(`Sorry, we couldn't find a course with the ID: ${courseId}.`);
+          setError(`Course with ID ${courseId} not found.`);
         } else {
           setCourse(courseResult.data as any);
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
@@ -96,7 +101,7 @@ const CourseDetail: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Error fetching course data:', err);
-        setError(err.message || 'An unexpected error occurred. Please try refreshing the page.');
+        setError(err.message || 'An unexpected error occurred.');
       } finally {
         setLoading(false);
       }
@@ -105,58 +110,41 @@ const CourseDetail: React.FC = () => {
     fetchCourseData();
   }, [courseId]);
 
-  // Display a loading skeleton while data is being fetched
   if (loading) {
     return (
-      <>
-        <NavBar />
-        <div className="min-h-screen bg-background pt-20">
-          <div className="container mx-auto px-4 py-12">
-            <Skeleton className="h-8 w-32 mb-8" />
-            <div className="grid lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 space-y-8">
-                <Skeleton className="h-12 w-3/4" />
-                <Skeleton className="h-6 w-full" />
-                <Skeleton className="h-6 w-5/6" />
-                <Skeleton className="h-48 w-full" />
-              </div>
-              <div className="lg:col-span-1">
-                <Skeleton className="h-96 w-full rounded-2xl" />
-              </div>
-            </div>
+      <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
+        {!isDashboardView && <NavBar />}
+        <div className="container mx-auto px-4 py-12">
+          <Skeleton className="h-12 w-3/4 mb-4" />
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8"><Skeleton className="h-64 w-full" /></div>
+            <div className="lg:col-span-1"><Skeleton className="h-96 w-full" /></div>
           </div>
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
-  // Display an error message if fetching fails or the course is not found
   if (error || !course) {
     return (
-      <>
-        <NavBar />
-        <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-          <div className="container mx-auto px-4 text-center">
-            <Alert variant="destructive" className="max-w-lg mx-auto text-left">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Failed to Load Course</AlertTitle>
-              <AlertDescription>
-                {error || 'The course you are looking for could not be found.'}
-              </AlertDescription>
-            </Alert>
+      <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
+        {!isDashboardView && <NavBar />}
+        <div className="container mx-auto px-4 text-center">
+          <Alert variant="destructive" className="max-w-lg mx-auto">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Failed to Load Course</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          {!isDashboardView && (
             <Button onClick={() => navigate('/courses')} variant="outline" className="mt-6">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Courses
+              <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
             </Button>
-          </div>
+          )}
         </div>
-        <Footer />
-      </>
+      </div>
     );
   }
 
-  // Define the tabs for the sticky navigation bar
   const tabs = [
     { id: 'features', label: 'Features' },
     { id: 'about', label: 'About' },
@@ -167,68 +155,61 @@ const CourseDetail: React.FC = () => {
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Render the main course detail page
   return (
-    <>
-      <NavBar />
-      <main className="min-h-screen pt-20 bg-background">
-        {/* Header Section with dark premium design */}
-        <div className="premium-course-header border-b border-slate-700/50">
+    <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
+      {!isDashboardView && <NavBar />}
+      
+      <main className="min-h-screen">
+        <div className="premium-course-header border-b border-slate-700/50 bg-slate-900 text-white">
           <div className="container mx-auto px-4 py-4">
-            <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 text-slate-300 hover:text-white hover:bg-slate-800/50">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Courses
-            </Button>
+            {!isDashboardView && (
+              <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 text-slate-300">
+                <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
+              </Button>
+            )}
           </div>
           <div className="container mx-auto px-4 pb-8">
             <div className="max-w-4xl">
               <div className="flex flex-wrap gap-2 mb-4">
-                {course.exam_category && <Badge variant="secondary" className="bg-blue-500/20 text-blue-300 border border-blue-400/30">{course.exam_category}</Badge>}
-                {course.level && <Badge variant="outline" className="border-slate-600 text-slate-300 hover:bg-slate-800/50">{course.level}</Badge>}
-                {course.bestseller && <Badge className="bg-amber-500/90 text-white border-amber-600/50">⭐ Best Seller</Badge>}
+                {course.exam_category && <Badge className="bg-blue-500/20 text-blue-300">{course.exam_category}</Badge>}
+                {course.bestseller && <Badge className="bg-amber-500/90 text-white">⭐ Best Seller</Badge>}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-br from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">{course.title}</h1>
-              <p className="text-md md:text-lg text-slate-300 mb-6">{course.description}</p>
-              <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center gap-4 sm:gap-6 text-sm text-slate-200">
-                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /><span className="font-semibold">{course.rating || 4.0}</span><span className="text-slate-300">rating</span></div>
-                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-400" /><span className="font-semibold">{course.students_enrolled || 0}</span><span className="text-slate-300">students</span></div>
-                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-blue-400" /><span className="text-slate-300">Starts: {new Date(course.start_date || "").toLocaleDateString()}</span></div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-4">{course.title}</h1>
+              <p className="text-md text-slate-300 mb-6">{course.description}</p>
+              <div className="flex gap-6 text-sm">
+                <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /> {course.rating || 4.0}</div>
+                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-400" /> {course.students_enrolled || 0}</div>
+                <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-blue-400" /> Starts: {new Date(course.start_date || "").toLocaleDateString()}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Sticky Navigation: Allows users to jump to different sections */}
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
 
-        {/* Main Content Area */}
         <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            
-            {/* Right Column: Contains the sticky enrollment card. It's ordered first on mobile for better UX. */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 lg:order-last">
               <div className="lg:sticky top-28">
                 <EnrollmentCard course={course} />
               </div>
             </div>
 
-            {/* Left Column: Contains all the detailed sections about the course. */}
             <div className="lg:col-span-2 space-y-12">
-              <div id="features" ref={sectionRefs.features} className="scroll-mt-24"><FeaturesSection course={course} /></div>
-              <div id="about" ref={sectionRefs.about} className="scroll-mt-24"><AboutSection course={course} /></div>
-              <div id="moreDetails" ref={sectionRefs.moreDetails} className="scroll-mt-24"><MoreDetailsSection /></div>
-              <div id="schedule" ref={sectionRefs.schedule} className="scroll-mt-24"><ScheduleSection scheduleData={scheduleData} /></div>
-              <div id="ssp" ref={sectionRefs.ssp} className="scroll-mt-24"><SSPPortalSection /></div>
-              <div id="access" ref={sectionRefs.access} className="scroll-mt-24"><CourseAccessGuide /></div>
-              <div id="faqs" ref={sectionRefs.faqs} className="scroll-mt-24">
-                <FAQSection faqs={faqs} />
-              </div>
+              <div ref={sectionRefs.features} className="scroll-mt-24"><FeaturesSection course={course} /></div>
+              <div ref={sectionRefs.about} className="scroll-mt-24"><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails} className="scroll-mt-24"><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule} className="scroll-mt-24"><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp} className="scroll-mt-24"><SSPPortalSection /></div>
+              <div ref={sectionRefs.access} className="scroll-mt-24"><CourseAccessGuide /></div>
+              <div ref={sectionRefs.faqs} className="scroll-mt-24"><FAQSection faqs={faqs} /></div>
             </div>
           </div>
         </div>
       </main>
-      <Footer />
-    </>
+
+      {!isDashboardView && <Footer />}
+    </div>
   );
 };
 
