@@ -42,7 +42,7 @@ const CourseCard: React.FC<{
 
         <div className="min-h-[60px] space-y-2.5 mb-6">
           <div className="flex items-center gap-2.5 text-gray-600 text-[15px]">
-            <BookOpen className="w-4 h-4 text-gray-400" />
+            < BookOpen className="w-4 h-4 text-gray-400" />
             {course.subject || 'Foundation'}
           </div>
           <div className="flex items-center gap-2.5 text-gray-600 text-[15px]">
@@ -109,40 +109,36 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]/50">
-      {/* HEADER: Aligned exactly with StudyPortal/ContentWrapper padding */}
-      <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 md:px-6 lg:px-8 py-5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <h1 className="text-[24px] font-bold tracking-tight text-gray-900">Regular Batches</h1>
+      {/* HEADER: Standard layout, fixed at the top, no rounding */}
+      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-6 py-4 shadow-sm h-[65px] flex items-center">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+          <h1 className="text-[22px] font-bold tracking-tight text-gray-900">Regular Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input 
               placeholder="Search by batch name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-11 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
+              className="pl-9 h-10 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
             />
           </div>
         </div>
       </div>
 
-      {/* SCROLLABLE GRID: Also aligned with padding */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-8">
+      {/* Grid Content: Starts below the header */}
+      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map(i => (
-                <div key={i} className="h-96 bg-gray-100 animate-pulse rounded-[24px]" />
+                <div key={i} className="h-96 bg-white animate-pulse rounded-[24px] border border-gray-100" />
               ))}
             </div>
-          ) : filtered.length > 0 ? (
+          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
               {filtered.map(batch => (
                 <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
               ))}
-            </div>
-          ) : (
-            <div className="text-center py-20 bg-white rounded-[32px] border border-dashed border-gray-300">
-              <p className="text-gray-400 text-lg font-medium">No paid regular batches found for {focusArea}.</p>
             </div>
           )}
         </div>
