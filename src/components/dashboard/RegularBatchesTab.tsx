@@ -1,8 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Star, CheckCircle2, Loader2 } from "lucide-react";
+import { 
+  Search, 
+  ChevronRight, 
+  BookOpen, 
+  Star, 
+  CheckCircle2, 
+  Loader2, 
+  Maximize2, 
+  X 
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -12,98 +20,134 @@ interface RegularBatchesTabProps {
 
 const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  
   const discount = course.discounted_price 
-    ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
+    ? Math.round(((course.price - (course.discounted_price ?? 0)) / course.price) * 100) 
     : 0;
 
+  const courseImage = course.image_url || "https://i.imgur.com/eBf29iE.png";
+
   return (
-    <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-      {/* Header Banner Section */}
-      <div className="bg-[#fffbeb] relative pt-[10px] text-center">
-        <div className="inline-flex items-center gap-1.5 text-[13px] color-[#444]">
-          <Star className="w-4 h-4 fill-[#facc15] text-[#facc15]" />
-          <span>Multiple plans inside: <strong>Infinity, Pro</strong></span>
-        </div>
-        <img 
-          src={course.image_url || "https://i.imgur.com/eBf29iE.png"} 
-          alt="Banner" 
-          className="w-full block mt-[5px] aspect-video object-cover" 
-        />
-        <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 bg-[#facc15] text-black text-[11px] font-extrabold px-3 py-1 rounded-[6px] uppercase shadow-sm whitespace-nowrap">
-          {course.course_type || "Comeback Kit Included"}
-        </div>
-      </div>
-
-      {/* Content Section */}
-      <div className="p-5 flex flex-col flex-1">
-        <div className="flex justify-between items-center mb-[10px]">
-          <span className="text-[#f97316] font-bold text-base">{course.level || 'Academic'}</span>
-          <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
-            {course.language || 'Hinglish'}
-          </span>
-        </div>
-
-        <h2 className="text-[20px] font-bold text-[#1f2937] m-0 mb-[15px] line-clamp-1">{course.title}</h2>
-
-        <div className="min-h-[70px]">
-          {!showDetails ? (
-            <>
-              <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
-                <BookOpen className="w-[18px] h-[18px] text-[#666]" />
-                {course.subject || 'Boards 2026'}
-              </div>
-              <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
-                <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
-                <span className="font-bold">Ongoing</span> 
-                <span className="text-[#d1d5db] mx-1">|</span> 
-                Started on {course.start_date || "17th Dec'25"}
-              </div>
-            </>
-          ) : (
-            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-              <ul className="space-y-1.5">
-                {(course.features || ['Live Classes', 'DPPs', 'Doubt Support']).slice(0, 3).map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-[#4b5563]">
-                    <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-                    <span className="line-clamp-1">{f}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Footer Pricing */}
-        <div className="flex justify-between items-center mt-auto pt-[15px]">
-          <div className="leading-tight">
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
-              {course.discounted_price && (
-                <span className="text-[14px] text-[#9ca3af] line-through">₹{course.price}</span>
-              )}
-            </div>
-            {discount > 0 && (
-              <span className="block text-[#166534] font-bold text-[15px] mt-0.5">{discount}% OFF</span>
-            )}
+    <>
+      <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
+        {/* Header Banner Section */}
+        <div className="bg-[#fffbeb] relative pt-[10px] text-center">
+          <div className="inline-flex items-center gap-1.5 text-[13px] text-[#444]">
+            <Star className="w-4 h-4 fill-[#facc15] text-[#facc15]" />
+            <span>Multiple plans inside: <strong>Infinity, Pro</strong></span>
           </div>
           
-          <div className="flex gap-2.5">
-            <button className="bg-[#1f2937] text-white border-none py-2.5 px-6 rounded-[10px] font-bold text-[15px] hover:bg-[#111827] transition-colors">
-              Buy Now
-            </button>
-            <button 
-              onClick={() => setShowDetails(!showDetails)}
-              className={cn(
-                "bg-white border border-[#e5e7eb] w-11 h-11 rounded-[10px] flex items-center justify-center transition-all",
-                showDetails && "rotate-90 bg-slate-50"
+          {/* Image Container with Preview Trigger */}
+          <div className="relative group cursor-pointer mt-[5px]" onClick={() => setIsPreviewOpen(true)}>
+            <img 
+              src={courseImage} 
+              alt={course.title} 
+              className="w-full block aspect-video object-cover transition-transform duration-300 group-hover:scale-[1.02]" 
+            />
+            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="bg-white/90 p-2 rounded-full shadow-lg">
+                <Maximize2 className="w-5 h-5 text-gray-900" />
+              </div>
+            </div>
+          </div>
+
+          <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 bg-[#facc15] text-black text-[11px] font-extrabold px-3 py-1 rounded-[6px] uppercase shadow-sm whitespace-nowrap">
+            {course.course_type || "Comeback Kit Included"}
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="p-5 flex flex-col flex-1">
+          <div className="flex justify-between items-center mb-[10px]">
+            <span className="text-[#f97316] font-bold text-base">{course.level || 'Academic'}</span>
+            <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
+              {course.language || 'Hinglish'}
+            </span>
+          </div>
+
+          <h2 className="text-[20px] font-bold text-[#1f2937] m-0 mb-[15px] line-clamp-1">{course.title}</h2>
+
+          <div className="min-h-[70px]">
+            {!showDetails ? (
+              <>
+                <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
+                  <BookOpen className="w-[18px] h-[18px] text-[#666]" />
+                  {course.subject || 'Boards 2026'}
+                </div>
+                <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
+                  <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
+                  <span className="font-bold">Ongoing</span> 
+                  <span className="text-[#d1d5db] mx-1">|</span> 
+                  Started on {course.start_date || "17th Dec'25"}
+                </div>
+              </>
+            ) : (
+              <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                <ul className="space-y-1.5">
+                  {(course.features || ['Live Classes', 'DPPs', 'Doubt Support']).slice(0, 3).map((f, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-[#4b5563]">
+                      <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+                      <span className="line-clamp-1">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Pricing */}
+          <div className="flex justify-between items-center mt-auto pt-[15px]">
+            <div className="leading-tight">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
+                {course.discounted_price && (
+                  <span className="text-[14px] text-[#9ca3af] line-through">₹{course.price}</span>
+                )}
+              </div>
+              {discount > 0 && (
+                <span className="block text-[#166534] font-bold text-[15px] mt-0.5">{discount}% OFF</span>
               )}
-            >
-              <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
-            </button>
+            </div>
+            
+            <div className="flex gap-2.5">
+              <button className="bg-[#1f2937] text-white border-none py-2.5 px-6 rounded-[10px] font-bold text-[15px] hover:bg-[#111827] transition-colors">
+                Buy Now
+              </button>
+              <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className={cn(
+                  "bg-white border border-[#e5e7eb] w-11 h-11 rounded-[10px] flex items-center justify-center transition-all",
+                  showDetails && "rotate-90 bg-slate-50"
+                )}
+              >
+                <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Image Preview Overlay */}
+      {isPreviewOpen && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          onClick={() => setIsPreviewOpen(false)}
+        >
+          <button 
+            className="absolute top-6 right-6 text-white p-2 hover:bg-white/10 rounded-full transition-colors"
+            onClick={(e) => { e.stopPropagation(); setIsPreviewOpen(false); }}
+          >
+            <X className="w-8 h-8" />
+          </button>
+          <img 
+            src={courseImage} 
+            alt="Preview" 
+            className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl animate-in zoom-in-95 duration-300" 
+          />
+        </div>
+      )}
+    </>
   );
 };
 
@@ -115,8 +159,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      console.log("Fetching regular batches for focus area:", focusArea); // Debug log
-      
       try {
         const { data, error } = await supabase
           .from('courses')
