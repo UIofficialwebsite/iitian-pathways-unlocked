@@ -1,16 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Search, 
-  ChevronRight, 
-  Languages, 
-  CalendarDays, 
-  CheckCircle2,
-  Sparkles 
-} from "lucide-react";
+import { Search, ChevronRight, BookOpen, Star, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -20,111 +12,97 @@ interface RegularBatchesTabProps {
 
 const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   const [showDetails, setShowDetails] = useState(false);
-  // Assume a tag 'dark-theme' exists for dark variation
-  const isDark = course.tags?.includes('dark-theme');
+  const discount = course.discounted_price 
+    ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
+    : 0;
 
   return (
-    <div className={cn(
-      "flex flex-col rounded-[20px] overflow-hidden border border-slate-200 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl bg-white",
-      isDark && "bg-[#1e292b] text-white border-none"
-    )}>
-      {/* Banner */}
-      <div 
-        className="h-[200px] bg-cover bg-center relative bg-slate-100"
-        style={{ backgroundImage: `url(${course.image_url || 'https://via.placeholder.com/400x200?text=Batch+Banner'})` }}
-      >
-        <div className={cn(
-          "absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-bold flex items-center gap-1.5 text-slate-900 shadow-sm",
-          isDark && "bg-[#3c2a1e] text-white"
-        )}>
-          {isDark ? '🎯 OFFLINE CENTRE' : `⚙️ ${course.course_type || 'Regular Batch'}`}
+    <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
+      {/* Header Banner Section */}
+      <div className="bg-[#fffbeb] relative pt-[10px] text-center">
+        <div className="inline-flex items-center gap-1.5 text-[13px] color-[#444]">
+          <Star className="w-4 h-4 fill-[#facc15] text-[#facc15]" />
+          <span>Multiple plans inside: <strong>Infinity, Pro</strong></span>
+        </div>
+        <img 
+          src={course.image_url || "https://i.imgur.com/eBf29iE.png"} 
+          alt="Banner" 
+          className="w-full block mt-[5px] aspect-video object-cover" 
+        />
+        <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 bg-[#facc15] text-black text-[11px] font-extrabold px-3 py-1 rounded-[6px] uppercase shadow-sm whitespace-nowrap">
+          {course.course_type || "Comeback Kit Included"}
         </div>
       </div>
 
-      {/* Body */}
-      <div className="p-5 flex flex-col flex-grow">
-        <div className="flex justify-between items-center mb-3">
-          <span className={cn("font-bold text-sm", isDark ? "text-[#ff9e43]" : "text-[#f58220]")}>
-            {course.level || 'Academic'}
-          </span>
-          <span className={cn(
-            "border px-2 py-0.5 rounded text-[10px] font-bold uppercase",
-            isDark ? "border-slate-600 text-slate-300" : "border-slate-300 text-slate-600"
-          )}>
+      {/* Content Section */}
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex justify-between items-center mb-[10px]">
+          <span className="text-[#f97316] font-bold text-base">{course.level || 'Academic'}</span>
+          <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
             {course.language || 'Hinglish'}
           </span>
         </div>
 
-        <h2 className="text-xl font-bold leading-tight mb-4 min-h-[50px] line-clamp-2">
-          {course.title}
-        </h2>
+        <h2 className="text-[20px] font-bold text-[#1f2937] m-0 mb-[15px] line-clamp-1">{course.title}</h2>
 
-        {!showDetails ? (
-          <ul className="space-y-2 mb-5">
-            <li className="flex items-center gap-2 text-sm opacity-80">
-              <Languages className="w-4 h-4 text-blue-500" /> {course.subject || 'All Subjects'}
-            </li>
-            <li className="flex items-center gap-2 text-sm opacity-80">
-              <CalendarDays className="w-4 h-4 text-red-500" /> Starts {course.start_date || 'Soon'}
-            </li>
-          </ul>
-        ) : (
-          <div className="mb-5 animate-in fade-in slide-in-from-top-1 duration-300">
-             <h4 className="text-xs font-bold uppercase tracking-wider mb-2 opacity-60">Batch Features:</h4>
-             <ul className="space-y-1.5">
-                {(course.features || ['Experienced Faculty', 'Live Classes', 'Doubt Support']).map((f, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
+        <div className="min-h-[70px]">
+          {!showDetails ? (
+            <>
+              <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
+                <BookOpen className="w-[18px] h-[18px] text-[#666]" />
+                {course.subject || 'Boards 2026'}
+              </div>
+              <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
+                <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
+                <span className="font-bold">Ongoing</span> 
+                <span className="text-[#d1d5db] mx-1">|</span> 
+                Started on {course.start_date || "17th Dec'25"}
+              </div>
+            </>
+          ) : (
+            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+              <ul className="space-y-1.5">
+                {(course.features || ['Live Classes', 'DPPs', 'Doubt Support']).slice(0, 3).map((f, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-[#4b5563]">
                     <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
                     <span className="line-clamp-1">{f}</span>
                   </li>
                 ))}
-             </ul>
-          </div>
-        )}
+              </ul>
+            </div>
+          )}
+        </div>
 
-        <div className="flex justify-between items-end mt-auto pt-4">
-          <div className="flex flex-col">
-            <span className="text-2xl font-extrabold">₹{course.discounted_price || course.price}</span>
-            {course.discounted_price && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs line-through opacity-50">₹{course.price}</span>
-                <span className="text-xs font-bold text-green-600">
-                  {Math.round(((course.price - course.discounted_price!) / course.price) * 100)}% OFF
-                </span>
-              </div>
+        {/* Footer Pricing */}
+        <div className="flex justify-between items-center mt-auto pt-[15px]">
+          <div className="leading-tight">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
+              {course.discounted_price && (
+                <span className="text-[14px] text-[#9ca3af] line-through">₹{course.price}</span>
+              )}
+            </div>
+            {discount > 0 && (
+              <span className="block text-[#166534] font-bold text-[15px] mt-0.5">{discount}% OFF</span>
             )}
           </div>
-
-          <div className="flex gap-2">
-            <Button className={cn(
-              "font-bold h-10 px-6 rounded-lg",
-              isDark ? "bg-white text-slate-900 hover:bg-slate-100" : "bg-[#1a1c1e] text-white hover:bg-slate-800"
-            )}>
-              {course.payment_type === 'free' ? 'Enroll' : 'Buy Now'}
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowDetails(!showDetails);
-              }}
+          
+          <div className="flex gap-2.5">
+            <button className="bg-[#1f2937] text-white border-none py-2.5 px-6 rounded-[10px] font-bold text-[15px] hover:bg-[#111827] transition-colors">
+              Buy Now
+            </button>
+            <button 
+              onClick={() => setShowDetails(!showDetails)}
               className={cn(
-                "h-10 w-10 rounded-lg border-slate-200 transition-transform",
-                showDetails && "rotate-90 bg-slate-100"
+                "bg-white border border-[#e5e7eb] w-11 h-11 rounded-[10px] flex items-center justify-center transition-all",
+                showDetails && "rotate-90 bg-slate-50"
               )}
             >
-              <ChevronRight className="w-5 h-5" />
-            </Button>
+              <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </div>
-      
-      {isDark && (
-        <div className="bg-[#121e20] text-white p-2.5 text-center text-[11px] font-semibold flex items-center justify-center gap-2 border-t border-white/10">
-          🛡️ Limited time offer: Up to 40% OFF
-        </div>
-      )}
     </div>
   );
 };
@@ -141,51 +119,51 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
         .from('courses')
         .select('*')
         .eq('exam_category', focusArea)
-        .eq('batch_type', 'regular');
+        .eq('batch_type', 'regular')
+        .eq('payment_type', 'paid');
+      
       if (data) setBatches(data);
       setLoading(false);
     };
     fetchCourses();
   }, [focusArea]);
 
-  const filteredBatches = batches.filter(b => 
-    b.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="relative">
-      {/* Consolidated Sticky Header */}
-      <div className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 -mx-4 md:-mx-8 px-4 md:px-8 py-6 mb-8">
+    <div className="flex flex-col h-full bg-[#f9f9f9]">
+      {/* Sticky Header - Joined with TopNav */}
+      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Regular Batches</h1>
-            <p className="text-slate-500 text-sm mt-1">Found {filteredBatches.length} courses for {focusArea}</p>
-          </div>
-          
+          <h1 className="text-[32px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
           <div className="relative w-full md:w-96">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
               placeholder={`Search for "${batches[0]?.title || 'batch name'}..."`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 h-12 bg-white border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 transition-all"
+              className="pl-11 h-12 bg-white border-[#e0e0e0] rounded-xl focus:ring-2 focus:ring-orange-500 transition-all shadow-none text-base"
             />
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 md:px-0">
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[1,2,3].map(i => <div key={i} className="h-[450px] bg-slate-100 animate-pulse rounded-[20px]" />)}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-20">
-            {filteredBatches.map(batch => (
-              <CourseCard key={batch.id} course={batch} />
-            ))}
-          </div>
-        )}
+      <div className="flex-1 overflow-y-auto p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1,2,3].map(i => <div key={i} className="h-[400px] bg-slate-100 animate-pulse rounded-[20px]" />)}
+            </div>
+          ) : filtered.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-12">
+              {filtered.map(batch => <CourseCard key={batch.id} course={batch} />)}
+            </div>
+          ) : (
+            <div className="text-center py-20">
+              <p className="text-slate-400 text-lg">No paid regular batches found for {focusArea}.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
