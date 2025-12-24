@@ -118,7 +118,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   
-  // Use the persisted state from props instead of local Record
   const viewingItem = persistedVideo;
   
   const setViewingItem = (item: ContentItem | null) => {
@@ -276,7 +275,8 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
           )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-7xl mx-auto w-full scrollbar-hide">
+      {/* UPDATED: Removed max-w-7xl and mx-auto to allow full left alignment */}
+      <div className="flex-1 overflow-y-auto p-4 md:px-8 py-8 w-full scrollbar-hide">
         {viewingItem ? (
             <div className="w-full h-full transition-opacity duration-200" style={{ opacity: isTabVisible ? 1 : 0 }}>
                 {viewingItem.category === 'Free Lectures' ? (
@@ -300,7 +300,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
             >
                 {activeTab === 'Free Lectures' && isIITM ? (
                     <div className="space-y-10 mb-20">
-                        <div className="relative max-w-md mx-auto mb-10">
+                        <div className="relative max-w-md mb-10">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-10 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
                         </div>
@@ -399,7 +399,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({
                                 {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
                             </div>
                         ) : displayedContent.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                             </div>
                         ) : (
