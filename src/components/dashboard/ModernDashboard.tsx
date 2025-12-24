@@ -16,7 +16,7 @@ import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
-import RegularBatchesTab from "./RegularBatchesTab"; // 1. IMPORT REGULAR BATCHES TAB
+import RegularBatchesTab from "./RegularBatchesTab"; //
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -73,25 +73,17 @@ const ModernDashboard: React.FC = () => {
           .eq("id", user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") {
-          throw error;
-        }
+        if (error && error.code !== "PGRST116") throw error;
 
         if (data) {
           setProfile(data);
-          if (!data.program_type) {
-            setIsFocusModalOpen(true);
-          }
+          if (!data.program_type) setIsFocusModalOpen(true);
         } else {
           setIsFocusModalOpen(true);
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch your profile. " + error.message,
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
       } finally {
         setLoadingProfile(false);
       }
@@ -105,24 +97,13 @@ const ModernDashboard: React.FC = () => {
     setIsFocusModalOpen(false);
   };
 
-  const handleProfileUpdate = (updatedProfile: any) => {
-    setProfile(updatedProfile as Profile);
-  };
+  const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) return; 
-    
-    if (view === 'coming_soon') {
-      setActiveView(view);
-      return;
-    }
-
     setIsViewLoading(true);
     setActiveView(view);
-
-    setTimeout(() => {
-      setIsViewLoading(false);
-    }, 800);
+    setTimeout(() => setIsViewLoading(false), 800);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -165,38 +146,29 @@ const ModernDashboard: React.FC = () => {
         </aside>
 
         <main className="flex-1 overflow-y-auto bg-gray-50/50">
-            {activeView === 'coming_soon' ? (
-              <ContentWrapper>
-                <DashboardLoader />
-              </ContentWrapper>
-            ) : 
-            isViewLoading ? (
-               <ContentWrapper>
-                 <DashboardLoader />
-               </ContentWrapper>
+            {isViewLoading ? (
+               <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full">
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
                 {activeView === 'studyPortal' && (
                   <ContentWrapper>
                     <StudyPortal profile={profile} onViewChange={handleViewChange} />
                   </ContentWrapper>
                 )}
                 
-                {/* 2. REGULAR BATCHES INTEGRATION */}
-                {activeView === 'regularBatches' && (
-                  <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
-                )}
-
                 {activeView === 'profile' && (
-                  <ContentWrapper>
-                    <MyProfile />
-                  </ContentWrapper>
+                  <ContentWrapper><MyProfile /></ContentWrapper>
                 )}
 
                 {activeView === 'enrollments' && (
-                  <ContentWrapper>
-                    <MyEnrollments />
-                  </ContentWrapper>
+                  <ContentWrapper><MyEnrollments /></ContentWrapper>
+                )}
+
+                {/* REGULAR BATCHES INTEGRATION */}
+                {activeView === 'regularBatches' && (
+                  <div className="flex-1">
+                    <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
+                  </div>
                 )}
 
                 {activeView === 'library' && (
