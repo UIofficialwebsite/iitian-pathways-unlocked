@@ -21,7 +21,7 @@ const CourseCard: React.FC<{
   return (
     <>
       <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-        {/* Simple Course Image Section */}
+        {/* Simple Header Image Section */}
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <img 
             src={course.image_url || "https://i.imgur.com/eBf29iE.png"} 
@@ -57,7 +57,7 @@ const CourseCard: React.FC<{
             </div>
           </div>
 
-          {/* Pricing and Action Buttons */}
+          {/* Footer Pricing and Actions */}
           <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
             <div>
               <div className="flex items-baseline gap-1.5">
@@ -126,8 +126,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* Sticky Header Aligned with ContentWrapper */}
-      <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm">
+      {/* FIXED HEADER: Sticks to the top of the content area */}
+      <div className="sticky top-0 z-30 bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
@@ -136,26 +136,31 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               placeholder="Search by batch name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-11 bg-gray-50/50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
+              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-8">
+      {/* Grid Content: Starts below the header */}
+      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 bg-[#f9f9f9]">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
-              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-96 bg-white animate-pulse rounded-[24px] border border-gray-100 flex items-center justify-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-gray-200" />
+                </div>
+              ))}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-20">
               {filtered.map(batch => (
                 <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
               <p className="text-gray-400 text-lg font-medium">No paid regular batches found.</p>
             </div>
           )}
