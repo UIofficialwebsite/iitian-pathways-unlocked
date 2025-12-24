@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, ArrowLeft } from "lucide-react"; 
+import { Loader2, ArrowLeft, X } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -11,13 +11,13 @@ import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 
-// Import the views
+// Import all original views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
 import RegularBatchesTab from "./RegularBatchesTab";
-import CourseDetail from "@/pages/CourseDetail"; // Import the detail component
+import CourseDetail from "@/pages/CourseDetail";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -50,7 +50,7 @@ const ModernDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
-  // Detail View State
+  // Floating Detail State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
   // Persisted Library State
@@ -105,11 +105,11 @@ const ModernDashboard: React.FC = () => {
 
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) {
-      setSelectedCourseId(null); // Reset detail view if clicking same tab
+      setSelectedCourseId(null);
       return; 
     }
     setIsViewLoading(true);
-    setSelectedCourseId(null); // Reset detail view on tab change
+    setSelectedCourseId(null);
     setActiveView(view);
     setTimeout(() => setIsViewLoading(false), 800);
   };
@@ -153,7 +153,7 @@ const ModernDashboard: React.FC = () => {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50/50">
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
@@ -173,25 +173,35 @@ const ModernDashboard: React.FC = () => {
                 )}
 
                 {activeView === 'regularBatches' && (
-                  <div className="flex-1">
-                    {selectedCourseId ? (
-                      <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                        <div className="bg-white border-b px-6 py-3 sticky top-0 z-10 flex items-center">
+                  <div className="flex-1 relative h-full">
+                    {/* The list stays in background */}
+                    <RegularBatchesTab 
+                      focusArea={profile?.program_type || 'General'} 
+                      onSelectCourse={setSelectedCourseId}
+                    />
+
+                    {/* Floating Detail Overlay */}
+                    {selectedCourseId && (
+                      <div className="absolute inset-0 z-50 bg-white animate-in slide-in-from-right duration-300 flex flex-col">
+                        <div className="sticky top-0 z-[60] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-600 hover:text-royal font-medium transition-colors"
+                            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
                           >
-                            <ArrowLeft className="w-4 h-4" />
-                            Back to Batches
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to All Batches
+                          </button>
+                          <button 
+                            onClick={() => setSelectedCourseId(null)}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <X className="w-6 h-6 text-gray-400" />
                           </button>
                         </div>
-                        <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                        <div className="flex-1 overflow-y-auto">
+                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                        </div>
                       </div>
-                    ) : (
-                      <RegularBatchesTab 
-                        focusArea={profile?.program_type || 'General'} 
-                        onSelectCourse={setSelectedCourseId}
-                      />
                     )}
                   </div>
                 )}
