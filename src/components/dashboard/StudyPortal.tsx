@@ -221,7 +221,6 @@ const EnrollmentListItem = ({
   );
 };
 
-// --- Custom Tab Navigation Component ---
 const CustomDashboardTabNav = ({ 
   tabs, 
   activeTab, 
@@ -233,7 +232,7 @@ const CustomDashboardTabNav = ({
 }) => {
   return (
     <div className="w-full bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
-      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-8">
+      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto scrollbar-hide px-4 md:px-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -450,10 +449,10 @@ const EnrolledView = ({
 
   if (viewMode === 'description') {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] -m-4 md:-m-8 bg-gray-50 overflow-hidden">
+      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
         
         <div className="flex-none bg-white z-20 shadow-sm">
-           <div className="px-4 md:px-8 py-2 border-b border-gray-100">
+           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -465,7 +464,7 @@ const EnrolledView = ({
               </Button>
            </div>
 
-           <div className="premium-course-header p-4 sm:p-6 md:px-8 text-white relative overflow-hidden">
+           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
@@ -487,7 +486,7 @@ const EnrolledView = ({
                    <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
                       {fullCourseData?.title || currentBatchSummary.title}
                    </h1>
-                   <p className="text-slate-200 max-w-full text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
+                   <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
                       {fullCourseData?.description || currentBatchSummary.description}
                    </p>
                  </div>
@@ -510,14 +509,14 @@ const EnrolledView = ({
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
             ) : fullCourseData ? (
-               <div className="p-4 md:p-8">
+               <div className="p-3 sm:p-6">
                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div className="space-y-8 pb-12">
                       <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
                         <FeaturesSection course={fullCourseData} />
                       </div>
                       
-                      <div className="px-4 sm:px-6 md:px-8 space-y-10 sm:space-y-12">
+                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
                           <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
                           <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
                           <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
@@ -1021,6 +1020,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const isLoading = dataLoading || contentLoading;
 
   return (
+    /* Removed max-w-7xl mx-auto here */
     <div className="w-full">
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
