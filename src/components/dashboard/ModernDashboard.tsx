@@ -16,10 +16,10 @@ import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
+import RegularBatchesTab from "./RegularBatchesTab"; // 1. Imported the new component
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-// Define a shared content item interface for the video player state
 interface ContentItem {
   id: string | number;
   title: string;
@@ -45,11 +45,9 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
-  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -192,6 +190,13 @@ const ModernDashboard: React.FC = () => {
                   <ContentWrapper>
                     <MyEnrollments />
                   </ContentWrapper>
+                )}
+
+                {/* 2. Added rendering for Regular Batches */}
+                {activeView === 'regularBatches' && (
+                   <ContentWrapper>
+                     <RegularBatchesTab focusArea={profile?.program_type || 'General'} />
+                   </ContentWrapper>
                 )}
 
                 {activeView === 'library' && (
