@@ -21,7 +21,6 @@ const CourseCard: React.FC<{
   return (
     <>
       <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-        {/* Simple Header Image Section */}
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <img 
             src={course.image_url || "https://i.imgur.com/eBf29iE.png"} 
@@ -33,10 +32,9 @@ const CourseCard: React.FC<{
           </div>
         </div>
 
-        {/* Content Section */}
         <div className="p-5 flex flex-col flex-1">
           <div className="flex justify-between items-center mb-[10px]">
-            <span className="text-[#f97316] font-bold text-base uppercase">{course.level || 'Academic'}</span>
+            <span className="text-[#f97316] font-bold text-base uppercase tracking-tight">{course.level || 'Academic'}</span>
             <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
               {course.language || 'Hinglish'}
             </span>
@@ -57,7 +55,6 @@ const CourseCard: React.FC<{
             </div>
           </div>
 
-          {/* Footer Pricing and Actions */}
           <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
             <div>
               <div className="flex items-baseline gap-1.5">
@@ -87,7 +84,6 @@ const CourseCard: React.FC<{
         </div>
       </div>
 
-      {/* Image Preview Overlay */}
       {isPreviewOpen && (
         <div 
           className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
@@ -126,7 +122,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* FIXED HEADER: Sticks to the top of the content area */}
+      {/* FIXED HEADER: Sticks within its own scrollable container */}
       <div className="sticky top-0 z-30 bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
@@ -142,25 +138,20 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      {/* Grid Content: Starts below the header */}
-      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8 bg-[#f9f9f9]">
+      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-96 bg-white animate-pulse rounded-[24px] border border-gray-100 flex items-center justify-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-gray-200" />
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
             </div>
           ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-20">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-12">
               {filtered.map(batch => (
                 <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
               ))}
             </div>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
               <p className="text-gray-400 text-lg font-medium">No paid regular batches found.</p>
             </div>
           )}
