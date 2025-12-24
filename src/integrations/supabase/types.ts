@@ -7,8 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "13.0.4"
   }
@@ -225,6 +223,8 @@ export type Database = {
           tags: string[] | null
           title: string
           updated_at: string | null
+          batch_type: string | null // Added
+          payment_type: string | null // Added
         }
         Insert: {
           bestseller?: boolean | null
@@ -252,6 +252,8 @@ export type Database = {
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          batch_type?: string | null // Added
+          payment_type?: string | null // Added
         }
         Update: {
           bestseller?: boolean | null
@@ -279,6 +281,8 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          batch_type?: string | null // Added
+          payment_type?: string | null // Added
         }
         Relationships: []
       }
@@ -397,7 +401,7 @@ export type Database = {
           id?: string
           label?: string
           parent_id?: string | null
-          profile_column_to_update?: string
+          profile_column_to_update: string
           value_to_save?: string
         }
         Relationships: [
@@ -820,7 +824,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           download_count?: number | null
-          exam_type?: string | null
+          exam_category?: string | null
           file_link?: string | null
           id?: string
           is_active?: boolean | null
