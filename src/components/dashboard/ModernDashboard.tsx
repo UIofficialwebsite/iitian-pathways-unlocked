@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, ArrowLeft, X } from "lucide-react"; 
+import { Loader2, X } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -138,11 +138,11 @@ const ModernDashboard: React.FC = () => {
           />
         </aside>
 
-        <main className="flex-1 overflow-y-auto relative">
+        <main className="flex-1 overflow-y-auto relative bg-[#f9f9f9]">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+              <div className="h-full flex flex-col">
                 {activeView === 'studyPortal' && (
                   <ContentWrapper>
                     <StudyPortal profile={profile} onViewChange={handleViewChange} />
@@ -158,31 +158,26 @@ const ModernDashboard: React.FC = () => {
                 )}
 
                 {activeView === 'regularBatches' && (
-                  <div className="flex-1 relative">
-                    {/* The list with its fixed header remains aligned with other sections */}
+                  <div className="flex-1 flex flex-col relative h-full">
+                    {/* FIXED HEADER (Standard, No Rounding) */}
                     <RegularBatchesTab 
                       focusArea={profile?.program_type || 'General'} 
                       onSelectCourse={setSelectedCourseId}
                     />
 
-                    {/* Floating Floating Detail Section with Round Corners */}
+                    {/* FLOATING DETAIL SECTION (Rounded top corners, no separate header) */}
                     {selectedCourseId && (
-                      <div className="absolute inset-4 z-50 bg-white shadow-2xl rounded-[32px] border border-gray-100 overflow-hidden animate-in slide-in-from-right-8 duration-500 flex flex-col">
-                        <div className="sticky top-0 z-[60] bg-white/90 backdrop-blur-sm border-b px-8 py-4 flex items-center justify-between">
+                      <div className="absolute top-[65px] left-0 right-0 bottom-0 z-50 bg-white rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] overflow-hidden animate-in slide-in-from-bottom-8 duration-500 flex flex-col border-t border-gray-100">
+                        {/* Minimal Close Handle/Button */}
+                        <div className="absolute top-4 right-8 z-[70]">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-all"
+                            className="bg-gray-100/80 hover:bg-gray-200 p-2.5 rounded-full backdrop-blur-sm transition-all shadow-sm group"
                           >
-                            <ArrowLeft className="w-5 h-5" />
-                            Back to Batches
-                          </button>
-                          <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                          >
-                            <X className="w-6 h-6 text-gray-400" />
+                            <X className="w-6 h-6 text-gray-500 group-hover:text-gray-900" />
                           </button>
                         </div>
+                        
                         <div className="flex-1 overflow-y-auto">
                           <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
                         </div>
