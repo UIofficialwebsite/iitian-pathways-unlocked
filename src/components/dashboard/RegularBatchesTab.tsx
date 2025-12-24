@@ -5,7 +5,6 @@ import {
   Search, 
   ChevronRight, 
   BookOpen, 
-  Star, 
   CheckCircle2, 
   Loader2, 
   Maximize2, 
@@ -23,7 +22,7 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const discount = course.discounted_price 
-    ? Math.round(((course.price - (course.discounted_price ?? 0)) / course.price) * 100) 
+    ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
     : 0;
 
   const courseImage = course.image_url || "https://i.imgur.com/eBf29iE.png";
@@ -31,29 +30,17 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
   return (
     <>
       <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
-        {/* Header Banner Section */}
-        <div className="bg-[#fffbeb] relative pt-[10px] text-center">
-          <div className="inline-flex items-center gap-1.5 text-[13px] text-[#444]">
-            <Star className="w-4 h-4 fill-[#facc15] text-[#facc15]" />
-            <span>Multiple plans inside: <strong>Infinity, Pro</strong></span>
-          </div>
-          
-          {/* Image Container with Preview Trigger */}
-          <div className="relative group cursor-pointer mt-[5px]" onClick={() => setIsPreviewOpen(true)}>
-            <img 
-              src={courseImage} 
-              alt={course.title} 
-              className="w-full block aspect-video object-cover transition-transform duration-300 group-hover:scale-[1.02]" 
-            />
-            <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <div className="bg-white/90 p-2 rounded-full shadow-lg">
-                <Maximize2 className="w-5 h-5 text-gray-900" />
-              </div>
+        {/* Header Section - Cleaned to show Image Only */}
+        <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
+          <img 
+            src={courseImage} 
+            alt={course.title} 
+            className="w-full block aspect-video object-cover transition-transform duration-300 group-hover:scale-[1.02]" 
+          />
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <div className="bg-white/90 p-2 rounded-full shadow-lg">
+              <Maximize2 className="w-5 h-5 text-gray-900" />
             </div>
-          </div>
-
-          <div className="absolute bottom-[10px] left-1/2 -translate-x-1/2 bg-[#facc15] text-black text-[11px] font-extrabold px-3 py-1 rounded-[6px] uppercase shadow-sm whitespace-nowrap">
-            {course.course_type || "Comeback Kit Included"}
           </div>
         </div>
 
@@ -72,8 +59,8 @@ const CourseCard: React.FC<{ course: Tables<'courses'> }> = ({ course }) => {
             {!showDetails ? (
               <>
                 <div className="flex items-center gap-2.5 mb-2 text-[#4b5563] text-[15px]">
-                  <BookOpen className="w-[18px] h-[18px] text-[#666]" />
-                  {course.subject || 'Boards 2026'}
+                  < BookOpen className="w-[18px] h-[18px] text-[#666]" />
+                  {course.subject || 'Foundation'}
                 </div>
                 <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
                   <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
@@ -163,7 +150,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
         const { data, error } = await supabase
           .from('courses')
           .select('*')
-          // Using ilike for case-insensitive matching to ensure JEE/jee both work
           .ilike('exam_category', focusArea)
           .eq('batch_type', 'regular')
           .eq('payment_type', 'paid');
@@ -188,7 +174,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-[32px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
@@ -221,7 +206,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
           ) : (
             <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
               <p className="text-slate-500 text-lg font-medium">No paid regular batches found for "{focusArea}".</p>
-              <p className="text-slate-400 text-sm mt-1">Check if the course has batch_type='regular' and payment_type='paid' in Supabase.</p>
             </div>
           )}
         </div>
