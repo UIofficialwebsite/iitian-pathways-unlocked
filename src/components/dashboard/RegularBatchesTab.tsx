@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Star, CheckCircle2 } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Star, CheckCircle2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tables } from "@/integrations/supabase/types";
 
@@ -115,31 +115,45 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from('courses')
-        .select('*')
-        .eq('exam_category', focusArea)
-        .eq('batch_type', 'regular')
-        .eq('payment_type', 'paid');
+      console.log("Fetching regular batches for focus area:", focusArea); // Debug log
       
-      if (data) setBatches(data);
-      setLoading(false);
+      try {
+        const { data, error } = await supabase
+          .from('courses')
+          .select('*')
+          // Using ilike for case-insensitive matching to ensure JEE/jee both work
+          .ilike('exam_category', focusArea)
+          .eq('batch_type', 'regular')
+          .eq('payment_type', 'paid');
+        
+        if (error) throw error;
+        if (data) setBatches(data);
+      } catch (err) {
+        console.error("Error fetching batches:", err);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchCourses();
+    
+    if (focusArea) {
+      fetchCourses();
+    }
   }, [focusArea]);
 
-  const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filtered = batches.filter(b => 
+    b.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* Sticky Header - Joined with TopNav */}
+      {/* Sticky Header */}
       <div className="sticky top-0 z-40 bg-white border-b border-[#e0e0e0] px-6 py-6 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h1 className="text-[32px] font-bold tracking-tight text-[#1a1a1a]">Regular Batches</h1>
           <div className="relative w-full md:w-96">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder={`Search for "${batches[0]?.title || 'batch name'}..."`}
+              placeholder={`Search for batch name...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-11 h-12 bg-white border-[#e0e0e0] rounded-xl focus:ring-2 focus:ring-orange-500 transition-all shadow-none text-base"
@@ -152,15 +166,20 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea }) => {
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1,2,3].map(i => <div key={i} className="h-[400px] bg-slate-100 animate-pulse rounded-[20px]" />)}
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-[400px] bg-slate-100 animate-pulse rounded-[20px] flex items-center justify-center">
+                   <Loader2 className="w-8 h-8 animate-spin text-slate-300" />
+                </div>
+              ))}
             </div>
           ) : filtered.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-12">
               {filtered.map(batch => <CourseCard key={batch.id} course={batch} />)}
             </div>
           ) : (
-            <div className="text-center py-20">
-              <p className="text-slate-400 text-lg">No paid regular batches found for {focusArea}.</p>
+            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-slate-300">
+              <p className="text-slate-500 text-lg font-medium">No paid regular batches found for "{focusArea}".</p>
+              <p className="text-slate-400 text-sm mt-1">Check if the course has batch_type='regular' and payment_type='paid' in Supabase.</p>
             </div>
           )}
         </div>
