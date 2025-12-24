@@ -103,10 +103,10 @@ const PlaylistRow: React.FC<{
           {playlist.videos.map((video) => (
             <div 
               key={video.id}
-              className="min-w-[350px] max-w-[350px] bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-slate-300 hover:shadow-lg cursor-pointer flex-shrink-0"
+              className="min-w-[300px] sm:min-w-[350px] bg-white border border-slate-200 rounded-lg overflow-hidden transition-all duration-200 hover:border-slate-300 hover:shadow-lg cursor-pointer flex-shrink-0"
               onClick={() => onVideoSelect({ id: video.id, title: video.title, category: 'Free Lectures' })}
             >
-              <div className="relative h-[140px] bg-slate-100 flex items-center justify-center border-b-[3px] border-slate-500">
+              <div className="relative aspect-video bg-slate-100 flex items-center justify-center border-b-[3px] border-slate-500">
                 <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/5 flex items-center justify-center">
                   <div className="w-[54px] h-[54px] bg-black/45 rounded-full flex items-center justify-center text-white backdrop-blur-[2px]">
@@ -115,10 +115,10 @@ const PlaylistRow: React.FC<{
                 </div>
               </div>
               <div className="p-4">
-                <h3 className="text-[15px] font-semibold text-slate-900 leading-[1.5] mb-2 line-clamp-2 m-0 h-[45px]">
+                <h3 className="text-[15px] font-semibold text-slate-900 leading-[1.5] mb-2 line-clamp-2 h-[45px]">
                   {video.title}
                 </h3>
-                <p className="text-[13px] text-slate-500 font-normal m-0">{playlist.title}</p>
+                <p className="text-[13px] text-slate-500 font-normal truncate">{playlist.title}</p>
               </div>
             </div>
           ))}
@@ -143,28 +143,28 @@ const ContentCard: React.FC<{ item: ContentItem; handleOpen: (item: ContentItem)
     };
 
     return (
-        <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-5 transition-all hover:shadow-md h-[180px] cursor-default overflow-hidden">
-            <div className="w-[100px] h-[145px] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
+        <Card className="group bg-white border-slate-200 rounded-lg p-4 flex gap-4 transition-all hover:shadow-md min-h-[160px] h-full cursor-default overflow-hidden">
+            <div className="w-[80px] sm:w-[100px] aspect-[2/3] bg-slate-800 rounded flex-shrink-0 overflow-hidden shadow-sm">
                 <img src={thumbnailUrl} alt={item.title} className="w-full h-full object-cover opacity-90" />
             </div>
             <div className="flex flex-col flex-1 min-w-0">
-                <div className="mb-1">
-                    <h3 className="text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</h3>
+                <div className="mb-2">
+                    <h3 className="text-sm sm:text-base font-semibold text-slate-900 leading-tight mb-1 group-hover:text-blue-600 transition-colors line-clamp-2">{item.title}</h3>
                     {(item.year || item.session || item.shift) && (
                         <p className="text-[10px] text-slate-500 flex items-center gap-1 mt-1 truncate">
                             {item.year || ''} {item.session || ''} {item.shift || ''}
                         </p>
                     )}
                 </div>
-                <div className="flex gap-1.5 mb-3 mt-auto">
+                <div className="flex flex-wrap gap-1.5 mb-3 mt-auto">
                     <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-red-50 text-red-600 border border-red-100">PDF</span>
-                    <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate">
+                    <span className="px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase bg-blue-50 text-blue-700 border border-blue-100 truncate max-w-full">
                         {isIITM && item.week_number ? `Week ${item.week_number}` : (item.subject || 'Gen')}
                     </span>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => handleOpen(item)} className="flex-grow h-8 text-xs font-normal text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md">View Content</Button>
-                    <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center">
+                <div className="flex gap-2 w-full mt-auto">
+                    <Button variant="outline" onClick={() => handleOpen(item)} className="flex-1 h-8 text-xs font-normal text-slate-700 border-slate-200 hover:bg-slate-50 rounded-md">View</Button>
+                    <button onClick={handleDownload} className="bg-blue-600 hover:bg-blue-700 w-8 h-8 rounded-md flex items-center justify-center shrink-0">
                         <Download className="h-4 w-4 text-white" />
                     </button>
                 </div>
@@ -292,7 +292,6 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
   const sortedAndFilteredPlaylists = useMemo(() => {
     let list = [...ytPlaylists];
     
-    // logic to keep the playlist row on top where recently a video is added
     if (viewingItem && viewingItem.category === 'Free Lectures') {
         const activePlaylistIndex = list.findIndex(pl => 
             pl.videos.some(v => String(v.id) === String(viewingItem.id))
@@ -321,7 +320,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                    <Button variant="ghost" size="icon" className="-ml-2 h-10 w-10 rounded-full" onClick={() => viewingItem ? setViewingItem(null) : navigate(-1)}>
                       <ArrowLeft className="h-6 w-6" />
                    </Button>
-                   <h1 className="text-xl font-semibold tracking-tight">{viewingItem ? viewingItem.title : 'Library'}</h1>
+                   <h1 className="text-xl font-semibold tracking-tight line-clamp-1">{viewingItem ? viewingItem.title : 'Library'}</h1>
               </div>
           </div>
           {!viewingItem && (
@@ -361,7 +360,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                 <div className="space-y-10 mb-20">
                     <div className="relative max-w-md mx-auto mb-12">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                        <Input placeholder="Search lectures by title..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-11 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
+                        <Input placeholder="Search lectures..." value={ytSearchQuery} onChange={(e) => setYtSearchQuery(e.target.value)} className="pl-11 h-12 bg-slate-50 border-slate-200 rounded-full shadow-sm focus:ring-2 focus:ring-blue-500" />
                     </div>
                     {loading ? (
                       <div className="flex justify-center py-20"><Loader2 className="animate-spin h-8 w-8 text-blue-600" /></div>
@@ -378,16 +377,16 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                     })}
                 </div>
             ) : (
-                <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-6 md:p-8 mb-20">
+                <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-4 sm:p-6 md:p-8 mb-20">
                     <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800"><FileText className="h-5 w-5 text-blue-600" /> {activeTab}</h2>
+                        <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800"><FileText className="h-5 w-5 text-blue-600 shrink-0" /> <span className="truncate">{activeTab}</span></h2>
                         <div className="flex items-center gap-4">
                             <div className="relative w-full md:w-64">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
-                                <Input placeholder="Search titles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
+                                <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-9 bg-white border-slate-200 text-sm" />
                             </div>
                             {catFiltered.length > 6 && (
-                                <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>{showAll ? 'Show Less' : 'View All →'}</button>
+                                <button className="text-sm font-medium text-blue-600 hover:underline shrink-0" onClick={() => setShowAll(!showAll)}>{showAll ? 'Less' : 'All →'}</button>
                             )}
                         </div>
                     </div>
@@ -396,7 +395,7 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                         <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in">
                             {levelsAvailable.length > 0 && (
                                 <Select value={selectedLevel} onValueChange={(val) => { setSelectedLevel(val); setSelectedSubject("none"); setSelectedWeekOrYear("none"); }}>
-                                    <SelectTrigger className="w-[160px] h-9 bg-white border-slate-200 text-sm">
+                                    <SelectTrigger className="w-full sm:w-[160px] h-9 bg-white border-slate-200 text-sm">
                                         <SelectValue placeholder="Academic Level" />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -406,10 +405,10 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                                 </Select>
                             )}
                             {selectedLevel !== "none" && subjectsAvailable.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <ChevronRight className="h-4 w-4 text-slate-400 hidden sm:block" />
                                     <Select value={selectedSubject} onValueChange={(val) => { setSelectedSubject(val); setSelectedWeekOrYear("none"); }}>
-                                        <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm">
+                                        <SelectTrigger className="w-full sm:w-[180px] h-9 bg-white border-slate-200 text-sm">
                                             <SelectValue placeholder="Subject" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -420,10 +419,10 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                                 </div>
                             )}
                             {selectedSubject !== "none" && specificsAvailable.length > 0 && (
-                                <div className="flex items-center gap-2">
-                                    <ChevronRight className="h-4 w-4 text-slate-400" />
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <ChevronRight className="h-4 w-4 text-slate-400 hidden sm:block" />
                                     <Select value={selectedWeekOrYear} onValueChange={setSelectedWeekOrYear}>
-                                        <SelectTrigger className="w-[140px] h-9 bg-white border-slate-200 text-sm">
+                                        <SelectTrigger className="w-full sm:w-[140px] h-9 bg-white border-slate-200 text-sm">
                                             <SelectValue placeholder={activeTab.includes('PYQs') ? "Year" : "Week"} />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -437,11 +436,11 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
                     )}
 
                     {(loading || studyLoading) ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
                             {[1,2,3,4,5,6].map(i => <div key={i} className="h-[180px] bg-slate-100 rounded-lg border" />)}
                         </div>
                     ) : displayedContent.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
                             {displayedContent.map((item) => <ContentCard key={item.id} item={item} handleOpen={setViewingItem} isIITM={isIITM} />)}
                         </div>
                     ) : (
