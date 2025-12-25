@@ -17,55 +17,65 @@ interface StickyTabNavProps {
 const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashboardView }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     
-    const mainNavBarHeight = 64; 
     const dashboardHeaderHeight = 73; 
-    const stickyNavBarHeight = 57; 
+    const mainNavBarHeight = 64; 
+    const stickyTabsHeight = 57;
 
     useEffect(() => {
         const handleScroll = () => {
             const currentHeader = isDashboardView ? dashboardHeaderHeight : mainNavBarHeight;
-            const totalOffset = currentHeader + stickyNavBarHeight + 20;
+            const totalOffset = currentHeader + stickyTabsHeight + 10;
 
             let currentTab = '';
             for (const tab of tabs) {
                 const section = sectionRefs[tab.id]?.current;
-                if (section && window.scrollY >= section.offsetTop - totalOffset) {
-                    currentTab = tab.id;
+                if (section) {
+                    const rect = section.getBoundingClientRect();
+                    // Detect if section top is hitting the bottom of the sticky nav
+                    if (rect.top <= totalOffset + 10) {
+                        currentTab = tab.id;
+                    }
                 }
             }
             if (currentTab) setActiveTab(currentTab);
         };
 
-        window.addEventListener('scroll', handleScroll, { passive: true });
-        return () => window.removeEventListener('scroll', handleScroll);
+        const scrollContainer = isDashboardView 
+            ? document.querySelector('main.overflow-y-auto') 
+            : window;
+
+        if (scrollContainer) {
+            scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+            return () => scrollContainer.removeEventListener('scroll', handleScroll);
+        }
     }, [sectionRefs, tabs, isDashboardView]);
 
     const scrollToSection = (sectionId: string) => {
         const section = sectionRefs[sectionId]?.current;
         if (section) {
             const currentHeader = isDashboardView ? dashboardHeaderHeight : mainNavBarHeight;
-            const y = section.getBoundingClientRect().top + window.scrollY - (currentHeader + stickyNavBarHeight);
+            const yOffset = -(currentHeader + stickyTabsHeight);
+            const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
 
     return (
         <nav className={cn(
-            "bg-white border-b z-30 transition-all duration-300 w-full",
-            /* FIXED: The top offset now exactly matches the header height (73px) to hang perfectly below it */
-            isDashboardView ? "sticky top-[73px] shadow-sm" : "sticky top-16 shadow-sm"
+            "bg-white/90 backdrop-blur-md border-b z-30 w-full transition-all duration-300",
+            isDashboardView ? "sticky top-[73px] shadow-sm" : "sticky top-16 shadow-md"
         )}>
             <div className="container mx-auto px-3 md:px-4">
-                <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
+                <div className="flex justify-start gap-4 md:gap-8 overflow-x-auto scrollbar-hide">
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
                             onClick={() => scrollToSection(tab.id)}
                             className={cn(
-                                "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap flex-shrink-0",
+                                "py-4 px-2 text-sm md:text-base font-bold border-b-2 transition-colors whitespace-nowrap",
                                 activeTab === tab.id
                                     ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-600 hover:text-orange-500"
+                                    : "border-transparent text-gray-500 hover:text-orange-500"
                             )}
                         >
                             {tab.label}
