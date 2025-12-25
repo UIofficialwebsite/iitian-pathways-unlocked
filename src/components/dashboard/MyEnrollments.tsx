@@ -41,7 +41,7 @@ type GroupedEnrollment = {
 };
 
 // --- NEW: Enrollment List Item (Larger and refined) ---
-const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
+const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: GroupedEnrollment; onSelectCourse?: (courseId: string) => void }) => {
   
   const StatusIndicator = () => {
     if (enrollment.status === 'Ongoing') {
@@ -90,9 +90,20 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
     return null;
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    if (onSelectCourse) {
+      e.preventDefault();
+      onSelectCourse(enrollment.course_id);
+    }
+  };
+
   return (
     // The entire card is a link, with hover effect
-    <Link to={`/courses/${enrollment.course_id}`} className="block group">
+    <Link 
+      to={`/courses/${enrollment.course_id}`} 
+      className="block group"
+      onClick={handleClick}
+    >
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg
                      border border-gray-200 group-hover:border-black transition-all duration-200">
         {/* Increased padding from p-4 to p-5 */}
@@ -165,8 +176,12 @@ const NoEnrollmentsPlaceholder = () => {
 };
 
 
-// --- Main Page Component (Logic unchanged) ---
-const MyEnrollments = () => {
+// --- Main Page Component ---
+interface MyEnrollmentsProps {
+  onSelectCourse?: (courseId: string) => void;
+}
+
+const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
@@ -285,7 +300,7 @@ const MyEnrollments = () => {
         // --- List of EnrollmentListItem components ---
         <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
-            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
+            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} onSelectCourse={onSelectCourse} />
           ))}
         </div>
       )}
