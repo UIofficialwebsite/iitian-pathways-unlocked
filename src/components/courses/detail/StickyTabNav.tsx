@@ -16,31 +16,30 @@ interface StickyTabNavProps {
 
 const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashboardView }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
-    const [headerOffset, setHeaderOffset] = useState(0);
-    const navRef = useRef<HTMLElement>(null);
+    const [isSticky, setIsSticky] = useState(false);
+    const navRef = useRef<HTMLDivElement>(null);
+    const placeholderRef = useRef<HTMLDivElement>(null);
     const stickyTabsHeight = 57;
+    
+    // Fixed header height - main navbar is 64px (h-16)
+    const headerOffset = isDashboardView ? 73 : 64;
 
     useEffect(() => {
-        const updateOffset = () => {
-            let totalHeight = 0;
+        const scrollContainer = isDashboardView 
+            ? document.querySelector('main.overflow-y-auto') 
+            : window;
 
-            if (isDashboardView) {
-                // In dashboard, we stick below the Batch Detail "Back" Header
-                // Standard Global TopNav (64px) is fixed, so we only need to 
-                // calculate the relative offset for the sticky container.
-                totalHeight = 73; 
-            } else {
-                // In standard site view, stick below the main NavBar (h-16 = 64px)
-                const mainNav = document.querySelector('nav');
-                totalHeight = mainNav ? mainNav.getBoundingClientRect().height : 64;
-            }
-            setHeaderOffset(totalHeight);
-        };
-
-        updateOffset();
-        window.addEventListener('resize', updateOffset);
+        if (!scrollContainer) return;
 
         const handleScroll = () => {
+            // Check if nav should be sticky
+            if (placeholderRef.current) {
+                const placeholderRect = placeholderRef.current.getBoundingClientRect();
+                // Nav becomes sticky when its placeholder reaches the bottom of the header
+                setIsSticky(placeholderRect.top <= headerOffset);
+            }
+
+            // Update active tab based on scroll position
             const totalOffset = headerOffset + stickyTabsHeight + 20;
             let currentTab = '';
             for (const tab of tabs) {
@@ -55,18 +54,12 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
             if (currentTab) setActiveTab(currentTab);
         };
 
-        // If in dashboard, the scroll happens inside the <main> tag, not window
-        const scrollContainer = isDashboardView 
-            ? document.querySelector('main.overflow-y-auto') 
-            : window;
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll(); // Initial check
 
-        if (scrollContainer) {
-            scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-            return () => {
-                scrollContainer.removeEventListener('scroll', handleScroll);
-                window.removeEventListener('resize', updateOffset);
-            };
-        }
+        return () => {
+            scrollContainer.removeEventListener('scroll', handleScroll);
+        };
     }, [sectionRefs, tabs, isDashboardView, headerOffset]);
 
     const scrollToSection = (sectionId: string) => {
@@ -78,7 +71,9 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
 
             if (scrollContainer) {
                 const yOffset = -(headerOffset + stickyTabsHeight);
-                const currentScroll = isDashboardView ? (scrollContainer as HTMLElement).scrollTop : window.scrollY;
+                const currentScroll = isDashboardView 
+                    ? (scrollContainer as HTMLElement).scrollTop 
+                    : window.scrollY;
                 const y = section.getBoundingClientRect().top + currentScroll + yOffset;
                 
                 scrollContainer.scrollTo({ top: y, behavior: 'smooth' });
@@ -87,33 +82,44 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
     };
 
     return (
-        <nav 
-            ref={navRef}
-            style={{ top: `${headerOffset}px` }} 
-            className={cn(
-                "bg-white/95 backdrop-blur-md border-b w-full transition-all duration-300 shadow-sm",
-                "sticky z-40" // Re-added sticky and high z-index
-            )}
-        >
-            <div className="container mx-auto px-3 md:px-4">
-                <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
-                    {tabs.map((tab) => (
-                        <button
-                            key={tab.id}
-                            onClick={() => scrollToSection(tab.id)}
-                            className={cn(
-                                "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap flex-shrink-0",
-                                activeTab === tab.id
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-600 hover:text-orange-500"
-                            )}
-                        >
-                            {tab.label}
-                        </button>
-                    ))}
+        <>
+            {/* Placeholder to prevent layout shift when nav becomes fixed */}
+            <div 
+                ref={placeholderRef} 
+                style={{ height: isSticky ? `${stickyTabsHeight}px` : '0px' }}
+                className="transition-[height] duration-0"
+            />
+            
+            <nav 
+                ref={navRef}
+                style={isSticky ? { top: `${headerOffset}px` } : undefined}
+                className={cn(
+                    "bg-white border-b w-full transition-shadow duration-300 z-40",
+                    isSticky 
+                        ? "fixed left-0 right-0 shadow-md backdrop-blur-md bg-white/95" 
+                        : "relative shadow-none"
+                )}
+            >
+                <div className="container mx-auto px-3 md:px-4">
+                    <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
+                        {tabs.map((tab) => (
+                            <button
+                                key={tab.id}
+                                onClick={() => scrollToSection(tab.id)}
+                                className={cn(
+                                    "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap flex-shrink-0",
+                                    activeTab === tab.id
+                                        ? "border-orange-500 text-orange-600"
+                                        : "border-transparent text-gray-600 hover:text-orange-500"
+                                )}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </nav>
+            </nav>
+        </>
     );
 };
 
