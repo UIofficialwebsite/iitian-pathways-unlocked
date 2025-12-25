@@ -1,18 +1,18 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
 import { Search, ChevronRight, BookOpen, Maximize2, X, ArrowLeft, Menu } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
-import SlidersIcon from "@/components/ui/SliderIcon"; // Import the SliderIcon
+import SlidersIcon from "@/components/ui/SliderIcon";
+import RefineBatchesModal from "./RefineBatchesModal"; // Import the separate modal
 
 interface RegularBatchesTabProps {
   focusArea: string;
   onSelectCourse: (id: string) => void;
 }
 
-// RESTORED ORIGINAL COURSE CARD: Design and dimensions strictly maintained
 const CourseCard: React.FC<{ 
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
@@ -75,19 +75,25 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [loading, setLoading] = useState(true);
   const [isViewingAllFree, setIsViewingAllFree] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeFilter, setActiveFilter] = useState("All");
+  const [activeQuickFilter, setActiveQuickFilter] = useState("All");
+  
+  // Refine Modal State
+  const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
+  const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      const { data } = await supabase.from('courses').select('*').ilike('exam_category', focusArea).eq('batch_type', 'regular');
+      const { data } = await supabase.from('courses')
+        .select('*')
+        .ilike('exam_category', focusArea)
+        .eq('batch_type', 'regular');
       if (data) setBatches(data);
       setLoading(false);
     };
     fetchCourses();
   }, [focusArea]);
 
-  // Dynamic Filters from Backend Data
   const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -95,9 +101,19 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   };
 
   const filtered = batches.filter(b => {
+    // Search filter
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = activeFilter === "All" || b.level === activeFilter;
-    return matchesSearch && matchesFilter;
+    
+    // Quick Horizontal Filter (Level)
+    const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
+    
+    // Detailed Refine Filters
+    const matchesStatus = !appliedFilters.status?.length || appliedFilters.status.includes('ongoing'); // Example logic
+    const matchesClass = !appliedFilters.class?.length || appliedFilters.class.includes(b.level || "");
+    const matchesSubject = !appliedFilters.subjects?.length || appliedFilters.subjects.includes(b.subject || "");
+    const matchesLanguage = !appliedFilters.language?.length || appliedFilters.language.includes(b.language?.toLowerCase() || "");
+
+    return matchesSearch && matchesQuickFilter && matchesStatus && matchesClass && matchesSubject && matchesLanguage;
   });
 
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
@@ -127,21 +143,26 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
         {/* FIXED FILTER BAR */}
         {!isViewingAllFree && (
-          <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar">
-            <div className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm">
-              Filter <SlidersIcon className="w-4 h-4" /> {/* Replaced Filter with SlidersIcon */}
+          <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar items-center">
+            {/* Clickable Filter Trigger */}
+            <div 
+              onClick={() => setIsRefineModalOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+            >
+              Filter <SlidersIcon className="w-4 h-4" />
             </div>
+            
             <button
-              onClick={() => setActiveFilter("All")}
-              className={`px-4 py-2 border rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${activeFilter === "All" ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
+              onClick={() => setActiveQuickFilter("All")}
+              className={`px-4 py-2 border rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${activeQuickFilter === "All" ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
             >
               All
             </button>
             {availableLevels.map((lvl) => (
               <button
                 key={lvl}
-                onClick={() => setActiveFilter(lvl!)}
-                className={`px-4 py-2 border rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${activeFilter === lvl ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
+                onClick={() => setActiveQuickFilter(lvl!)}
+                className={`px-4 py-2 border rounded-full text-[13px] font-semibold transition-all whitespace-nowrap ${activeQuickFilter === lvl ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
               >
                 {lvl}
               </button>
@@ -158,7 +179,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
-              {/* Popular Section */}
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-14">
                   <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10 hidden md:block">
@@ -172,7 +192,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* Free Section */}
               {freeBatches.length > 0 && (
                 isViewingAllFree ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
@@ -187,13 +206,20 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
               {filtered.length === 0 && (
                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
-                  <p className="text-gray-400 text-lg font-medium">No batches found.</p>
+                  <p className="text-gray-400 text-lg font-medium">No batches found matching your criteria.</p>
                 </div>
               )}
             </>
           )}
         </div>
       </div>
+
+      {/* Separate Filter Modal */}
+      <RefineBatchesModal 
+        isOpen={isRefineModalOpen} 
+        onClose={() => setIsRefineModalOpen(false)} 
+        onApply={(filters) => setAppliedFilters(filters)} 
+      />
     </div>
   );
 };
