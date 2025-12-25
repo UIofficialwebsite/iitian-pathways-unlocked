@@ -52,6 +52,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
       const currentIndex = categories.findIndex(c => c.id === catId);
       const prevIndex = categories.findIndex(c => c.id === key);
 
+      // Only filter by categories that come BEFORE the current one in the chain
       if (cat && values.length > 0 && prevIndex < currentIndex) {
         query = query.in(cat.dbField, values);
       }
@@ -63,9 +64,8 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
       let uniqueValues: string[] = [];
       
       if (catId === "exam_category") {
-         uniqueValues = [focusArea]; // Restrict Exam Goal to focusArea only
+         uniqueValues = [focusArea]; 
       } else if (catId === "level") {
-        // Aggregate Class (level) and Branch for "Class/Branch" tab
         const levels = data.map(item => item.level).filter(Boolean);
         const branches = data.map(item => item.branch).filter(Boolean);
         uniqueValues = Array.from(new Set([...levels, ...branches])) as string[];
@@ -83,6 +83,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
   useEffect(() => {
     if (isOpen) {
       const load = async () => {
+        // Only show full pulse loader on first open
         if (Object.keys(availableOptions).length === 0) setIsInitialLoading(true);
         await fetchDynamicOptions(activeTabId);
         setIsInitialLoading(false);
@@ -103,7 +104,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
           : [...current, optionId];
       }
 
-      // Clear downstream filters in hierarchy
+      // Reset downstream filters in hierarchy
       const currentIndex = categories.findIndex(c => c.id === categoryId);
       categories.forEach((cat, idx) => {
         if (idx > currentIndex) delete updated[cat.id];
