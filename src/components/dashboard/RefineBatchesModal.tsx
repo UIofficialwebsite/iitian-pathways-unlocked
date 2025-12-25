@@ -16,13 +16,19 @@ interface FilterCategory {
   selectionType: "single" | "multiple";
 }
 
-const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
+interface RefineBatchesModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onApply: (filters: Record<string, string[]>) => void;
+  focusArea: string;
+}
+
+const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatchesModalProps) => {
   const [activeTabId, setActiveTabId] = useState("exam_category");
   const [tempSelections, setTempSelections] = useState<Record<string, string[]>>({});
   const [availableOptions, setAvailableOptions] = useState<Record<string, FilterOption[]>>({});
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
-  // Future-proof hierarchy definition
   const categories: FilterCategory[] = useMemo(() => [
     { id: "exam_category", name: "Exam Goal", dbField: "exam_category", selectionType: "single" },
     { id: "level", name: "Class/Branch", dbField: "level", selectionType: "single" },
@@ -34,13 +40,19 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
     const category = categories.find(c => c.id === catId);
     if (!category) return;
 
-    // We fetch both 'level' and 'branch' to ensure nothing is missed for Class/Branch choice
-    let query = supabase.from('courses').select('exam_category, level, subject, language, branch');
+    // Constrain query by the user's current focusArea context
+    let query = supabase
+      .from('courses')
+      .select('exam_category, level, subject, language, branch')
+      .ilike('exam_category', focusArea);
 
-    // Cascade Filtering: Apply existing selections to the query
+    // Cascade filters based on hierarchy
     Object.entries(tempSelections).forEach(([key, values]) => {
       const cat = categories.find(c => c.id === key);
-      if (cat && values.length > 0 && categories.indexOf(cat) < categories.findIndex(c => c.id === catId)) {
+      const currentIndex = categories.findIndex(c => c.id === catId);
+      const prevIndex = categories.findIndex(c => c.id === key);
+
+      if (cat && values.length > 0 && prevIndex < currentIndex) {
         query = query.in(cat.dbField, values);
       }
     });
@@ -48,9 +60,12 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
     const { data, error } = await query;
 
     if (data && !error) {
-      // Logic to merge 'level' and 'branch' if we are on the Class/Branch tab
       let uniqueValues: string[] = [];
-      if (catId === "level") {
+      
+      if (catId === "exam_category") {
+         uniqueValues = [focusArea]; // Restrict Exam Goal to focusArea only
+      } else if (catId === "level") {
+        // Aggregate Class (level) and Branch for "Class/Branch" tab
         const levels = data.map(item => item.level).filter(Boolean);
         const branches = data.map(item => item.branch).filter(Boolean);
         uniqueValues = Array.from(new Set([...levels, ...branches])) as string[];
@@ -79,7 +94,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
   const handleToggleOption = (categoryId: string, optionId: string, type: "single" | "multiple") => {
     setTempSelections((prev) => {
       const updated = { ...prev };
-      
       if (type === "single") {
         updated[categoryId] = [optionId];
       } else {
@@ -89,12 +103,11 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
           : [...current, optionId];
       }
 
-      // Reset downstream selections to prevent invalid filter states
+      // Clear downstream filters in hierarchy
       const currentIndex = categories.findIndex(c => c.id === categoryId);
       categories.forEach((cat, idx) => {
         if (idx > currentIndex) delete updated[cat.id];
       });
-
       return updated;
     });
   };
@@ -112,7 +125,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Sidebar Navigation */}
           <div className="w-[160px] bg-[#f8f9fa] border-r border-gray-100">
             {categories.map((cat) => (
               <div
@@ -125,12 +137,10 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
                 }`}
               >
                 {cat.name}
-                {/* Removed Subtitle selection display per requirement */}
               </div>
             ))}
           </div>
 
-          {/* Options List */}
           <div className="flex-1 p-6 overflow-y-auto bg-white">
             {isInitialLoading ? (
                <div className="space-y-4 animate-pulse">
