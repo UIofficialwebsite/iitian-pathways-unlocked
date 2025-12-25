@@ -21,7 +21,6 @@ const CourseCard: React.FC<{
 
   return (
     <>
-      {/* Container max-width and margin auto ensure stability during zoom */}
       <div className="w-full max-w-[360px] mx-auto bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 hover:shadow-md">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -161,7 +160,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                   <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10">
                     POPULAR COURSES
                   </h2>
-                  {/* Grid uses auto-fill and centers items to handle zoom gracefully */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
@@ -170,18 +168,21 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {isViewingAllFree ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
-                  {freeBatches.map(batch => (
-                    <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
-                  ))}
-                </div>
-              ) : (
-                <FreeBatchSection 
-                  batches={freeBatches} 
-                  onSelect={onSelectCourse} 
-                  onViewAll={() => setIsViewingAllFree(true)}
-                />
+              {/* Conditional rendering for Free section - HIDDEN if freeBatches is empty */}
+              {freeBatches.length > 0 && (
+                isViewingAllFree ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
+                    {freeBatches.map(batch => (
+                      <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
+                    ))}
+                  </div>
+                ) : (
+                  <FreeBatchSection 
+                    batches={freeBatches} 
+                    onSelect={onSelectCourse} 
+                    onViewAll={() => setIsViewingAllFree(true)}
+                  />
+                )
               )}
 
               {filtered.length === 0 && (
