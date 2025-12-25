@@ -21,13 +21,16 @@ const CourseCard: React.FC<{
 
   return (
     <>
-      <div className="w-full max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md">
+      {/* Added max-w-full and transition-transform for better zoom handling */}
+      <div className="w-full max-w-[360px] mx-auto bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 hover:shadow-md">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
-          <img 
-            src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
-            alt={course.title} 
-            className="w-full block aspect-video object-cover" 
-          />
+          <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
+            <img 
+              src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
+              alt={course.title} 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            />
+          </div>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <Maximize2 className="text-white w-6 h-6" />
           </div>
@@ -72,7 +75,7 @@ const CourseCard: React.FC<{
                 onClick={() => onSelect(course.id)} 
                 className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black transition-colors"
               >
-                Enroll Now
+                Enroll
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
@@ -109,12 +112,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from('courses')
-        .select('*')
-        .ilike('exam_category', focusArea)
-        .eq('batch_type', 'regular');
-      
+      const { data } = await supabase.from('courses').select('*').ilike('exam_category', focusArea).eq('batch_type', 'regular');
       if (data) setBatches(data);
       setLoading(false);
     };
@@ -131,9 +129,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      <div className={`sticky top-0 z-30 h-[73px] bg-white transition-all duration-200 px-4 md:px-6 lg:px-8 py-4 shrink-0 flex items-center ${
-        isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'
-      }`}>
+      <div className={`sticky top-0 z-30 h-[73px] bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex items-center ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {isViewingAllFree && (
@@ -147,34 +143,26 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           </div>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-            <Input 
-              placeholder="Search by name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
-            />
+            <Input placeholder="Search by name..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none" />
           </div>
         </div>
       </div>
 
-      <div 
-        ref={scrollContainerRef}
-        onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-6 lg:px-8 py-8"
-      >
+      <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-8 no-scrollbar">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
+              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl" />)}
             </div>
           ) : (
             <>
               {!isViewingAllFree && paidBatches.length > 0 && (
-                <div className="mb-12">
-                  <h2 className="text-[28px] font-semibold tracking-[0.5px] text-[#111] uppercase font-poppins mb-8">
+                <div className="mb-14">
+                  <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10">
                     POPULAR COURSES
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8">
+                  {/* Updated grid settings to prevent cutting on zoom */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6 md:gap-8 justify-items-center">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
@@ -183,7 +171,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               )}
 
               {isViewingAllFree ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
                   {freeBatches.map(batch => (
                     <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                   ))}
