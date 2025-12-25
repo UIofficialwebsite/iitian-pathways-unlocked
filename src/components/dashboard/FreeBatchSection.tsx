@@ -16,8 +16,7 @@ const FreeCourseCard: React.FC<{
   
   return (
     <>
-      {/* Optimized min-width for zoom stability */}
-      <div className="w-full min-w-[280px] sm:min-w-[320px] md:min-w-[340px] max-w-[360px] bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl shrink-0">
+      <div className="w-full min-w-[280px] sm:min-w-[340px] max-w-[360px] bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl shrink-0">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
             <img 
@@ -60,7 +59,7 @@ const FreeCourseCard: React.FC<{
                 onClick={() => onSelect(course.id)} 
                 className="bg-[#022c22] text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:bg-[#064e3b] transition-colors"
               >
-                Enroll Now
+                Enroll
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
@@ -101,7 +100,8 @@ export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onS
           </button>
         </div>
 
-        <div className="flex overflow-x-auto gap-6 md:gap-8 pb-6 no-scrollbar snap-x">
+        {/* Improved scrolling side-roller for zoom stability */}
+        <div className="flex overflow-x-auto gap-8 pb-6 no-scrollbar snap-x">
           {batches.map((batch) => (
             <div key={batch.id} className="snap-start">
               <FreeCourseCard course={batch} onSelect={onSelect} />
