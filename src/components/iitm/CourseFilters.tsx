@@ -1,7 +1,7 @@
 // src/components/iitm/CourseFilters.tsx
 import React from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import SlidersIcon from "@/components/ui/SlidersIcon";
+import SlidersIcon from "@/components/ui/SliderIcon";
 
 interface CourseFiltersProps {
   branch: string;
