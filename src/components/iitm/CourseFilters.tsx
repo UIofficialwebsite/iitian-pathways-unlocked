@@ -8,9 +8,22 @@ interface CourseFiltersProps {
   setBranch: (value: string) => void;
   level: string;
   setLevel: (value: string) => void;
+  availableBranches?: string[]; // New: Pass branches from data
+  availableLevels?: string[];   // New: Pass levels from data
 }
 
-const CourseFilters: React.FC<CourseFiltersProps> = ({ branch, setBranch, level, setLevel }) => {
+const CourseFilters: React.FC<CourseFiltersProps> = ({ 
+  branch, 
+  setBranch, 
+  level, 
+  setLevel,
+  availableBranches = ["Data Science", "Electronic Systems"], // Fallback defaults
+  availableLevels = ["Qualifier", "Foundation", "Diploma", "Degree"]
+}) => {
+  
+  // Helper to format slugs back to readable text if needed
+  const formatSlug = (slug: string) => slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-2 text-gray-700 font-semibold">
@@ -19,6 +32,7 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ branch, setBranch, level,
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Dynamic Branch Select */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
           <Select value={branch} onValueChange={setBranch}>
@@ -27,12 +41,16 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ branch, setBranch, level,
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Branches</SelectItem>
-              <SelectItem value="data-science">Data Science</SelectItem>
-              <SelectItem value="electronic-system">Electronic Systems</SelectItem>
+              {availableBranches.map((b) => (
+                <SelectItem key={b} value={b.toLowerCase().replace(/\s+/g, '-')}>
+                  {b}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         
+        {/* Dynamic Level Select */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Level</label>
           <Select value={level} onValueChange={setLevel}>
@@ -41,10 +59,11 @@ const CourseFilters: React.FC<CourseFiltersProps> = ({ branch, setBranch, level,
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Levels</SelectItem>
-              <SelectItem value="qualifier">Qualifier</SelectItem>
-              <SelectItem value="foundation">Foundation</SelectItem>
-              <SelectItem value="diploma">Diploma</SelectItem>
-              <SelectItem value="degree">Degree</SelectItem>
+              {availableLevels.map((l) => (
+                <SelectItem key={l} value={l.toLowerCase()}>
+                  {l}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
