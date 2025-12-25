@@ -87,7 +87,7 @@ const CourseCard: React.FC<{
 
       {isPreviewOpen && (
         <div 
-          className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
           onClick={() => setIsPreviewOpen(false)}
         >
           <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
@@ -103,7 +103,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [isViewingAllFree, setIsViewingAllFree] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false); // State for header line
+  const [isScrolled, setIsScrolled] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,10 +121,9 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
-  // Handle scroll to toggle the header line
+  // Logic to show the header border line only after scrolling starts
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
-    setIsScrolled(scrollTop > 10);
+    setIsScrolled(e.currentTarget.scrollTop > 10);
   };
 
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
@@ -133,10 +132,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* STICKY HEADER: 
-         border-b is now conditional based on isScrolled 
-         shadow-sm is also removed/conditional for a cleaner look
-      */}
+      {/* Sticky Header with conditional border line and shadow */}
       <div className={`sticky top-0 z-30 h-[73px] bg-white transition-all duration-200 px-4 md:px-6 lg:px-8 py-4 shrink-0 flex items-center ${
         isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'
       }`}>
@@ -163,7 +159,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      {/* Main scrollable area */}
       <div 
         ref={scrollContainerRef}
         onScroll={handleScroll}
@@ -176,6 +171,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
+              {/* POPULAR COURSES: Semi-bold header on white background */}
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-12">
                   <h2 className="text-[28px] font-semibold tracking-[0.5px] text-[#111] uppercase font-poppins mb-8">
@@ -189,6 +185,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
+              {/* FREE BATCHES: Following all paid batches with technical Obsidian side-roller */}
               {isViewingAllFree ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
                   {freeBatches.map(batch => (
