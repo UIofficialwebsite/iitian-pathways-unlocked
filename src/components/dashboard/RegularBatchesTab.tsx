@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
 import { Search, ChevronRight, BookOpen, Maximize2, X, ArrowLeft } from "lucide-react";
@@ -90,7 +90,7 @@ const CourseCard: React.FC<{
           className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setIsPreviewOpen(false)}
         >
-          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg" alt="Preview" />
+          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
           <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
       )}
@@ -103,6 +103,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [isViewingAllFree, setIsViewingAllFree] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false); // State for header line
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -119,13 +121,25 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
+  // Handle scroll to toggle the header line
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const scrollTop = e.currentTarget.scrollTop;
+    setIsScrolled(scrollTop > 10);
+  };
+
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
   const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
   return (
-    <div className="flex flex-col h-full bg-white"> {/* Pure white background */}
-      <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
+    <div className="flex flex-col h-full bg-white"> 
+      {/* STICKY HEADER: 
+         border-b is now conditional based on isScrolled 
+         shadow-sm is also removed/conditional for a cleaner look
+      */}
+      <div className={`sticky top-0 z-30 h-[73px] bg-white transition-all duration-200 px-4 md:px-6 lg:px-8 py-4 shrink-0 flex items-center ${
+        isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'
+      }`}>
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {isViewingAllFree && (
@@ -149,7 +163,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
+      {/* Main scrollable area */}
+      <div 
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-6 lg:px-8 py-8"
+      >
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -157,7 +176,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
-              {/* POPULAR COURSES: SemiBold Font Weight */}
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-12">
                   <h2 className="text-[28px] font-semibold tracking-[0.5px] text-[#111] uppercase font-poppins mb-8">
@@ -171,7 +189,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* FREE BATCHES: Following all paid batches */}
               {isViewingAllFree ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
                   {freeBatches.map(batch => (
@@ -184,6 +201,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                   onSelect={onSelectCourse} 
                   onViewAll={() => setIsViewingAllFree(true)}
                 />
+              )}
+
+              {filtered.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+                  <p className="text-gray-400 text-lg font-medium">No batches found.</p>
+                </div>
               )}
             </>
           )}
