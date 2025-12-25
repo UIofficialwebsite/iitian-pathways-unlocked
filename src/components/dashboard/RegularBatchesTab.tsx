@@ -11,7 +11,7 @@ interface RegularBatchesTabProps {
   onSelectCourse: (id: string) => void;
 }
 
-// ORIGINAL COURSE CARD (Unchanged design)
+// RESTORED ORIGINAL COURSE CARD: Design and dimensions strictly maintained
 const CourseCard: React.FC<{ 
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
@@ -58,7 +58,7 @@ const CourseCard: React.FC<{
         </div>
       </div>
       {isPreviewOpen && (
-        <div className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setIsPreviewOpen(false)}>
+        <div className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
           <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
           <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
@@ -86,7 +86,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
-  // Derived filters from existing data (no hardcoding)
+  // Dynamic Filters from Backend Data
   const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -104,7 +104,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* STICKY HEADER AREA */}
+      {/* HEADER AREA */}
       <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -124,9 +124,9 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           </div>
         </div>
 
-        {/* FIXED FILTERS (Below Popular Courses logic: they are shown unless viewing all free) */}
+        {/* FIXED FILTER BAR */}
         {!isViewingAllFree && (
-          <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar scroll-smooth">
+          <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm">
               Filter <Filter className="w-3.5 h-3.5 text-orange-500" />
             </div>
@@ -149,23 +149,20 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         )}
       </div>
 
-      {/* CONTENT AREA */}
       <div onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 no-scrollbar">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse pt-4">
-              {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
+              {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />)}
             </div>
           ) : (
             <>
               {/* Popular Section */}
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-14">
-                  {!isMobile && (
-                    <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10">
-                      POPULAR COURSES
-                    </h2>
-                  )}
+                  <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10 hidden md:block">
+                    POPULAR COURSES
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
@@ -174,7 +171,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* Free Batch Section */}
+              {/* Free Section */}
               {freeBatches.length > 0 && (
                 isViewingAllFree ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
@@ -188,8 +185,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               )}
 
               {filtered.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-                  <p className="text-gray-400 text-lg font-medium">No batches found for your selection.</p>
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                  <p className="text-gray-400 text-lg font-medium">No batches found.</p>
                 </div>
               )}
             </>
