@@ -16,13 +16,15 @@ const FreeCourseCard: React.FC<{
   
   return (
     <>
-      <div className="w-full min-w-[280px] sm:min-w-[340px] max-w-[360px] bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl shrink-0">
+      {/* Hover zoom and movement classes removed (hover:-translate-y-4, hover:shadow-2xl) */}
+      <div className="w-full min-w-[280px] sm:min-w-[340px] max-w-[360px] bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col shrink-0">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
+            {/* Image zoom class removed (group-hover:scale-105) */}
             <img 
               src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
               alt={course.title} 
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+              className="w-full h-full object-cover" 
             />
           </div>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -63,7 +65,7 @@ const FreeCourseCard: React.FC<{
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-xl flex items-center justify-center"
+                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-xl flex items-center justify-center hover:border-[#e5c185]"
               >
                 <ChevronRight className="w-5 h-5 text-[#111]" strokeWidth={2.5} />
               </button>
