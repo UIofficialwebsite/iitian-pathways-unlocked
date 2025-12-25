@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Maximize2, X } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Maximize2, X, Sparkles } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
+import { FreeBatchSection } from './FreeBatchSection';
 
 interface RegularBatchesTabProps {
   focusArea: string;
@@ -109,8 +110,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         .from('courses')
         .select('*')
         .ilike('exam_category', focusArea)
-        .eq('batch_type', 'regular')
-        .eq('payment_type', 'paid');
+        .eq('batch_type', 'regular'); // Fetches both 'paid' and 'free'
       
       if (data) setBatches(data);
       setLoading(false);
@@ -119,10 +119,13 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   }, [focusArea]);
 
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
+  
+  // Separate Paid and Free batches
+  const paidBatches = filtered.filter(b => b.payment_type === 'paid');
+  const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* FIXED HEADER: Standardized h-[73px] and removed all X/Close icons */}
       <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
@@ -144,16 +147,31 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
               {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
             </div>
-          ) : filtered.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8 pb-12">
-              {filtered.map(batch => (
-                <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
-              ))}
-            </div>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-              <p className="text-gray-400 text-lg font-medium">No paid regular batches found.</p>
-            </div>
+            <>
+              {/* PAID COURSES (POPULAR) */}
+              {paidBatches.length > 0 && (
+                <div className="mb-12">
+                  <h2 className="text-[24px] font-bold text-gray-900 mb-6 flex items-center gap-2">
+                    Popular Courses <Sparkles className="text-orange-500 w-5 h-5" />
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8">
+                    {paidBatches.map(batch => (
+                      <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* FREE BATCHES SECTION */}
+              <FreeBatchSection batches={freeBatches} onSelect={onSelectCourse} />
+
+              {filtered.length === 0 && (
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
+                  <p className="text-gray-400 text-lg font-medium">No regular batches found.</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
