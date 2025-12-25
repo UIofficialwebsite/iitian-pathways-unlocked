@@ -119,16 +119,14 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   }, [focusArea]);
 
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
-  
-  // Logic to separate Paid and Free batches
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
   const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
   return (
-    <div className="flex flex-col h-full bg-[#f9f9f9]">
+    <div className="flex flex-col h-full bg-[#f5f5f5]">
       {/* 1. Header updated to "Batches" */}
       <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
-        <div className="max-max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
@@ -150,7 +148,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
-              {/* 2. Popular Courses section: Non-bold and removed star */}
+              {/* 2. Popular Courses: Normal Weight, No Star */}
               {paidBatches.length > 0 && (
                 <div className="mb-12">
                   <div className="flex justify-between items-center mb-6">
@@ -170,12 +168,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* 3. Free Batch Section follows the popular courses */}
+              {/* 3. Free Batches follows all other courses */}
               <FreeBatchSection batches={freeBatches} onSelect={onSelectCourse} />
 
               {filtered.length === 0 && (
                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-                  <p className="text-gray-400 text-lg font-medium">No batches found matching your selection.</p>
+                  <p className="text-gray-400 text-lg font-medium">No batches found matching your search.</p>
                 </div>
               )}
             </>
