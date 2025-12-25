@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tables } from "@/integrations/supabase/types";
-import { MoveRight, BookOpen, Maximize2, X, ChevronRight } from "lucide-react";
+import { ChevronRight, MoveRight, BookOpen, Maximize2, X } from "lucide-react";
 
 interface FreeBatchSectionProps {
   batches: Tables<'courses'>[];
@@ -16,7 +16,7 @@ const FreeCourseCard: React.FC<{
   
   return (
     <>
-      <div className="w-full min-w-[300px] md:min-w-[340px] max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md shrink-0">
+      <div className="w-full min-w-[300px] md:min-w-[340px] max-w-[360px] bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl shrink-0">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <img 
             src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
@@ -28,43 +28,42 @@ const FreeCourseCard: React.FC<{
           </div>
         </div>
 
-        <div className="p-5 flex flex-col flex-1">
-          <div className="flex justify-between items-center mb-[10px]">
-            <span className="text-[#f97316] font-bold text-base uppercase tracking-tight">{course.level || 'Academic'}</span>
-            <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
+        <div className="p-7 flex flex-col flex-1">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-[#f97316] font-bold text-sm uppercase tracking-wider">{course.level || 'Academic'}</span>
+            <span className="bg-[#f3f4f6] px-3 py-1 rounded-lg text-[10px] font-bold text-[#4b5563] uppercase">
               {course.language || 'Hinglish'}
             </span>
           </div>
 
-          <h2 className="text-[18px] font-bold text-[#1f2937] mb-[15px] line-clamp-1">{course.title}</h2>
+          <h2 className="text-[19px] font-semibold text-[#111827] mb-5 line-clamp-1 leading-tight">{course.title}</h2>
 
           <div className="min-h-[50px] space-y-2">
-            <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
-              <BookOpen className="w-[16px] h-[16px] text-[#666]" />
+            <div className="flex items-center gap-3 text-[#6b7280] text-[13px] font-medium">
+              <BookOpen className="w-4 h-4" />
               {course.subject || 'Foundation'}
             </div>
-            <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
-              <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
-              <span className="font-bold">Ongoing</span> 
-              <span className="text-[#d1d5db] mx-1">|</span> 
+            <div className="flex items-center gap-3 text-[#6b7280] text-[13px] font-medium">
+              <span className="w-2 h-2 bg-[#ef4444] rounded-full"></span>
+              Ongoing <span className="opacity-30">|</span> 
               Starts: {course.start_date ? new Date(course.start_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : "TBD"}
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
-            <span className="text-[20px] font-extrabold text-black uppercase">Free</span>
-            <div className="flex gap-2">
+          <div className="flex justify-between items-center mt-auto pt-5 border-t border-[#f1f5f9]">
+            <span className="text-2xl font-[800] text-[#022c22] uppercase tracking-tight">Free</span>
+            <div className="flex gap-3">
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-[#1f2937] text-white py-1.5 px-4 rounded-[10px] font-bold text-[13px] hover:bg-black transition-colors"
+                className="bg-[#022c22] text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:bg-[#064e3b] transition-colors"
               >
-                Enroll
+                Enroll Now
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-white border border-[#e5e7eb] w-9 h-9 rounded-[10px] flex items-center justify-center"
+                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-xl flex items-center justify-center hover:border-[#e5c185]"
               >
-                <ChevronRight className="w-4 h-4 text-[#1f2937]" strokeWidth={2.5} />
+                <ChevronRight className="w-5 h-5 text-[#111]" strokeWidth={2.5} />
               </button>
             </div>
           </div>
@@ -73,7 +72,7 @@ const FreeCourseCard: React.FC<{
 
       {isPreviewOpen && (
         <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
-          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" alt="Preview" />
+          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg" alt="Preview" />
           <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
       )}
@@ -83,30 +82,28 @@ const FreeCourseCard: React.FC<{
 
 export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onSelect, onViewAll }) => {
   return (
-    /* Removed shadow-sm and shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] classes */
-    <div className="mt-12 mb-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 md:p-12 relative overflow-hidden bg-[#0f0f0f] border border-white/[0.03]">
-      {/* Removed radial-gradient entirely to eliminate vignette effect */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        backgroundImage: `
-          radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-          url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")
-        `,
-        backgroundSize: '30px 30px, auto'
+    <div className="mt-12 mb-10 w-full max-w-7xl mx-auto rounded-[40px] p-8 md:p-14 relative overflow-hidden bg-[#022c22] border border-[#e5c185]/20">
+      {/* Heritage Pattern - No Vignette */}
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23e5c185' stroke-width='0.4' stroke-opacity='0.5'%3E%3Cpath d='M50 0 L100 50 L50 100 L0 50 Z'/%3E%3Ccircle cx='50' cy='50' r='20'/%3E%3Cpath d='M0 0 L100 100 M100 0 L0 100'/%3E%3Crect x='25' y='25' width='50' height='50' transform='rotate(45 50 50)'/%3E%3C/g%3E%3C/svg%3E")`,
+        backgroundSize: '100px 100px'
       }} />
       
       <div className="relative z-10">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-white text-[32px] md:text-[42px] font-normal tracking-[2px] font-bebas uppercase after:content-['✦'] after:ml-3 after:text-[20px] after:text-[#f36c21]">
-            FREE BATCHES
+        <div className="flex justify-between items-center mb-10">
+          <h2 className="text-white text-[42px] md:text-[52px] font-normal tracking-[4px] font-bebas uppercase flex items-center gap-4 leading-none">
+            FREE BATCHES <span className="text-[#e5c185] font-poppins text-2xl">✦</span>
           </h2>
-          <button onClick={onViewAll} className="text-[#888888] hover:text-white text-[14px] font-[500] flex items-center gap-2 transition-all">
-            View All Batches <MoveRight className="w-4 h-4" />
+          <button onClick={onViewAll} className="text-[#e5c185] hover:text-white text-base font-semibold tracking-wide flex items-center gap-2.5 transition-all hover:translate-x-2">
+            Explore All Programs <MoveRight className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
+        <div className="flex overflow-x-auto gap-8 pb-6 no-scrollbar snap-x">
           {batches.map((batch) => (
-            <FreeCourseCard key={batch.id} course={batch} onSelect={onSelect} />
+            <div key={batch.id} className="snap-start">
+              <FreeCourseCard course={batch} onSelect={onSelect} />
+            </div>
           ))}
         </div>
       </div>
