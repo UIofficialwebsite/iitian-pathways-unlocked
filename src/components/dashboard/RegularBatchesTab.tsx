@@ -87,11 +87,11 @@ const CourseCard: React.FC<{
 
       {isPreviewOpen && (
         <div 
-          className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[110] bg-black/90 flex items-center justify-center p-4"
           onClick={() => setIsPreviewOpen(false)}
         >
-          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
-          <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" onClick={() => setIsPreviewOpen(false)} />
+          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg" alt="Preview" />
+          <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
       )}
     </>
@@ -124,8 +124,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
   return (
-    <div className="flex flex-col h-full bg-[#f5f5f5]">
-      {/* 1. STICKY HEADER: Title changed to "Batches" */}
+    <div className="flex flex-col h-full bg-white"> {/* Pure white background */}
       <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
@@ -134,14 +133,14 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">
+            <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a]">
               {isViewingAllFree ? "Free Batches" : "Batches"}
             </h1>
           </div>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder="Search by batch name..."
+              placeholder="Search by name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
@@ -153,19 +152,17 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 animate-pulse rounded-2xl" />)}
             </div>
           ) : (
             <>
-              {/* 2. POPULAR COURSES SECTION: Non-bold title, no star */}
+              {/* POPULAR COURSES: SemiBold Font Weight */}
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-12">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-[28px] font-normal tracking-[0.5px] text-[#111] uppercase font-poppins">
-                      POPULAR COURSES
-                    </h2>
-                  </div>
+                  <h2 className="text-[28px] font-semibold tracking-[0.5px] text-[#111] uppercase font-poppins mb-8">
+                    POPULAR COURSES
+                  </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
@@ -174,9 +171,9 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* 3. FREE BATCHES SECTION: Always follows others */}
+              {/* FREE BATCHES: Following all paid batches */}
               {isViewingAllFree ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12">
                   {freeBatches.map(batch => (
                     <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                   ))}
@@ -184,15 +181,9 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               ) : (
                 <FreeBatchSection 
                   batches={freeBatches} 
-                  onSelect={onSelectCourse}
+                  onSelect={onSelectCourse} 
                   onViewAll={() => setIsViewingAllFree(true)}
                 />
-              )}
-
-              {filtered.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-                  <p className="text-gray-400 text-lg font-medium">No batches found.</p>
-                </div>
               )}
             </>
           )}
