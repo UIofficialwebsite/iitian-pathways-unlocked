@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Check } from "lucide-react";
+import { X, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,158 +12,152 @@ interface FilterOption {
 interface FilterCategory {
   id: string;
   name: string;
+  dbField: string;
   selectionType: "single" | "multiple";
-  options: FilterOption[];
 }
 
-interface RefineBatchesModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onApply: (filters: Record<string, string[]>) => void;
-}
-
-const RefineBatchesModal = ({ isOpen, onClose, onApply }: RefineBatchesModalProps) => {
-  const [activeTabId, setActiveTabId] = useState("goal");
+const RefineBatchesModal = ({ isOpen, onClose, onApply }: any) => {
+  const [activeTabId, setActiveTabId] = useState("exam_category");
   const [tempSelections, setTempSelections] = useState<Record<string, string[]>>({});
-  const [categories, setCategories] = useState<FilterCategory[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [availableOptions, setAvailableOptions] = useState<Record<string, FilterOption[]>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchDynamicFilters = async () => {
-      setIsLoading(true);
-      // Fetch unique values from the courses table
-      const { data, error } = await supabase
-        .from('courses')
-        .select('exam_category, level, subject, language, batch_type');
-      
-      if (data && !error) {
-        // Extract unique options from the database results
-        const getUnique = (key: keyof typeof data[0]) => 
-          Array.from(new Set(data.map(item => item[key]).filter(Boolean))) as string[];
+  // Define the hierarchy and database mapping
+  const categories: FilterCategory[] = [
+    { id: "exam_category", name: "Exam Goal", dbField: "exam_category", selectionType: "single" },
+    { id: "level", name: "Class/Branch", dbField: "level", selectionType: "single" },
+    { id: "subject", name: "Subject", dbField: "subject", selectionType: "multiple" },
+    { id: "language", name: "Language", dbField: "language", selectionType: "single" }
+  ];
 
-        const dynamicCategories: FilterCategory[] = [
-          {
-            id: "goal",
-            name: "Exam Goal",
-            selectionType: "multiple", // Users can see JEE and NEET together
-            options: getUnique('exam_category').map(val => ({ id: val.toLowerCase(), label: val }))
-          },
-          {
-            id: "class",
-            name: "Class/Level",
-            selectionType: "multiple",
-            options: getUnique('level').map(val => ({ id: val, label: val }))
-          },
-          {
-            id: "subject",
-            name: "Subject",
-            selectionType: "multiple",
-            options: getUnique('subject').map(val => ({ id: val, label: val }))
-          },
-          {
-            id: "language",
-            name: "Language",
-            selectionType: "single", // Usually one language at a time
-            options: getUnique('language').map(val => ({ id: val.toLowerCase(), label: val }))
-          }
-        ];
-        
-        setCategories(dynamicCategories);
-        if (dynamicCategories.length > 0) setActiveTabId(dynamicCategories[0].id);
+  const fetchOptionsForCategory = async (catId: string) => {
+    setIsLoading(true);
+    const category = categories.find(c => c.id === catId);
+    if (!category) return;
+
+    let query = supabase.from('courses').select(category.dbField);
+
+    // Apply previous selections as filters to the query for dependency
+    categories.forEach((prevCat) => {
+      const selections = tempSelections[prevCat.id];
+      // Only filter by categories that come BEFORE the current one in the hierarchy
+      const currentIndex = categories.findIndex(c => c.id === catId);
+      const prevIndex = categories.findIndex(c => c.id === prevCat.id);
+
+      if (selections && selections.length > 0 && prevIndex < currentIndex) {
+        query = query.in(prevCat.dbField, selections);
       }
-      setIsLoading(false);
-    };
+    });
 
-    if (isOpen) fetchDynamicFilters();
-  }, [isOpen]);
+    const { data, error } = await query;
+
+    if (data && !error) {
+      const uniqueValues = Array.from(new Set(data.map(item => (item as any)[category.dbField]).filter(Boolean))) as string[];
+      setAvailableOptions(prev => ({
+        ...prev,
+        [catId]: uniqueValues.map(val => ({ id: val, label: val }))
+      }));
+    }
+    setIsLoading(false);
+  };
+
+  // Fetch options whenever the active tab changes or previous selections change
+  useEffect(() => {
+    if (isOpen) {
+      fetchOptionsForCategory(activeTabId);
+    }
+  }, [isOpen, activeTabId, tempSelections]);
 
   const handleToggleOption = (categoryId: string, optionId: string, type: "single" | "multiple") => {
     setTempSelections((prev) => {
-      const current = prev[categoryId] || [];
-      if (type === "single") return { ...prev, [categoryId]: [optionId] };
-      const updated = current.includes(optionId) 
-        ? current.filter(id => id !== optionId) 
-        : [...current, optionId];
-      return { ...prev, [categoryId]: updated };
+      const updated = { ...prev };
+      
+      if (type === "single") {
+        updated[categoryId] = [optionId];
+      } else {
+        const current = prev[categoryId] || [];
+        updated[categoryId] = current.includes(optionId) 
+          ? current.filter(id => id !== optionId) 
+          : [...current, optionId];
+      }
+
+      // FUTURE PROOF LOGIC: Clear all DOWNSTREAM filters in the hierarchy
+      const catIndex = categories.findIndex(c => c.id === categoryId);
+      categories.forEach((cat, index) => {
+        if (index > catIndex) {
+          delete updated[cat.id];
+        }
+      });
+
+      return updated;
     });
   };
 
   const activeCategory = categories.find((cat) => cat.id === activeTabId);
+  const currentOptions = availableOptions[activeTabId] || [];
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      {/* z-[200] ensures it sits above the Navbar */}
       <SheetContent side="right" className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl z-[200]">
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100 bg-white">
-          <SheetTitle className="text-xl font-bold text-gray-900 tracking-tight">Refine Batches</SheetTitle>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors">
-            <X size={24} />
-          </button>
+          <SheetTitle className="text-xl font-bold text-gray-900">Refine Batches</SheetTitle>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900"><X size={24} /></button>
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar Nav */}
+          {/* Sidebar */}
           <div className="w-[160px] bg-[#f8f9fa] border-r border-gray-100">
-            {isLoading ? (
-              <div className="p-5 space-y-4">
-                {[1, 2, 3, 4].map(i => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
+            {categories.map((cat) => (
+              <div
+                key={cat.id}
+                onClick={() => setActiveTabId(cat.id)}
+                className={`px-5 py-4 text-[13px] cursor-pointer border-l-4 transition-all ${
+                  activeTabId === cat.id 
+                    ? "bg-white text-[#5d54d1] border-[#5d54d1] font-bold" 
+                    : "text-gray-500 border-transparent hover:bg-gray-100"
+                }`}
+              >
+                {cat.name}
+                {tempSelections[cat.id]?.length > 0 && (
+                  <div className="text-[10px] mt-1 text-gray-400 truncate">
+                    {tempSelections[cat.id].join(", ")}
+                  </div>
+                )}
               </div>
-            ) : (
-              categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  onClick={() => setActiveTabId(cat.id)}
-                  className={`px-5 py-4 text-[13px] cursor-pointer border-l-4 transition-all ${
-                    activeTabId === cat.id 
-                      ? "bg-[#f1f1f1] text-gray-900 border-[#5d54d1] font-bold" 
-                      : "text-gray-500 border-transparent hover:bg-gray-200"
-                  }`}
-                >
-                  {cat.name}
-                </div>
-              ))
-            )}
+            ))}
           </div>
 
-          {/* Right Content Options */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          {/* Options */}
+          <div className="flex-1 p-6 overflow-y-auto bg-white relative">
             {isLoading ? (
-              <div className="space-y-6">
-                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-50 rounded" />)}
-              </div>
-            ) : (
-              activeCategory?.options.map((option) => {
-                const isSelected = tempSelections[activeCategory.id]?.includes(option.id);
-                const isSingle = activeCategory.selectionType === "single";
-
+              <div className="flex justify-center items-center h-20"><Loader2 className="animate-spin text-gray-400" /></div>
+            ) : currentOptions.length > 0 ? (
+              currentOptions.map((option) => {
+                const isSelected = tempSelections[activeTabId]?.includes(option.id);
                 return (
                   <div
                     key={option.id}
-                    onClick={() => handleToggleOption(activeCategory.id, option.id, activeCategory.selectionType)}
-                    className="flex justify-between items-center py-4 border-b border-gray-50 cursor-pointer group"
+                    onClick={() => handleToggleOption(activeTabId, option.id, activeCategory!.selectionType)}
+                    className="flex justify-between items-center py-4 border-b border-gray-50 cursor-pointer"
                   >
-                    <span className={`text-[15px] transition-colors ${isSelected ? "text-[#5d54d1] font-bold" : "text-gray-700 group-hover:text-black"}`}>
-                      {option.label}
-                    </span>
-                    <div className={`w-5 h-5 flex items-center justify-center border transition-all ${
-                      isSingle ? "rounded-full" : "rounded"
+                    <span className={`${isSelected ? "text-[#5d54d1] font-bold" : "text-gray-700"}`}>{option.label}</span>
+                    <div className={`w-5 h-5 flex items-center justify-center border ${
+                      activeCategory?.selectionType === "single" ? "rounded-full" : "rounded"
                     } ${isSelected ? "border-[#5d54d1] bg-[#5d54d1]" : "border-gray-300"}`}>
-                      {isSelected && (isSingle ? <div className="w-2 h-2 rounded-full bg-white" /> : <Check size={14} className="text-white" />)}
+                      {isSelected && <Check size={14} className="text-white" />}
                     </div>
                   </div>
                 );
               })
+            ) : (
+              <div className="text-sm text-gray-400 text-center mt-10">Select a previous category first</div>
             )}
           </div>
         </div>
 
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-4 bg-white z-10">
-          <Button variant="outline" className="flex-1 h-12 font-bold text-gray-600" onClick={() => setTempSelections({})}>
-            Reset
-          </Button>
-          <Button className="flex-1 bg-[#9499a6] hover:bg-[#838895] h-12 font-bold text-white" onClick={() => { onApply(tempSelections); onClose(); }}>
-            Apply Filters
-          </Button>
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-4 bg-white">
+          <Button variant="outline" className="flex-1" onClick={() => setTempSelections({})}>Reset</Button>
+          <Button className="flex-1 bg-[#5d54d1] hover:bg-[#4a43b1]" onClick={() => { onApply(tempSelections); onClose(); }}>Apply</Button>
         </div>
       </SheetContent>
     </Sheet>
