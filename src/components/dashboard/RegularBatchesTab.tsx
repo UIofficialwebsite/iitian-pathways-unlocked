@@ -121,24 +121,23 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex flex-col h-full bg-[#f9f9f9] overflow-y-auto">
-      {/* HEADER: Removed all close/cross icons. Height fixed to 73px. */}
-      <div className="sticky top-0 z-40 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
+    <div className="flex flex-col h-full bg-[#f9f9f9]">
+      <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-            <Input 
+            <input 
               placeholder="Search by batch name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
+              className="w-full pl-9 pr-4 h-11 bg-gray-50 border border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm outline-none"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex-1 px-6 lg:px-8 py-8">
+      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
