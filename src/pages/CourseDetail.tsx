@@ -146,7 +146,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
   const scrollMarginClass = isDashboardView ? "scroll-mt-[140px]" : "scroll-mt-24";
 
   return (
-    <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
+    <div className={cn("bg-background", !isDashboardView && "min-h-screen pt-20")}>
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
