@@ -11,30 +11,22 @@ interface StickyTabNavProps {
     sectionRefs: {
         [key: string]: RefObject<HTMLDivElement>;
     };
-    isDashboardView?: boolean; // NEW: Added to handle dashboard view context
+    isDashboardView?: boolean;
 }
 
 const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashboardView }) => {
-    const [isSticky, setSticky] = useState(false);
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     
-    // Configurable heights for calculation
     const mainNavBarHeight = 64; 
-    const dashboardSubHeaderHeight = 73; // Height of RegularBatchesTab header
+    const dashboardHeaderHeight = 73; 
     const stickyNavBarHeight = 57; 
 
-    // Calculate total offset based on view
-    const currentHeaderHeight = isDashboardView ? dashboardSubHeaderHeight : mainNavBarHeight;
-    const totalOffset = currentHeaderHeight + stickyNavBarHeight + 16; 
-
+    // Calculation for active tab highlighting during scroll
     useEffect(() => {
         const handleScroll = () => {
-            // Determine if the nav should be sticky
-            // Threshold is lower in dashboard view as there is no large main navbar scroll
-            const threshold = isDashboardView ? 200 : 350;
-            setSticky(window.scrollY > threshold);
+            const currentHeader = isDashboardView ? dashboardHeaderHeight : mainNavBarHeight;
+            const totalOffset = currentHeader + stickyNavBarHeight + 20;
 
-            // Logic for auto-highlighting the active tab on scroll
             let currentTab = '';
             for (const tab of tabs) {
                 const section = sectionRefs[tab.id]?.current;
@@ -42,31 +34,27 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
                     currentTab = tab.id;
                 }
             }
-            if (currentTab) {
-                setActiveTab(currentTab);
-            }
+            if (currentTab) setActiveTab(currentTab);
         };
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [sectionRefs, tabs, totalOffset, isDashboardView]);
+    }, [sectionRefs, tabs, isDashboardView]);
 
-    // Scrolls to the correct section, accounting for the height of the nav bars
     const scrollToSection = (sectionId: string) => {
         const section = sectionRefs[sectionId]?.current;
         if (section) {
-            const y = section.getBoundingClientRect().top + window.scrollY - (currentHeaderHeight + stickyNavBarHeight);
+            const currentHeader = isDashboardView ? dashboardHeaderHeight : mainNavBarHeight;
+            const y = section.getBoundingClientRect().top + window.scrollY - (currentHeader + stickyNavBarHeight);
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
 
     return (
         <nav className={cn(
-            "bg-white/80 backdrop-blur-lg border-b z-30 transition-all duration-300",
-            // UPDATED: In dashboard mode, stick to top-73 (below sub-header)
-            isSticky 
-                ? (isDashboardView ? "sticky top-[73px] shadow-md" : "sticky top-16 shadow-md") 
-                : "relative"
+            "bg-white border-b z-30 transition-all duration-300 w-full",
+            /* FIXED: Explicit top offsets. 73px matches the RegularBatchesTab header height. */
+            isDashboardView ? "sticky top-[73px] shadow-sm" : "sticky top-16 shadow-sm"
         )}>
             <div className="container mx-auto px-3 md:px-4">
                 <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
@@ -77,8 +65,8 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
                             className={cn(
                                 "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-colors duration-200 whitespace-nowrap flex-shrink-0",
                                 activeTab === tab.id
-                                    ? "border-blue-600 text-blue-600"
-                                    : "border-transparent text-gray-600 hover:text-blue-600"
+                                    ? "border-orange-500 text-orange-600"
+                                    : "border-transparent text-gray-600 hover:text-orange-500"
                             )}
                         >
                             {tab.label}
