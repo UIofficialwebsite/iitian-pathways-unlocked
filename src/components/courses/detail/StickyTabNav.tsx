@@ -18,39 +18,30 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     const [headerOffset, setHeaderOffset] = useState(0);
     const navRef = useRef<HTMLElement>(null);
-    
-    // Sticky height for scroll calculations
     const stickyTabsHeight = 57;
 
     useEffect(() => {
         const updateOffset = () => {
-            // Automatically find the main navbar or dashboard header
-            const mainNav = document.querySelector('nav');
-            // Check for announcement bar if it exists and is not fixed/floating
-            const announcement = document.querySelector('.announcement-bar'); 
-            
             let totalHeight = 0;
-            if (mainNav) {
-                totalHeight += mainNav.getBoundingClientRect().height;
-            }
-            
-            // In Dashboard view, we might need to target a specific sub-header 
-            // if the main nav is hidden or different
-            if (isDashboardView) {
-                const dashboardHeader = document.querySelector('[data-dashboard-header="true"]');
-                if (dashboardHeader) totalHeight = dashboardHeader.getBoundingClientRect().height;
-            }
 
+            if (isDashboardView) {
+                // In dashboard, we stick below the Batch Detail "Back" Header
+                // Standard Global TopNav (64px) is fixed, so we only need to 
+                // calculate the relative offset for the sticky container.
+                totalHeight = 73; 
+            } else {
+                // In standard site view, stick below the main NavBar (h-16 = 64px)
+                const mainNav = document.querySelector('nav');
+                totalHeight = mainNav ? mainNav.getBoundingClientRect().height : 64;
+            }
             setHeaderOffset(totalHeight);
         };
 
-        // Run once on mount and on every resize
         updateOffset();
         window.addEventListener('resize', updateOffset);
 
         const handleScroll = () => {
             const totalOffset = headerOffset + stickyTabsHeight + 20;
-
             let currentTab = '';
             for (const tab of tabs) {
                 const section = sectionRefs[tab.id]?.current;
@@ -61,11 +52,10 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
                     }
                 }
             }
-            if (currentTab) {
-                setActiveTab(currentTab);
-            }
+            if (currentTab) setActiveTab(currentTab);
         };
 
+        // If in dashboard, the scroll happens inside the <main> tag, not window
         const scrollContainer = isDashboardView 
             ? document.querySelector('main.overflow-y-auto') 
             : window;
@@ -88,8 +78,8 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
 
             if (scrollContainer) {
                 const yOffset = -(headerOffset + stickyTabsHeight);
-                const scrollPos = isDashboardView ? (scrollContainer as HTMLElement).scrollTop : window.scrollY;
-                const y = section.getBoundingClientRect().top + scrollPos + yOffset;
+                const currentScroll = isDashboardView ? (scrollContainer as HTMLElement).scrollTop : window.scrollY;
+                const y = section.getBoundingClientRect().top + currentScroll + yOffset;
                 
                 scrollContainer.scrollTo({ top: y, behavior: 'smooth' });
             }
@@ -101,7 +91,8 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
             ref={navRef}
             style={{ top: `${headerOffset}px` }} 
             className={cn(
-                "bg-white/90 backdrop-blur-md border-b z-30 w-full transition-all duration-300 sticky shadow-md"
+                "bg-white/95 backdrop-blur-md border-b w-full transition-all duration-300 shadow-sm",
+                "sticky z-40" // Re-added sticky and high z-index
             )}
         >
             <div className="container mx-auto px-3 md:px-4">
