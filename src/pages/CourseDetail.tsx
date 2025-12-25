@@ -142,7 +142,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  /* FIXED: scroll-mt ensures section titles aren't hidden behind the sticky nav bars */
+  /* 140px margin ensures content aligns below header (73px) + tabs (57px) */
   const scrollMarginClass = isDashboardView ? "scroll-mt-[140px]" : "scroll-mt-24";
 
   return (
