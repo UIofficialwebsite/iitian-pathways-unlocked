@@ -4,20 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { cn } from "@/lib/utils";
 
-// Import UI components
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-// Import icons
 import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
 
-// Import layout components
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
-
-// Import specialized components
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
@@ -28,7 +22,6 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 
-// Interfaces
 interface BatchScheduleItem {
   id: string;
   course_id: string;
@@ -40,8 +33,6 @@ interface CourseFaq {
   question: string;
   answer: string;
 }
-
-// Added Props for Dashboard Integration
 interface CourseDetailProps {
   customCourseId?: string; 
   isDashboardView?: boolean;
@@ -151,14 +142,14 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // UPDATED: Dynamic scroll-mt based on header + tab nav heights
-  const scrollMarginClass = isDashboardView ? "scroll-mt-[130px]" : "scroll-mt-24";
+  /* FIXED: scroll-mt ensures section titles aren't hidden behind the sticky nav bars */
+  const scrollMarginClass = isDashboardView ? "scroll-mt-[140px]" : "scroll-mt-24";
 
   return (
     <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
       {!isDashboardView && <NavBar />}
       
-      <main className="min-h-screen">
+      <main className="w-full">
         <div className="premium-course-header border-b border-slate-700/50 bg-slate-900 text-white">
           <div className="container mx-auto px-4 py-4">
             {!isDashboardView && (
@@ -184,7 +175,6 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           </div>
         </div>
 
-        {/* UPDATED: Passing isDashboardView to nav */}
         <StickyTabNav 
           tabs={tabs} 
           sectionRefs={sectionRefs} 
@@ -194,7 +184,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-1 lg:order-last">
-              <div className="lg:sticky top-28">
+              <div className="lg:sticky top-[140px] z-20">
                 <EnrollmentCard course={course} />
               </div>
             </div>
