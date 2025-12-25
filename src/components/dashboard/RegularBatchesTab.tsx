@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Maximize2, X, ArrowLeft, Menu, Filter } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Maximize2, X, ArrowLeft, Menu } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
+import SlidersIcon from "@/components/ui/SliderIcon"; // Import the SliderIcon
 
 interface RegularBatchesTabProps {
   focusArea: string;
@@ -128,7 +129,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         {!isViewingAllFree && (
           <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar">
             <div className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm">
-              Filter <Filter className="w-3.5 h-3.5 text-orange-500" />
+              Filter <SlidersIcon className="w-4 h-4" /> {/* Replaced Filter with SlidersIcon */}
             </div>
             <button
               onClick={() => setActiveFilter("All")}
