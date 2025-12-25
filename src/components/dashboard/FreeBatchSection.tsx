@@ -59,11 +59,11 @@ const FreeCourseCard: React.FC<{
                 onClick={() => onSelect(course.id)} 
                 className="bg-[#022c22] text-white py-2.5 px-6 rounded-xl font-bold text-sm hover:bg-[#064e3b] transition-colors"
               >
-                Enroll
+                Enroll Now
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-xl flex items-center justify-center hover:border-[#e5c185]"
+                className="bg-white border border-[#e5e7eb] w-11 h-11 rounded-xl flex items-center justify-center"
               >
                 <ChevronRight className="w-5 h-5 text-[#111]" strokeWidth={2.5} />
               </button>
@@ -100,7 +100,6 @@ export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onS
           </button>
         </div>
 
-        {/* Improved scrolling side-roller for zoom stability */}
         <div className="flex overflow-x-auto gap-8 pb-6 no-scrollbar snap-x">
           {batches.map((batch) => (
             <div key={batch.id} className="snap-start">
