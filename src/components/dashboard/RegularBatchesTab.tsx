@@ -110,7 +110,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         .from('courses')
         .select('*')
         .ilike('exam_category', focusArea)
-        .eq('batch_type', 'regular'); // Fetches both 'paid' and 'free'
+        .eq('batch_type', 'regular'); 
       
       if (data) setBatches(data);
       setLoading(false);
@@ -120,7 +120,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
   
-  // Separate Paid and Free batches
+  // Separate batches into sections
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
   const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
@@ -149,12 +149,18 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
-              {/* PAID COURSES (POPULAR) */}
+              {/* PAID COURSES SECTION WITH UPDATED WORDINGS AND FONT */}
               {paidBatches.length > 0 && (
                 <div className="mb-12">
-                  <h2 className="text-[24px] font-bold text-gray-900 mb-6 flex items-center gap-2">
-                    Popular Courses <Sparkles className="text-orange-500 w-5 h-5" />
-                  </h2>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-[28px] font-[800] tracking-[0.5px] text-[#111] flex items-center gap-[10px] uppercase font-poppins">
+                      POPULAR COURSES <Sparkles className="text-orange-500 w-5 h-5" />
+                    </h2>
+                    <a href="#" className="text-[#94a3b8] hover:text-[#111] text-[14px] font-[500] flex items-center gap-[6px] transition-colors">
+                      View All 
+                      <ChevronRight className="w-4 h-4" />
+                    </a>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(360px,1fr))] gap-8">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
