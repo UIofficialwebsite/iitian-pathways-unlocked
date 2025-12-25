@@ -101,17 +101,16 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   };
 
   const filtered = batches.filter(b => {
-    // Existing Search and Quick Filter logic
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
-    // Updated Refine Filters logic to match cascaded modal data
+    // Detailed Refine Filters matched with RefineBatchesModal output
     const matchesClassOrBranch = !appliedFilters.level?.length || 
       appliedFilters.level.includes(b.level || "") || 
       appliedFilters.level.includes(b.branch || "");
 
     const matchesSubject = !appliedFilters.subject?.length || appliedFilters.subject.includes(b.subject || "");
-    const matchesLanguage = !appliedFilters.language?.length || appliedFilters.language.includes(b.language?.toLowerCase() || "");
+    const matchesLanguage = !appliedFilters.language?.length || appliedFilters.language.includes(b.language || "");
 
     return matchesSearch && matchesQuickFilter && matchesClassOrBranch && matchesSubject && matchesLanguage;
   });
@@ -211,7 +210,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      {/* Passing focusArea to restrict modal filters to current exam goal */}
       <RefineBatchesModal 
         isOpen={isRefineModalOpen} 
         onClose={() => setIsRefineModalOpen(false)} 
