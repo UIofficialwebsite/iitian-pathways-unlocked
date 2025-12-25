@@ -40,13 +40,11 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
     const category = categories.find(c => c.id === catId);
     if (!category) return;
 
-    // Constrain query by the user's current focusArea context using exact case-insensitive match
     let query = supabase
       .from('courses')
       .select('exam_category, level, subject, language, branch')
       .ilike('exam_category', focusArea);
 
-    // Apply cascading filters for hierarchy (Previous selections affect current options)
     Object.entries(tempSelections).forEach(([key, values]) => {
       const cat = categories.find(c => c.id === key);
       const currentIndex = categories.findIndex(c => c.id === catId);
@@ -63,7 +61,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
       let uniqueValues: string[] = [];
       
       if (catId === "exam_category") {
-         // Return the exact value found in the DB that matches the focusArea
          const match = data.find(item => item.exam_category?.toLowerCase() === focusArea.toLowerCase());
          uniqueValues = match?.exam_category ? [match.exam_category] : [focusArea];
       } else if (catId === "level") {
@@ -104,7 +101,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
           : [...current, optionId];
       }
 
-      // Reset downstream filters in hierarchy
       const currentIndex = categories.findIndex(c => c.id === categoryId);
       categories.forEach((cat, idx) => {
         if (idx > currentIndex) delete updated[cat.id];
@@ -117,7 +113,13 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent side="right" className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl z-[200]">
+      {/* z-[200] ensures it covers the TopNav (which is z-[100]). 
+          The overlay (dimmer) is automatically handled by the Sheet primitive. 
+      */}
+      <SheetContent 
+        side="right" 
+        className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl z-[200]"
+      >
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100 bg-white">
           <SheetTitle className="text-xl font-bold text-gray-900">Refine Batches</SheetTitle>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors">
