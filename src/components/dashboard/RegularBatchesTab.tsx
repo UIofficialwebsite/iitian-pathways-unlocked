@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Loader2, Maximize2, X } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Maximize2, X } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 
 interface RegularBatchesTabProps {
@@ -121,9 +121,10 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    <div className="flex flex-col h-full bg-[#f9f9f9]">
-      {/* UPDATED FIXED HEADER: h-[73px] ensures consistency for sticky children */}
-      <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
+    /* FIXED: Added overflow-y-auto here so sticky children work relative to this div */
+    <div className="flex flex-col h-full bg-[#f9f9f9] overflow-y-auto">
+      {/* FIXED HEADER: Stays at the very top of the scroll container */}
+      <div className="sticky top-0 z-40 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
@@ -138,7 +139,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 lg:px-8 py-8">
+      <div className="flex-1 px-6 lg:px-8 py-8">
         <div className="max-w-7xl mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-10">
