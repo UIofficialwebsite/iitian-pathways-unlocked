@@ -1,6 +1,6 @@
 // src/components/courses/CategoryFilter.tsx
 import React from 'react';
-import SlidersIcon from "@/components/ui/SlidersIcon";
+import SlidersIcon from "@/components/ui/SliderIcon";
 
 interface Category {
     id: string;
