@@ -40,19 +40,18 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
     const category = categories.find(c => c.id === catId);
     if (!category) return;
 
-    // Constrain query by the user's current focusArea context
+    // Constrain query by the user's current focusArea context using exact case-insensitive match
     let query = supabase
       .from('courses')
       .select('exam_category, level, subject, language, branch')
       .ilike('exam_category', focusArea);
 
-    // Cascade filters based on hierarchy
+    // Apply cascading filters for hierarchy (Previous selections affect current options)
     Object.entries(tempSelections).forEach(([key, values]) => {
       const cat = categories.find(c => c.id === key);
       const currentIndex = categories.findIndex(c => c.id === catId);
       const prevIndex = categories.findIndex(c => c.id === key);
 
-      // Only filter by categories that come BEFORE the current one in the chain
       if (cat && values.length > 0 && prevIndex < currentIndex) {
         query = query.in(cat.dbField, values);
       }
@@ -64,7 +63,9 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
       let uniqueValues: string[] = [];
       
       if (catId === "exam_category") {
-         uniqueValues = [focusArea]; 
+         // Return the exact value found in the DB that matches the focusArea
+         const match = data.find(item => item.exam_category?.toLowerCase() === focusArea.toLowerCase());
+         uniqueValues = match?.exam_category ? [match.exam_category] : [focusArea];
       } else if (catId === "level") {
         const levels = data.map(item => item.level).filter(Boolean);
         const branches = data.map(item => item.branch).filter(Boolean);
@@ -83,7 +84,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
   useEffect(() => {
     if (isOpen) {
       const load = async () => {
-        // Only show full pulse loader on first open
         if (Object.keys(availableOptions).length === 0) setIsInitialLoading(true);
         await fetchDynamicOptions(activeTabId);
         setIsInitialLoading(false);
