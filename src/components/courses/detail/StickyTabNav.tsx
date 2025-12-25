@@ -11,20 +11,28 @@ interface StickyTabNavProps {
     sectionRefs: {
         [key: string]: RefObject<HTMLDivElement>;
     };
+    isDashboardView?: boolean; // NEW: Added to handle dashboard view context
 }
 
-const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
+const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashboardView }) => {
     const [isSticky, setSticky] = useState(false);
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     
-    const mainNavBarHeight = 64; // Corresponds to h-16
-    const stickyNavBarHeight = 57; // Approximate height of this sticky nav itself
-    const totalOffset = mainNavBarHeight + stickyNavBarHeight + 16; // Added 16px for padding
+    // Configurable heights for calculation
+    const mainNavBarHeight = 64; 
+    const dashboardSubHeaderHeight = 73; // Height of RegularBatchesTab header
+    const stickyNavBarHeight = 57; 
+
+    // Calculate total offset based on view
+    const currentHeaderHeight = isDashboardView ? dashboardSubHeaderHeight : mainNavBarHeight;
+    const totalOffset = currentHeaderHeight + stickyNavBarHeight + 16; 
 
     useEffect(() => {
         const handleScroll = () => {
-            // Determines if the nav should be sticky
-            setSticky(window.scrollY > 350);
+            // Determine if the nav should be sticky
+            // Threshold is lower in dashboard view as there is no large main navbar scroll
+            const threshold = isDashboardView ? 200 : 350;
+            setSticky(window.scrollY > threshold);
 
             // Logic for auto-highlighting the active tab on scroll
             let currentTab = '';
@@ -41,13 +49,13 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
 
         window.addEventListener('scroll', handleScroll, { passive: true });
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [sectionRefs, tabs, totalOffset]);
+    }, [sectionRefs, tabs, totalOffset, isDashboardView]);
 
     // Scrolls to the correct section, accounting for the height of the nav bars
     const scrollToSection = (sectionId: string) => {
         const section = sectionRefs[sectionId]?.current;
         if (section) {
-            const y = section.getBoundingClientRect().top + window.scrollY - (mainNavBarHeight + stickyNavBarHeight);
+            const y = section.getBoundingClientRect().top + window.scrollY - (currentHeaderHeight + stickyNavBarHeight);
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
     };
@@ -55,11 +63,13 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs }) => {
     return (
         <nav className={cn(
             "bg-white/80 backdrop-blur-lg border-b z-30 transition-all duration-300",
-            isSticky ? "sticky top-16 shadow-md" : "relative"
+            // UPDATED: In dashboard mode, stick to top-73 (below sub-header)
+            isSticky 
+                ? (isDashboardView ? "sticky top-[73px] shadow-md" : "sticky top-16 shadow-md") 
+                : "relative"
         )}>
             <div className="container mx-auto px-3 md:px-4">
                 <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
-                    {/* This now correctly maps over the 'tabs' prop, making it dynamic */}
                     {tabs.map((tab) => (
                         <button
                             key={tab.id}
