@@ -151,13 +151,14 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       
       <main className="w-full">
         <div className="premium-course-header border-b border-slate-700/50 bg-slate-900 text-white">
-          <div className="container mx-auto px-4 py-4">
-            {!isDashboardView && (
+          {/* Only show back button container in non-dashboard view */}
+          {!isDashboardView && (
+            <div className="container mx-auto px-4 py-4">
               <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 text-slate-300">
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
               </Button>
-            )}
-          </div>
+            </div>
+          )}
           <div className="container mx-auto px-4 pb-8">
             <div className="max-w-4xl">
               <div className="flex flex-wrap gap-2 mb-4">
