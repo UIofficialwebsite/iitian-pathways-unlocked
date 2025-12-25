@@ -6,7 +6,7 @@ import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
 import SlidersIcon from "@/components/ui/SliderIcon";
-import RefineBatchesModal from "./RefineBatchesModal"; // Import the separate modal
+import RefineBatchesModal from "./RefineBatchesModal"; 
 
 interface RegularBatchesTabProps {
   focusArea: string;
@@ -101,19 +101,19 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   };
 
   const filtered = batches.filter(b => {
-    // Search filter
+    // Existing Search and Quick Filter logic
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Quick Horizontal Filter (Level)
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
-    // Detailed Refine Filters
-    const matchesStatus = !appliedFilters.status?.length || appliedFilters.status.includes('ongoing'); // Example logic
-    const matchesClass = !appliedFilters.class?.length || appliedFilters.class.includes(b.level || "");
-    const matchesSubject = !appliedFilters.subjects?.length || appliedFilters.subjects.includes(b.subject || "");
+    // Updated Refine Filters logic to match cascaded modal data
+    const matchesClassOrBranch = !appliedFilters.level?.length || 
+      appliedFilters.level.includes(b.level || "") || 
+      appliedFilters.level.includes(b.branch || "");
+
+    const matchesSubject = !appliedFilters.subject?.length || appliedFilters.subject.includes(b.subject || "");
     const matchesLanguage = !appliedFilters.language?.length || appliedFilters.language.includes(b.language?.toLowerCase() || "");
 
-    return matchesSearch && matchesQuickFilter && matchesStatus && matchesClass && matchesSubject && matchesLanguage;
+    return matchesSearch && matchesQuickFilter && matchesClassOrBranch && matchesSubject && matchesLanguage;
   });
 
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
@@ -121,7 +121,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* HEADER AREA */}
       <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -141,10 +140,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           </div>
         </div>
 
-        {/* FIXED FILTER BAR */}
         {!isViewingAllFree && (
           <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar items-center">
-            {/* Clickable Filter Trigger */}
             <div 
               onClick={() => setIsRefineModalOpen(true)}
               className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
@@ -214,11 +211,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      {/* Separate Filter Modal */}
+      {/* Passing focusArea to restrict modal filters to current exam goal */}
       <RefineBatchesModal 
         isOpen={isRefineModalOpen} 
         onClose={() => setIsRefineModalOpen(false)} 
         onApply={(filters) => setAppliedFilters(filters)} 
+        focusArea={focusArea}
       />
     </div>
   );
