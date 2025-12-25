@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Maximize2, X, Sparkles } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Maximize2, X } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 
@@ -120,15 +120,16 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
   
-  // Separate batches into sections
+  // Logic to separate Paid and Free batches
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
   const freeBatches = filtered.filter(b => b.payment_type === 'free');
 
   return (
     <div className="flex flex-col h-full bg-[#f9f9f9]">
+      {/* 1. Header updated to "Batches" */}
       <div className="sticky top-0 z-30 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
-        <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
-          <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
+        <div className="max-max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
+          <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Batches</h1>
           <div className="relative w-full max-w-xs md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
@@ -149,12 +150,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             </div>
           ) : (
             <>
-              {/* PAID COURSES SECTION WITH UPDATED WORDINGS AND FONT */}
+              {/* 2. Popular Courses section: Non-bold and removed star */}
               {paidBatches.length > 0 && (
                 <div className="mb-12">
                   <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-[28px] font-[800] tracking-[0.5px] text-[#111] flex items-center gap-[10px] uppercase font-poppins">
-                      POPULAR COURSES <Sparkles className="text-orange-500 w-5 h-5" />
+                    <h2 className="text-[28px] font-normal tracking-[0.5px] text-[#111] uppercase font-poppins">
+                      POPULAR COURSES
                     </h2>
                     <a href="#" className="text-[#94a3b8] hover:text-[#111] text-[14px] font-[500] flex items-center gap-[6px] transition-colors">
                       View All 
@@ -169,12 +170,12 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 </div>
               )}
 
-              {/* FREE BATCHES SECTION */}
+              {/* 3. Free Batch Section follows the popular courses */}
               <FreeBatchSection batches={freeBatches} onSelect={onSelectCourse} />
 
               {filtered.length === 0 && (
                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-300">
-                  <p className="text-gray-400 text-lg font-medium">No regular batches found.</p>
+                  <p className="text-gray-400 text-lg font-medium">No batches found matching your selection.</p>
                 </div>
               )}
             </>
