@@ -83,8 +83,9 @@ const FreeCourseCard: React.FC<{
 
 export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onSelect, onViewAll }) => {
   return (
-    <div className="mt-12 mb-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 md:p-12 relative overflow-hidden bg-[#0f0f0f] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border border-white/[0.03]">
-      {/* Background Pattern: Vignette removed, micro-dots and noise texture kept */}
+    /* Removed shadow-sm and shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] classes */
+    <div className="mt-12 mb-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 md:p-12 relative overflow-hidden bg-[#0f0f0f] border border-white/[0.03]">
+      {/* Removed radial-gradient entirely to eliminate vignette effect */}
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: `
           radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
