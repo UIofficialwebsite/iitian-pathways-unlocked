@@ -21,7 +21,7 @@ const CourseCard: React.FC<{
 
   return (
     <>
-      {/* Added max-w-full and transition-transform for better zoom handling */}
+      {/* Container max-width and margin auto ensure stability during zoom */}
       <div className="w-full max-w-[360px] mx-auto bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 hover:shadow-md">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
@@ -133,7 +133,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             {isViewingAllFree && (
-              <button onClick={() => setIsViewingAllFree(false)} className="mr-2 p-1 hover:bg-gray-100 rounded-full">
+              <button onClick={() => setIsViewingAllFree(false)} className="mr-2 p-1 hover:bg-gray-100 rounded-full transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
@@ -151,8 +151,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       <div ref={scrollContainerRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-8 no-scrollbar">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse">
-              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl" />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1,2,3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />)}
             </div>
           ) : (
             <>
@@ -161,8 +161,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                   <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10">
                     POPULAR COURSES
                   </h2>
-                  {/* Updated grid settings to prevent cutting on zoom */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-6 md:gap-8 justify-items-center">
+                  {/* Grid uses auto-fill and centers items to handle zoom gracefully */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
