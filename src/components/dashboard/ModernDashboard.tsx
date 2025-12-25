@@ -186,7 +186,8 @@ const ModernDashboard: React.FC = () => {
                     {/* SLIDING DETAIL OVERLAY */}
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav (73px height to match RegularBatchesTab) */}
+                        {/* BACK HEADER: Sticks exactly below the Global TopNav. 
+                            Standardized height of 73px to match RegularBatchesTab header. */}
                         <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
