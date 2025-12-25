@@ -172,7 +172,29 @@ const ModernDashboard: React.FC = () => {
                 )}
 
                 {activeView === 'enrollments' && (
-                  <ContentWrapper><MyEnrollments /></ContentWrapper>
+                  <div className="flex-1 relative h-full">
+                    {!selectedCourseId ? (
+                      <ContentWrapper>
+                        <MyEnrollments onSelectCourse={setSelectedCourseId} />
+                      </ContentWrapper>
+                    ) : (
+                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
+                        {/* BACK HEADER: Sticks exactly below the Global TopNav */}
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
+                          <button 
+                            onClick={() => setSelectedCourseId(null)}
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
+                          >
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to My Enrollments
+                          </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 {activeView === 'regularBatches' && (
