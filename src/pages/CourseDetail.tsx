@@ -48,7 +48,6 @@ interface CourseDetailProps {
 }
 
 const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboardView }) => {
-  // Use customCourseId from props if provided, otherwise use URL params
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
@@ -80,8 +79,6 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       try {
         setLoading(true);
         setError(null);
-
-        // Fetches data in parallel as per your original design
         const [courseResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
@@ -106,7 +103,6 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
         setLoading(false);
       }
     };
-
     fetchCourseData();
   }, [courseId]);
 
@@ -155,6 +151,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     { id: 'faqs', label: 'FAQs' },
   ];
 
+  // UPDATED: Dynamic scroll-mt based on header + tab nav heights
+  const scrollMarginClass = isDashboardView ? "scroll-mt-[130px]" : "scroll-mt-24";
+
   return (
     <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
       {!isDashboardView && <NavBar />}
@@ -185,7 +184,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           </div>
         </div>
 
-        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} />
+        {/* UPDATED: Passing isDashboardView to nav */}
+        <StickyTabNav 
+          tabs={tabs} 
+          sectionRefs={sectionRefs} 
+          isDashboardView={isDashboardView} 
+        />
 
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -196,13 +200,13 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
             </div>
 
             <div className="lg:col-span-2 space-y-12">
-              <div ref={sectionRefs.features} className="scroll-mt-24"><FeaturesSection course={course} /></div>
-              <div ref={sectionRefs.about} className="scroll-mt-24"><AboutSection course={course} /></div>
-              <div ref={sectionRefs.moreDetails} className="scroll-mt-24"><MoreDetailsSection /></div>
-              <div ref={sectionRefs.schedule} className="scroll-mt-24"><ScheduleSection scheduleData={scheduleData} /></div>
-              <div ref={sectionRefs.ssp} className="scroll-mt-24"><SSPPortalSection /></div>
-              <div ref={sectionRefs.access} className="scroll-mt-24"><CourseAccessGuide /></div>
-              <div ref={sectionRefs.faqs} className="scroll-mt-24"><FAQSection faqs={faqs} /></div>
+              <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
+              <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails} className={scrollMarginClass}><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule} className={scrollMarginClass}><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp} className={scrollMarginClass}><SSPPortalSection /></div>
+              <div ref={sectionRefs.access} className={scrollMarginClass}><CourseAccessGuide /></div>
+              <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
             </div>
           </div>
         </div>
