@@ -121,9 +121,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const filtered = batches.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
-    /* FIXED: Added overflow-y-auto here so sticky children work relative to this div */
     <div className="flex flex-col h-full bg-[#f9f9f9] overflow-y-auto">
-      {/* FIXED HEADER: Stays at the very top of the scroll container */}
+      {/* HEADER: No Cross sign, Fixed height h-[73px] */}
       <div className="sticky top-0 z-40 h-[73px] bg-white border-b border-[#e0e0e0] px-4 md:px-6 lg:px-8 py-4 shadow-sm shrink-0 flex items-center">
         <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-4">
           <h1 className="text-[22px] font-bold tracking-tight text-[#1a1a1a] whitespace-nowrap">Regular Batches</h1>
@@ -135,6 +134,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none"
             />
+            {/* Removed any X (cross) icons here */}
           </div>
         </div>
       </div>
