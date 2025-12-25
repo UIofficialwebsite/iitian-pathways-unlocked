@@ -73,7 +73,7 @@ const FreeCourseCard: React.FC<{
 
       {isPreviewOpen && (
         <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
-          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg" alt="Preview" />
+          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" alt="Preview" />
           <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
       )}
@@ -84,7 +84,7 @@ const FreeCourseCard: React.FC<{
 export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onSelect, onViewAll }) => {
   return (
     <div className="mt-12 mb-10 w-full max-w-7xl mx-auto rounded-[28px] p-6 md:p-12 relative overflow-hidden bg-[#0f0f0f] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.7)] border border-white/[0.03]">
-      {/* Background Pattern: Radial Vignette removed, micro-dots and noise kept */}
+      {/* Background Pattern: Vignette removed, micro-dots and noise texture kept */}
       <div className="absolute inset-0 pointer-events-none" style={{
         backgroundImage: `
           radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
@@ -99,7 +99,7 @@ export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onS
             FREE BATCHES
           </h2>
           <button onClick={onViewAll} className="text-[#888888] hover:text-white text-[14px] font-[500] flex items-center gap-2 transition-all">
-            View All <MoveRight className="w-4 h-4" />
+            View All Batches <MoveRight className="w-4 h-4" />
           </button>
         </div>
 
