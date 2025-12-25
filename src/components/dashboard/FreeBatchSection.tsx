@@ -8,43 +8,45 @@ interface FreeBatchSectionProps {
   onViewAll: () => void;
 }
 
-// Re-implementing the exact CourseCard design from RegularBatchesTab
-const StandardCourseCard: React.FC<{ 
+const FreeCourseCard: React.FC<{ 
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
   const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
-
+  
   return (
     <>
-      <div className="w-full min-w-[320px] max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all hover:shadow-md shrink-0">
+      <div className="w-full min-w-[300px] md:min-w-[340px] max-w-[360px] bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-500 hover:-translate-y-4 hover:shadow-2xl shrink-0">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
-          <img 
-            src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
-            alt={course.title} 
-            className="w-full block aspect-video object-cover" 
-          />
+          {/* Unified height container to fix preview sizing */}
+          <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
+            <img 
+              src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
+              alt={course.title} 
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            />
+          </div>
           <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <Maximize2 className="text-white w-6 h-6" />
           </div>
         </div>
 
         <div className="p-5 flex flex-col flex-1">
-          <div className="flex justify-between items-center mb-[10px]">
-            <span className="text-[#f97316] font-bold text-base uppercase tracking-tight">{course.level || 'Academic'}</span>
-            <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-[#f97316] font-bold text-sm uppercase tracking-tight">{course.level || 'Academic'}</span>
+            <span className="bg-[#f3f4f6] px-2 py-0.5 rounded-md text-[10px] font-bold text-[#4b5563] uppercase">
               {course.language || 'Hinglish'}
             </span>
           </div>
 
-          <h2 className="text-[20px] font-bold text-[#1f2937] mb-[15px] line-clamp-1">{course.title}</h2>
+          <h2 className="text-[19px] font-bold text-[#1f2937] mb-4 line-clamp-1">{course.title}</h2>
 
-          <div className="min-h-[60px] space-y-2">
-            <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
+          <div className="min-h-[50px] space-y-2">
+            <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
               <BookOpen className="w-[18px] h-[18px] text-[#666]" />
               {course.subject || 'Foundation'}
             </div>
-            <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
+            <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
               <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
               <span className="font-bold">Ongoing</span> 
               <span className="text-[#d1d5db] mx-1">|</span> 
@@ -52,21 +54,18 @@ const StandardCourseCard: React.FC<{
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
-            <div>
-              <span className="text-[20px] font-extrabold text-black uppercase">Free</span>
-            </div>
-            
+          <div className="flex justify-between items-center mt-auto pt-4 border-t border-gray-100">
+            <span className="text-[20px] font-extrabold text-black uppercase tracking-tighter">Free</span>
             <div className="flex gap-2">
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black transition-colors"
+                className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[13px] hover:bg-black transition-colors"
               >
-                Enroll Now
+                Enroll
               </button>
               <button 
                 onClick={() => onSelect(course.id)} 
-                className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center hover:bg-gray-50 transition-colors"
+                className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center"
               >
                 <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
               </button>
@@ -77,7 +76,7 @@ const StandardCourseCard: React.FC<{
 
       {isPreviewOpen && (
         <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
-          <img src={course.image_url || ""} className="max-w-full max-h-[85vh] rounded-lg shadow-2xl" alt="Preview" />
+          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" alt="Preview" />
           <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
         </div>
       )}
@@ -99,14 +98,14 @@ export const FreeBatchSection: React.FC<FreeBatchSectionProps> = ({ batches, onS
             FREE BATCHES <span className="text-[#e5c185] font-poppins text-2xl">✦</span>
           </h2>
           <button onClick={onViewAll} className="text-[#e5c185] hover:text-white text-base font-semibold tracking-wide flex items-center gap-2.5 transition-all hover:translate-x-2">
-            Explore All Programs <MoveRight className="w-4 h-4" />
+            Explore All Programs <MoveRight className="w-5 h-5" />
           </button>
         </div>
 
         <div className="flex overflow-x-auto gap-8 pb-6 no-scrollbar snap-x">
           {batches.map((batch) => (
             <div key={batch.id} className="snap-start">
-              <StandardCourseCard course={batch} onSelect={onSelect} />
+              <FreeCourseCard course={batch} onSelect={onSelect} />
             </div>
           ))}
         </div>
