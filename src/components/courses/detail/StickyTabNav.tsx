@@ -18,12 +18,10 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     const [isSticky, setIsSticky] = useState(false);
     const navRef = useRef<HTMLDivElement>(null);
-    const placeholderRef = useRef<HTMLDivElement>(null);
     
     const stickyTabsHeight = 57;
-    // In dashboard view: "Back to All Batches" header is 73px
     // In standard view: main NavBar is 64px (h-16)
-    const headerOffset = isDashboardView ? 73 : 64;
+    const headerOffset = isDashboardView ? 0 : 64;
 
     // Get the scroll container based on view type
     const getScrollContainer = useCallback(() => {
@@ -37,34 +35,27 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
     // Scroll-spy: determine which section is currently active
     const updateActiveTab = useCallback(() => {
         const scrollContainer = getScrollContainer();
-        const containerTop = scrollContainer?.getBoundingClientRect().top ?? 0;
         
         // Offset from top where we consider a section "active"
-        // This is the header + sticky nav + some buffer
-        const activationOffset = headerOffset + stickyTabsHeight + 50;
+        const activationOffset = stickyTabsHeight + 80;
         
         let currentTab = tabs[0]?.id || '';
-        let minDistance = Infinity;
         
-        // Find the section that's closest to (but above) our activation line
         for (const tab of tabs) {
             const section = sectionRefs[tab.id]?.current;
             if (section) {
                 const rect = section.getBoundingClientRect();
-                // For dashboard view, calculate relative to the scroll container
-                const sectionTop = isDashboardView 
-                    ? rect.top - containerTop
-                    : rect.top;
                 
-                // Section is considered active if its top is at or above the activation line
-                if (sectionTop <= activationOffset) {
-                    currentTab = tab.id;
-                }
-                
-                // Also track which section is closest to activation point for edge cases
-                const distance = Math.abs(sectionTop - activationOffset);
-                if (distance < minDistance && sectionTop <= activationOffset + 100) {
-                    minDistance = distance;
+                if (isDashboardView && scrollContainer) {
+                    const containerRect = scrollContainer.getBoundingClientRect();
+                    const sectionTop = rect.top - containerRect.top;
+                    if (sectionTop <= activationOffset) {
+                        currentTab = tab.id;
+                    }
+                } else {
+                    if (rect.top <= activationOffset + headerOffset) {
+                        currentTab = tab.id;
+                    }
                 }
             }
         }
@@ -72,23 +63,21 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
         setActiveTab(currentTab);
     }, [tabs, sectionRefs, isDashboardView, headerOffset, getScrollContainer]);
 
-    // Check if nav should be sticky
+    // Check if nav should show shadow (is in sticky mode)
     const updateStickyState = useCallback(() => {
-        if (!placeholderRef.current) return;
+        if (!navRef.current) return;
         
-        const scrollContainer = getScrollContainer();
+        const rect = navRef.current.getBoundingClientRect();
         
-        if (isDashboardView && scrollContainer) {
-            // In dashboard view, check position relative to the scroll container
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const placeholderRect = placeholderRef.current.getBoundingClientRect();
-            // Placeholder top relative to the container's viewport top
-            const relativeTop = placeholderRect.top - containerRect.top;
-            setIsSticky(relativeTop <= 0);
+        if (isDashboardView) {
+            const scrollContainer = getScrollContainer();
+            if (scrollContainer) {
+                const containerRect = scrollContainer.getBoundingClientRect();
+                // Nav is sticky when its top is at or near the container top
+                setIsSticky(rect.top <= containerRect.top + 5);
+            }
         } else {
-            // Standard view - check against window
-            const placeholderRect = placeholderRef.current.getBoundingClientRect();
-            setIsSticky(placeholderRect.top <= headerOffset);
+            setIsSticky(rect.top <= headerOffset + 5);
         }
     }, [isDashboardView, headerOffset, getScrollContainer]);
 
@@ -104,7 +93,7 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
         scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
         
         // Initial check
-        handleScroll();
+        requestAnimationFrame(handleScroll);
 
         return () => {
             scrollTarget.removeEventListener('scroll', handleScroll);
@@ -118,7 +107,6 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
         const scrollContainer = getScrollContainer();
         
         if (isDashboardView && scrollContainer) {
-            // Calculate position within the scroll container
             const containerRect = scrollContainer.getBoundingClientRect();
             const sectionRect = section.getBoundingClientRect();
             const currentScroll = scrollContainer.scrollTop;
@@ -128,60 +116,47 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
             
             scrollContainer.scrollTo({ top: targetScroll, behavior: 'smooth' });
         } else {
-            // Standard view - scroll window
             const yOffset = -(headerOffset + stickyTabsHeight + 10);
             const y = section.getBoundingClientRect().top + window.scrollY + yOffset;
             window.scrollTo({ top: y, behavior: 'smooth' });
         }
         
-        // Immediately set active tab for responsiveness
         setActiveTab(sectionId);
     };
 
+    // For dashboard view: always use sticky positioning within the scroll container
+    // For standard view: use sticky with top offset for the fixed navbar
     return (
-        <>
-            {/* Placeholder to prevent layout shift when nav becomes fixed */}
-            <div 
-                ref={placeholderRef} 
-                style={{ height: isSticky ? `${stickyTabsHeight}px` : '0px' }}
-                aria-hidden="true"
-            />
-            
-            <nav 
-                ref={navRef}
-                style={isSticky ? { 
-                    position: isDashboardView ? 'sticky' : 'fixed',
-                    top: isDashboardView ? '0px' : `${headerOffset}px`,
-                    left: 0,
-                    right: 0,
-                } : undefined}
-                className={cn(
-                    "bg-white border-b w-full transition-shadow duration-200 z-40",
-                    isSticky 
-                        ? "shadow-md backdrop-blur-sm bg-white/98" 
-                        : "relative shadow-none"
-                )}
-            >
-                <div className="container mx-auto px-3 md:px-4">
-                    <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.id}
-                                onClick={() => scrollToSection(tab.id)}
-                                className={cn(
-                                    "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-all duration-200 whitespace-nowrap flex-shrink-0",
-                                    activeTab === tab.id
-                                        ? "border-orange-500 text-orange-600"
-                                        : "border-transparent text-gray-600 hover:text-orange-500 hover:border-orange-200"
-                                )}
-                            >
-                                {tab.label}
-                            </button>
-                        ))}
-                    </div>
+        <nav 
+            ref={navRef}
+            style={{ top: isDashboardView ? '0px' : `${headerOffset}px` }}
+            className={cn(
+                "bg-white border-b w-full z-40 sticky",
+                "transition-shadow duration-200",
+                isSticky 
+                    ? "shadow-md backdrop-blur-sm bg-white/98" 
+                    : "shadow-none"
+            )}
+        >
+            <div className="container mx-auto px-3 md:px-4">
+                <div className="flex justify-start gap-1 md:gap-2 lg:gap-8 overflow-x-auto scrollbar-hide">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => scrollToSection(tab.id)}
+                            className={cn(
+                                "py-3 md:py-4 px-3 md:px-4 text-xs md:text-sm lg:text-base font-semibold border-b-2 transition-all duration-200 whitespace-nowrap flex-shrink-0",
+                                activeTab === tab.id
+                                    ? "border-orange-500 text-orange-600"
+                                    : "border-transparent text-gray-600 hover:text-orange-500 hover:border-orange-200"
+                            )}
+                        >
+                            {tab.label}
+                        </button>
+                    ))}
                 </div>
-            </nav>
-        </>
+            </div>
+        </nav>
     );
 };
 
