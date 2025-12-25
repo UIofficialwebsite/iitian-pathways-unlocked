@@ -29,6 +29,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
   const [availableOptions, setAvailableOptions] = useState<Record<string, FilterOption[]>>({});
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
+  // Hierarchy definition for future-proof cascading
   const categories: FilterCategory[] = useMemo(() => [
     { id: "exam_category", name: "Exam Goal", dbField: "exam_category", selectionType: "single" },
     { id: "level", name: "Class/Branch", dbField: "level", selectionType: "single" },
@@ -40,6 +41,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
     const category = categories.find(c => c.id === catId);
     if (!category) return;
 
+    // Constrain query by the user's focusArea and cascading previous selections
     let query = supabase
       .from('courses')
       .select('exam_category, level, subject, language, branch')
@@ -101,6 +103,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
           : [...current, optionId];
       }
 
+      // Reset downstream filters to prevent invalid states
       const currentIndex = categories.findIndex(c => c.id === categoryId);
       categories.forEach((cat, idx) => {
         if (idx > currentIndex) delete updated[cat.id];
@@ -113,9 +116,6 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      {/* z-[200] ensures it covers the TopNav (which is z-[100]). 
-          The overlay (dimmer) is automatically handled by the Sheet primitive. 
-      */}
       <SheetContent 
         side="right" 
         className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl z-[200]"
@@ -135,7 +135,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
                 onClick={() => setActiveTabId(cat.id)}
                 className={`px-5 py-5 text-[13px] cursor-pointer border-l-4 transition-all ${
                   activeTabId === cat.id 
-                    ? "bg-white text-[#5d54d1] border-[#5d54d1] font-bold" 
+                    ? "bg-white text-blue-800 border-blue-800 font-bold" 
                     : "text-gray-500 border-transparent hover:bg-gray-200"
                 }`}
               >
@@ -160,12 +160,12 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
                     onClick={() => handleToggleOption(activeTabId, option.id, isSingle ? "single" : "multiple")}
                     className="flex justify-between items-center py-4 border-b border-gray-50 cursor-pointer group"
                   >
-                    <span className={`text-[15px] transition-colors ${isSelected ? "text-[#5d54d1] font-bold" : "text-gray-700 group-hover:text-black"}`}>
+                    <span className={`text-[15px] transition-colors ${isSelected ? "text-blue-800 font-bold" : "text-gray-700 group-hover:text-black"}`}>
                       {option.label}
                     </span>
                     <div className={`w-5 h-5 flex items-center justify-center border transition-all ${
                       isSingle ? "rounded-full" : "rounded"
-                    } ${isSelected ? "border-[#5d54d1] bg-[#5d54d1]" : "border-gray-300"}`}>
+                    } ${isSelected ? "border-blue-800 bg-blue-800" : "border-gray-300"}`}>
                       {isSelected && <Check size={14} className="text-white" />}
                     </div>
                   </div>
@@ -177,7 +177,7 @@ const RefineBatchesModal = ({ isOpen, onClose, onApply, focusArea }: RefineBatch
 
         <div className="px-6 py-4 border-t border-gray-100 flex gap-4 bg-white">
           <Button variant="outline" className="flex-1 h-12 font-bold" onClick={() => setTempSelections({})}>Reset</Button>
-          <Button className="flex-1 bg-[#5d54d1] hover:bg-[#4a43b1] h-12 font-bold text-white" onClick={() => { onApply(tempSelections); onClose(); }}>
+          <Button className="flex-1 bg-blue-800 hover:bg-blue-900 h-12 font-bold text-white transition-colors" onClick={() => { onApply(tempSelections); onClose(); }}>
             Apply Filters
           </Button>
         </div>
