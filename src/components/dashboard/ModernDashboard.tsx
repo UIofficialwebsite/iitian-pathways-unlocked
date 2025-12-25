@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, ArrowLeft, X } from "lucide-react"; 
+import { Loader2, ArrowLeft } from "lucide-react"; 
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -131,8 +131,8 @@ const ModernDashboard: React.FC = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden">
-      {/* GLOBAL TOP NAV: Fixed at the very top */}
+    <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden font-sans">
+      {/* GLOBAL TOP NAV: Fixed at the very top (64px / h-16) */}
       <div className="z-[100] w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
@@ -143,7 +143,7 @@ const ModernDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* SIDEBAR: Remains perfectly still */}
+        {/* SIDEBAR: Remains fixed to the left */}
         <aside className="hidden lg:block w-[288px] border-r bg-white shrink-0">
           <div className="h-full">
             <DashboardSidebar
@@ -155,8 +155,8 @@ const ModernDashboard: React.FC = () => {
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA: Only this scrolls */}
-        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar">
+        {/* MAIN CONTENT AREA: Only this container scrolls */}
+        <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar scroll-smooth">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
@@ -186,21 +186,17 @@ const ModernDashboard: React.FC = () => {
                     {/* SLIDING DETAIL OVERLAY */}
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav */}
-                        <div className="sticky top-0 z-[100] bg-white border-b px-6 py-3 flex items-center justify-between shadow-sm shrink-0">
+                        {/* BACK HEADER: Sticks exactly below the Global TopNav (73px height to match RegularBatchesTab) */}
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-600 hover:text-orange-600 font-bold transition-colors"
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
                           >
                             <ArrowLeft className="w-5 h-5" />
                             Back to All Batches
                           </button>
-                          <X 
-                            className="w-6 h-6 text-gray-400 cursor-pointer hover:text-gray-600" 
-                            onClick={() => setSelectedCourseId(null)}
-                          />
                         </div>
-                        <div className="flex-1 overflow-y-auto">
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
                           <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
                         </div>
                       </div>
