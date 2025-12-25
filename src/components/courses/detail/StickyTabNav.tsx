@@ -17,11 +17,11 @@ interface StickyTabNavProps {
 const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashboardView }) => {
     const [activeTab, setActiveTab] = useState(tabs[0]?.id || '');
     
-    const mainNavBarHeight = 64; 
+    // Constants matching the heights in RegularBatchesTab
     const dashboardHeaderHeight = 73; 
+    const mainNavBarHeight = 64; 
     const stickyNavBarHeight = 57; 
 
-    // Calculation for active tab highlighting during scroll
     useEffect(() => {
         const handleScroll = () => {
             const currentHeader = isDashboardView ? dashboardHeaderHeight : mainNavBarHeight;
@@ -53,7 +53,7 @@ const StickyTabNav: React.FC<StickyTabNavProps> = ({ tabs, sectionRefs, isDashbo
     return (
         <nav className={cn(
             "bg-white border-b z-30 transition-all duration-300 w-full",
-            /* FIXED: Explicit top offsets. 73px matches the RegularBatchesTab header height. */
+            /* top-[73px] is the key to hanging exactly below the header */
             isDashboardView ? "sticky top-[73px] shadow-sm" : "sticky top-16 shadow-sm"
         )}>
             <div className="container mx-auto px-3 md:px-4">
