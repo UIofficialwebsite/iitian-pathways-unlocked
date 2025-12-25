@@ -52,8 +52,8 @@ const CourseCard: React.FC<{
               {discount > 0 && <span className="text-[#166534] font-bold text-[15px]">{discount}% OFF</span>}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black">Enroll</button>
-              <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center"><ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} /></button>
+              <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-[10px] font-bold text-[14px] hover:bg-black transition-colors">Enroll</button>
+              <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[10px] flex items-center justify-center hover:bg-gray-50 transition-colors"><ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} /></button>
             </div>
           </div>
         </div>
@@ -77,7 +77,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeQuickFilter, setActiveQuickFilter] = useState("All");
   
-  // Refine Modal State
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>({});
 
@@ -104,7 +103,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
-    // Cascading filters logic
+    // Filter by 'level' or 'branch' from modal selection
     const matchesLevel = !appliedFilters.level?.length || 
       appliedFilters.level.includes(b.level || "") || 
       appliedFilters.level.includes(b.branch || "");
@@ -145,7 +144,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               placeholder="Search..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="pl-9 h-10 md:h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none" 
+              className="pl-9 h-10 md:h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none" 
             />
           </div>
         </div>
