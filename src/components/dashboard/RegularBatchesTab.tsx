@@ -101,22 +101,24 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   };
 
   const filtered = batches.filter(b => {
-    // Search filter
     const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Quick Horizontal Filter (Level)
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
-    // Detailed Refine Filters matched with dynamic RefineBatchesModal keys
-    // Filter by 'level' or 'branch' from the Class/Branch selection
-    const matchesClassOrBranch = !appliedFilters.level?.length || 
+    // Cascading filters logic
+    const matchesLevel = !appliedFilters.level?.length || 
       appliedFilters.level.includes(b.level || "") || 
       appliedFilters.level.includes(b.branch || "");
 
-    const matchesSubject = !appliedFilters.subject?.length || appliedFilters.subject.includes(b.subject || "");
-    const matchesLanguage = !appliedFilters.language?.length || appliedFilters.language.includes(b.language || "");
+    const matchesSubject = !appliedFilters.subject?.length || 
+      appliedFilters.subject.includes(b.subject || "");
+    
+    const matchesLanguage = !appliedFilters.language?.length || 
+      appliedFilters.language.includes(b.language || "");
 
-    return matchesSearch && matchesQuickFilter && matchesClassOrBranch && matchesSubject && matchesLanguage;
+    const matchesExamCategory = !appliedFilters.exam_category?.length ||
+      appliedFilters.exam_category.includes(b.exam_category || "");
+
+    return matchesSearch && matchesQuickFilter && matchesLevel && matchesSubject && matchesLanguage && matchesExamCategory;
   });
 
   const paidBatches = filtered.filter(b => b.payment_type === 'paid');
@@ -124,7 +126,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* HEADER AREA */}
       <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -140,14 +141,17 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           </div>
           <div className="relative flex-1 max-w-[200px] md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
-            <Input placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9 h-10 md:h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none" />
+            <Input 
+              placeholder="Search..." 
+              value={searchQuery} 
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              className="pl-9 h-10 md:h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-orange-500 text-sm shadow-none" 
+            />
           </div>
         </div>
 
-        {/* FIXED FILTER BAR */}
         {!isViewingAllFree && (
           <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar items-center">
-            {/* Clickable Filter Trigger */}
             <div 
               onClick={() => setIsRefineModalOpen(true)}
               className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-500 whitespace-nowrap bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
@@ -217,7 +221,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         </div>
       </div>
 
-      {/* Passing focusArea to ensure modal filters are restricted */}
       <RefineBatchesModal 
         isOpen={isRefineModalOpen} 
         onClose={() => setIsRefineModalOpen(false)} 
