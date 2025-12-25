@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FilterOption {
   id: string;
@@ -15,64 +16,6 @@ interface FilterCategory {
   options: FilterOption[];
 }
 
-// Global filter categories including all goals
-const globalRefineCategories: FilterCategory[] = [
-  {
-    id: "goal",
-    name: "Exam Goal",
-    selectionType: "multiple",
-    options: [
-      { id: "jee", label: "JEE Main & Advanced" },
-      { id: "neet", label: "NEET" },
-      { id: "iitm", label: "IITM BS Degree" },
-      { id: "foundation", label: "Foundation (8th-10th)" },
-    ],
-  },
-  {
-    id: "status",
-    name: "Batch Status",
-    selectionType: "single",
-    options: [
-      { id: "ongoing", label: "Ongoing" },
-      { id: "upcoming", label: "Upcoming" },
-      { id: "completed", label: "Completed" },
-    ],
-  },
-  {
-    id: "class",
-    name: "Class",
-    selectionType: "multiple",
-    options: [
-      { id: "11", label: "Class 11th" },
-      { id: "12", label: "Class 12th" },
-      { id: "dropper", label: "Dropper" },
-    ],
-  },
-  {
-    id: "subjects",
-    name: "Subjects",
-    selectionType: "multiple",
-    options: [
-      { id: "physics", label: "Physics" },
-      { id: "chemistry", label: "Chemistry" },
-      { id: "maths", label: "Mathematics" },
-      { id: "biology", label: "Biology" },
-      { id: "stats", label: "Statistics (IITM)" },
-      { id: "python", label: "Python (IITM)" },
-    ],
-  },
-  {
-    id: "language",
-    name: "Language",
-    selectionType: "single",
-    options: [
-      { id: "hinglish", label: "Hinglish" },
-      { id: "english", label: "English" },
-      { id: "hindi", label: "Hindi" },
-    ],
-  },
-];
-
 interface RefineBatchesModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -80,100 +23,146 @@ interface RefineBatchesModalProps {
 }
 
 const RefineBatchesModal = ({ isOpen, onClose, onApply }: RefineBatchesModalProps) => {
-  const [activeTabId, setActiveTabId] = useState(globalRefineCategories[0].id);
+  const [activeTabId, setActiveTabId] = useState("goal");
   const [tempSelections, setTempSelections] = useState<Record<string, string[]>>({});
+  const [categories, setCategories] = useState<FilterCategory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const activeCategory = globalRefineCategories.find((cat) => cat.id === activeTabId);
+  useEffect(() => {
+    const fetchDynamicFilters = async () => {
+      setIsLoading(true);
+      // Fetch unique values from the courses table
+      const { data, error } = await supabase
+        .from('courses')
+        .select('exam_category, level, subject, language, batch_type');
+      
+      if (data && !error) {
+        // Extract unique options from the database results
+        const getUnique = (key: keyof typeof data[0]) => 
+          Array.from(new Set(data.map(item => item[key]).filter(Boolean))) as string[];
+
+        const dynamicCategories: FilterCategory[] = [
+          {
+            id: "goal",
+            name: "Exam Goal",
+            selectionType: "multiple", // Users can see JEE and NEET together
+            options: getUnique('exam_category').map(val => ({ id: val.toLowerCase(), label: val }))
+          },
+          {
+            id: "class",
+            name: "Class/Level",
+            selectionType: "multiple",
+            options: getUnique('level').map(val => ({ id: val, label: val }))
+          },
+          {
+            id: "subject",
+            name: "Subject",
+            selectionType: "multiple",
+            options: getUnique('subject').map(val => ({ id: val, label: val }))
+          },
+          {
+            id: "language",
+            name: "Language",
+            selectionType: "single", // Usually one language at a time
+            options: getUnique('language').map(val => ({ id: val.toLowerCase(), label: val }))
+          }
+        ];
+        
+        setCategories(dynamicCategories);
+        if (dynamicCategories.length > 0) setActiveTabId(dynamicCategories[0].id);
+      }
+      setIsLoading(false);
+    };
+
+    if (isOpen) fetchDynamicFilters();
+  }, [isOpen]);
 
   const handleToggleOption = (categoryId: string, optionId: string, type: "single" | "multiple") => {
     setTempSelections((prev) => {
-      const currentSelections = prev[categoryId] || [];
-      if (type === "single") {
-        return { ...prev, [categoryId]: [optionId] };
-      } else {
-        const isSelected = currentSelections.includes(optionId);
-        const updated = isSelected 
-          ? currentSelections.filter(id => id !== optionId) 
-          : [...currentSelections, optionId];
-        return { ...prev, [categoryId]: updated };
-      }
+      const current = prev[categoryId] || [];
+      if (type === "single") return { ...prev, [categoryId]: [optionId] };
+      const updated = current.includes(optionId) 
+        ? current.filter(id => id !== optionId) 
+        : [...current, optionId];
+      return { ...prev, [categoryId]: updated };
     });
   };
 
+  const activeCategory = categories.find((cat) => cat.id === activeTabId);
+
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      {/* Side="right" ensures it slides from the right; sm:max-w-md sets width */}
-      <SheetContent side="right" className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl">
+      {/* z-[200] ensures it sits above the Navbar */}
+      <SheetContent side="right" className="p-0 sm:max-w-[450px] border-none h-full flex flex-col gap-0 shadow-2xl z-[200]">
         <div className="flex justify-between items-center px-6 py-5 border-b border-gray-100 bg-white">
-          <SheetTitle className="text-xl font-bold text-gray-900">Refine Batches</SheetTitle>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-900">
+          <SheetTitle className="text-xl font-bold text-gray-900 tracking-tight">Refine Batches</SheetTitle>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-900 transition-colors">
             <X size={24} />
           </button>
         </div>
 
-        <div className="flex flex-1 overflow-hidden bg-white">
-          {/* Sidebar Navigation */}
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left Sidebar Nav */}
           <div className="w-[160px] bg-[#f8f9fa] border-r border-gray-100">
-            {globalRefineCategories.map((cat) => (
-              <div
-                key={cat.id}
-                onClick={() => setActiveTabId(cat.id)}
-                className={`px-5 py-4 text-[13px] cursor-pointer border-l-4 transition-all ${
-                  activeTabId === cat.id
-                    ? "bg-[#f1f1f1] text-gray-900 border-[#5d54d1] font-bold"
-                    : "text-gray-500 border-transparent hover:bg-gray-200"
-                }`}
-              >
-                {cat.name}
+            {isLoading ? (
+              <div className="p-5 space-y-4">
+                {[1, 2, 3, 4].map(i => <div key={i} className="h-4 bg-gray-200 rounded animate-pulse" />)}
               </div>
-            ))}
+            ) : (
+              categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  onClick={() => setActiveTabId(cat.id)}
+                  className={`px-5 py-4 text-[13px] cursor-pointer border-l-4 transition-all ${
+                    activeTabId === cat.id 
+                      ? "bg-[#f1f1f1] text-gray-900 border-[#5d54d1] font-bold" 
+                      : "text-gray-500 border-transparent hover:bg-gray-200"
+                  }`}
+                >
+                  {cat.name}
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Content Area */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            <h3 className="text-xs uppercase font-bold text-gray-400 mb-4 tracking-wider">
-              Select {activeCategory?.name}
-            </h3>
-            {activeCategory?.options.map((option) => {
-              const isSelected = tempSelections[activeCategory.id]?.includes(option.id);
-              const isSingle = activeCategory.selectionType === "single";
+          {/* Right Content Options */}
+          <div className="flex-1 p-6 overflow-y-auto bg-white">
+            {isLoading ? (
+              <div className="space-y-6">
+                {[1, 2, 3].map(i => <div key={i} className="h-10 bg-gray-50 rounded" />)}
+              </div>
+            ) : (
+              activeCategory?.options.map((option) => {
+                const isSelected = tempSelections[activeCategory.id]?.includes(option.id);
+                const isSingle = activeCategory.selectionType === "single";
 
-              return (
-                <div
-                  key={option.id}
-                  onClick={() => handleToggleOption(activeCategory.id, option.id, activeCategory.selectionType)}
-                  className="flex justify-between items-center py-4 border-b border-gray-50 cursor-pointer"
-                >
-                  <span className={`text-[15px] ${isSelected ? "text-[#5d54d1] font-bold" : "text-gray-700"}`}>
-                    {option.label}
-                  </span>
-
-                  {isSingle ? (
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                      isSelected ? "border-[#5d54d1] bg-[#5d54d1]" : "border-gray-300"
-                    }`}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
+                return (
+                  <div
+                    key={option.id}
+                    onClick={() => handleToggleOption(activeCategory.id, option.id, activeCategory.selectionType)}
+                    className="flex justify-between items-center py-4 border-b border-gray-50 cursor-pointer group"
+                  >
+                    <span className={`text-[15px] transition-colors ${isSelected ? "text-[#5d54d1] font-bold" : "text-gray-700 group-hover:text-black"}`}>
+                      {option.label}
+                    </span>
+                    <div className={`w-5 h-5 flex items-center justify-center border transition-all ${
+                      isSingle ? "rounded-full" : "rounded"
+                    } ${isSelected ? "border-[#5d54d1] bg-[#5d54d1]" : "border-gray-300"}`}>
+                      {isSelected && (isSingle ? <div className="w-2 h-2 rounded-full bg-white" /> : <Check size={14} className="text-white" />)}
                     </div>
-                  ) : (
-                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${
-                      isSelected ? "border-[#5d54d1] bg-[#5d54d1]" : "border-gray-300"
-                    }`}>
-                      {isSelected && <Check size={14} className="text-white" />}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-4 bg-white">
-          <Button variant="outline" className="flex-1 h-12 font-bold border-gray-300" onClick={() => setTempSelections({})}>
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-4 bg-white z-10">
+          <Button variant="outline" className="flex-1 h-12 font-bold text-gray-600" onClick={() => setTempSelections({})}>
             Reset
           </Button>
-          <Button className="flex-1 bg-[#9499a6] hover:bg-[#828896] h-12 font-bold" onClick={() => { onApply(tempSelections); onClose(); }}>
-            Apply
+          <Button className="flex-1 bg-[#9499a6] hover:bg-[#838895] h-12 font-bold text-white" onClick={() => { onApply(tempSelections); onClose(); }}>
+            Apply Filters
           </Button>
         </div>
       </SheetContent>
