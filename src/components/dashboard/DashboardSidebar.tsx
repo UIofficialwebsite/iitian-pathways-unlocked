@@ -22,7 +22,15 @@ import {
 import FocusAreaModal from './FocusAreaModal';
 import { cn } from "@/lib/utils";
 
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'coming_soon';
+// Comprehensive view types used across the dashboard
+export type ActiveView = 
+  | 'dashboard' 
+  | 'profile' 
+  | 'enrollments' 
+  | 'studyPortal' 
+  | 'library' 
+  | 'regularBatches' 
+  | 'coming_soon';
 
 interface UserProfile {
   id: string;
@@ -39,7 +47,7 @@ interface DashboardSidebarProps {
   onProfileUpdate: (updatedProfile: UserProfile) => void; 
   onViewChange: (view: ActiveView) => void;
   activeView: ActiveView;
-  isCollapsed?: boolean; // Intelligence: Prop to control the "minimize" behavior
+  isCollapsed?: boolean; // Prop to handle the "minimize" feature
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
@@ -47,16 +55,22 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onProfileUpdate, 
   onViewChange,
   activeView,
-  isCollapsed = false // Default to false if not provided
+  isCollapsed = false 
 }) => {
   const navigate = useNavigate();
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
 
+  /**
+   * Intelligence: Displays student focus details (e.g., IITM Branch or Exam Class)
+   * Hides completely when sidebar is collapsed to maximize UI space.
+   */
   const getProfileDisplay = () => {
-    if (isCollapsed) return null; // Hide profile text in collapsed mode
+    if (isCollapsed) return null;
+    
     if (!profile || !profile.program_type) {
       return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
     }
+    
     if (profile.program_type === 'IITM_BS') {
       const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : '??';
       return (
@@ -66,6 +80,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
+    
     if (profile.program_type === 'COMPETITIVE_EXAM') {
       return (
         <div className="text-left overflow-hidden">
@@ -74,12 +89,13 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
+    
     return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
   };
 
   /**
-   * Universal Sidebar Item that handles both SidebarButton and PlaceholderButton logic
-   * and adds Tooltips for collapsed mode.
+   * Helper component for Sidebar Items.
+   * Includes Tooltip logic that only activates when the sidebar is minimized.
    */
   const SidebarItem = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => {
     const isActive = activeView === viewName;
@@ -122,9 +138,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         <div className="flex-1 overflow-y-auto py-6 no-scrollbar">
           <div className={cn("px-4 space-y-8", isCollapsed && "px-2")}>
             
-            {/* My Focus Area Section */}
+            {/* Target Area (Focus) */}
             <div className="space-y-2">
-              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Target</h4>}
+              {!isCollapsed && (
+                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Focus Area</h4>
+              )}
               <Button
                 variant="ghost"
                 onClick={() => setIsFocusModalOpen(true)}
@@ -137,40 +155,52 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   <Target className="h-5 w-5 text-blue-600 shrink-0" />
                   {getProfileDisplay()}
                 </div>
-                {!isCollapsed && <ChevronRight className="h-4 w-4 text-gray-300 group-hover:animate-bounce-horizontal" />}
+                {!isCollapsed && <ChevronRight className="h-4 w-4 text-gray-300 group-hover:translate-x-1 transition-transform" />}
               </Button>
             </div>
             
-            {/* Categories matching your requested layout */}
+            {/* Learn Digitally Category */}
             <div className="space-y-1">
-              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Learn Digitally</h4>}
+              {!isCollapsed && (
+                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Learn Digitally</h4>
+              )}
               <SidebarItem icon={BookOpen} label="Study Portal" viewName="studyPortal" />
               <SidebarItem icon={Library} label="Digital Library" viewName="library" />
             </div>
 
+            {/* Academic Programs Category */}
             <div className="space-y-1">
-              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Academic Programs</h4>}
+              {!isCollapsed && (
+                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Academic Hub</h4>
+              )}
               <SidebarItem icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
               <SidebarItem icon={FastForward} label="FastTrack Batches" viewName="coming_soon" />
             </div>
 
+            {/* Explore Category */}
             <div className="space-y-1">
-              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Explore</h4>}
+              {!isCollapsed && (
+                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Explore</h4>
+              )}
               <SidebarItem icon={Briefcase} label="Work @UI" viewName="coming_soon" />
               <SidebarItem icon={Users} label="Career Consult" viewName="coming_soon" />
               <SidebarItem icon={BookOpen} label="Upskilling" viewName="coming_soon" />
             </div>
 
+            {/* More Category */}
             <div className="space-y-1">
-              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">More</h4>}
+              {!isCollapsed && (
+                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">More</h4>
+              )}
               <SidebarItem icon={Phone} label="Contact Us" viewName="coming_soon" />
-              <SidebarItem icon={Info} label="About Us" viewName="coming_soon" />
+              <SidebarItem icon={Info} label="About UI" viewName="coming_soon" />
               <SidebarItem icon={Shield} label="Privacy Policy" viewName="coming_soon" />
             </div>
+
           </div>
         </div>
 
-        {/* Exit Dashboard */}
+        {/* Exit Logic */}
         <div className="p-4 border-t border-gray-100">
           <Button 
             variant="ghost" 
