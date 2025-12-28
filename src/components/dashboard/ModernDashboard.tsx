@@ -17,6 +17,7 @@ import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
 import RegularBatchesTab from "./RegularBatchesTab";
+import FastTrackBatchesTab from "./FastTrackBatchesTab"; // New Import
 import CourseDetail from "@/pages/CourseDetail";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -132,7 +133,7 @@ const ModernDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden font-sans">
-      {/* GLOBAL TOP NAV: Fixed at the very top (64px / h-16) */}
+      {/* GLOBAL TOP NAV */}
       <div className="z-[100] w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
@@ -143,7 +144,7 @@ const ModernDashboard: React.FC = () => {
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* SIDEBAR: Remains fixed to the left */}
+        {/* SIDEBAR */}
         <aside className="hidden lg:block w-[288px] border-r bg-white shrink-0">
           <div className="h-full">
             <DashboardSidebar
@@ -155,7 +156,7 @@ const ModernDashboard: React.FC = () => {
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA: Only this container scrolls */}
+        {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar scroll-smooth">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
@@ -179,7 +180,6 @@ const ModernDashboard: React.FC = () => {
                       </ContentWrapper>
                     ) : (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav */}
                         <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
@@ -199,17 +199,13 @@ const ModernDashboard: React.FC = () => {
 
                 {activeView === 'regularBatches' && (
                   <div className="flex-1 relative h-full">
-                    {/* FIXED HEADER BATCH LIST */}
                     <RegularBatchesTab 
                       focusArea={profile?.program_type || 'General'} 
                       onSelectCourse={setSelectedCourseId}
                     />
 
-                    {/* SLIDING DETAIL OVERLAY */}
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav. 
-                            Standardized height of 73px to match RegularBatchesTab header. */}
                         <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
                           <button 
                             onClick={() => setSelectedCourseId(null)}
@@ -217,6 +213,33 @@ const ModernDashboard: React.FC = () => {
                           >
                             <ArrowLeft className="w-5 h-5" />
                             Back to All Batches
+                          </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* FASTRACK BATCHES VIEW */}
+                {activeView === 'fastTrackBatches' && (
+                  <div className="flex-1 relative h-full">
+                    <FastTrackBatchesTab 
+                      focusArea={profile?.program_type || 'General'} 
+                      onSelectCourse={setSelectedCourseId}
+                    />
+
+                    {selectedCourseId && (
+                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
+                          <button 
+                            onClick={() => setSelectedCourseId(null)}
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
+                          >
+                            <ArrowLeft className="w-5 h-5" />
+                            Back to Fastrack Batches
                           </button>
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
