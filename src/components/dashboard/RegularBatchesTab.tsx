@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, ArrowLeft, Menu } from "lucide-react";
+import { Search, ChevronRight, BookOpen, ArrowLeft } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -137,7 +137,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            {isMobile && <Menu className="w-6 h-6 text-gray-700" />}
             {isViewingAllFree && (
               <button onClick={() => setIsViewingAllFree(false)} className="mr-1 p-1 hover:bg-gray-100 rounded-full">
                 <ArrowLeft className="w-5 h-5" />
