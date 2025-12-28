@@ -22,15 +22,7 @@ import {
 import FocusAreaModal from './FocusAreaModal';
 import { cn } from "@/lib/utils";
 
-// Comprehensive view types for navigation
-export type ActiveView = 
-  | 'dashboard' 
-  | 'profile' 
-  | 'enrollments' 
-  | 'studyPortal' 
-  | 'library' 
-  | 'regularBatches' 
-  | 'coming_soon';
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'coming_soon';
 
 interface UserProfile {
   id: string;
@@ -47,7 +39,7 @@ interface DashboardSidebarProps {
   onProfileUpdate: (updatedProfile: UserProfile) => void; 
   onViewChange: (view: ActiveView) => void;
   activeView: ActiveView;
-  isCollapsed?: boolean; // Intelligence: State to control layout density
+  isCollapsed?: boolean; // Intelligence: Prop to control the "minimize" behavior
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
@@ -55,22 +47,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   onProfileUpdate, 
   onViewChange,
   activeView,
-  isCollapsed = false
+  isCollapsed = false // Default to false if not provided
 }) => {
   const navigate = useNavigate();
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
 
-  /**
-   * Generates profile display text based on selected focus area.
-   * Cleans up display for collapsed mode.
-   */
   const getProfileDisplay = () => {
-    if (isCollapsed) return null;
-    
+    if (isCollapsed) return null; // Hide profile text in collapsed mode
     if (!profile || !profile.program_type) {
       return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
     }
-    
     if (profile.program_type === 'IITM_BS') {
       const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : '??';
       return (
@@ -80,7 +66,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
-    
     if (profile.program_type === 'COMPETITIVE_EXAM') {
       return (
         <div className="text-left overflow-hidden">
@@ -89,12 +74,12 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         </div>
       );
     }
-    
     return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
   };
 
   /**
-   * Reusable Sidebar Button with Tooltip support for collapsed mode.
+   * Universal Sidebar Item that handles both SidebarButton and PlaceholderButton logic
+   * and adds Tooltips for collapsed mode.
    */
   const SidebarItem = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => {
     const isActive = activeView === viewName;
@@ -119,7 +104,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             </Button>
           </TooltipTrigger>
           {isCollapsed && (
-            <TooltipContent side="right" className="bg-gray-900 text-white border-none font-bold text-xs py-2 px-3">
+            <TooltipContent side="right" className="bg-gray-900 text-white border-none font-bold text-xs py-2 px-3 shadow-xl">
               {label}
             </TooltipContent>
           )}
@@ -131,22 +116,20 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   return (
     <>
       <nav className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out",
+        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out sticky top-0",
         isCollapsed ? "w-20" : "w-72"
       )}>
         <div className="flex-1 overflow-y-auto py-6 no-scrollbar">
           <div className={cn("px-4 space-y-8", isCollapsed && "px-2")}>
             
-            {/* Target Area (Focus) */}
+            {/* My Focus Area Section */}
             <div className="space-y-2">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Focus Area</h4>
-              )}
+              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Target</h4>}
               <Button
                 variant="ghost"
                 onClick={() => setIsFocusModalOpen(true)}
                 className={cn(
-                  "w-full flex items-center h-auto py-3 px-3 border border-gray-100 rounded-xl hover:border-gray-300 transition-colors bg-gray-50/50",
+                  "w-full flex items-center h-auto py-3 px-3 border border-gray-100 rounded-xl hover:border-gray-300 transition-colors bg-gray-50/50 group",
                   isCollapsed ? "justify-center" : "justify-between"
                 )}
               >
@@ -154,45 +137,40 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                   <Target className="h-5 w-5 text-blue-600 shrink-0" />
                   {getProfileDisplay()}
                 </div>
-                {!isCollapsed && <ChevronRight className="h-4 w-4 text-gray-300" />}
+                {!isCollapsed && <ChevronRight className="h-4 w-4 text-gray-300 group-hover:animate-bounce-horizontal" />}
               </Button>
             </div>
             
-            {/* Academic Content */}
+            {/* Categories matching your requested layout */}
             <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2">Academic Programs</h4>
-              )}
-              <SidebarItem icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
-              <SidebarItem icon={FastForward} label="FastTrack Batches" viewName="coming_soon" />
+              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Learn Digitally</h4>}
               <SidebarItem icon={BookOpen} label="Study Portal" viewName="studyPortal" />
               <SidebarItem icon={Library} label="Digital Library" viewName="library" />
             </div>
 
-            {/* Career & Growth */}
             <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2">Explore</h4>
-              )}
+              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Academic Programs</h4>}
+              <SidebarItem icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
+              <SidebarItem icon={FastForward} label="FastTrack Batches" viewName="coming_soon" />
+            </div>
+
+            <div className="space-y-1">
+              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Explore</h4>}
               <SidebarItem icon={Briefcase} label="Work @UI" viewName="coming_soon" />
               <SidebarItem icon={Users} label="Career Consult" viewName="coming_soon" />
               <SidebarItem icon={BookOpen} label="Upskilling" viewName="coming_soon" />
             </div>
 
-            {/* Support Section */}
             <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2">Support</h4>
-              )}
+              {!isCollapsed && <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">More</h4>}
               <SidebarItem icon={Phone} label="Contact Us" viewName="coming_soon" />
-              <SidebarItem icon={Info} label="About UI" viewName="coming_soon" />
+              <SidebarItem icon={Info} label="About Us" viewName="coming_soon" />
               <SidebarItem icon={Shield} label="Privacy Policy" viewName="coming_soon" />
             </div>
-
           </div>
         </div>
 
-        {/* Exit Logic */}
+        {/* Exit Dashboard */}
         <div className="p-4 border-t border-gray-100">
           <Button 
             variant="ghost" 
