@@ -22,11 +22,12 @@ const CourseCard: React.FC<{
     : 0;
 
   return (
-    <div className="w-full bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
-      {/* Image Logic: 'object-contain' ensures the image is never cropped or zoomed. 
-          The background gray-50 fills any gaps if the aspect ratio differs.
+    /* Reduced corner roundness from 20px to xl (12px) */
+    <div className="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
+      {/* Removed padding (p-2) to prevent the "separated frame" look.
+          Kept 'object-contain' so the image is never zoomed or cropped.
       */}
-      <div className="w-full h-[210px] bg-gray-50 flex items-center justify-center overflow-hidden p-2">
+      <div className="w-full h-[210px] bg-gray-50 flex items-center justify-center overflow-hidden">
         <img 
           src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
           alt={course.title} 
@@ -36,37 +37,38 @@ const CourseCard: React.FC<{
       
       <div className="p-5 flex flex-col flex-1">
         <div className="flex justify-between items-center mb-[10px]">
-          <span className="text-[#f97316] font-bold text-base uppercase tracking-tight">{course.level || 'Academic'}</span>
-          <span className="border border-[#ccc] px-2 py-0.5 rounded-[5px] text-[11px] font-semibold text-[#555] uppercase">{course.language || 'Hinglish'}</span>
+          <span className="text-[#f97316] font-bold text-xs uppercase tracking-tight">{course.level || 'Academic'}</span>
+          <span className="border border-[#ccc] px-2 py-0.5 rounded-[4px] text-[10px] font-semibold text-[#555] uppercase">{course.language || 'Hinglish'}</span>
         </div>
         
-        <h2 className="text-[20px] font-bold text-[#1f2937] mb-[15px] line-clamp-2 leading-tight h-[50px]">{course.title}</h2>
+        <h2 className="text-[18px] font-bold text-[#1f2937] mb-[12px] line-clamp-2 leading-tight h-[44px]">{course.title}</h2>
         
-        <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
-            <BookOpen className="w-[18px] h-[18px] text-[#666]" />
+        <div className="space-y-1.5 mb-4">
+          <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
+            <BookOpen className="w-[16px] h-[16px] text-[#666]" />
             {course.subject || 'Foundation'}
           </div>
-          <div className="flex items-center gap-2.5 text-[#4b5563] text-[15px]">
-            <span className="w-2 h-2 bg-[#dc2626] rounded-full"></span>
+          <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
+            <span className="w-1.5 h-1.5 bg-[#dc2626] rounded-full"></span>
             <span className="font-bold">Ongoing</span> 
             <span className="text-[#d1d5db] mx-1">|</span> 
-            Starts: {course.start_date ? new Date(course.start_date).toLocaleDateString('en-GB') : "TBD"}
+            {course.start_date ? new Date(course.start_date).toLocaleDateString('en-GB') : "TBD"}
           </div>
         </div>
         
-        <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
+        <div className="flex justify-between items-center mt-auto pt-[12px] border-t border-gray-100">
           <div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[22px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
-              {course.discounted_price && <span className="text-[14px] text-[#9ca3af] line-through">₹{course.price}</span>}
+              <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
+              {course.discounted_price && <span className="text-[13px] text-[#9ca3af] line-through">₹{course.price}</span>}
             </div>
-            {discount > 0 && <span className="text-[#166534] font-bold text-[15px]">{discount}% OFF</span>}
+            {discount > 0 && <span className="text-[#166534] font-bold text-[13px]">{discount}% OFF</span>}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-[12px] font-bold text-[14px] hover:bg-black transition-colors">Enroll</button>
-            <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-10 h-10 rounded-[12px] flex items-center justify-center hover:bg-gray-50 transition-colors">
-              <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
+            {/* Reduced button roundness to match card */}
+            <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-1.5 px-4 rounded-lg font-bold text-[13px] hover:bg-black transition-colors">Enroll</button>
+            <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
+              <ChevronRight className="w-4 h-4 text-[#1f2937]" strokeWidth={2.5} />
             </button>
           </div>
         </div>
@@ -122,8 +124,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* Sticky Header with integrated Mobile Menu logic */}
-      <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
+      <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             {isMobile && <Menu className="w-6 h-6 text-gray-700 cursor-pointer" />}
@@ -132,7 +133,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <h1 className="text-[20px] md:text-[24px] font-bold tracking-tight text-[#1a1a1a]">
+            <h1 className="text-[18px] md:text-[22px] font-bold tracking-tight text-[#1a1a1a]">
               {isViewingAllFree ? "Free Batches" : "Batches"}
             </h1>
           </div>
@@ -142,7 +143,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               placeholder="Search courses..." 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 text-sm shadow-none w-full" 
+              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-500 text-sm shadow-none w-full" 
             />
           </div>
         </div>
@@ -151,14 +152,14 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           <div className="flex gap-2.5 pb-4 overflow-x-auto no-scrollbar items-center">
             <div 
               onClick={() => setIsRefineModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[13px] font-bold text-gray-600 whitespace-nowrap bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 border border-gray-200 rounded-full text-[12px] font-bold text-gray-600 whitespace-nowrap bg-white shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
             >
               Filter <SlidersIcon className="w-4 h-4" />
             </div>
             
             <button
               onClick={() => setActiveQuickFilter("All")}
-              className={`px-5 py-2 border rounded-full text-[13px] font-bold transition-all whitespace-nowrap ${activeQuickFilter === "All" ? 'bg-[#1f2937] text-white border-[#1f2937]' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+              className={`px-4 py-2 border rounded-full text-[12px] font-bold transition-all whitespace-nowrap ${activeQuickFilter === "All" ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
             >
               All Batches
             </button>
@@ -166,7 +167,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               <button
                 key={lvl}
                 onClick={() => setActiveQuickFilter(lvl!)}
-                className={`px-5 py-2 border rounded-full text-[13px] font-bold transition-all whitespace-nowrap ${activeQuickFilter === lvl ? 'bg-[#1f2937] text-white border-[#1f2937]' : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'}`}
+                className={`px-4 py-2 border rounded-full text-[12px] font-bold transition-all whitespace-nowrap ${activeQuickFilter === lvl ? 'bg-black text-white border-black' : 'bg-white text-gray-500 border-gray-200'}`}
               >
                 {lvl}
               </button>
@@ -175,26 +176,20 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
         )}
       </div>
 
-      <div onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-8 py-6 no-scrollbar">
+      <div onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-6 no-scrollbar">
         <div className="max-w-[1400px] mx-auto">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1, 2, 3].map(i => <div key={i} className="h-[400px] bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)}
+              {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-50 rounded-xl animate-pulse" />)}
             </div>
           ) : (
             <>
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-14">
-                  <h2 className="text-[22px] font-bold tracking-tight text-[#111] uppercase mb-8 hidden md:block">
-                    Available Regular Batches
+                  <h2 className="text-[20px] font-bold tracking-tight text-[#111] uppercase mb-8 hidden md:block">
+                    Popular Batches
                   </h2>
-                  {/* Fluid Grid Structure:
-                      - grid-cols-[repeat(auto-fill,minmax(320px,1fr))]: 
-                        This automatically calculates how many cards fit. 
-                        If only one fits, it takes 100% width.
-                        If two fit, they share 50% each, etc.
-                  */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 w-full">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
@@ -215,8 +210,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               )}
 
               {filtered.length === 0 && (
-                <div className="text-center py-24 bg-gray-50/50 rounded-3xl border border-dashed border-gray-200 w-full">
-                  <p className="text-gray-400 text-lg font-medium">We couldn't find any batches matching those filters.</p>
+                <div className="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200 w-full">
+                  <p className="text-gray-400 text-lg font-medium">No results found.</p>
                 </div>
               )}
             </>
