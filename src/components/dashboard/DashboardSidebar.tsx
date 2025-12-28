@@ -13,24 +13,10 @@ import {
   FastForward,
   Home,
   ChevronRight,
-  Target,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger 
+  Target 
 } from 'lucide-react';
 import FocusAreaModal from './FocusAreaModal';
 import { cn } from "@/lib/utils";
-
-// Comprehensive view types used across the dashboard
-export type ActiveView = 
-  | 'dashboard' 
-  | 'profile' 
-  | 'enrollments' 
-  | 'studyPortal' 
-  | 'library' 
-  | 'regularBatches' 
-  | 'coming_soon';
 
 interface UserProfile {
   id: string;
@@ -42,176 +28,149 @@ interface UserProfile {
   [key: string]: any;
 }
 
+// Added 'regularBatches' to the ActiveView type
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'coming_soon';
+
 interface DashboardSidebarProps {
   profile: UserProfile | null;
   onProfileUpdate: (updatedProfile: UserProfile) => void; 
   onViewChange: (view: ActiveView) => void;
   activeView: ActiveView;
-  isCollapsed?: boolean; // Prop to handle the "minimize" feature
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
   profile, 
   onProfileUpdate, 
   onViewChange,
-  activeView,
-  isCollapsed = false 
+  activeView 
 }) => {
   const navigate = useNavigate();
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
 
-  /**
-   * Intelligence: Displays student focus details (e.g., IITM Branch or Exam Class)
-   * Hides completely when sidebar is collapsed to maximize UI space.
-   */
   const getProfileDisplay = () => {
-    if (isCollapsed) return null;
-    
     if (!profile || !profile.program_type) {
-      return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
+      return <span className="text-gray-500">Set your focus area</span>;
     }
-    
     if (profile.program_type === 'IITM_BS') {
-      const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : '??';
+      const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch?';
+      const level = profile.level || 'Level?';
       return (
-        <div className="text-left overflow-hidden">
-          <p className="font-bold text-gray-800 text-[13px] leading-tight truncate">{branch} ({profile.level || '?'})</p>
-          <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">IITM BS Degree</p>
+        <div className="text-left">
+          <p className="font-semibold text-gray-800">{branch} ({level})</p>
+          <p className="text-xs text-gray-500">IITM BS Degree</p>
         </div>
       );
     }
-    
     if (profile.program_type === 'COMPETITIVE_EXAM') {
+      const exam = profile.exam_type || 'Exam?';
+      const status = profile.student_status || 'Class?';
       return (
-        <div className="text-left overflow-hidden">
-          <p className="font-bold text-gray-800 text-[13px] leading-tight truncate">{profile.student_status || 'Class'} - {profile.exam_type || 'Exam'}</p>
-          <p className="text-[10px] text-gray-400 font-black uppercase tracking-tighter">Competitive Exam</p>
+        <div className="text-left">
+          <p className="font-semibold text-gray-800">{status} - {exam}</p>
+          <p className="text-xs text-gray-500">Competitive Exam</p>
         </div>
       );
     }
-    
-    return <span className="text-gray-500 text-xs font-bold">Set Focus Area</span>;
+    return <span className="text-gray-500">Set your focus area</span>;
   };
 
-  /**
-   * Helper component for Sidebar Items.
-   * Includes Tooltip logic that only activates when the sidebar is minimized.
-   */
-  const SidebarItem = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => {
-    const isActive = activeView === viewName;
-    
-    return (
-      <TooltipProvider delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              variant="ghost" 
-              onClick={() => onViewChange(viewName)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 transition-all rounded-xl border border-transparent",
-                isCollapsed ? "justify-center" : "justify-start",
-                isActive 
-                  ? "bg-gray-900 text-white shadow-md" 
-                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-              )}
-            >
-              <Icon className={cn("h-5 w-5 shrink-0", isActive ? "text-white" : "text-gray-400")} />
-              {!isCollapsed && <span className="text-[14px] font-bold tracking-tight">{label}</span>}
-            </Button>
-          </TooltipTrigger>
-          {isCollapsed && (
-            <TooltipContent side="right" className="bg-gray-900 text-white border-none font-bold text-xs py-2 px-3 shadow-xl">
-              {label}
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
-    );
-  };
+  const SidebarButton = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => (
+    <Button 
+      variant="ghost" 
+      onClick={() => onViewChange(viewName)}
+      className={cn(
+        "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+        activeView === viewName 
+          ? "bg-teal-50 text-teal-700 border border-teal-100"
+          : "text-gray-700 hover:bg-gray-100 border border-transparent"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Button>
+  );
+
+  const PlaceholderButton = ({ icon: Icon, label }: { icon: any, label: string }) => (
+    <Button 
+      variant="ghost" 
+      onClick={() => onViewChange('coming_soon')}
+      className={cn(
+        "w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors",
+        "text-gray-700 hover:bg-gray-100 border border-transparent"
+      )}
+    >
+      <Icon className="h-4 w-4" />
+      {label}
+    </Button>
+  );
 
   return (
     <>
-      <nav className={cn(
-        "flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300 ease-in-out sticky top-0",
-        isCollapsed ? "w-20" : "w-72"
-      )}>
-        <div className="flex-1 overflow-y-auto py-6 no-scrollbar">
-          <div className={cn("px-4 space-y-8", isCollapsed && "px-2")}>
+      <nav className="flex flex-col h-screen sticky top-0 bg-white border-r border-gray-200">
+        <div className="flex-1 overflow-y-auto py-4">
+          <div className="px-4 space-y-4">
             
-            {/* Target Area (Focus) */}
-            <div className="space-y-2">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">Focus Area</h4>
-              )}
+            <div className="px-2 py-2">
+              <h4 className="px-0 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">My Focus Area</h4>
               <Button
                 variant="ghost"
                 onClick={() => setIsFocusModalOpen(true)}
-                className={cn(
-                  "w-full flex items-center h-auto py-3 px-3 border border-gray-100 rounded-xl hover:border-gray-300 transition-colors bg-gray-50/50 group",
-                  isCollapsed ? "justify-center" : "justify-between"
-                )}
+                className="w-full justify-between items-center h-auto py-3 px-3 group hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-lg"
               >
-                <div className="flex items-center gap-3 overflow-hidden">
-                  <Target className="h-5 w-5 text-blue-600 shrink-0" />
+                <div className="flex items-center gap-3">
+                  <Target className="h-5 w-5 text-blue-600" />
                   {getProfileDisplay()}
                 </div>
-                {!isCollapsed && <ChevronRight className="h-4 w-4 text-gray-300 group-hover:translate-x-1 transition-transform" />}
+                <ChevronRight className="h-5 w-5 text-gray-400 group-hover:animate-bounce-horizontal" />
               </Button>
             </div>
             
-            {/* Learn Digitally Category */}
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Learn Digitally</h4>
-              )}
-              <SidebarItem icon={BookOpen} label="Study Portal" viewName="studyPortal" />
-              <SidebarItem icon={Library} label="Digital Library" viewName="library" />
+            <div>
+              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
+              <div className="mt-2 space-y-1">
+                <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
+                <SidebarButton icon={Library} label="Digital Library" viewName="library" />
+              </div>
             </div>
 
-            {/* Academic Programs Category */}
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Academic Hub</h4>
-              )}
-              <SidebarItem icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
-              <SidebarItem icon={FastForward} label="FastTrack Batches" viewName="coming_soon" />
+            <div>
+              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
+              <div className="mt-2 space-y-1">
+                {/* Changed from Placeholder to SidebarButton */}
+                <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
+                <PlaceholderButton icon={FastForward} label="FastTrack Batches" />
+              </div>
             </div>
 
-            {/* Explore Category */}
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Explore</h4>
-              )}
-              <SidebarItem icon={Briefcase} label="Work @UI" viewName="coming_soon" />
-              <SidebarItem icon={Users} label="Career Consult" viewName="coming_soon" />
-              <SidebarItem icon={BookOpen} label="Upskilling" viewName="coming_soon" />
+            <div>
+              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Explore</h4>
+              <div className="mt-2 space-y-1">
+                <PlaceholderButton icon={Briefcase} label="Work @UI" />
+                <PlaceholderButton icon={Users} label="Career Consult" />
+                <PlaceholderButton icon={BookOpen} label="Upskilling" />
+              </div>
             </div>
 
-            {/* More Category */}
-            <div className="space-y-1">
-              {!isCollapsed && (
-                <h4 className="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">More</h4>
-              )}
-              <SidebarItem icon={Phone} label="Contact Us" viewName="coming_soon" />
-              <SidebarItem icon={Info} label="About UI" viewName="coming_soon" />
-              <SidebarItem icon={Shield} label="Privacy Policy" viewName="coming_soon" />
+            <div>
+              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</h4>
+              <div className="mt-2 space-y-1">
+                <PlaceholderButton icon={Phone} label="Contact Us" />
+                <PlaceholderButton icon={Info} label="About Us" />
+                <PlaceholderButton icon={Shield} label="Privacy Policy" />
+              </div>
             </div>
 
           </div>
         </div>
 
-        {/* Exit Logic */}
-        <div className="p-4 border-t border-gray-100">
+        <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
           <Button 
             variant="ghost" 
             onClick={() => navigate('/')}
-            className={cn(
-              "w-full text-gray-600 font-bold text-sm rounded-xl hover:bg-red-50 hover:text-red-600 transition-colors",
-              isCollapsed ? "justify-center" : "justify-start px-3"
-            )}
+            className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
           >
-            <Home className="h-5 w-5 shrink-0" />
-            {!isCollapsed && <span className="ml-3">Exit Dashboard</span>}
+            <Home className="h-4 w-4 mr-2" />
+            Home
           </Button>
         </div>
       </nav>
