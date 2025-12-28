@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, Menu, ArrowLeft } from "lucide-react";
+import { Search, ChevronRight, BookOpen, Menu, ArrowLeft } from "lucide-react"; 
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -22,8 +22,9 @@ const CourseCard: React.FC<{
     : 0;
 
   return (
-    <div className="w-full max-w-[360px] mx-auto bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
-      {/* Image container with fixed height and no hover effects/click events */}
+    /* Removed max-w-[360px] and mx-auto to allow the card to fill its grid cell width completely */
+    <div className="w-full bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
+      {/* Image container: no hover effects, no click events, consistent height */}
       <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
         <img 
           src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
@@ -129,7 +130,6 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
   return (
     <div className="flex flex-col h-full bg-white"> 
-      {/* Header section with sticky behavior */}
       <div className={`sticky top-0 z-30 bg-white transition-all duration-300 px-4 md:px-6 lg:px-8 shrink-0 flex flex-col ${isScrolled ? 'border-b border-[#e0e0e0] shadow-sm' : 'border-b-transparent shadow-none'}`}>
         <div className="h-[73px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -185,8 +185,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       <div onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 no-scrollbar">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            /* Skeleton matches the grid layout */
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
               {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />)}
             </div>
           ) : (
@@ -196,8 +195,13 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                   <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10 hidden md:block">
                     POPULAR COURSES
                   </h2>
-                  {/* Grid: 1 column for mobile/tablet, exactly 3 columns for PC (lg screens) */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 justify-items-center">
+                  {/* Intelligent Grid: 
+                      - Default: 1 column (Mobile)
+                      - sm (640px+): 2 columns (Tablets)
+                      - lg (1024px+): Exactly 3 columns (PC/Desktop)
+                      Cards fill the entire width of their cell, leaving no side spaces.
+                  */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
@@ -207,7 +211,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
               {freeBatches.length > 0 && (
                 isViewingAllFree ? (
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 w-full">
                     {freeBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
@@ -218,7 +222,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
               )}
 
               {filtered.length === 0 && (
-                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 w-full">
                   <p className="text-gray-400 text-lg font-medium">No batches found matching your criteria.</p>
                 </div>
               )}
