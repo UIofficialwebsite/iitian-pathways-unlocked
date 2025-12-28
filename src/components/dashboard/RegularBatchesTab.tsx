@@ -22,13 +22,7 @@ const CourseCard: React.FC<{
     : 0;
 
   return (
-    /* UI Fix: Reduced corner rounding (rounded-xl) and removed fixed max-width for fluid expansion */
     <div className="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
-      {/* Intelligence: 
-          - Used 'aspect-video' (16:9) to maintain banner proportions.
-          - Used 'object-cover' to ensure NO WHITE BARS above or below.
-          - Removed click events and hover overlays as requested.
-      */}
       <div className="w-full aspect-video overflow-hidden bg-gray-100">
         <img 
           src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
@@ -103,14 +97,38 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
+  // Intelligence: Extract unique fields for dynamic placeholders
   const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
+  const availableSubjects = Array.from(new Set(batches.filter(b => b.subject).map(b => b.subject)));
+
+  // Placeholder logic to show existing levels, subjects, or titles
+  const getDynamicPlaceholder = () => {
+    if (loading || batches.length === 0) return "Search batches...";
+    
+    const examples: string[] = [];
+    if (availableLevels[0]) examples.push(availableLevels[0]);
+    if (availableSubjects[0]) examples.push(availableSubjects[0]);
+    if (focusArea) examples.push(focusArea);
+    if (batches[0]?.title) examples.push(batches[0].title.split(' ')[0]);
+    
+    // Limits examples to first 3 matches for a clean UI
+    return `Search "${examples.slice(0, 3).join('", "')}"...`;
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 10);
   };
 
   const filtered = batches.filter(b => {
-    const matchesSearch = b.title.toLowerCase().includes(searchQuery.toLowerCase());
+    // Comprehensive Search: Matches title, level, subject, exam category, or branch
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = 
+      b.title.toLowerCase().includes(searchLower) ||
+      (b.level?.toLowerCase().includes(searchLower) || false) ||
+      (b.subject?.toLowerCase().includes(searchLower) || false) ||
+      (b.exam_category?.toLowerCase().includes(searchLower) || false) ||
+      (b.branch?.toLowerCase().includes(searchLower) || false);
+
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
     const matchesLevel = !appliedFilters.level?.length || 
@@ -149,7 +167,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           <div className="relative flex-1 max-w-[250px] md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder="Search..." 
+              placeholder={getDynamicPlaceholder()} 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
               className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none" 
