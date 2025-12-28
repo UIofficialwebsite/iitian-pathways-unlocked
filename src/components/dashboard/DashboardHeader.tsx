@@ -2,8 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal';
+import { ActiveView } from './DashboardSidebar';
 
 interface DashboardHeaderProps {
   activeView: ActiveView;
@@ -17,6 +16,9 @@ const viewNames: Record<ActiveView, string> = {
   studyPortal: 'Study Portal',
   profile: 'My Profile',
   enrollments: 'My Enrollments',
+  library: 'Digital Library',
+  regularBatches: 'Regular Batches',
+  coming_soon: 'Coming Soon',
 };
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
@@ -38,14 +40,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({
           <Button 
             variant="ghost" 
             size="icon" 
-            onClick={() => onViewChange('studyPortal')} // Always go back to the main portal
+            onClick={() => onViewChange('studyPortal')}
             className="h-9 w-9"
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
         <h1 className="text-xl font-bold text-gray-900 tracking-tight sm:text-2xl">
-          {viewNames[activeView]}
+          {viewNames[activeView] || 'Dashboard'}
         </h1>
       </div>
     </header>
