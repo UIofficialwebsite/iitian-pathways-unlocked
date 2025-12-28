@@ -84,8 +84,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>({});
 
-  // Animation State for Placeholder
-  const [currentPlaceholder, setCurrentPlaceholder] = useState("Search batches...");
+  // Animation State
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   useEffect(() => {
@@ -101,30 +100,35 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
-  // Extract keywords for the animation
+  // "Unorganised" Keyword Logic: Interleaving Levels, Subjects, and Titles
   const searchKeywords = useMemo(() => {
     const levels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level as string)));
     const subjects = Array.from(new Set(batches.filter(b => b.subject).map(b => b.subject as string)));
-    const titles = batches.slice(0, 3).map(b => b.title.split(' ')[0]);
-    
-    const combined = [...levels, ...subjects, focusArea, ...titles].filter(Boolean);
-    return combined.length > 0 ? combined : ["batches", "subjects", "levels"];
+    const titles = batches.slice(0, 5).map(b => b.title.split(' ')[0]);
+    const categories = focusArea ? [focusArea] : [];
+
+    const result: string[] = [];
+    const maxLen = Math.max(levels.length, subjects.length, titles.length, categories.length);
+
+    // Interleave so it doesn't show all levels at once
+    for (let i = 0; i < maxLen; i++) {
+      if (levels[i]) result.push(levels[i]);
+      if (subjects[i]) result.push(subjects[i]);
+      if (titles[i]) result.push(titles[i]);
+      if (categories[i]) result.push(categories[i]);
+    }
+
+    return result.length > 0 ? result : ["Physics", "Chemistry", "Foundation", "JEE", "NEET"];
   }, [batches, focusArea]);
 
-  // Placeholder Animation Logic
+  // Interval for placeholder rotation
   useEffect(() => {
     if (searchKeywords.length === 0) return;
-
     const interval = setInterval(() => {
       setPlaceholderIndex((prev) => (prev + 1) % searchKeywords.length);
-    }, 2500); // Change every 2.5 seconds
-
+    }, 2500);
     return () => clearInterval(interval);
   }, [searchKeywords]);
-
-  useEffect(() => {
-    setCurrentPlaceholder(`Search ${searchKeywords[placeholderIndex]}`);
-  }, [placeholderIndex, searchKeywords]);
 
   const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
 
@@ -178,10 +182,11 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           <div className="relative flex-1 max-w-[250px] md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder={currentPlaceholder} 
+              // Animated placeholder without quotes
+              placeholder={`Search ${searchKeywords[placeholderIndex]}`} 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none transition-all duration-500 placeholder:transition-opacity placeholder:duration-500" 
+              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none placeholder:transition-all placeholder:duration-500" 
             />
           </div>
         </div>
