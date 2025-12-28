@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
 import { Search, ChevronRight, BookOpen, ArrowLeft } from "lucide-react";
@@ -84,6 +84,10 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>({});
 
+  // Animation State for Placeholder
+  const [currentPlaceholder, setCurrentPlaceholder] = useState("Search batches...");
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
   useEffect(() => {
     const fetchCourses = async () => {
       setLoading(true);
@@ -97,37 +101,44 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
     fetchCourses();
   }, [focusArea]);
 
-  // Intelligence: Extract unique fields for dynamic placeholders
-  const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
-  const availableSubjects = Array.from(new Set(batches.filter(b => b.subject).map(b => b.subject)));
+  // Extract keywords for the animation
+  const searchKeywords = useMemo(() => {
+    const levels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level as string)));
+    const subjects = Array.from(new Set(batches.filter(b => b.subject).map(b => b.subject as string)));
+    const titles = batches.slice(0, 3).map(b => b.title.split(' ')[0]);
+    
+    const combined = [...levels, ...subjects, focusArea, ...titles].filter(Boolean);
+    return combined.length > 0 ? combined : ["batches", "subjects", "levels"];
+  }, [batches, focusArea]);
 
-  // Placeholder logic to show existing levels, subjects, or titles
-  const getDynamicPlaceholder = () => {
-    if (loading || batches.length === 0) return "Search batches...";
-    
-    const examples: string[] = [];
-    if (availableLevels[0]) examples.push(availableLevels[0]);
-    if (availableSubjects[0]) examples.push(availableSubjects[0]);
-    if (focusArea) examples.push(focusArea);
-    if (batches[0]?.title) examples.push(batches[0].title.split(' ')[0]);
-    
-    // Limits examples to first 3 matches for a clean UI
-    return `Search "${examples.slice(0, 3).join('", "')}"...`;
-  };
+  // Placeholder Animation Logic
+  useEffect(() => {
+    if (searchKeywords.length === 0) return;
+
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prev) => (prev + 1) % searchKeywords.length);
+    }, 2500); // Change every 2.5 seconds
+
+    return () => clearInterval(interval);
+  }, [searchKeywords]);
+
+  useEffect(() => {
+    setCurrentPlaceholder(`Search ${searchKeywords[placeholderIndex]}`);
+  }, [placeholderIndex, searchKeywords]);
+
+  const availableLevels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level)));
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     setIsScrolled(e.currentTarget.scrollTop > 10);
   };
 
   const filtered = batches.filter(b => {
-    // Comprehensive Search: Matches title, level, subject, exam category, or branch
     const searchLower = searchQuery.toLowerCase();
     const matchesSearch = 
       b.title.toLowerCase().includes(searchLower) ||
       (b.level?.toLowerCase().includes(searchLower) || false) ||
       (b.subject?.toLowerCase().includes(searchLower) || false) ||
-      (b.exam_category?.toLowerCase().includes(searchLower) || false) ||
-      (b.branch?.toLowerCase().includes(searchLower) || false);
+      (b.exam_category?.toLowerCase().includes(searchLower) || false);
 
     const matchesQuickFilter = activeQuickFilter === "All" || b.level === activeQuickFilter;
     
@@ -167,10 +178,10 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
           <div className="relative flex-1 max-w-[250px] md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              placeholder={getDynamicPlaceholder()} 
+              placeholder={currentPlaceholder} 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
-              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none" 
+              className="pl-9 h-11 bg-gray-50 border-gray-200 rounded-xl focus:ring-1 focus:ring-blue-800 text-sm shadow-none transition-all duration-500 placeholder:transition-opacity placeholder:duration-500" 
             />
           </div>
         </div>
