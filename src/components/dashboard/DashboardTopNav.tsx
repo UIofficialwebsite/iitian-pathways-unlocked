@@ -8,14 +8,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+} from "@/components/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
+import { ChevronDown, User, LogOut, LayoutGrid, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
-import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
+import { ActiveView } from "./DashboardSidebar";
 
-// Define profile type locally or import if available globally
 interface UserProfile {
   program_type: string | null;
   branch?: string | null;
@@ -31,11 +29,20 @@ interface UserProfile {
 interface DashboardTopNavProps {
   profile: UserProfile | null;
   onViewChange: (view: ActiveView) => void;
-  activeView: ActiveView; // Added to support highlighting in mobile sidebar
+  activeView: ActiveView;
   onProfileUpdate: (updatedProfile: any) => void;
+  isSidebarCollapsed?: boolean;
+  setSidebarCollapsed?: (collapsed: boolean) => void;
 }
 
-const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }: DashboardTopNavProps) => {
+const DashboardTopNav = ({ 
+  profile, 
+  onViewChange, 
+  activeView, 
+  onProfileUpdate,
+  isSidebarCollapsed,
+  setSidebarCollapsed 
+}: DashboardTopNavProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -50,76 +57,74 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
 
   return (
     <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200">
-      <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
+      <div className="flex items-center justify-between h-full px-4 md:px-6">
         
-        {/* Left: Mobile Menu & Logo */}
-        <div className="flex items-center gap-2">
-          {/* Mobile Hamburger Menu */}
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
-                <DashboardSidebar 
-                  profile={profile as any} 
-                  onProfileUpdate={onProfileUpdate} 
-                  onViewChange={onViewChange}
-                  activeView={activeView} // Pass activeView to mobile sidebar
-                />
-              </div>
-            </SheetContent>
-          </Sheet>
+        {/* Left Section: Logo & Layout Controls */}
+        <div className="flex items-center gap-4">
+          {/* Intelligence: Removed the 'three horizontal lines' (Menu icon) and mobile Sheet trigger. 
+              Kept only the Sidebar toggle for desktop/tablet space management. */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSidebarCollapsed?.(!isSidebarCollapsed)}
+            className="hidden lg:flex h-9 w-9 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+            title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          >
+            {isSidebarCollapsed ? <PanelLeft className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
+          </Button>
 
-          {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+          {/* Brand Logo */}
+          <Link to="/" className="flex items-center gap-2.5 group">
             <img
-              className="h-8 w-auto"
+              className="h-8 w-auto transition-transform duration-300 group-hover:scale-105"
               src="/lovable-uploads/logo_ui_new.png"
               alt="UI Logo"
             />
-            <span className="font-sans text-lg font-semibold text-black hidden sm:block">
+            <span className="font-sans text-lg font-bold text-gray-900 hidden sm:block tracking-tight">
               Unknown IITians
             </span>
           </Link>
         </div>
 
-        {/* Right: User Menu */}
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-gray-700 hidden sm:block">
-            Hi, {userName}
-          </span>
+        {/* Right Section: User Profile & Actions */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end mr-2 text-right">
+            <span className="text-sm font-bold text-gray-900 leading-none">
+              {userName}
+            </span>
+            <span className="text-[11px] text-gray-500 font-medium">
+              Student Dashboard
+            </span>
+          </div>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none">
-                <Avatar className="h-8 w-8">
+              <button className="flex items-center gap-2 rounded-xl p-1 hover:bg-gray-50 transition-all border border-transparent hover:border-gray-200 outline-none">
+                <Avatar className="h-9 w-9 border-2 border-white shadow-sm">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
-                  <AvatarFallback>{userInitial}</AvatarFallback>
+                  <AvatarFallback className="bg-blue-600 text-white font-bold">{userInitial}</AvatarFallback>
                 </Avatar>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <p className="text-sm font-medium truncate">{userName}</p>
-                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+            <DropdownMenuContent align="end" className="w-60 rounded-xl p-1.5 shadow-xl border-gray-200 bg-white">
+              <DropdownMenuLabel className="px-3 py-2">
+                <p className="text-sm font-bold text-gray-900 truncate">{userName}</p>
+                <p className="text-xs text-gray-500 truncate font-medium">{userEmail}</p>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onViewChange('profile')} className="cursor-pointer">
-                <User className="h-4 w-4 mr-2" />
+              <DropdownMenuSeparator className="my-1 bg-gray-100" />
+              <DropdownMenuItem onClick={() => onViewChange('profile')} className="rounded-lg cursor-pointer py-2 font-medium">
+                <User className="h-4 w-4 mr-3 text-gray-500" />
                 My Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onViewChange('enrollments')} className="cursor-pointer">
-                <LayoutGrid className="h-4 w-4 mr-2" />
+              <DropdownMenuItem onClick={() => onViewChange('enrollments')} className="rounded-lg cursor-pointer py-2 font-medium">
+                <LayoutGrid className="h-4 w-4 mr-3 text-gray-500" />
                 My Enrollments
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              <DropdownMenuSeparator className="my-1 bg-gray-100" />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 rounded-lg cursor-pointer py-2 font-bold hover:bg-red-50">
+                <LogOut className="h-4 w-4 mr-3" />
+                Logout Account
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
