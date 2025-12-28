@@ -11,7 +11,6 @@ import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
 
-// Import the views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
@@ -29,14 +28,9 @@ interface ContentItem {
 }
 
 const DashboardLoader = () => (
-  <div className="flex flex-col items-center justify-center h-[70vh] w-full font-sans animate-in fade-in zoom-in-95 duration-300">
+  <div className="flex flex-col items-center justify-center h-[70vh] w-full animate-in fade-in duration-300">
     <BouncingDots className="bg-royal w-3 h-3" />
-    <h3 className="mt-6 text-xl font-bold text-gray-900 text-center tracking-tight px-4">
-      Hang tight, we are preparing the best contents for you
-    </h3>
-    <p className="mt-2 text-base text-gray-500 font-medium text-center">
-      Just wait and love the moment
-    </p>
+    <h3 className="mt-6 text-xl font-bold text-gray-900 tracking-tight">Preparing your dashboard...</h3>
   </div>
 );
 
@@ -45,15 +39,12 @@ const ModernDashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Intelligence: Control layout space
   
-  // View State
   const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
-  
-  // Floating Detail State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   
-  // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -87,14 +78,13 @@ const ModernDashboard: React.FC = () => {
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
-        toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
       } finally {
         setLoadingProfile(false);
       }
     };
 
     fetchProfile();
-  }, [user, authLoading, navigate, location, toast]);
+  }, [user, authLoading, navigate, location]);
 
   const handleFocusSave = (updatedProfile: Profile) => {
     setProfile(updatedProfile);
@@ -111,7 +101,7 @@ const ModernDashboard: React.FC = () => {
     setIsViewLoading(true);
     setSelectedCourseId(null);
     setActiveView(view);
-    setTimeout(() => setIsViewLoading(false), 800);
+    setTimeout(() => setIsViewLoading(false), 500);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -132,44 +122,43 @@ const ModernDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden font-sans">
-      {/* GLOBAL TOP NAV: Fixed at the very top (64px / h-16) */}
-      <div className="z-[100] w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
+      <div className="z-[100] w-full bg-white border-b border-gray-200 shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
           profile={profile}
           onProfileUpdate={handleProfileUpdate}
           activeView={activeView}
+          isSidebarCollapsed={isSidebarCollapsed}
+          setSidebarCollapsed={setIsSidebarCollapsed} // Passed for manual intelligence
         />
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* SIDEBAR: Remains fixed to the left */}
-        <aside className="hidden lg:block w-[288px] border-r bg-white shrink-0">
+        {/* Dynamic Sidebar Width based on collapse state */}
+        <aside className={`hidden lg:block border-r bg-white shrink-0 transition-all duration-300 ${isSidebarCollapsed ? 'w-20' : 'w-[288px]'}`}>
           <div className="h-full">
             <DashboardSidebar
               profile={profile}
               onProfileUpdate={handleProfileUpdate}
               onViewChange={handleViewChange} 
               activeView={activeView}
+              isCollapsed={isSidebarCollapsed}
             />
           </div>
         </aside>
 
-        {/* MAIN CONTENT AREA: Only this container scrolls */}
         <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar scroll-smooth">
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+              <div className="animate-in fade-in duration-500 h-full flex flex-col">
                 {activeView === 'studyPortal' && (
                   <ContentWrapper>
                     <StudyPortal profile={profile} onViewChange={handleViewChange} />
                   </ContentWrapper>
                 )}
                 
-                {activeView === 'profile' && (
-                  <ContentWrapper><MyProfile /></ContentWrapper>
-                )}
+                {activeView === 'profile' && <ContentWrapper><MyProfile /></ContentWrapper>}
 
                 {activeView === 'enrollments' && (
                   <div className="flex-1 relative h-full">
@@ -179,17 +168,13 @@ const ModernDashboard: React.FC = () => {
                       </ContentWrapper>
                     ) : (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav */}
                         <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
-                          <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
-                          >
+                          <button onClick={() => setSelectedCourseId(null)} className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors">
                             <ArrowLeft className="w-5 h-5" />
                             Back to My Enrollments
                           </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto">
                           <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
                         </div>
                       </div>
@@ -199,27 +184,20 @@ const ModernDashboard: React.FC = () => {
 
                 {activeView === 'regularBatches' && (
                   <div className="flex-1 relative h-full">
-                    {/* FIXED HEADER BATCH LIST */}
                     <RegularBatchesTab 
                       focusArea={profile?.program_type || 'General'} 
                       onSelectCourse={setSelectedCourseId}
                     />
 
-                    {/* SLIDING DETAIL OVERLAY */}
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* BACK HEADER: Sticks exactly below the Global TopNav. 
-                            Standardized height of 73px to match RegularBatchesTab header. */}
                         <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
-                          <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
-                          >
+                          <button onClick={() => setSelectedCourseId(null)} className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors">
                             <ArrowLeft className="w-5 h-5" />
                             Back to All Batches
                           </button>
                         </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div className="flex-1 overflow-y-auto">
                           <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
                         </div>
                       </div>
