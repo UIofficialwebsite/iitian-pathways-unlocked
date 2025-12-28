@@ -24,7 +24,7 @@ const CourseCard: React.FC<{
 
   return (
     <>
-      <div className="w-full max-w-[360px] mx-auto bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300">
+      <div className="w-full bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300">
         <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
           <div className="w-full h-[200px] bg-gray-50 flex items-center justify-center overflow-hidden">
             <img src={course.image_url || "/lovable-uploads/logo_ui_new.png"} alt={course.title} className="w-full h-full object-cover" />
@@ -180,8 +180,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       <div onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 no-scrollbar">
         <div className="max-w-7xl mx-auto">
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-4">
-              {[1, 2, 3].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />)}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 pt-4">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-80 bg-gray-100 rounded-2xl animate-pulse" />)}
             </div>
           ) : (
             <>
@@ -190,7 +190,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
                   <h2 className="text-[28px] font-semibold tracking-wide text-[#111] uppercase font-poppins mb-10 hidden md:block">
                     POPULAR COURSES
                   </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
                     {paidBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
@@ -200,7 +200,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
 
               {freeBatches.length > 0 && (
                 isViewingAllFree ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-12 justify-items-center">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 pb-12">
                     {freeBatches.map(batch => (
                       <CourseCard key={batch.id} course={batch} onSelect={onSelectCourse} />
                     ))}
