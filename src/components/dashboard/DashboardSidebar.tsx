@@ -28,8 +28,8 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// Added 'regularBatches' to the ActiveView type
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'coming_soon';
+// Ensure 'fastTrackBatches' is included in the ActiveView type
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'coming_soon';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
@@ -136,9 +136,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
               <div className="mt-2 space-y-1">
-                {/* Changed from Placeholder to SidebarButton */}
                 <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
-                <PlaceholderButton icon={FastForward} label="FastTrack Batches" />
+                {/* Changed from PlaceholderButton to SidebarButton */}
+                <SidebarButton icon={FastForward} label="FastTrack Batches" viewName="fastTrackBatches" />
               </div>
             </div>
 
