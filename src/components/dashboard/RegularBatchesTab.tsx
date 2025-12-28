@@ -195,7 +195,7 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
             <>
               {!isViewingAllFree && paidBatches.length > 0 && (
                 <div className="mb-14">
-                  <h2 className="text-[20px] font-semibold tracking-tight text-[#111] uppercase mb-8 hidden md:block">
+                  <h2 className="text-[24px] font-semibold tracking-tight text-[#111] uppercase mb-8 hidden md:block">
                     Popular Batches
                   </h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full">
