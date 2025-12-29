@@ -101,7 +101,8 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Updated max-width for consistency in loading state */}
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8"><Skeleton className="h-64 w-full" /></div>
@@ -116,7 +117,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="max-w-7xl mx-auto px-4 text-center">
+        <div className="max-w-[1440px] mx-auto px-4 text-center">
           <Alert variant="destructive" className="max-w-lg mx-auto">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to Load Course</AlertTitle>
@@ -149,9 +150,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Spatial Reference: Centered Premium Header Container */}
+        {/* Updated max-width to [1440px] for header */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
               <div className="max-w-4xl">
                 {!isDashboardView && (
@@ -181,12 +182,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Spatial Reference: Main 7xl Centered Container for 2-column wireframe */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        {/* Updated max-width to [1440px] for the content grid */}
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
-            {/* Left Column: Course Details Section (8/12 width) */}
-            <div className="lg:col-span-8 space-y-8">
+            {/* Left Column: Course Details Section (Reduced to 7/12 width) */}
+            <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
               </div>
@@ -216,8 +217,8 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column: Sticky Card (4/12 width) */}
-            <aside className="lg:col-span-4">
+            {/* Right Column: Enrollment Card (Increased to 5/12 width) */}
+            <aside className="lg:col-span-5">
               <div className="lg:sticky top-24 z-20">
                 <EnrollmentCard course={course} />
               </div>
