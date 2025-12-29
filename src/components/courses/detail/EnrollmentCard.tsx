@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
@@ -26,7 +26,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, className, isDa
         return new Date(dateString).toLocaleDateString('en-GB', options);
     };
 
-    // Correctly identifies the scroll container to trigger animations in Dashboard view
+    // restored scroll-spy behavior for expansion
     useEffect(() => {
         const scrollContainer = isDashboardView 
             ? document.querySelector('.overflow-y-auto.custom-scrollbar') 
@@ -37,6 +37,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, className, isDa
                 ? (scrollContainer as HTMLElement).scrollTop 
                 : window.scrollY;
 
+            // restored: Details expand animatedly after scrolling 100px
             if (scrollTop > 100) {
                 setDetailsVisible(true);
             } else {
@@ -69,8 +70,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, className, isDa
 
     return (
         <div className={cn(
-            "lg:sticky z-30 transition-all duration-300",
-            isDashboardView ? "top-20" : "top-32",
+            "lg:sticky z-30 transition-all duration-300", 
+            isDashboardView ? "top-20" : "top-32", // correctly fixed position
             className
         )}>
             <div className="rounded-xl bg-gradient-to-b from-slate-200 to-transparent p-0.5 shadow-xl">
@@ -83,29 +84,49 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, className, isDa
                         />
                     </CardHeader>
                     <CardContent className="p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-baseline">
-                                <span className="text-3xl font-bold text-slate-900">₹{course.discounted_price || course.price}</span>
-                                {course.discounted_price && (
-                                    <span className="text-slate-500 line-through ml-2 font-normal">₹{course.price}</span>
-                                )}
-                            </div>
-                            {course.discounted_price && (
-                                <div className="bg-green-500 text-white font-bold text-xs px-2 py-1 rounded">
-                                    {discountPercentage}% OFF
-                                </div>
-                            )}
+                        
+                        {/* restored behavior: initially only buttons are shown */}
+                        <div className="flex gap-2 mb-2">
+                            <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
+                                <Button size="lg" className="w-full text-base bg-royal hover:bg-royal-dark text-white font-bold">
+                                    Enroll Now
+                                </Button>
+                            </a>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="aspect-square p-0 border-slate-200"
+                                onClick={handleShare}
+                            >
+                                {copied ? <Check className="h-5 w-5 text-green-600" /> : <Share2 className="h-5 w-5 text-slate-600" />}
+                            </Button>
                         </div>
 
-                        {/* Details Animation: maxHeight increased to 600px to ensure nothing is hidden */}
+                        {/* restored behavior: Price and details animate in on scroll */}
                         <div
-                            className="transition-all ease-in-out duration-700 overflow-hidden"
+                            className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '600px' : '0',
+                                maxHeight: detailsVisible ? '600px' : '0', // increased to prevent cut-off
                                 opacity: detailsVisible ? 1 : 0,
                             }}
                         >
-                            <div className="space-y-4 pt-2 pb-4">
+                            <Separator className="my-4" />
+                            
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-baseline">
+                                    <span className="text-3xl font-bold text-slate-900">₹{course.discounted_price || course.price}</span>
+                                    {course.discounted_price && (
+                                        <span className="text-slate-500 line-through ml-2 font-normal">₹{course.price}</span>
+                                    )}
+                                </div>
+                                {course.discounted_price && (
+                                    <div className="bg-green-500 text-white font-bold text-xs px-2 py-1 rounded">
+                                        {discountPercentage}% OFF
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-4 pt-2 pb-2">
                                 <div className="flex items-start text-slate-700">
                                     <MapPin className="w-5 h-5 mr-3 text-slate-400 flex-shrink-0 mt-0.5" />
                                     <span className="text-sm font-medium">{course.branch} — {course.level}</span>
@@ -124,23 +145,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, className, isDa
                             </div>
                         </div>
 
-                        <Separator className="my-4" />
-
-                        <div className="flex gap-2">
-                            <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                <Button size="lg" className="w-full text-base bg-royal hover:bg-royal-dark text-white font-bold">
-                                    Enroll Now
-                                </Button>
-                            </a>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="aspect-square p-0 border-slate-200"
-                                onClick={handleShare}
-                            >
-                                {copied ? <Check className="h-5 w-5 text-green-600" /> : <Share2 className="h-5 w-5 text-slate-600" />}
-                            </Button>
-                        </div>
                     </CardContent>
                 </Card>
             </div>
