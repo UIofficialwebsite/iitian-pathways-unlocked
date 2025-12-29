@@ -31,12 +31,14 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
 
   if (scheduleData.length === 0) {
     return (
-      <section id="schedule" className="py-12 scroll-mt-24">
-        <h2 className="text-3xl font-bold mb-8">Schedule</h2>
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Schedule information will be available soon.</p>
+      <section id="schedule" className="scroll-mt-24">
+        <Card className="border border-border/60 shadow-sm">
+          <CardContent className="p-5 md:p-6 lg:p-8">
+            <h2 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">Schedule</h2>
+            <div className="text-center py-8 text-muted-foreground">
+              <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>Schedule information will be available soon.</p>
+            </div>
           </CardContent>
         </Card>
       </section>
@@ -44,44 +46,40 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
   }
 
   return (
-    <section id="schedule" className="py-12 scroll-mt-24">
-      <h2 className="text-3xl font-bold mb-8">Schedule</h2>
-      
-      <div className="space-y-6">
-        {Object.entries(groupedSchedule).map(([batchName, items]) => (
-          <Card key={batchName}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" />
-                {batchName}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {items.map((item) => (
-                  <div 
-                    key={item.id}
-                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold">{item.subject_name}</p>
-                    </div>
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleDownload(item.file_link, item.subject_name)}
-                      className="ml-4"
+    <section id="schedule" className="scroll-mt-24">
+      <Card className="border border-border/60 shadow-sm">
+        <CardContent className="p-5 md:p-6 lg:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">Schedule</h2>
+          <div className="space-y-5">
+            {Object.entries(groupedSchedule).map(([batchName, items]) => (
+              <div key={batchName} className="rounded-lg border border-border/40 overflow-hidden">
+                <div className="flex items-center gap-2 px-4 py-3 bg-muted/50 border-b border-border/40">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <span className="font-semibold text-sm md:text-base">{batchName}</span>
+                </div>
+                <div className="divide-y divide-border/30">
+                  {items.map((item) => (
+                    <div 
+                      key={item.id}
+                      className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
                     >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
-                  </div>
-                ))}
+                      <p className="font-medium text-sm md:text-base">{item.subject_name}</p>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleDownload(item.file_link, item.subject_name)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 };
