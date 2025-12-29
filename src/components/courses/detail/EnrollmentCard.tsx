@@ -16,23 +16,22 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
-    // Calculates the discount percentage
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
 
     useEffect(() => {
-        // Find the correct scroll container (Dashboard internal scroll vs Main website window)
+        // Automatically find the closest scrollable container for the dashboard
         const scrollContainer = isDashboardView 
-            ? document.querySelector('.overflow-y-auto.custom-scrollbar') 
+            ? cardRef.current?.closest('.overflow-y-auto') || window 
             : window;
 
         const handleScroll = () => {
-            const currentScroll = isDashboardView && scrollContainer instanceof HTMLElement
+            const currentScroll = scrollContainer instanceof HTMLElement
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            // Details section animates out after 80px scroll
+            // Trigger details reveal after 80px scroll
             if (currentScroll > 80) {
                 setDetailsVisible(true);
             } else {
@@ -40,16 +39,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
             }
         };
 
-        if (scrollContainer) {
-            scrollContainer.addEventListener('scroll', handleScroll);
-            handleScroll(); // Check immediately on mount
-        }
+        scrollContainer.addEventListener('scroll', handleScroll);
+        handleScroll(); // Check immediately on mount
 
-        return () => {
-            if (scrollContainer) {
-                scrollContainer.removeEventListener('scroll', handleScroll);
-            }
-        };
+        return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }, [isDashboardView]);
 
     const formatDate = (dateString: string) => {
@@ -62,11 +55,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
         const courseUrl = window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({
-                    title: course.title,
-                    text: `Check out this course: ${course.title}`,
-                    url: courseUrl,
-                });
+                await navigator.share({ title: course.title, url: courseUrl });
             } else {
                 await navigator.clipboard.writeText(courseUrl);
                 setCopied(true);
@@ -103,7 +92,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                             )}
                         </div>
 
-                        {/* Animated details section that expands on scroll */}
+                        {/* Reveals details on scroll */}
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
@@ -119,8 +108,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                 <div className="flex items-center text-gray-700">
                                     <Calendar className="w-5 h-5 mr-3 text-gray-500" />
                                     <div className="flex flex-col">
-                                        <span className="font-normal">Starts on: {formatDate(course.start_date)}</span>
-                                        <span className="font-normal text-slate-500">Ends on: {formatDate(course.end_date)}</span>
+                                        <span className="font-normal">Starts: {formatDate(course.start_date)}</span>
+                                        <span className="font-normal text-slate-400">Ends: {formatDate(course.end_date)}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center text-gray-700">
@@ -136,12 +125,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                             <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
                                 <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                             </a>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="aspect-square p-0"
-                                onClick={handleShare}
-                            >
+                            <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                             </Button>
                         </div>
