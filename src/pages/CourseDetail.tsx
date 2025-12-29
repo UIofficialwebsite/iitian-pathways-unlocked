@@ -101,6 +101,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
+        {/* Width increased to match updated layout */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <div className="grid lg:grid-cols-3 gap-8">
@@ -149,7 +150,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Container increased to max-w-[1440px] to allow more card width */}
+        {/* Header Section: Width increased to max-w-[1440px] */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -181,11 +182,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Updated grid from 8/4 to 7/5 for more horizontal space for the card */}
+        {/* Main Layout Container: Width increased to max-w-[1440px] */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+          {/* Grid Layout updated from 8/4 to 7/5 for a wider Sidebar/Enrollment Card */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
-            {/* Left Column: Details (7/12) */}
+            {/* Left Column: Course Details Section (7/12 width) */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
@@ -216,10 +218,17 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column: Enrollment Card (5/12) */}
+            {/* Right Column: Sticky Enrollment Card (5/12 width) */}
             <aside className="lg:col-span-5 relative">
-              <div className="lg:sticky top-28 z-20">
-                <EnrollmentCard course={course} />
+              {/* Sticky container ensures the card stays fixed during scroll */}
+              <div className={cn(
+                "sticky z-20 transition-all duration-300",
+                isDashboardView ? "top-4" : "top-28"
+              )}>
+                <EnrollmentCard 
+                  course={course} 
+                  isDashboardView={isDashboardView} 
+                />
               </div>
             </aside>
           </div>
