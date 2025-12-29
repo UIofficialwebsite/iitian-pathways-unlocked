@@ -149,7 +149,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Header Container: Updated to max-w-[1440px] */}
+        {/* Container increased to max-w-[1440px] to allow more card width */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -181,11 +181,11 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Main Content Grid: Updated to max-w-[1440px] */}
+        {/* Updated grid from 8/4 to 7/5 for more horizontal space for the card */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* Left Column (Course Details): Reduced to 7/12 to increase card width */}
+            {/* Left Column: Details (7/12) */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
@@ -216,10 +216,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column (Fixed Enrollment Card): Increased to 5/12 width */}
-            <aside className="lg:col-span-5">
-              {/* Added z-index and top offset to ensure it sits fixed below the Tab Nav */}
-              <div className="sticky top-32 z-20">
+            {/* Right Column: Enrollment Card (5/12) */}
+            <aside className="lg:col-span-5 relative">
+              <div className="lg:sticky top-28 z-20">
                 <EnrollmentCard course={course} />
               </div>
             </aside>
