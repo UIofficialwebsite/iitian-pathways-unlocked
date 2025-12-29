@@ -37,50 +37,54 @@ const SSPPortalSection: React.FC = () => {
   ];
 
   return (
-    <section id="ssp" className="py-12 scroll-mt-24 bg-gradient-to-br from-primary/5 to-primary/10 -mx-4 px-4 rounded-2xl">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">Student Success Portal (SSP)</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Your all-in-one learning companion with exclusive features designed to accelerate your success
-        </p>
-      </div>
-      
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {portalFeatures.map((feature, idx) => {
-          const Icon = feature.icon;
-          return (
-            <Card key={idx} className="border-primary/20 hover:shadow-lg transition-shadow bg-background/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                    <Icon className="h-6 w-6 text-primary" />
+    <section id="ssp" className="scroll-mt-24">
+      <Card className="border border-border/60 shadow-sm overflow-hidden">
+        <div className="bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardContent className="p-5 md:p-6 lg:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl md:text-2xl font-bold mb-2">Student Success Portal (SSP)</h2>
+              <p className="text-sm md:text-base text-muted-foreground">
+                Your all-in-one learning companion with exclusive features designed to accelerate your success
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {portalFeatures.map((feature, idx) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={idx} className="flex items-start gap-3 p-4 rounded-lg bg-background/80 border border-border/40">
+                    <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm md:text-base mb-1">{feature.title}</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">{feature.description}</p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-lg">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                );
+              })}
+            </div>
 
-      <div className="mt-8 p-6 bg-background/60 backdrop-blur rounded-xl border border-primary/20">
-        <h3 className="text-xl font-semibold mb-3 text-center">How SSP Portal Helps You</h3>
-        <div className="grid md:grid-cols-3 gap-6 text-center">
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">100%</p>
-            <p className="text-sm text-muted-foreground">Course Content Access</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">24/7</p>
-            <p className="text-sm text-muted-foreground">Learning Availability</p>
-          </div>
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">∞</p>
-            <p className="text-sm text-muted-foreground">Practice Resources</p>
-          </div>
+            <div className="mt-6 p-4 md:p-5 bg-background/70 rounded-lg border border-border/40">
+              <h3 className="text-base md:text-lg font-semibold mb-4 text-center">How SSP Portal Helps You</h3>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold text-primary mb-1">100%</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Course Content Access</p>
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold text-primary mb-1">24/7</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Learning Availability</p>
+                </div>
+                <div>
+                  <p className="text-2xl md:text-3xl font-bold text-primary mb-1">∞</p>
+                  <p className="text-xs md:text-sm text-muted-foreground">Practice Resources</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
         </div>
-      </div>
+      </Card>
     </section>
   );
 };

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Check } from 'lucide-react';
 
 const MoreDetailsSection: React.FC = () => {
@@ -11,21 +12,24 @@ const MoreDetailsSection: React.FC = () => {
   ];
 
   return (
-    <section className="border-t pt-6 md:pt-8 lg:pt-12">
-      <h2 className="text-2xl md:text-3xl font-bold mb-4 md:mb-6">More Details</h2>
-      
-      <ul className="space-y-2.5 md:space-y-3">
-        {details.map((detail, index) => (
-          <li key={index} className="flex items-start gap-2 md:gap-3">
-            <span className="text-primary mt-0.5 md:mt-1 flex-shrink-0">
-              <Check className="h-4 w-4 md:h-5 md:w-5" />
-            </span>
-            <span className="text-muted-foreground leading-relaxed text-sm md:text-base">
-              {detail}
-            </span>
-          </li>
-        ))}
-      </ul>
+    <section className="scroll-mt-24">
+      <Card className="border border-border/60 shadow-sm">
+        <CardContent className="p-5 md:p-6 lg:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-5">More Details</h2>
+          <ul className="space-y-3">
+            {details.map((detail, index) => (
+              <li key={index} className="flex items-start gap-3">
+                <span className="text-primary mt-0.5 flex-shrink-0">
+                  <Check className="h-4 w-4 md:h-5 md:w-5" />
+                </span>
+                <span className="text-muted-foreground leading-relaxed text-sm md:text-base">
+                  {detail}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
     </section>
   );
 };

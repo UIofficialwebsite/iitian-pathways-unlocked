@@ -1,4 +1,5 @@
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -40,28 +41,32 @@ interface FAQSectionProps {
 
 const FAQSection: React.FC<FAQSectionProps> = ({ faqs = defaultFaqs }) => {
   return (
-    <section className="pb-20 lg:pb-0">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Frequently Asked Questions</h2>
-      <Accordion type="single" collapsible className="w-full space-y-3 md:space-y-4">
-        {faqs.map((faq, index) => (
-          <AccordionItem
-            value={`item-${index}`}
-            key={index}
-            className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
-          >
-            <AccordionTrigger
-              className="text-sm md:text-base lg:text-lg text-left font-semibold text-blue-900 px-4 md:px-6 py-3 md:py-4 hover:no-underline hover:text-blue-800"
-            >
-              {faq.question}
-            </AccordionTrigger>
-            <AccordionContent
-              className="px-4 md:px-6 pt-0 pb-4 md:pb-5 text-sm md:text-base text-slate-700"
-            >
-              {faq.answer}
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
+    <section className="scroll-mt-24 pb-12 lg:pb-0">
+      <Card className="border border-border/60 shadow-sm">
+        <CardContent className="p-5 md:p-6 lg:p-8">
+          <h2 className="text-xl md:text-2xl font-bold mb-5 md:mb-6">Frequently Asked Questions</h2>
+          <Accordion type="single" collapsible className="w-full space-y-3">
+            {faqs.map((faq, index) => (
+              <AccordionItem
+                value={`item-${index}`}
+                key={index}
+                className="bg-muted/40 border border-border/40 rounded-lg"
+              >
+                <AccordionTrigger
+                  className="text-sm md:text-base text-left font-semibold px-4 py-3 hover:no-underline hover:text-primary"
+                >
+                  {faq.question}
+                </AccordionTrigger>
+                <AccordionContent
+                  className="px-4 pt-0 pb-4 text-sm text-muted-foreground"
+                >
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
     </section>
   );
 };

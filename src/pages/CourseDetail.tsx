@@ -182,22 +182,38 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        <div className="container mx-auto px-4 py-8">
+        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Enrollment Card - Completely untouched */}
             <div className="lg:col-span-1 lg:order-last">
               <div className="lg:sticky top-[140px] z-20">
                 <EnrollmentCard course={course} />
               </div>
             </div>
 
-            <div className="lg:col-span-2 space-y-12">
-              <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
-              <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
-              <div ref={sectionRefs.moreDetails} className={scrollMarginClass}><MoreDetailsSection /></div>
-              <div ref={sectionRefs.schedule} className={scrollMarginClass}><ScheduleSection scheduleData={scheduleData} /></div>
-              <div ref={sectionRefs.ssp} className={scrollMarginClass}><SSPPortalSection /></div>
-              <div ref={sectionRefs.access} className={scrollMarginClass}><CourseAccessGuide /></div>
-              <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
+            {/* Content Sections - Wrapped in cards with consistent spacing */}
+            <div className="lg:col-span-2 space-y-6">
+              <div ref={sectionRefs.features} className={scrollMarginClass}>
+                <FeaturesSection course={course} />
+              </div>
+              <div ref={sectionRefs.about} className={scrollMarginClass}>
+                <AboutSection course={course} />
+              </div>
+              <div ref={sectionRefs.moreDetails} className={scrollMarginClass}>
+                <MoreDetailsSection />
+              </div>
+              <div ref={sectionRefs.schedule} className={scrollMarginClass}>
+                <ScheduleSection scheduleData={scheduleData} />
+              </div>
+              <div ref={sectionRefs.ssp} className={scrollMarginClass}>
+                <SSPPortalSection />
+              </div>
+              <div ref={sectionRefs.access} className={scrollMarginClass}>
+                <CourseAccessGuide />
+              </div>
+              <div ref={sectionRefs.faqs} className={scrollMarginClass}>
+                <FAQSection faqs={faqs} />
+              </div>
             </div>
           </div>
         </div>
