@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
@@ -8,13 +8,31 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, AlertCircle, Star, Users, Calendar, Globe } from 'lucide-react';
+import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
 
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
+import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
-import CourseTabs from '@/components/courses/detail/CourseTabs';
+import FeaturesSection from '@/components/courses/detail/FeaturesSection';
+import AboutSection from '@/components/courses/detail/AboutSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
+import ScheduleSection from '@/components/courses/detail/ScheduleSection';
+import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
+import FAQSection from '@/components/courses/detail/FAQSection';
+import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 
+interface BatchScheduleItem {
+  id: string;
+  course_id: string;
+  batch_name: string;
+  subject_name: string;
+  file_link: string;
+}
+interface CourseFaq {
+  question: string;
+  answer: string;
+}
 interface CourseDetailProps {
   customCourseId?: string; 
   isDashboardView?: boolean;
@@ -26,8 +44,20 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const sectionRefs = {
+    features: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
+    schedule: useRef<HTMLDivElement>(null),
+    ssp: useRef<HTMLDivElement>(null),
+    access: useRef<HTMLDivElement>(null),
+    faqs: useRef<HTMLDivElement>(null),
+  };
 
   useEffect(() => {
     const fetchCourseData = async () => {
@@ -40,19 +70,22 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       try {
         setLoading(true);
         setError(null);
-        
-        const { data, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
-          .maybeSingle();
+        const [courseResult, scheduleResult, faqResult] = await Promise.all([
+          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
+          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+        ]);
 
-        if (courseError) throw new Error(courseError.message);
+        if (courseResult.error) throw new Error(courseResult.error.message);
         
-        if (!data) {
+        if (!courseResult.data) {
           setError(`Course with ID ${courseId} not found.`);
         } else {
-          setCourse(data as any);
+          setCourse(courseResult.data as any);
+          if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
+          if (faqResult.data && faqResult.data.length > 0) {
+            setFaqs(faqResult.data as any);
+          }
         }
       } catch (err: any) {
         console.error('Error fetching course data:', err);
@@ -68,16 +101,11 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="container mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <Skeleton className="h-12 w-3/4 mb-4" />
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <Skeleton className="h-12 w-3/4" />
-              <Skeleton className="h-6 w-full" />
-              <Skeleton className="h-96 w-full" />
-            </div>
-            <div className="lg:col-span-1">
-              <Skeleton className="h-[500px] w-full rounded-xl" />
-            </div>
+            <div className="lg:col-span-2 space-y-8"><Skeleton className="h-64 w-full" /></div>
+            <div className="lg:col-span-1"><Skeleton className="h-96 w-full" /></div>
           </div>
         </div>
       </div>
@@ -88,14 +116,14 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="container mx-auto px-4 text-center">
-          <Alert variant="destructive" className="max-w-lg mx-auto mb-6">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <Alert variant="destructive" className="max-w-lg mx-auto">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to Load Course</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
           {!isDashboardView && (
-            <Button onClick={() => navigate('/courses')} variant="outline">
+            <Button onClick={() => navigate('/courses')} variant="outline" className="mt-6">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
             </Button>
           )}
@@ -104,92 +132,96 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     );
   }
 
+  const tabs = [
+    { id: 'features', label: 'Features' },
+    { id: 'about', label: 'About' },
+    { id: 'moreDetails', label: 'More Details' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'access', label: 'Course Access' },
+    { id: 'faqs', label: 'FAQs' },
+  ];
+
+  const scrollMarginClass = isDashboardView ? "scroll-mt-[140px]" : "scroll-mt-24";
+
   return (
     <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-20")}>
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Premium Header Section */}
-        <div className="bg-[#1c1d1f] text-white py-12 border-b border-slate-700">
-          <div className="container mx-auto px-4">
-            <div className="grid lg:grid-cols-3 gap-12">
-              <div className="lg:col-span-2 space-y-6">
+        {/* Spatial Reference: Centered Premium Header Container */}
+        <div className="border-b border-slate-200 bg-white shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+              <div className="max-w-4xl">
                 {!isDashboardView && (
-                  <Button 
-                    onClick={() => navigate('/courses')} 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-blue-400 hover:text-blue-300 p-0 h-auto"
-                  >
+                  <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 -ml-2 text-slate-500 hover:text-royal">
                     <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
                   </Button>
                 )}
-                
-                <div className="flex flex-wrap gap-2">
-                  {course.exam_category && (
-                    <Badge className="bg-blue-600 hover:bg-blue-600 text-white border-none rounded-none px-3 py-1 font-bold">
-                      {course.exam_category}
-                    </Badge>
-                  )}
-                  {course.bestseller && (
-                    <Badge className="bg-amber-400 text-black border-none rounded-none px-3 py-1 font-bold">
-                      Bestseller
-                    </Badge>
-                  )}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {course.exam_category && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-100">{course.exam_category}</Badge>}
+                  {course.bestseller && <Badge className="bg-amber-500 text-white border-none">⭐ Best Seller</Badge>}
                 </div>
-
-                <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{course.title}</h1>
-                
-                <p className="text-xl text-slate-200 leading-relaxed max-w-3xl">
-                  {course.description}
-                </p>
-
-                <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="text-amber-400 font-bold text-lg">{course.rating || 4.5}</span>
-                    <div className="flex">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star key={s} className={cn("h-4 w-4 fill-amber-400 text-amber-400", s > (course.rating || 4) && "text-slate-500 fill-slate-500")} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="h-4 w-4 text-blue-400" />
-                    <span>{course.students_enrolled?.toLocaleString() || '1,200+'} students enrolled</span>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span>Last updated {new Date().toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Globe className="h-4 w-4" />
-                    <span>{course.language || 'English'}</span>
-                  </div>
+                <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">{course.title}</h1>
+                <p className="text-lg text-slate-600 mb-6 leading-relaxed">{course.description}</p>
+                <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-500">
+                  <div className="flex items-center gap-2 text-amber-600"><Star className="h-5 w-5 fill-amber-500 text-amber-500" /> {course.rating || 4.0}</div>
+                  <div className="flex items-center gap-2"><Users className="h-5 w-5 text-royal" /> {course.students_enrolled || 0} students</div>
+                  <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-royal" /> Starts: {new Date(course.start_date || "").toLocaleDateString()}</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content & Sidebar */}
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            
-            {/* Left Column: Course Tabs Content */}
-            <div className="lg:col-span-2">
-              <CourseTabs course={course} />
-            </div>
+        <StickyTabNav 
+          tabs={tabs} 
+          sectionRefs={sectionRefs} 
+          isDashboardView={isDashboardView} 
+        />
 
-            {/* Right Column: Sticky Enrollment Card */}
-            <div className="lg:col-span-1">
-              <div className="lg:sticky lg:top-24 z-30 lg:-mt-[350px]">
-                <EnrollmentCard course={course} />
+        {/* Spatial Reference: Main 7xl Centered Container for 2-column wireframe */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            
+            {/* Left Column: Course Details Section (8/12 width) */}
+            <div className="lg:col-span-8 space-y-8">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.moreDetails} className={scrollMarginClass}><MoreDetailsSection /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.schedule} className={scrollMarginClass}><ScheduleSection scheduleData={scheduleData} /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.ssp} className={scrollMarginClass}><SSPPortalSection /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.access} className={scrollMarginClass}><CourseAccessGuide /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
               </div>
             </div>
 
+            {/* Right Column: Sticky Card (4/12 width) */}
+            <aside className="lg:col-span-4">
+              <div className="lg:sticky top-24 z-20">
+                <EnrollmentCard course={course} />
+              </div>
+            </aside>
           </div>
         </div>
       </main>
