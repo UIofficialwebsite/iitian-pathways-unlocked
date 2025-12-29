@@ -101,11 +101,11 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="container mx-auto px-4 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8"><Skeleton className="h-64 w-full" /></div>
-            <div className="lg:col-span-1"><Skeleton className="h-96 w-full" /></div>
+          <div className="grid lg:grid-cols-12 gap-8">
+            <div className="lg:col-span-8 space-y-8"><Skeleton className="h-64 w-full" /></div>
+            <div className="lg:col-span-4"><Skeleton className="h-96 w-full" /></div>
           </div>
         </div>
       </div>
@@ -116,7 +116,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        <div className="container mx-auto px-4 text-center">
+        <div className="max-w-7xl mx-auto px-4 text-center">
           <Alert variant="destructive" className="max-w-lg mx-auto">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to Load Course</AlertTitle>
@@ -142,34 +142,32 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  /* 140px margin ensures content aligns below header (73px) + tabs (57px) */
   const scrollMarginClass = isDashboardView ? "scroll-mt-[140px]" : "scroll-mt-24";
 
   return (
-    <div className={cn("bg-background", !isDashboardView && "min-h-screen pt-20")}>
+    <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-20")}>
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
         <div className="premium-course-header border-b border-slate-700/50 bg-slate-900 text-white">
-          {/* Only show back button container in non-dashboard view */}
           {!isDashboardView && (
-            <div className="container mx-auto px-4 py-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
               <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 text-slate-300">
                 <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
               </Button>
             </div>
           )}
-          <div className="container mx-auto px-4 pb-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-10">
             <div className="max-w-4xl">
               <div className="flex flex-wrap gap-2 mb-4">
                 {course.exam_category && <Badge className="bg-blue-500/20 text-blue-300">{course.exam_category}</Badge>}
                 {course.bestseller && <Badge className="bg-amber-500/90 text-white">⭐ Best Seller</Badge>}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-4">{course.title}</h1>
-              <p className="text-md text-slate-300 mb-6">{course.description}</p>
-              <div className="flex gap-6 text-sm">
+              <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight">{course.title}</h1>
+              <p className="text-lg text-slate-300 mb-8 leading-relaxed">{course.description}</p>
+              <div className="flex flex-wrap gap-8 text-sm font-medium">
                 <div className="flex items-center gap-2"><Star className="h-5 w-5 text-amber-400 fill-amber-400" /> {course.rating || 4.0}</div>
-                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-400" /> {course.students_enrolled || 0}</div>
+                <div className="flex items-center gap-2"><Users className="h-5 w-5 text-blue-400" /> {course.students_enrolled || 0} students</div>
                 <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-blue-400" /> Starts: {new Date(course.start_date || "").toLocaleDateString()}</div>
               </div>
             </div>
@@ -182,23 +180,46 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-1 lg:order-last">
-              <div className="lg:sticky top-[140px] z-20">
-                <EnrollmentCard course={course} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            
+            {/* Left Column: Course Details Card-based Sections (8/12 width) */}
+            <div className="lg:col-span-8 space-y-8">
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
+              </div>
+              
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.moreDetails} className={scrollMarginClass}><MoreDetailsSection /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.schedule} className={scrollMarginClass}><ScheduleSection scheduleData={scheduleData} /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.ssp} className={scrollMarginClass}><SSPPortalSection /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.access} className={scrollMarginClass}><CourseAccessGuide /></div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
+                <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
               </div>
             </div>
 
-            <div className="lg:col-span-2 space-y-12">
-              <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
-              <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
-              <div ref={sectionRefs.moreDetails} className={scrollMarginClass}><MoreDetailsSection /></div>
-              <div ref={sectionRefs.schedule} className={scrollMarginClass}><ScheduleSection scheduleData={scheduleData} /></div>
-              <div ref={sectionRefs.ssp} className={scrollMarginClass}><SSPPortalSection /></div>
-              <div ref={sectionRefs.access} className={scrollMarginClass}><CourseAccessGuide /></div>
-              <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
-            </div>
+            {/* Right Column: Original Sidebar Behavior (4/12 width) */}
+            <aside className="lg:col-span-4">
+              <div className="lg:sticky top-32 z-20">
+                <EnrollmentCard course={course} />
+              </div>
+            </aside>
           </div>
         </div>
       </main>
