@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 interface EnrollmentCardProps {
     course: Course;
-    isDashboardView?: boolean; // Prop to detect dashboard context
+    isDashboardView?: boolean;
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView }) => {
@@ -16,12 +16,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
+    // Calculates the discount percentage
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
 
     useEffect(() => {
-        // Find the specific scroll container used in the dashboard
+        // Find the correct scroll container (Dashboard internal scroll vs Main website window)
         const scrollContainer = isDashboardView 
             ? document.querySelector('.overflow-y-auto.custom-scrollbar') 
             : window;
@@ -31,8 +32,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            // Show details after 100px of scrolling
-            if (currentScroll > 100) {
+            // Details section animates out after 80px scroll
+            if (currentScroll > 80) {
                 setDetailsVisible(true);
             } else {
                 setDetailsVisible(false);
@@ -41,7 +42,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
 
         if (scrollContainer) {
             scrollContainer.addEventListener('scroll', handleScroll);
-            handleScroll(); // Initial check
+            handleScroll(); // Check immediately on mount
         }
 
         return () => {
@@ -102,10 +103,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                             )}
                         </div>
 
+                        {/* Animated details section that expands on scroll */}
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '220px' : '0',
+                                maxHeight: detailsVisible ? '200px' : '0',
                                 opacity: detailsVisible ? 1 : 0,
                             }}
                         >
@@ -134,7 +136,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                             <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
                                 <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                             </a>
-                            <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
+                            <Button
+                                size="lg"
+                                variant="outline"
+                                className="aspect-square p-0"
+                                onClick={handleShare}
+                            >
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                             </Button>
                         </div>
