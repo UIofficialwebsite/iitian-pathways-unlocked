@@ -173,11 +173,10 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
 
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Added items-start to fix sticky positioning */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-            
-            <div className="lg:col-span-8 space-y-8">
+        <div className="relative py-10">
+          {/* Left content section */}
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:ml-8 lg:mr-[420px] lg:max-w-none">
+            <div className="space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
               </div>
@@ -200,14 +199,22 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
                 <div ref={sectionRefs.faqs} className={scrollMarginClass}><FAQSection faqs={faqs} /></div>
               </div>
             </div>
+          </div>
 
-            {/* DIRECT GRID CHILD: No aside or div wrapper. Handles its own lg:col-span-4 */}
+          {/* EnrollmentCard - positioned independently, no parent container constraints */}
+          <div className="hidden lg:block fixed right-8 top-28 w-[380px] z-10">
             <EnrollmentCard 
               course={course} 
-              isDashboardView={isDashboardView} 
-              className="lg:col-span-4" 
+              isDashboardView={isDashboardView}
             />
-
+          </div>
+          
+          {/* Mobile EnrollmentCard */}
+          <div className="lg:hidden max-w-4xl mx-auto px-4 sm:px-6 mt-8">
+            <EnrollmentCard 
+              course={course} 
+              isDashboardView={isDashboardView}
+            />
           </div>
         </div>
       </main>
