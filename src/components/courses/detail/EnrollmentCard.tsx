@@ -64,9 +64,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     };
 
     return (
-        <div className={cn("sticky top-24", className)} ref={cardRef}>
-            <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
-                <Card className="overflow-hidden rounded-lg font-sans">
+        <div className={cn("sticky top-24 overflow-visible", className)} ref={cardRef}>
+            <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl overflow-visible">
+                <Card className="overflow-visible rounded-lg font-sans">
                     <CardHeader className="p-0">
                         <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
