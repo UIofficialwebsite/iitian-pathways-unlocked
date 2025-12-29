@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 interface EnrollmentCardProps {
     course: Course;
-    isDashboardView?: boolean; // Keep this to handle dashboard scroll logic
+    isDashboardView?: boolean; // Prop to detect dashboard context
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView }) => {
@@ -16,24 +16,23 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
-    // Calculates the discount percentage
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
 
     useEffect(() => {
-        // Find the correct container based on whether we are in the dashboard or main page
+        // Find the specific scroll container used in the dashboard
         const scrollContainer = isDashboardView 
             ? document.querySelector('.overflow-y-auto.custom-scrollbar') 
             : window;
 
         const handleScroll = () => {
-            const scrollPos = isDashboardView && scrollContainer instanceof HTMLElement
+            const currentScroll = isDashboardView && scrollContainer instanceof HTMLElement
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            // Trigger details visibility after small scroll
-            if (scrollPos > 80) {
+            // Show details after 100px of scrolling
+            if (currentScroll > 100) {
                 setDetailsVisible(true);
             } else {
                 setDetailsVisible(false);
@@ -98,17 +97,15 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                     <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
                                         {discountPercentage}% OFF
                                     </div>
-                                    {/* Restored the green triangle arrow badge detail */}
                                     <div className="absolute top-1/2 -left-2 transform -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-green-500"></div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Animated details section */}
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '200px' : '0',
+                                maxHeight: detailsVisible ? '220px' : '0',
                                 opacity: detailsVisible ? 1 : 0,
                             }}
                         >
@@ -121,7 +118,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                     <Calendar className="w-5 h-5 mr-3 text-gray-500" />
                                     <div className="flex flex-col">
                                         <span className="font-normal">Starts on: {formatDate(course.start_date)}</span>
-                                        <span className="font-normal">Ends on: {formatDate(course.end_date)}</span>
+                                        <span className="font-normal text-slate-500">Ends on: {formatDate(course.end_date)}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center text-gray-700">
@@ -135,15 +132,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
 
                         <div className="flex gap-2">
                             <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                {/* Restored original button text and styling */}
                                 <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                             </a>
-                            <Button
-                                size="lg"
-                                variant="outline"
-                                className="aspect-square p-0"
-                                onClick={handleShare}
-                            >
+                            <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                             </Button>
                         </div>
