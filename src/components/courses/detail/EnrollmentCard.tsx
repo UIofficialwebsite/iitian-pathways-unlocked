@@ -4,16 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, BookOpen, Share2, Check } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface EnrollmentCardProps {
     course: Course;
-    isDashboardView?: boolean;
-    className?: string;
 }
 
-const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView, className }) => {
+const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -64,7 +61,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     };
 
     return (
-        <div className={cn("", className)} ref={cardRef}>
+        <div className="sticky top-24" ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg font-sans">
                     <CardHeader className="p-0">
