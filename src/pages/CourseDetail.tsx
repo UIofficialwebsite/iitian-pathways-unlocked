@@ -101,7 +101,6 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
     return (
       <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
-        {/* Updated max-width for consistency in loading state */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Skeleton className="h-12 w-3/4 mb-4" />
           <div className="grid lg:grid-cols-3 gap-8">
@@ -150,7 +149,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Updated max-width to [1440px] for header */}
+        {/* Header Container: Updated to max-w-[1440px] */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -182,11 +181,11 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Updated max-width to [1440px] for the content grid */}
+        {/* Main Content Grid: Updated to max-w-[1440px] */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* Left Column: Course Details Section (Reduced to 7/12 width) */}
+            {/* Left Column (Course Details): Reduced to 7/12 to increase card width */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
@@ -217,9 +216,10 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column: Enrollment Card (Increased to 5/12 width) */}
+            {/* Right Column (Fixed Enrollment Card): Increased to 5/12 width */}
             <aside className="lg:col-span-5">
-              <div className="lg:sticky top-24 z-20">
+              {/* Added z-index and top offset to ensure it sits fixed below the Tab Nav */}
+              <div className="sticky top-32 z-20">
                 <EnrollmentCard course={course} />
               </div>
             </aside>
