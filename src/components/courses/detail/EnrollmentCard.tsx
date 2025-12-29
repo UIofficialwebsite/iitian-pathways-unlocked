@@ -8,7 +8,7 @@ import { toast } from 'sonner';
 
 interface EnrollmentCardProps {
     course: Course;
-    isDashboardView?: boolean; // Added prop to handle dashboard scroll
+    isDashboardView?: boolean; // Keep this to handle dashboard scroll logic
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView }) => {
@@ -16,12 +16,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
 
+    // Calculates the discount percentage
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
 
     useEffect(() => {
-        // Find the correct container to listen for scroll
+        // Find the correct container based on whether we are in the dashboard or main page
         const scrollContainer = isDashboardView 
             ? document.querySelector('.overflow-y-auto.custom-scrollbar') 
             : window;
@@ -31,7 +32,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            // Trigger details visibility after 80px of scroll
+            // Trigger details visibility after small scroll
             if (scrollPos > 80) {
                 setDetailsVisible(true);
             } else {
@@ -41,8 +42,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
 
         if (scrollContainer) {
             scrollContainer.addEventListener('scroll', handleScroll);
-            // Initial check in case page is already scrolled
-            handleScroll();
+            handleScroll(); // Initial check
         }
 
         return () => {
@@ -83,11 +83,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg font-sans">
                     <CardHeader className="p-0">
-                        <img 
-                            src={course.image_url || '/placeholder.svg'} 
-                            alt={course.title} 
-                            className="w-full h-auto object-cover aspect-video" 
-                        />
+                        <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
@@ -98,36 +94,39 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                 )}
                             </div>
                             {course.discounted_price && (
-                                <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
-                                    {discountPercentage}% OFF
+                                <div className="relative">
+                                    <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
+                                        {discountPercentage}% OFF
+                                    </div>
+                                    {/* Restored the green triangle arrow badge detail */}
+                                    <div className="absolute top-1/2 -left-2 transform -translate-y-1/2 w-0 h-0 border-t-8 border-t-transparent border-b-8 border-b-transparent border-r-8 border-r-green-500"></div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Animated details section that reveals on scroll */}
+                        {/* Animated details section */}
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '250px' : '0',
+                                maxHeight: detailsVisible ? '200px' : '0',
                                 opacity: detailsVisible ? 1 : 0,
-                                marginBottom: detailsVisible ? '1rem' : '0'
                             }}
                         >
-                            <div className="space-y-4 pt-2">
+                            <div className="space-y-4 pt-2 pb-4">
                                 <div className="flex items-center text-gray-700">
-                                    <MapPin className="w-5 h-5 mr-3 text-royal" />
-                                    <span className="font-medium text-sm">{course.branch} — {course.level}</span>
+                                    <MapPin className="w-5 h-5 mr-3 text-gray-500" />
+                                    <span className="font-normal">{course.branch} - {course.level}</span>
                                 </div>
                                 <div className="flex items-center text-gray-700">
-                                    <Calendar className="w-5 h-5 mr-3 text-royal" />
-                                    <div className="flex flex-col text-sm">
-                                        <span>Starts: {formatDate(course.start_date)}</span>
-                                        <span className="text-slate-500">Ends: {formatDate(course.end_date)}</span>
+                                    <Calendar className="w-5 h-5 mr-3 text-gray-500" />
+                                    <div className="flex flex-col">
+                                        <span className="font-normal">Starts on: {formatDate(course.start_date)}</span>
+                                        <span className="font-normal">Ends on: {formatDate(course.end_date)}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center text-gray-700">
-                                    <BookOpen className="w-5 h-5 mr-3 text-royal" />
-                                    <span className="font-medium text-sm">Language: {course.language || 'English'}</span>
+                                    <BookOpen className="w-5 h-5 mr-3 text-gray-500" />
+                                    <span className="font-normal">Language: {course.language}</span>
                                 </div>
                             </div>
                         </div>
@@ -136,9 +135,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
 
                         <div className="flex gap-2">
                             <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                <Button size="lg" className="w-full text-md font-semibold bg-royal hover:bg-royal/90">
-                                    Enroll Now
-                                </Button>
+                                {/* Restored original button text and styling */}
+                                <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
                             </a>
                             <Button
                                 size="lg"
@@ -146,7 +144,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                 className="aspect-square p-0"
                                 onClick={handleShare}
                             >
-                                {copied ? <Check className="h-5 w-5 text-green-500" /> : <Share2 className="h-5 w-5" />}
+                                {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                             </Button>
                         </div>
                     </CardContent>
