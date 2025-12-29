@@ -149,7 +149,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Header: Increased to max-w-[1440px] */}
+        {/* Header: Max-width increased to prevent card clipping */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -181,12 +181,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Main Content: Increased to max-w-[1440px] */}
+        {/* Main Content Area: Width increased to 1440px */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Grid Layout: Adjusted to 7/12 (Details) and 5/12 (Card) for more card width */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+          {/* Grid Split updated to 7/12 (Details) and 5/12 (Card) for more room */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* Left Column: Course Details Section */}
+            {/* Left Column: Course Details */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
@@ -217,16 +217,16 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column: Sticky Enrollment Card */}
+            {/* Right Column: Enrollment Card (STAYS FIXED ON SCROLL) */}
             <aside className="lg:col-span-5 relative">
-              {/* Sticky container with conditional top spacing for dashboard view */}
+              {/* This wrapper ensures the card stays fixed below the sticky navigation */}
               <div className={cn(
                 "sticky z-20 transition-all duration-300",
-                isDashboardView ? "top-4" : "top-28" 
+                isDashboardView ? "top-32" : "top-32" 
               )}>
                 <EnrollmentCard 
-                  course={course} 
-                  isDashboardView={isDashboardView} 
+                    course={course} 
+                    isDashboardView={isDashboardView} 
                 />
               </div>
             </aside>
