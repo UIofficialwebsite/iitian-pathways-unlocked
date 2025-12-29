@@ -200,7 +200,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* No parent container: The card handles its own sticky behavior and takes 4 columns */}
+            {/* DIRECT CHILD OF GRID: EnrollmentCard handles its own sticky logic and spans 4 columns */}
             <EnrollmentCard 
               course={course} 
               isDashboardView={isDashboardView} 
