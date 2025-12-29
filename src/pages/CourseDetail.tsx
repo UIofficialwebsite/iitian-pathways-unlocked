@@ -116,13 +116,13 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
         {!isDashboardView && <NavBar />}
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <Alert variant="destructive" className="max-w-lg mx-auto mb-6">
+          <Alert variant="destructive" className="max-w-lg mx-auto">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Failed to Load Course</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
           </Alert>
           {!isDashboardView && (
-            <Button onClick={() => navigate('/courses')} variant="outline">
+            <Button onClick={() => navigate('/courses')} variant="outline" className="mt-6">
               <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
             </Button>
           )}
@@ -148,6 +148,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
+        {/* Wireframe Header */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="max-w-4xl">
@@ -173,9 +174,11 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
 
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
+        {/* Strictly Centered 7xl Container with Grid structure */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
             
+            {/* Left Content Column (8/12) */}
             <div className="lg:col-span-8 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
@@ -200,7 +203,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* DIRECT CHILD OF GRID: EnrollmentCard handles its own sticky logic and spans 4 columns */}
+            {/* DIRECT GRID CHILD: EnrollmentCard occupies 4/12 columns without parent placeholders */}
             <EnrollmentCard 
               course={course} 
               isDashboardView={isDashboardView} 
