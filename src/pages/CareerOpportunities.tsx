@@ -201,7 +201,6 @@ const CareerOpportunities = () => {
   );
 
   return (
-    // min-h-screen ensures it takes full height but grows if content is larger
     <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900">
       
       {/* 1. Header is Sticky - Stays at top while scrolling */}
@@ -255,9 +254,9 @@ const CareerOpportunities = () => {
             {/* 3. Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
-              {/* Left Column: Filters - STICKY */}
-              {/* 'sticky top-24' keeps it visible while you scroll the main page */}
-              <div className="hidden lg:block sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar">
+              {/* Left Column: Filters - STICKY but NO internal SCROLL */}
+              {/* 'sticky top-24' keeps it visible while you scroll, but we removed max-h and overflow */}
+              <div className="hidden lg:block sticky top-24">
                 <p className="text-sm font-semibold text-slate-600 mb-4 py-2">Filters</p>
                 
                 <FilterSection 
