@@ -119,10 +119,8 @@ const Career = () => {
       <main className="pt-24 pb-20 bg-slate-50 min-h-screen font-sans text-slate-900">
         
         {/* HERO SECTION - Corporate Announcement Style */}
-        {/* Using w-full and removing centering constraints to use full width of screen */}
+        {/* Full Width Container with Rounded Content Block */}
         <section className="w-full px-4 mb-16">
-          
-          {/* Round rectangular block container, full width */}
           <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative">
             
             {/* Content Side */}
