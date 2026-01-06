@@ -280,7 +280,7 @@ const JobDetails = () => {
                 </svg>
               </a>
 
-              {/* WhatsApp - Fixed Icon Path */}
+              {/* WhatsApp - Fixed Icon Path from user request */}
               <a 
                 href={`https://wa.me/?text=${shareText}%20${shareUrlEnc}`}
                 target="_blank"
@@ -313,5 +313,12 @@ const JobDetails = () => {
     </div>
   );
 };
+
+// Helper Components
+const Share2Icon = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
 
 export default JobDetails;
