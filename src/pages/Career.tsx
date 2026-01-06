@@ -11,7 +11,13 @@ import {
   Building, 
   Check, 
   FileText,
-  Loader2
+  Loader2,
+  ArrowRight,
+  GraduationCap,
+  Star,
+  Users,
+  Briefcase,
+  User
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -112,20 +118,22 @@ const Career = () => {
     setVerifying(false);
   };
 
+  const scrollToOpenings = () => {
+    navigate('/career/openings');
+  };
+
   return (
     <>
       <NavBar />
       
-      <main className="pt-24 pb-20 bg-slate-50 min-h-screen font-sans text-slate-900">
+      <main className="pt-24 pb-20 bg-white min-h-screen font-sans text-slate-900">
         
-        {/* HERO SECTION - Corporate Announcement Style */}
-        {/* Full Width Container with Rounded Content Block */}
-        <section className="w-full px-4 mb-16">
-          <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative">
+        {/* HERO SECTION - Full Width Rounded Block */}
+        <section className="w-full px-4 mb-20">
+          <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
-            {/* Content Side */}
             <div className="flex-1 w-full text-left z-10">
-              <div className="inline-flex items-center bg-slate-50 border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide">
+              <div className="inline-flex items-center bg-white border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide shadow-sm">
                 <Check className="w-3.5 h-3.5 mr-2 opacity-70" />
                 Corporate Announcement — Q1 2026
               </div>
@@ -154,7 +162,7 @@ const Career = () => {
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
                 <Button 
-                  onClick={() => navigate('/career/openings')}
+                  onClick={scrollToOpenings}
                   className="bg-slate-900 hover:bg-blue-800 text-white px-7 py-6 h-auto rounded-md font-semibold text-base shadow-sm transition-all duration-200"
                 >
                   View career opportunities
@@ -162,14 +170,13 @@ const Career = () => {
               </motion.div>
             </div>
 
-            {/* Illustration Side */}
             <motion.div 
               className="flex-1 w-full relative z-10"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              <div className="w-full h-[300px] md:h-[420px] bg-slate-50 border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group">
+              <div className="w-full h-[300px] md:h-[420px] bg-white border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group shadow-sm">
                 <div className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 bg-[radial-gradient(circle_at_70%_30%,rgba(30,64,175,0.03)_0%,transparent_50%)]" />
                 <div className="z-10 text-center">
                     <span className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-[2px] block mb-2">
@@ -184,8 +191,128 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Employee Verification Section - Preserved */}
-        <section className="py-12 bg-slate-50">
+        {/* Join UI Section */}
+        <section className="py-20 bg-slate-50 border-t border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-12 items-center">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ y: 0, opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="text-center max-w-4xl mx-auto"
+              >
+                <h2 className="text-4xl font-bold mb-6 text-slate-900">
+                  Join Unknown IITians!
+                </h2>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Unknown IITians is a platform dedicated to providing high-quality educational content to help students and freshers succeed in their careers. We also offer opportunities for internships and hiring positions directly through our platform. All hirings for Unknown IITians will be posted here, with notifications sent out to those who have filled out the required forms.
+                </p>
+                <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                  Once you complete the form, you will receive an email with further details about the interview process and the next steps. Our goal is to help you gain practical experience, develop your skills, and build a strong foundation for your future career.
+                </p>
+                <Button onClick={scrollToOpenings} className="bg-slate-900 hover:bg-slate-800 text-white px-8 py-6 text-lg shadow-lg">
+                  Start Your Journey <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* Why Work at UI Section */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold text-slate-900">Why work at Unknown IITians</h2>
+              <p className="mt-4 text-xl text-blue-600 font-semibold">
+                Earn Today, Build Tomorrow, Succeed Forever
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+              {[
+                {
+                  title: "A Platform for Growth",
+                  description: "Our company is built on helping individuals discover and unlock their full potential. Working with us means you'll be part of a community that values personal development, career advancement, and success.",
+                  icon: GraduationCap
+                },
+                {
+                  title: "Earn While You Learn",
+                  description: "College students often look for ways to manage their expenses, and our internships offer the perfect solution. You can earn money while gaining hands-on experience and making progress toward your career goals.",
+                  icon: Star
+                },
+                {
+                  title: "No Middlemen",
+                  description: "At Unknown IITians, we don't act as a mediator. You get direct access to internship openings based on your skills and interests. If you have the required skills, you can join and begin your journey without delays.",
+                  icon: Users
+                },
+                {
+                  title: "A Stepping Stone",
+                  description: "An internship with Unknown IITians is more than just a learning experience; it's a chance to set the foundation for your future career. You'll gain insights into the industry, develop a strong work ethic, and build a network.",
+                  icon: Briefcase
+                },
+                {
+                  title: "No Experience? No Problem!",
+                  description: "You don't need to have extensive experience to get started. We welcome students with basic skills who are eager to learn and grow. The internships we offer are a perfect starting point to build your knowledge.",
+                  icon: User
+                },
+                {
+                  title: "Paid Opportunities",
+                  description: "Once you've completed the training and feel confident in your abilities, you can directly apply for paid internships and roles. Unknown IITians helps bridge the gap between learning and earning.",
+                  icon: Building
+                }
+              ].map((item, index) => (
+                <motion.div 
+                  key={index} 
+                  className="flex flex-col items-center text-center p-8 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
+                  initial={{ y: 30, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  viewport={{ once: true, margin: "-50px" }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className="rounded-full bg-white p-4 mb-6 shadow-sm border border-slate-100">
+                    <item.icon className="h-8 w-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-3 text-slate-900">{item.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{item.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How We Make Remarkable Change */}
+        <section className="py-20 bg-slate-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-bold mb-4 text-slate-900">How do we make remarkable change?</h2>
+              <p className="max-w-3xl mx-auto text-lg text-slate-600">
+                Unknown IITians creates remarkable change in the educational field by offering students the opportunity to earn while they learn. We provide skill-building resources, paid internships, and real-world experiences that empower students.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-14 relative overflow-hidden border border-slate-200">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mt-32 -mr-32 blur-3xl"></div>
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full -mb-32 -ml-32 blur-3xl"></div>
+              
+              <div className="relative">
+                <blockquote className="text-xl md:text-2xl text-slate-800 italic font-medium text-center mb-8 leading-relaxed">
+                  "Don't just think about placement; think about building your own empire. Success isn't limited to your degree—it begins with the growth you nurture today. Train yourself, work on your skills, and create something great, because true success comes from starting now, not after your studies."
+                </blockquote>
+                
+                <div className="flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="font-bold text-lg text-slate-900">Anonymous</p>
+                    <p className="text-slate-500">Founder, Unknown IITians</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Employee Verification Section */}
+        <section className="py-24 bg-white border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center p-2 bg-white border border-slate-200 rounded-full mb-4 shadow-sm">
