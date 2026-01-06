@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- JOB HELP CARD COMPONENT (Based on your HTML/CSS) ---
+// --- JOB HELP CARD COMPONENT ---
 const JobHelpCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -33,7 +33,7 @@ College:
 Role interested in :
 If teaching then subject: 
 
-(Please attach your resume)`);
+(Please attach your resume to this email)`);
 
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
@@ -201,13 +201,15 @@ const CareerOpportunities = () => {
   );
 
   return (
+    // min-h-screen ensures it takes full height but grows if content is larger
     <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900">
-      {/* 1. Header is Sticky */}
-      <div className="sticky top-0 z-50 bg-white shrink-0">
+      
+      {/* 1. Header is Sticky - Stays at top while scrolling */}
+      <div className="sticky top-0 z-50 bg-white shrink-0 shadow-sm border-b border-slate-100">
         <NavBar />
       </div>
 
-      {/* 2. Main Content Area - Scrollable page flow */}
+      {/* 2. Main Content Area */}
       <div className="flex-1 flex flex-col relative">
         {/* Background Gradient */}
         <div className="absolute top-0 left-0 w-full h-[240px] bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] -z-10 mt-0"></div>
@@ -250,10 +252,11 @@ const CareerOpportunities = () => {
                 </div>
             </div>
 
-            {/* 3. The Grid Layout */}
+            {/* 3. Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
               {/* Left Column: Filters - STICKY */}
+              {/* 'sticky top-24' keeps it visible while you scroll the main page */}
               <div className="hidden lg:block sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar">
                 <p className="text-sm font-semibold text-slate-600 mb-4 py-2">Filters</p>
                 
@@ -284,7 +287,7 @@ const CareerOpportunities = () => {
                 <JobHelpCard />
               </div>
 
-              {/* Right Column: Jobs - FLOWS NATURALLY */}
+              {/* Right Column: Jobs - Natural Height */}
               <div className="min-h-[500px]">
                 <div className="space-y-5">
                   {contentLoading ? (
@@ -353,7 +356,7 @@ const CareerOpportunities = () => {
         </div>
       </div>
       
-      {/* 4. Footer - Placed at the very bottom, full width */}
+      {/* 4. Footer - Stays at bottom */}
       <Footer />
     </div>
   );
