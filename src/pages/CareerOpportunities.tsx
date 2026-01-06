@@ -15,12 +15,13 @@ import {
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const CareerOpportunities = () => {
   const { jobs, contentLoading } = useBackend();
   const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
 
-  // Filter active jobs based on search
   const openings = jobs.filter(job => {
     if (!job.is_active) return false;
     if (searchTerm === "") return true;
@@ -39,7 +40,6 @@ const CareerOpportunities = () => {
       
       {/* Abstract Header Background */}
       <div className="h-[240px] w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] relative overflow-hidden mt-16">
-         {/* Decorative masking/shapes can be added here if needed */}
       </div>
 
       {/* Main Content Container */}
@@ -132,12 +132,10 @@ const CareerOpportunities = () => {
 
                   <div className="flex items-center gap-3">
                     <Button 
-                      asChild
+                      onClick={() => navigate(`/career/job/${job.id}`)}
                       className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 hover:border-blue-300 font-medium px-6 py-2 h-auto rounded-md transition-all duration-200"
                     >
-                      <a href={job.application_url || '#'} target="_blank" rel="noopener noreferrer">
-                        View and Apply
-                      </a>
+                      View and Apply
                     </Button>
                     <button className="p-2.5 rounded-md border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all">
                       <Bookmark className="w-5 h-5" />
