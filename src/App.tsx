@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,6 +15,7 @@ import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
 import Career from "./pages/Career";
+import CareerOpportunities from "./pages/CareerOpportunities"; // Updated import
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
@@ -58,6 +58,7 @@ const App = () => (
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               <Route path="/career" element={<Career />} />
+              <Route path="/career/openings" element={<CareerOpportunities />} /> {/* New Route */}
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile/complete" element={<ProfileComplete />} />
