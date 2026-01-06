@@ -1,18 +1,19 @@
-
 export interface Job {
   id: string;
   title: string;
-  company: string;
-  location: string;
   job_type: string;
-  experience_level: string;
-  stipend?: string;
-  description: string;
-  requirements: string[];
-  application_url?: string;
-  deadline?: string;
+  location: string;
+  stipend: string | null;
+  duration: string | null;
+  deadline: string | null; // Dates often come as strings from JSON APIs
+  skills: string[] | null;
+  description: string | null;
+  requirements: string[] | null;
+  application_url: string | null;
+  company: string;
+  experience_level: string | null;
   is_featured: boolean;
   is_active: boolean;
   created_at: string;
-  duration?: string;
+  updated_at: string;
 }
