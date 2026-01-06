@@ -1,280 +1,192 @@
-import React, { useState, useMemo } from "react";
-import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
+import { useState, useEffect, useMemo } from "react";
+import { useJobsManager } from "@/hooks/useJobsManager"; // Assuming this hook fetches your jobs
+import { Job } from "@/types/job";
 import { Button } from "@/components/ui/button";
-import { 
-  MapPin, 
-  Briefcase, 
-  Building, 
-  Search,
-  ChevronDown,
-  Plus,
-  Minus,
-  Bookmark,
-  Loader2,
-  X,
-  Check,
-  FilterX
-} from "lucide-react";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MapPin, Briefcase, Clock, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // or 'next/navigation' if using Next.js App Router
 
-const CareerOpportunities = () => {
-  const { jobs, contentLoading } = useBackend();
-  const [searchTerm, setSearchTerm] = useState("");
+export default function CareerOpportunities() {
   const navigate = useNavigate();
+  // 1. Fetch jobs from your data source
+  const { jobs, loading, error } = useJobsManager(); 
 
-  // Filter States
-  const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // Added for Job Type filtering if needed
-  
-  // FIX: Initialize to null to stop auto-toggle on mount
-  const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedSubCategory, setSelectedSubCategory] = useState("All");
 
-  // Derived Unique Values from Active Jobs (Dynamic generation)
-  const activeJobs = useMemo(() => jobs.filter(j => j.is_active), [jobs]);
+  // 2. DYNAMICALLY EXTRACT CATEGORIES
+  // We use useMemo to recalculate this only when 'jobs' changes
+  const availableCategories = useMemo(() => {
+    if (!jobs) return [];
+    // Extract unique categories from jobs, filter out empty/undefined ones
+    const categories = jobs
+      .map((job) => job.category)
+      .filter((cat): cat is string => !!cat); // Ensure it's a string and truthy
+    
+    return Array.from(new Set(categories)).sort(); // Remove duplicates and sort
+  }, [jobs]);
 
-  const uniqueDepartments = useMemo(() => {
-    const items = new Set<string>();
-    activeJobs.forEach(job => { if (job.department) items.add(job.department); });
-    return Array.from(items).sort();
-  }, [activeJobs]);
+  // 3. DYNAMICALLY EXTRACT SUB-CATEGORIES
+  // Logic: Show sub-categories available for the *selected* category (if any), 
+  // or all sub-categories if "All" is selected.
+  const availableSubCategories = useMemo(() => {
+    if (!jobs) return [];
 
-  const uniqueLocations = useMemo(() => {
-    const items = new Set<string>();
-    activeJobs.forEach(job => { if (job.location) items.add(job.location); });
-    return Array.from(items).sort();
-  }, [activeJobs]);
+    let filteredJobs = jobs;
 
-  // Filtering Logic
-  const openings = useMemo(() => {
-    return activeJobs.filter(job => {
-      // Search
-      if (searchTerm) {
-        const term = searchTerm.toLowerCase();
-        const matchesSearch = 
-          job.title?.toLowerCase().includes(term) ||
-          job.location?.toLowerCase().includes(term) ||
-          job.department?.toLowerCase().includes(term) ||
-          job.company?.toLowerCase().includes(term);
-        if (!matchesSearch) return false;
-      }
-      
-      // Department Filter
-      if (selectedDepartments.length > 0) {
-        if (!job.department || !selectedDepartments.includes(job.department)) return false;
-      }
-
-      // Location Filter
-      if (selectedLocations.length > 0) {
-        if (!job.location || !selectedLocations.includes(job.location)) return false;
-      }
-
-      return true;
-    });
-  }, [activeJobs, searchTerm, selectedDepartments, selectedLocations]);
-
-  // Toggle Handlers
-  const toggleFilter = (
-    item: string, 
-    currentSelected: string[], 
-    setFn: React.Dispatch<React.SetStateAction<string[]>>
-  ) => {
-    if (currentSelected.includes(item)) {
-      setFn(currentSelected.filter(i => i !== item));
-    } else {
-      setFn([...currentSelected, item]);
+    // Optional: If you want sub-categories to strictly match the selected category
+    if (selectedCategory !== "All") {
+      filteredJobs = jobs.filter(job => job.category === selectedCategory);
     }
-  };
 
-  const clearFilters = () => {
-    setSelectedDepartments([]);
-    setSelectedLocations([]);
-    setSearchTerm("");
-  };
+    const subCategories = filteredJobs
+      .map((job) => job.subcategory) // Ensure your Job type has 'subcategory' property
+      .filter((sub): sub is string => !!sub);
 
-  const toggleExpanded = (filterName: string) => {
-    setExpandedFilter(prev => prev === filterName ? null : filterName);
-  };
+    return Array.from(new Set(subCategories)).sort();
+  }, [jobs, selectedCategory]);
 
-  const hasActiveFilters = selectedDepartments.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
-
-  // Helper for filter sections
-  const FilterSection = ({ 
-    title, 
-    items, 
-    selectedItems, 
-    id, 
-    onToggle 
-  }: { 
-    title: string, 
-    items: string[], 
-    selectedItems: string[], 
-    id: string, 
-    onToggle: (item: string) => void 
-  }) => (
-    <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mb-3">
-      <div 
-        className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
-        onClick={() => toggleExpanded(id)}
-      >
-        <span className="text-sm text-slate-700 font-medium flex items-center gap-2">
-          {title}
-          {selectedItems.length > 0 && (
-            <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] bg-blue-100 text-blue-700">
-              {selectedItems.length}
-            </Badge>
-          )}
-        </span>
-        {expandedFilter === id ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
-      </div>
+  // 4. Filter the displayed jobs based on selection
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch = 
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.company?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesCategory = 
+      selectedCategory === "All" || job.category === selectedCategory;
       
-      <AnimatePresence initial={false}>
-        {expandedFilter === id && (
-          <motion.div 
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden bg-slate-50/50 border-t border-slate-100"
-          >
-            <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto">
-              {items.length > 0 ? items.map((item) => (
-                <button
-                  key={item}
-                  onClick={(e) => { e.stopPropagation(); onToggle(item); }}
-                  className={`flex items-center w-full text-left text-sm py-2 px-2 rounded-md transition-colors ${
-                    selectedItems.includes(item) ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600 hover:bg-slate-100"
-                  }`}
-                >
-                  <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center transition-colors ${
-                    selectedItems.includes(item) ? "bg-blue-600 border-blue-600" : "border-slate-300 bg-white"
-                  }`}>
-                    {selectedItems.includes(item) && <Check className="w-3 h-3 text-white" />}
-                  </div>
-                  {item}
-                </button>
-              )) : (
-                <p className="text-xs text-slate-400 italic">No options available</p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
+    const matchesSubCategory = 
+      selectedSubCategory === "All" || job.subcategory === selectedSubCategory;
+
+    return matchesSearch && matchesCategory && matchesSubCategory;
+  });
+
+  if (loading) return <div className="p-8 text-center">Loading opportunities...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">Error loading jobs</div>;
 
   return (
-    <div className="bg-white min-h-screen font-sans text-slate-900 pb-12">
-      <NavBar />
-      <div className="h-[240px] w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] relative overflow-hidden mt-16"></div>
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-8 text-center">Career Opportunities</h1>
 
-      <div className="max-w-[1100px] mx-auto px-5 relative z-10 -mt-10">
-        <div className="relative w-full mb-10 shadow-sm bg-white rounded-lg">
-          <input 
-            type="text" 
+      {/* Filters Section */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        {/* Search Input */}
+        <div className="relative">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search jobs or companies..."
+            className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-4 pl-5 pr-14 border border-slate-200 rounded-lg text-[15px] outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
-            placeholder="Search by role, department or location"
           />
-          <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
-            {searchTerm ? (
-              <button onClick={() => setSearchTerm("")} className="hover:text-slate-600"><X className="w-5 h-5" /></button>
-            ) : (
-              <Search className="w-5 h-5" />
-            )}
-          </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-medium text-slate-800">
-              {openings.length} {openings.length === 1 ? 'Open job' : 'Open jobs'} available
-            </h1>
-            {hasActiveFilters && (
-              <button onClick={clearFilters} className="text-xs flex items-center gap-1 text-red-500 font-medium hover:text-red-600 transition-colors">
-                <FilterX className="w-3 h-3" /> Clear filters
-              </button>
-            )}
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-            Newest First <ChevronDown className="w-4 h-4 text-slate-500" />
-          </button>
-        </div>
+        {/* Dynamic Category Filter */}
+        <Select 
+          value={selectedCategory} 
+          onValueChange={(val) => {
+            setSelectedCategory(val);
+            setSelectedSubCategory("All"); // Reset sub-cat when category changes
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Categories</SelectItem>
+            {availableCategories.map((category) => (
+              <SelectItem key={category} value={category}>
+                {category}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-          {/* Filters Sidebar */}
-          <div className="hidden lg:block space-y-1">
-            <p className="text-sm font-semibold text-slate-600 mb-4">Filters</p>
-            
-            <FilterSection 
-              title="Department" 
-              id="department" 
-              items={uniqueDepartments} 
-              selectedItems={selectedDepartments} 
-              onToggle={(item) => toggleFilter(item, selectedDepartments, setSelectedDepartments)}
-            />
-
-            <FilterSection 
-              title="Location" 
-              id="location" 
-              items={uniqueLocations} 
-              selectedItems={selectedLocations} 
-              onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
-            />
-          </div>
-
-          {/* Job Listings */}
-          <div className="space-y-5">
-            {contentLoading ? (
-               <div className="flex justify-center items-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                 <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-               </div>
-            ) : openings.length > 0 ? (
-              openings.map((job) => (
-                <motion.div
-                  key={job.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.3 }}
-                  // FIX: Added border-slate-900 for dark black lining
-                  className="bg-white border border-slate-900 rounded-xl p-6 hover:shadow-md transition-all duration-300"
-                >
-                  <h2 className="text-xl font-medium text-slate-900 mb-3">{job.title}</h2>
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 text-sm text-slate-500">
-                    <div className="flex items-center gap-2"><MapPin className="w-4 h-4 opacity-70" /><span>{job.location}</span></div>
-                    <div className="flex items-center gap-2"><Briefcase className="w-4 h-4 opacity-70" /><span>{job.job_type || 'Full Time'}</span></div>
-                    {job.company && <div className="flex items-center gap-2"><Building className="w-4 h-4 opacity-70" /><span>{job.company}</span></div>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Button 
-                      onClick={() => navigate(`/career/job/${job.id}`)}
-                      className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 hover:border-blue-300 font-medium px-6 py-2 h-auto rounded-md transition-all duration-200"
-                    >
-                      View and Apply
-                    </Button>
-                    <button className="p-2.5 rounded-md border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all"><Bookmark className="w-5 h-5" /></button>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600">No open positions found matching your criteria.</p>
-                <button onClick={clearFilters} className="text-sm text-blue-600 font-medium mt-2 hover:underline">Clear all filters</button>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Dynamic Sub-Category Filter */}
+        <Select 
+          value={selectedSubCategory} 
+          onValueChange={setSelectedSubCategory}
+          disabled={availableSubCategories.length === 0} // Disable if no sub-cats available
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Sub-Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="All">All Sub-Categories</SelectItem>
+            {availableSubCategories.map((sub) => (
+              <SelectItem key={sub} value={sub}>
+                {sub}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        {/* Reset Filters Button */}
+        <Button 
+          variant="outline" 
+          onClick={() => {
+            setSearchTerm("");
+            setSelectedCategory("All");
+            setSelectedSubCategory("All");
+          }}
+        >
+          Reset Filters
+        </Button>
       </div>
-      <div className="mt-20"><Footer /></div>
+
+      {/* Jobs Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredJobs.length > 0 ? (
+          filteredJobs.map((job) => (
+            <Card key={job.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-xl font-semibold">{job.title}</CardTitle>
+                    <p className="text-sm text-gray-500 font-medium">{job.company}</p>
+                  </div>
+                  {job.type && <Badge variant="secondary">{job.type}</Badge>}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{job.location || "Remote"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4" />
+                    <span>{job.category} {job.subcategory ? `• ${job.subcategory}` : ""}</span>
+                  </div>
+                  {job.postedDate && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span>{new Date(job.postedDate).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+                <Button className="w-full" onClick={() => navigate(`/career/${job.id}`)}>
+                  View Details
+                </Button>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <div className="col-span-full text-center text-gray-500 py-12">
+            No jobs found matching your criteria.
+          </div>
+        )}
+      </div>
     </div>
   );
-};
-
-export default CareerOpportunities;
+}
