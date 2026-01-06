@@ -188,20 +188,20 @@ const CareerOpportunities = () => {
   );
 
   return (
-    <div className="bg-white h-screen flex flex-col font-sans text-slate-900 overflow-hidden">
-      {/* 1. Header is Fixed */}
-      <div className="shrink-0 z-50 bg-white">
+    <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900">
+      {/* 1. Header is Sticky */}
+      <div className="sticky top-0 z-50 bg-white shrink-0">
         <NavBar />
       </div>
 
-      {/* 2. Main Content Area - Scrollable but contains fixed structure */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      {/* 2. Main Content Area - Scrollable page flow */}
+      <div className="flex-1 flex flex-col relative">
         {/* Background Gradient */}
         <div className="absolute top-0 left-0 w-full h-[240px] bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] -z-10 mt-0"></div>
 
-        <div className="max-w-[1100px] w-full mx-auto px-5 flex flex-col h-full pt-8">
+        <div className="max-w-[1100px] w-full mx-auto px-5 flex flex-col flex-1 pt-8 pb-16">
             
-            {/* Top Search & Stats Area (Fixed height usually, but let's let it flow slightly or keep it top) */}
+            {/* Top Search & Stats Area */}
             <div className="shrink-0 mb-4">
                 <div className="relative w-full mb-8 shadow-sm bg-white rounded-lg mt-8">
                   <input 
@@ -237,12 +237,12 @@ const CareerOpportunities = () => {
                 </div>
             </div>
 
-            {/* 3. The Separately Scrollable Grid */}
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 pb-4">
+            {/* 3. The Grid Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
-              {/* Left Column: Filters - SCROLLS INDEPENDENTLY */}
-              <div className="hidden lg:block h-full overflow-y-auto pr-2 custom-scrollbar pb-20">
-                <p className="text-sm font-semibold text-slate-600 mb-4 sticky top-0 bg-[#f0f4c3]/0 backdrop-blur-sm z-10 py-2">Filters</p>
+              {/* Left Column: Filters - STICKY */}
+              <div className="hidden lg:block sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto pr-2 custom-scrollbar">
+                <p className="text-sm font-semibold text-slate-600 mb-4 py-2">Filters</p>
                 
                 <FilterSection 
                   title="Job Type" 
@@ -268,12 +268,11 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
-                {/* NEW CARD ADDED HERE at the bottom of filters */}
                 <JobHelpCard />
               </div>
 
-              {/* Right Column: Jobs - SCROLLS INDEPENDENTLY */}
-              <div className="h-full overflow-y-auto pr-2 custom-scrollbar pb-20">
+              {/* Right Column: Jobs - FLOWS NATURALLY */}
+              <div className="min-h-[500px]">
                 <div className="space-y-5">
                   {contentLoading ? (
                     <div className="flex justify-center items-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -335,16 +334,14 @@ const CareerOpportunities = () => {
                       <button onClick={clearFilters} className="text-sm text-blue-600 font-medium mt-2 hover:underline">Clear all filters</button>
                     </div>
                   )}
-                  
-                  {/* Footer is inside the scrollable content area usually, or put it outside if you want it fixed */}
-                  <div className="pt-10">
-                    <Footer />
-                  </div>
                 </div>
               </div>
             </div>
         </div>
       </div>
+      
+      {/* 4. Footer - Placed at the very bottom, full width */}
+      <Footer />
     </div>
   );
 };
