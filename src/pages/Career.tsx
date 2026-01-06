@@ -116,80 +116,78 @@ const Career = () => {
     <>
       <NavBar />
       
-      <main className="pt-20 bg-slate-50 min-h-screen font-sans text-slate-900 pb-20">
+      <main className="pt-24 pb-20 bg-slate-50 min-h-screen font-sans text-slate-900">
         
         {/* HERO SECTION - Corporate Announcement Style */}
-        <section className="py-12 flex justify-center items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        {/* Using w-full and removing centering constraints to use full width of screen */}
+        <section className="w-full px-4 mb-16">
+          
+          {/* Round rectangular block container, full width */}
+          <div className="w-full bg-white border border-slate-200 rounded-xl shadow-sm p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative">
             
-            {/* Round no much corner rectangular block container */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center">
-              
-              {/* Content Side */}
-              <div className="flex-1 w-full md:min-w-[450px] text-left">
-                <div className="inline-flex items-center bg-slate-50 border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide">
-                  <Check className="w-3.5 h-3.5 mr-2 opacity-70" />
-                  Corporate Announcement — Q1 2026
-                </div>
-
-                <motion.h1 
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  Architecting the infrastructure of global learning
-                </motion.h1>
-
-                <motion.p 
-                  className="text-lg text-slate-600 leading-relaxed mb-10 max-w-xl"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  We are scaling our engineering and product teams to build mission-critical tools for the next generation of educators.
-                </motion.p>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                >
-                  <Button 
-                    onClick={() => navigate('/career/openings')}
-                    className="bg-slate-900 hover:bg-blue-800 text-white px-7 py-6 h-auto rounded-md font-semibold text-base shadow-sm transition-all duration-200"
-                  >
-                    View career opportunities
-                  </Button>
-                </motion.div>
+            {/* Content Side */}
+            <div className="flex-1 w-full text-left z-10">
+              <div className="inline-flex items-center bg-slate-50 border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide">
+                <Check className="w-3.5 h-3.5 mr-2 opacity-70" />
+                Corporate Announcement — Q1 2026
               </div>
 
-              {/* Illustration Side */}
-              <motion.div 
-                className="flex-1 w-full"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+              <motion.h1 
+                className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
               >
-                <div className="w-full h-[300px] md:h-[420px] bg-slate-50 border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group">
-                  <div className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 bg-[radial-gradient(circle_at_70%_30%,rgba(30,64,175,0.03)_0%,transparent_50%)]" />
-                  <div className="z-10 text-center">
-                      <span className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-[2px] block mb-2">
-                          Visual Assets Frame
-                      </span>
-                      <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
-                          <Building className="w-8 h-8" />
-                      </div>
-                  </div>
-                </div>
+                Architecting the infrastructure of global learning
+              </motion.h1>
+
+              <motion.p 
+                className="text-lg text-slate-600 leading-relaxed mb-10 max-w-xl"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                We are scaling our engineering and product teams to build mission-critical tools for the next generation of educators.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Button 
+                  onClick={() => navigate('/career/openings')}
+                  className="bg-slate-900 hover:bg-blue-800 text-white px-7 py-6 h-auto rounded-md font-semibold text-base shadow-sm transition-all duration-200"
+                >
+                  View career opportunities
+                </Button>
               </motion.div>
             </div>
 
+            {/* Illustration Side */}
+            <motion.div 
+              className="flex-1 w-full relative z-10"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="w-full h-[300px] md:h-[420px] bg-slate-50 border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group">
+                <div className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 bg-[radial-gradient(circle_at_70%_30%,rgba(30,64,175,0.03)_0%,transparent_50%)]" />
+                <div className="z-10 text-center">
+                    <span className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-[2px] block mb-2">
+                        Visual Assets Frame
+                    </span>
+                    <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
+                        <Building className="w-8 h-8" />
+                    </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </section>
 
-        {/* Employee Verification Section */}
-        <section className="py-12">
+        {/* Employee Verification Section - Preserved */}
+        <section className="py-12 bg-slate-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center p-2 bg-white border border-slate-200 rounded-full mb-4 shadow-sm">
