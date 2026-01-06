@@ -29,32 +29,30 @@ const CareerOpportunities = () => {
   // Filter States
   const [selectedDepartments, setSelectedDepartments] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // Added for Job Type filtering if needed
   
-  // FIX: Initialize to null so it doesn't "automatically" open/flicker on mount
+  // FIX: Initialize to null to stop auto-toggle on mount
   const [expandedFilter, setExpandedFilter] = useState<string | null>(null);
 
-  // Derived Unique Values from Active Jobs
+  // Derived Unique Values from Active Jobs (Dynamic generation)
   const activeJobs = useMemo(() => jobs.filter(j => j.is_active), [jobs]);
 
   const uniqueDepartments = useMemo(() => {
-    const depts = new Set<string>();
-    activeJobs.forEach(job => {
-      if (job.department) depts.add(job.department);
-    });
-    return Array.from(depts).sort();
+    const items = new Set<string>();
+    activeJobs.forEach(job => { if (job.department) items.add(job.department); });
+    return Array.from(items).sort();
   }, [activeJobs]);
 
   const uniqueLocations = useMemo(() => {
-    const locs = new Set<string>();
-    activeJobs.forEach(job => {
-      if (job.location) locs.add(job.location);
-    });
-    return Array.from(locs).sort();
+    const items = new Set<string>();
+    activeJobs.forEach(job => { if (job.location) items.add(job.location); });
+    return Array.from(items).sort();
   }, [activeJobs]);
 
   // Filtering Logic
   const openings = useMemo(() => {
     return activeJobs.filter(job => {
+      // Search
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         const matchesSearch = 
@@ -64,23 +62,32 @@ const CareerOpportunities = () => {
           job.company?.toLowerCase().includes(term);
         if (!matchesSearch) return false;
       }
-      if (selectedDepartments.length > 0 && (!job.department || !selectedDepartments.includes(job.department))) return false;
-      if (selectedLocations.length > 0 && (!job.location || !selectedLocations.includes(job.location))) return false;
+      
+      // Department Filter
+      if (selectedDepartments.length > 0) {
+        if (!job.department || !selectedDepartments.includes(job.department)) return false;
+      }
+
+      // Location Filter
+      if (selectedLocations.length > 0) {
+        if (!job.location || !selectedLocations.includes(job.location)) return false;
+      }
+
       return true;
     });
   }, [activeJobs, searchTerm, selectedDepartments, selectedLocations]);
 
-  // FIX: Corrected filter logic (prev.filter(d => d !== dept))
-  const toggleDepartment = (dept: string) => {
-    setSelectedDepartments(prev => 
-      prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
-    );
-  };
-
-  const toggleLocation = (loc: string) => {
-    setSelectedLocations(prev => 
-      prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]
-    );
+  // Toggle Handlers
+  const toggleFilter = (
+    item: string, 
+    currentSelected: string[], 
+    setFn: React.Dispatch<React.SetStateAction<string[]>>
+  ) => {
+    if (currentSelected.includes(item)) {
+      setFn(currentSelected.filter(i => i !== item));
+    } else {
+      setFn([...currentSelected, item]);
+    }
   };
 
   const clearFilters = () => {
@@ -89,11 +96,76 @@ const CareerOpportunities = () => {
     setSearchTerm("");
   };
 
-  const toggleExpanded = (filter: string) => {
-    setExpandedFilter(expandedFilter === filter ? null : filter);
+  const toggleExpanded = (filterName: string) => {
+    setExpandedFilter(prev => prev === filterName ? null : filterName);
   };
 
   const hasActiveFilters = selectedDepartments.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
+
+  // Helper for filter sections
+  const FilterSection = ({ 
+    title, 
+    items, 
+    selectedItems, 
+    id, 
+    onToggle 
+  }: { 
+    title: string, 
+    items: string[], 
+    selectedItems: string[], 
+    id: string, 
+    onToggle: (item: string) => void 
+  }) => (
+    <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mb-3">
+      <div 
+        className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
+        onClick={() => toggleExpanded(id)}
+      >
+        <span className="text-sm text-slate-700 font-medium flex items-center gap-2">
+          {title}
+          {selectedItems.length > 0 && (
+            <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] bg-blue-100 text-blue-700">
+              {selectedItems.length}
+            </Badge>
+          )}
+        </span>
+        {expandedFilter === id ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
+      </div>
+      
+      <AnimatePresence initial={false}>
+        {expandedFilter === id && (
+          <motion.div 
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden bg-slate-50/50 border-t border-slate-100"
+          >
+            <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto">
+              {items.length > 0 ? items.map((item) => (
+                <button
+                  key={item}
+                  onClick={(e) => { e.stopPropagation(); onToggle(item); }}
+                  className={`flex items-center w-full text-left text-sm py-2 px-2 rounded-md transition-colors ${
+                    selectedItems.includes(item) ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center transition-colors ${
+                    selectedItems.includes(item) ? "bg-blue-600 border-blue-600" : "border-slate-300 bg-white"
+                  }`}>
+                    {selectedItems.includes(item) && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  {item}
+                </button>
+              )) : (
+                <p className="text-xs text-slate-400 italic">No options available</p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 pb-12">
@@ -135,106 +207,28 @@ const CareerOpportunities = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-          <div className="hidden lg:block space-y-3">
+          {/* Filters Sidebar */}
+          <div className="hidden lg:block space-y-1">
             <p className="text-sm font-semibold text-slate-600 mb-4">Filters</p>
             
-            {/* Department Filter Section */}
-            <div className="border border-slate-200 rounded-lg bg-white overflow-hidden">
-              <div 
-                className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => toggleExpanded("department")}
-              >
-                <span className="text-sm text-slate-700 font-medium flex items-center gap-2">
-                  Department
-                  {selectedDepartments.length > 0 && (
-                    <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] bg-blue-100 text-blue-700">
-                      {selectedDepartments.length}
-                    </Badge>
-                  )}
-                </span>
-                {expandedFilter === "department" ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
-              </div>
-              
-              <AnimatePresence initial={false}>
-                {expandedFilter === "department" && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-slate-50/30"
-                  >
-                    <div className="px-4 pb-4 space-y-2">
-                      {uniqueDepartments.map((dept) => (
-                        <button
-                          key={dept}
-                          onClick={() => toggleDepartment(dept)}
-                          className={`flex items-center w-full text-left text-sm py-1.5 px-2 rounded-md transition-colors ${
-                            selectedDepartments.includes(dept) ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center ${
-                            selectedDepartments.includes(dept) ? "bg-blue-600 border-blue-600" : "border-slate-300"
-                          }`}>
-                            {selectedDepartments.includes(dept) && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                          {dept}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <FilterSection 
+              title="Department" 
+              id="department" 
+              items={uniqueDepartments} 
+              selectedItems={selectedDepartments} 
+              onToggle={(item) => toggleFilter(item, selectedDepartments, setSelectedDepartments)}
+            />
 
-            {/* Location Filter Section */}
-            <div className="border border-slate-200 rounded-lg bg-white overflow-hidden">
-              <div 
-                className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => toggleExpanded("location")}
-              >
-                <span className="text-sm text-slate-700 font-medium flex items-center gap-2">
-                  Location
-                  {selectedLocations.length > 0 && (
-                    <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] bg-blue-100 text-blue-700">
-                      {selectedLocations.length}
-                    </Badge>
-                  )}
-                </span>
-                {expandedFilter === "location" ? <Minus className="w-4 h-4 text-slate-400" /> : <Plus className="w-4 h-4 text-slate-400" />}
-              </div>
-              
-              <AnimatePresence initial={false}>
-                {expandedFilter === "location" && (
-                  <motion.div 
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden bg-slate-50/30"
-                  >
-                    <div className="px-4 pb-4 space-y-2">
-                      {uniqueLocations.map((loc) => (
-                        <button
-                          key={loc}
-                          onClick={() => toggleLocation(loc)}
-                          className={`flex items-center w-full text-left text-sm py-1.5 px-2 rounded-md transition-colors ${
-                            selectedLocations.includes(loc) ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          <div className={`w-4 h-4 mr-3 rounded border flex items-center justify-center ${
-                            selectedLocations.includes(loc) ? "bg-blue-600 border-blue-600" : "border-slate-300"
-                          }`}>
-                            {selectedLocations.includes(loc) && <Check className="w-3 h-3 text-white" />}
-                          </div>
-                          {loc}
-                        </button>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+            <FilterSection 
+              title="Location" 
+              id="location" 
+              items={uniqueLocations} 
+              selectedItems={selectedLocations} 
+              onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
+            />
           </div>
 
+          {/* Job Listings */}
           <div className="space-y-5">
             {contentLoading ? (
                <div className="flex justify-center items-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
@@ -248,7 +242,8 @@ const CareerOpportunities = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.3 }}
-                  className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-all duration-300"
+                  // FIX: Added border-slate-900 for dark black lining
+                  className="bg-white border border-slate-900 rounded-xl p-6 hover:shadow-md transition-all duration-300"
                 >
                   <h2 className="text-xl font-medium text-slate-900 mb-3">{job.title}</h2>
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 text-sm text-slate-500">
