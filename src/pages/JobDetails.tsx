@@ -19,10 +19,25 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const { jobs, contentLoading } = useBackend();
 
-  // Find the specific job
-  const job = jobs.find(j => j.id === jobId);
+  // Find the specific job from the backend list
+  const rawJob = jobs.find(j => j.id === jobId);
 
-  // Inject Manrope font dynamically
+  // Normalize data structures (handle potential JSON/String differences)
+  const job = rawJob ? {
+    ...rawJob,
+    requirements: Array.isArray(rawJob.requirements) 
+      ? rawJob.requirements 
+      : typeof rawJob.requirements === 'string' 
+        ? [rawJob.requirements] 
+        : [],
+    skills: Array.isArray(rawJob.skills) 
+      ? rawJob.skills 
+      : typeof rawJob.skills === 'string' 
+        ? [rawJob.skills] 
+        : []
+  } : null;
+
+  // Inject Manrope font dynamically for this page
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap';
@@ -54,6 +69,14 @@ const JobDetails = () => {
       </div>
     );
   }
+
+  // Format Date
+  const updatedDate = job.updated_at || job.created_at 
+    ? new Date(job.updated_at || job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : 'Recently';
+
+  // Format ID for "Reference"
+  const jobReference = `GB-${job.id.slice(0, 4).toUpperCase()}`;
 
   return (
     <div className="bg-[#f8fafc] min-h-screen font-['Manrope'] text-[#475569] leading-[1.6]">
@@ -94,10 +117,12 @@ const JobDetails = () => {
               <MapPin className="w-[18px] h-[18px]" strokeWidth={2} />
               {job.location}
             </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-[18px] h-[18px]" strokeWidth={2} />
-              {job.duration || '1 - 5 Years'}
-            </div>
+            {job.duration && (
+              <div className="flex items-center gap-2">
+                <Clock className="w-[18px] h-[18px]" strokeWidth={2} />
+                {job.duration}
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <Briefcase className="w-[18px] h-[18px]" strokeWidth={2} />
               {job.job_type}
@@ -129,34 +154,33 @@ const JobDetails = () => {
           <h2 className="text-[18px] font-[700] text-[#0f172a] mb-6">Job Description</h2>
           
           <div className="text-[16px] text-[#475569] leading-[1.8] space-y-6">
-            <p>
-              {job.description || "We are seeking a high-energy Business Development Executive to join our growing strategy team. This role focuses on identifying new market opportunities, building high-value partnerships, and scaling our global business operations."}
+            {/* Description */}
+            <p className="whitespace-pre-line">
+              {job.description}
             </p>
 
+            {/* Requirements Section */}
             {job.requirements && job.requirements.length > 0 && (
-              <div>
+              <div className="mt-8">
                 <h3 className="text-[16px] font-[700] text-[#0f172a] mb-3">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2">
-                  {Array.isArray(job.requirements) 
-                    ? job.requirements.map((req, i) => <li key={i}>{req}</li>)
-                    : <li>{String(job.requirements)}</li>
-                  }
+                  {job.requirements.map((req: any, i: number) => (
+                    <li key={i}>{typeof req === 'string' ? req : JSON.stringify(req)}</li>
+                  ))}
                 </ul>
               </div>
             )}
 
+            {/* Skills Section */}
             {job.skills && job.skills.length > 0 && (
-              <div>
+              <div className="mt-8">
                 <h3 className="text-[16px] font-[700] text-[#0f172a] mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
-                  {Array.isArray(job.skills) 
-                    ? job.skills.map((skill, i) => (
-                        <span key={i} className="bg-[#f1f5f9] text-[#475569] px-3 py-1 rounded-md text-sm font-medium">
-                          {skill}
-                        </span>
-                      ))
-                    : null
-                  }
+                  {job.skills.map((skill: any, i: number) => (
+                    <span key={i} className="bg-[#f1f5f9] text-[#475569] px-3 py-1 rounded-md text-sm font-medium">
+                      {typeof skill === 'string' ? skill : JSON.stringify(skill)}
+                    </span>
+                  ))}
                 </div>
               </div>
             )}
@@ -172,15 +196,13 @@ const JobDetails = () => {
             <div className="mb-6">
               <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Updated Date</p>
               <p className="text-[15px] font-[600] text-[#0f172a]">
-                {job.updated_at 
-                  ? new Date(job.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
-                  : 'Nov 13, 2024'}
+                {updatedDate}
               </p>
             </div>
 
             <div className="mb-6">
               <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Job Reference</p>
-              <p className="text-[15px] font-[600] text-[#0f172a] font-mono">GB-{job.id.slice(0, 4).toUpperCase()}</p>
+              <p className="text-[15px] font-[600] text-[#0f172a] font-mono">{jobReference}</p>
             </div>
 
             <div className="mb-6">
@@ -190,7 +212,9 @@ const JobDetails = () => {
 
             <div>
               <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Employee Type</p>
-              <p className="text-[15px] font-[600] text-[#0f172a]">{job.job_type === 'Remote' ? 'Remote' : 'FTE (Full-time)'}</p>
+              <p className="text-[15px] font-[600] text-[#0f172a]">
+                {job.job_type === 'Remote' ? 'Remote' : 'FTE (Full-time)'}
+              </p>
             </div>
           </div>
 
@@ -213,7 +237,7 @@ const JobDetails = () => {
   );
 };
 
-// Helper Components for Cleaner JSX
+// Helper Components
 const Share2Icon = () => (
   <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
     <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
