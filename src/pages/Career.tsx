@@ -128,9 +128,9 @@ const Career = () => {
       
       <main className="pt-24 pb-20 bg-white min-h-screen font-sans text-slate-900">
         
-        {/* HERO SECTION - Full Width Rounded Block */}
+        {/* HERO SECTION - Full Width Rounded Block - WHITE BACKGROUND */}
         <section className="w-full px-4 mb-20">
-          <div className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
+          <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
             <div className="flex-1 w-full text-left z-10">
               <div className="inline-flex items-center bg-white border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide shadow-sm">
