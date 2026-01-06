@@ -3,18 +3,15 @@ import { useParams, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import { Button } from "@/components/ui/button";
 import { 
-  MapPin, 
-  Briefcase, 
-  Clock, 
-  Share2, 
-  ArrowLeft,
   Loader2,
   Linkedin,
   Facebook,
   Link as LinkIcon,
-  Twitter
+  Twitter,
+  MapPin,
+  Clock,
+  Briefcase
 } from "lucide-react";
 
 const JobDetails = () => {
@@ -22,9 +19,10 @@ const JobDetails = () => {
   const navigate = useNavigate();
   const { jobs, contentLoading } = useBackend();
 
+  // Find the specific job
   const job = jobs.find(j => j.id === jobId);
 
-  // Add Manrope font dynamically
+  // Inject Manrope font dynamically
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap';
@@ -37,7 +35,7 @@ const JobDetails = () => {
 
   if (contentLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center font-['Manrope']">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
@@ -45,152 +43,165 @@ const JobDetails = () => {
 
   if (!job) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <h2 className="text-2xl font-bold text-slate-800 mb-4">Job not found</h2>
-        <Button onClick={() => navigate('/career/openings')}>Back to Openings</Button>
+      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-4 font-['Manrope']">
+        <h2 className="text-2xl font-bold text-[#0f172a] mb-4">Job not found</h2>
+        <button 
+          onClick={() => navigate('/career/openings')}
+          className="bg-[#2563eb] text-white px-6 py-3 rounded-lg font-bold hover:bg-[#1d4ed8] transition-colors"
+        >
+          Back to Openings
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-50 min-h-screen font-['Manrope'] text-slate-600">
+    <div className="bg-[#f8fafc] min-h-screen font-['Manrope'] text-[#475569] leading-[1.6]">
       <NavBar />
 
       {/* HERO HEADER */}
-      <header className="relative pt-[120px] pb-[140px] border-b border-slate-200 bg-white">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2000" 
-            alt="Office background" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-white/95 via-white/90 to-white/60"></div>
-        </div>
+      <header className="relative pt-[100px] pb-[140px] border-b border-[#e2e8f0] bg-white">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 z-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2000')" }}
+        ></div>
+        
+        {/* Gradient Overlay */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{ background: "linear-gradient(to right, rgba(255,255,255,0.98) 10%, rgba(255,255,255,0.6) 100%)" }}
+        ></div>
 
         <div className="max-w-[1140px] mx-auto px-6 relative z-10">
-          <div className="flex items-center text-sm font-semibold text-blue-600 mb-6 tracking-wide cursor-pointer" onClick={() => navigate('/career/openings')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            <span className="hover:underline">Back to Jobs</span> 
-            <span className="mx-2 text-slate-400">/</span>
+          {/* Breadcrumbs */}
+          <nav className="text-[13px] font-[600] text-[#2563eb] mb-6 tracking-[0.01em]">
+            <span className="cursor-pointer hover:underline" onClick={() => navigate('/career/openings')}>Open Jobs</span>
+            <span className="text-[#94a3b8] mx-2 font-[400]">/</span>
             <span>{job.department || 'General'}</span>
-            <span className="mx-2 text-slate-400">/</span>
-            <span className="text-slate-500 font-normal">{job.title}</span>
-          </div>
+            <span className="text-[#94a3b8] mx-2 font-[400]">/</span>
+            <span className="text-[#64748b]">{job.title}</span>
+          </nav>
 
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-3 tracking-tight">
+          {/* H1 Title */}
+          <h1 className="text-[34px] font-[800] text-[#0f172a] mb-3 tracking-[-0.02em] leading-tight">
             {job.title}
           </h1>
           
-          <div className="flex flex-wrap gap-6 mb-8 text-sm font-semibold text-slate-600">
+          {/* Meta Row */}
+          <div className="flex flex-wrap gap-6 mb-7 font-[600] text-[14px] text-[#475569]">
             <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-slate-500" />
+              <MapPin className="w-[18px] h-[18px]" strokeWidth={2} />
               {job.location}
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-slate-500" />
-              {job.duration || 'Full Time'}
+              <Clock className="w-[18px] h-[18px]" strokeWidth={2} />
+              {job.duration || '1 - 5 Years'}
             </div>
             <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-slate-500" />
+              <Briefcase className="w-[18px] h-[18px]" strokeWidth={2} />
               {job.job_type}
             </div>
           </div>
 
+          {/* Action Bar */}
           <div className="flex gap-3">
-            {/* THIS BUTTON OPENS THE EXTERNAL APPLICATION LINK */}
-            <Button 
-              asChild
-              className="bg-blue-600 hover:bg-blue-700 text-white px-7 py-6 rounded-lg font-bold text-base shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-px"
+            <a 
+              href={job.application_url || '#'} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-7 py-3 rounded-lg font-[700] transition-all shadow-[0_4px_6px_-1px_rgba(37,99,235,0.2)] hover:-translate-y-px inline-block"
             >
-              <a href={job.application_url || '#'} target="_blank" rel="noopener noreferrer">
-                Apply Now
-              </a>
-            </Button>
-            <button className="bg-white border border-slate-200 p-3 rounded-lg hover:bg-slate-50 transition-colors text-slate-600">
-              <Share2 className="w-5 h-5" />
+              Apply Now
+            </a>
+            <button className="bg-white border border-[#e2e8f0] px-3.5 py-2.5 rounded-lg flex items-center justify-center hover:bg-[#f1f5f9] transition-all text-[#475569]">
+              <Share2Icon />
             </button>
           </div>
         </div>
       </header>
 
-      {/* CONTENT LAYOUT */}
-      <main className="max-w-[1140px] mx-auto px-6 relative z-20 -mt-20 pb-24 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
+      {/* MAIN CONTENT LAYOUT: OVERLAPPING */}
+      <main className="max-w-[1140px] mx-auto px-6 relative z-10 -mt-[80px] pb-[100px] grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
         
-        {/* Main Job Info */}
-        <section className="bg-white border border-slate-200 rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Job Description</h2>
+        {/* Main Job Info Card */}
+        <section className="bg-white border border-[#e2e8f0] rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
+          <h2 className="text-[18px] font-[700] text-[#0f172a] mb-6">Job Description</h2>
           
-          <div className="prose prose-slate max-w-none text-[16px] leading-relaxed text-slate-600">
-            <p className="mb-6">
-              {job.description || "We are seeking a high-energy individual to join our growing team."}
+          <div className="text-[16px] text-[#475569] leading-[1.8] space-y-6">
+            <p>
+              {job.description || "We are seeking a high-energy Business Development Executive to join our growing strategy team. This role focuses on identifying new market opportunities, building high-value partnerships, and scaling our global business operations."}
             </p>
 
-            {job.requirements && (
-              <>
-                <h3 className="text-lg font-bold text-slate-900 mt-8 mb-4">Requirements</h3>
+            {job.requirements && job.requirements.length > 0 && (
+              <div>
+                <h3 className="text-[16px] font-[700] text-[#0f172a] mb-3">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2">
                   {Array.isArray(job.requirements) 
-                    ? job.requirements.map((req: string, i: number) => <li key={i}>{req}</li>)
-                    : typeof job.requirements === 'string' 
-                      ? <li>{job.requirements}</li>
-                      : <li>No specific requirements listed.</li>
+                    ? job.requirements.map((req, i) => <li key={i}>{req}</li>)
+                    : <li>{String(job.requirements)}</li>
                   }
                 </ul>
-              </>
+              </div>
             )}
 
-            {job.skills && (
-              <>
-                <h3 className="text-lg font-bold text-slate-900 mt-8 mb-4">Skills Required</h3>
+            {job.skills && job.skills.length > 0 && (
+              <div>
+                <h3 className="text-[16px] font-[700] text-[#0f172a] mb-3">Skills</h3>
                 <div className="flex flex-wrap gap-2">
-                  {Array.isArray(job.skills) ? job.skills.map((skill: string, i: number) => (
-                    <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
-                      {skill}
-                    </span>
-                  )) : null}
+                  {Array.isArray(job.skills) 
+                    ? job.skills.map((skill, i) => (
+                        <span key={i} className="bg-[#f1f5f9] text-[#475569] px-3 py-1 rounded-md text-sm font-medium">
+                          {skill}
+                        </span>
+                      ))
+                    : null
+                  }
                 </div>
-              </>
+              </div>
             )}
           </div>
         </section>
 
         {/* Sidebar Details */}
-        <aside className="space-y-6">
-          <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
-            <h2 className="text-[16px] font-bold text-slate-900 mb-5">Job Snapshot</h2>
+        <aside>
+          {/* Job Snapshot Card */}
+          <div className="bg-white border border-[#e2e8f0] rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)] mb-6">
+            <h2 className="text-[16px] font-[700] text-[#0f172a] mb-5">Job Snapshot</h2>
             
             <div className="mb-6">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Posted Date</p>
-              <p className="text-[15px] font-semibold text-slate-900">
-                {job.created_at ? new Date(job.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently'}
+              <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Updated Date</p>
+              <p className="text-[15px] font-[600] text-[#0f172a]">
+                {job.updated_at 
+                  ? new Date(job.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) 
+                  : 'Nov 13, 2024'}
               </p>
             </div>
 
             <div className="mb-6">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Job Reference</p>
-              <p className="text-[15px] font-semibold text-slate-900 font-mono text-sm">#{job.id.slice(0, 8)}</p>
+              <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Job Reference</p>
+              <p className="text-[15px] font-[600] text-[#0f172a] font-mono">GB-{job.id.slice(0, 4).toUpperCase()}</p>
             </div>
 
             <div className="mb-6">
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Stipend / Salary</p>
-              <p className="text-[15px] font-semibold text-slate-900">{job.stipend || 'Competitive'}</p>
+              <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Stipend / Salary</p>
+              <p className="text-[15px] font-[600] text-[#0f172a]">{job.stipend || 'Competitive'}</p>
             </div>
 
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Deadline</p>
-              <p className="text-[15px] font-semibold text-slate-900">
-                {job.deadline ? new Date(job.deadline).toLocaleDateString() : 'Open until filled'}
-              </p>
+              <p className="text-[11px] font-[700] text-[#94a3b8] uppercase tracking-[0.05em] mb-1">Employee Type</p>
+              <p className="text-[15px] font-[600] text-[#0f172a]">{job.job_type === 'Remote' ? 'Remote' : 'FTE (Full-time)'}</p>
             </div>
           </div>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
-            <h2 className="text-[16px] font-bold text-slate-900 mb-3">Share this role</h2>
+          {/* Share Card */}
+          <div className="bg-white border border-[#e2e8f0] rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
+            <h2 className="text-[16px] font-[700] text-[#0f172a] mb-3">Share this role</h2>
             <div className="flex gap-2.5 mt-3">
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-600 hover:text-white transition-colors"><Linkedin className="w-4 h-4" /></button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-black hover:text-white transition-colors"><Twitter className="w-4 h-4" /></button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-800 hover:text-white transition-colors"><Facebook className="w-4 h-4" /></button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-slate-800 hover:text-white transition-colors"><LinkIcon className="w-4 h-4" /></button>
+              <SocialButton icon={<Linkedin className="w-3.5 h-3.5" />} />
+              <SocialButton icon={<Twitter className="w-3.5 h-3.5" />} />
+              <SocialButton icon={<Facebook className="w-3.5 h-3.5" />} />
+              <SocialButton icon={<LinkIcon className="w-3.5 h-3.5" />} />
             </div>
           </div>
         </aside>
@@ -201,5 +212,18 @@ const JobDetails = () => {
     </div>
   );
 };
+
+// Helper Components for Cleaner JSX
+const Share2Icon = () => (
+  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+  </svg>
+);
+
+const SocialButton = ({ icon }: { icon: React.ReactNode }) => (
+  <div className="w-9 h-9 rounded-full bg-[#f1f5f9] flex items-center justify-center text-[#64748b] cursor-pointer transition-all hover:bg-[#2563eb] hover:text-white">
+    {icon}
+  </div>
+);
 
 export default JobDetails;
