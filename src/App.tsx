@@ -15,7 +15,8 @@ import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
 import Career from "./pages/Career";
-import CareerOpportunities from "./pages/CareerOpportunities"; // Updated import
+import CareerOpportunities from "./pages/CareerOpportunities"; 
+import JobDetails from "./pages/JobDetails"; // Import the new page
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
@@ -32,7 +33,6 @@ import EmployeeVerification from "./pages/EmployeeVerification";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
-
 import IITMCalculators from "./pages/IITMCalculators";
 
 const queryClient = new QueryClient();
@@ -57,8 +57,12 @@ const App = () => (
               <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
+              
+              {/* Career Routes */}
               <Route path="/career" element={<Career />} />
-              <Route path="/career/openings" element={<CareerOpportunities />} /> {/* New Route */}
+              <Route path="/career/openings" element={<CareerOpportunities />} />
+              <Route path="/career/job/:jobId" element={<JobDetails />} /> {/* New Route */}
+              
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/profile/complete" element={<ProfileComplete />} />
