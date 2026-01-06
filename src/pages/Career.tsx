@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -9,33 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  MapPin, 
-  Briefcase, 
   Building, 
   Check, 
   FileText,
-  Search,
-  ChevronDown,
-  Plus,
-  Bookmark,
   Loader2
 } from "lucide-react";
-import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Career = () => {
-  const { jobs, contentLoading } = useBackend();
-
-  // Filter active jobs
-  const openings = jobs.filter(job => job.is_active).map(job => ({
-    ...job,
-    requirements: Array.isArray(job.requirements) ? job.requirements : 
-                 typeof job.requirements === 'string' ? [job.requirements] : [],
-    skills: Array.isArray(job.skills) ? job.skills :
-           typeof job.skills === 'string' ? [job.skills] : []
-  }));
-
+  const navigate = useNavigate();
   const [verificationTab, setVerificationTab] = useState<"intern" | "employer">("intern");
   const [empId, setEmpId] = useState("");
   const [empName, setEmpName] = useState("");
@@ -129,200 +112,84 @@ const Career = () => {
     setVerifying(false);
   };
 
-  const scrollToOpenings = () => {
-    const element = document.getElementById("openings");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <>
       <NavBar />
       
-      <main className="pt-20 bg-white min-h-screen font-sans text-slate-900">
+      <main className="pt-20 bg-slate-50 min-h-screen font-sans text-slate-900 pb-20">
         
         {/* HERO SECTION - Corporate Announcement Style */}
-        <section className="py-16 lg:py-24 flex justify-center items-center bg-white text-slate-900 border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex flex-col md:flex-row gap-12 lg:gap-24 items-center">
+        <section className="py-12 flex justify-center items-center">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
             
-            {/* Content Side */}
-            <div className="flex-1 w-full md:min-w-[450px] text-left">
-              <div className="inline-flex items-center bg-slate-50 border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide">
-                <Check className="w-3.5 h-3.5 mr-2 opacity-70" />
-                Corporate Announcement — Q1 2026
+            {/* Round no much corner rectangular block container */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center">
+              
+              {/* Content Side */}
+              <div className="flex-1 w-full md:min-w-[450px] text-left">
+                <div className="inline-flex items-center bg-slate-50 border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide">
+                  <Check className="w-3.5 h-3.5 mr-2 opacity-70" />
+                  Corporate Announcement — Q1 2026
+                </div>
+
+                <motion.h1 
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  Architecting the infrastructure of global learning
+                </motion.h1>
+
+                <motion.p 
+                  className="text-lg text-slate-600 leading-relaxed mb-10 max-w-xl"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  We are scaling our engineering and product teams to build mission-critical tools for the next generation of educators.
+                </motion.p>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <Button 
+                    onClick={() => navigate('/career/openings')}
+                    className="bg-slate-900 hover:bg-blue-800 text-white px-7 py-6 h-auto rounded-md font-semibold text-base shadow-sm transition-all duration-200"
+                  >
+                    View career opportunities
+                  </Button>
+                </motion.div>
               </div>
 
-              <motion.h1 
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 leading-[1.15] mb-6 tracking-tight"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+              {/* Illustration Side */}
+              <motion.div 
+                className="flex-1 w-full"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
               >
-                Architecting the infrastructure of global learning
-              </motion.h1>
-
-              <motion.p 
-                className="text-lg text-slate-600 leading-relaxed mb-10 max-w-xl"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                We are scaling our engineering and product teams to build mission-critical tools for the next generation of educators.
-              </motion.p>
-
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
-              >
-                <Button 
-                  onClick={scrollToOpenings}
-                  className="bg-slate-900 hover:bg-blue-800 text-white px-7 py-6 h-auto rounded-md font-semibold text-base shadow-sm transition-all duration-200"
-                >
-                  View career opportunities
-                </Button>
+                <div className="w-full h-[300px] md:h-[420px] bg-slate-50 border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group">
+                  <div className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 bg-[radial-gradient(circle_at_70%_30%,rgba(30,64,175,0.03)_0%,transparent_50%)]" />
+                  <div className="z-10 text-center">
+                      <span className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-[2px] block mb-2">
+                          Visual Assets Frame
+                      </span>
+                      <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
+                          <Building className="w-8 h-8" />
+                      </div>
+                  </div>
+                </div>
               </motion.div>
             </div>
 
-            {/* Illustration Side */}
-            <motion.div 
-              className="flex-1 w-full"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              <div className="w-full h-[300px] md:h-[420px] bg-slate-50 border border-slate-200 rounded-xl flex justify-center items-center relative overflow-hidden group">
-                <div className="absolute inset-0 w-[150%] h-[150%] -left-1/4 -top-1/4 bg-[radial-gradient(circle_at_70%_30%,rgba(30,64,175,0.03)_0%,transparent_50%)]" />
-                <div className="z-10 text-center">
-                    <span className="text-slate-400 text-xs sm:text-sm font-bold uppercase tracking-[2px] block mb-2">
-                        Visual Assets Frame
-                    </span>
-                    <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center text-slate-300">
-                        <Building className="w-8 h-8" />
-                    </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* NEW JOB BOARD INTERFACE SECTION */}
-        <section id="openings" className="bg-white pb-24">
-          
-          {/* Abstract Header Background */}
-          <div className="h-[200px] w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] relative overflow-hidden">
-             {/* Optional decorative shapes could go here if implemented with SVG/CSS */}
-          </div>
-
-          {/* Main Content Container (Overlapping Header) */}
-          <div className="max-w-[1100px] mx-auto px-4 sm:px-6 relative z-10 -mt-10">
-            
-            {/* Search Bar */}
-            <div className="relative w-full mb-10 shadow-sm">
-              <input 
-                type="text" 
-                className="w-full py-4 pl-5 pr-14 border border-slate-200 rounded-lg text-[15px] outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
-                placeholder="Search by role, department or location"
-              />
-              <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
-                <Search className="w-5 h-5" />
-              </div>
-            </div>
-
-            {/* Results Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-              <h2 className="text-2xl font-medium text-slate-800">
-                {openings.length} {openings.length === 1 ? 'Open job' : 'Open jobs'} available
-              </h2>
-              
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors">
-                Newest First
-                <ChevronDown className="w-4 h-4 text-slate-500" />
-              </div>
-            </div>
-
-            {/* Main Grid Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
-              
-              {/* Sidebar Filters */}
-              <div className="hidden lg:block space-y-4">
-                <p className="text-sm font-semibold text-slate-600 mb-4">Filters</p>
-                
-                <div className="bg-white border border-slate-200 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:border-blue-200 transition-colors group">
-                  <span className="text-sm text-slate-700 font-medium">Department</span>
-                  <Plus className="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
-                </div>
-
-                <div className="bg-white border border-slate-200 p-4 rounded-lg flex justify-between items-center cursor-pointer hover:border-blue-200 transition-colors group">
-                  <span className="text-sm text-slate-700 font-medium">Location</span>
-                  <Plus className="w-4 h-4 text-slate-400 group-hover:text-blue-500" />
-                </div>
-              </div>
-
-              {/* Job Listings Content */}
-              <div className="space-y-5">
-                {contentLoading ? (
-                   <div className="flex justify-center items-center py-20 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                     <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
-                   </div>
-                ) : openings.length > 0 ? (
-                  openings.map((job) => (
-                    <motion.div
-                      key={job.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3 }}
-                      className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-all duration-300"
-                    >
-                      <h3 className="text-xl font-medium text-slate-900 mb-3">{job.title}</h3>
-                      
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 text-sm text-slate-500">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 opacity-70" />
-                          <span>{job.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Briefcase className="w-4 h-4 opacity-70" />
-                          <span>{job.job_type || 'Full Time'}</span>
-                        </div>
-                        {job.company && (
-                          <div className="flex items-center gap-2">
-                            <Building className="w-4 h-4 opacity-70" />
-                            <span>{job.company}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          asChild
-                          className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 hover:border-blue-300 font-medium px-6 py-2 h-auto rounded-md transition-all duration-200"
-                        >
-                          <a href={job.application_url || '#'} target="_blank" rel="noopener noreferrer">
-                            View and Apply
-                          </a>
-                        </Button>
-                        <button className="p-2.5 rounded-md border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all">
-                          <Bookmark className="w-5 h-5" />
-                        </button>
-                      </div>
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                    <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-600">No open positions found.</p>
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </section>
 
         {/* Employee Verification Section */}
-        <section className="py-20 bg-slate-50 border-t border-slate-200">
+        <section className="py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <div className="inline-flex items-center justify-center p-2 bg-white border border-slate-200 rounded-full mb-4 shadow-sm">
