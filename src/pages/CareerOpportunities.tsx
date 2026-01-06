@@ -24,6 +24,19 @@ import { Badge } from "@/components/ui/badge";
 
 // --- JOB HELP CARD COMPONENT (Based on your HTML/CSS) ---
 const JobHelpCard = () => {
+  const emailTo = "unknowniitians@gmail.com";
+  const emailCc = "support@unknowniitians.live";
+  const subject = encodeURIComponent("Job Application / Resume Submission");
+  const body = encodeURIComponent(`Name: 
+Year: 
+College: 
+Role interested in :
+If teaching then subject: 
+
+(Please attach your resume)`);
+
+  const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
+
   return (
     <div className="w-full bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm flex flex-col mt-6">
       <div className="w-full h-[180px] bg-slate-50 rounded-xl mb-6 flex justify-center items-center overflow-hidden relative">
@@ -44,7 +57,7 @@ const JobHelpCard = () => {
       </p>
 
       <a 
-        href="#" 
+        href={mailtoLink}
         className="inline-block self-start px-6 py-2.5 border-[1.5px] border-blue-600 text-blue-600 font-bold text-sm rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:shadow-md hover:-translate-y-px font-sans decoration-0"
       >
         Apply Here
