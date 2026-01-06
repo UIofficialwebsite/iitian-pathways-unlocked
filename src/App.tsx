@@ -15,8 +15,8 @@ import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
 import Career from "./pages/Career";
-import CareerOpportunities from "./pages/CareerOpportunities"; 
-import JobDetails from "./pages/JobDetails"; // Import the new page
+import CareerOpportunities from "./pages/CareerOpportunities"; // Import this
+import JobDetails from "./pages/JobDetails"; // Import this
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
@@ -58,10 +58,10 @@ const App = () => (
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               
-              {/* Career Routes */}
+              {/* CAREER ROUTES */}
               <Route path="/career" element={<Career />} />
               <Route path="/career/openings" element={<CareerOpportunities />} />
-              <Route path="/career/job/:jobId" element={<JobDetails />} /> {/* New Route */}
+              <Route path="/career/job/:jobId" element={<JobDetails />} />
               
               <Route path="/about" element={<About />} />
               <Route path="/dashboard" element={<Dashboard />} />
