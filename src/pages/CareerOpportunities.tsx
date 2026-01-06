@@ -14,7 +14,8 @@ import {
   Loader2,
   X,
   Check,
-  FilterX
+  FilterX,
+  GraduationCap
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,43 +27,41 @@ const CareerOpportunities = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
-  // Filter States
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [selectedSubCategories, setSelectedSubCategories] = useState<string[]>([]);
+  // Filter States - Naming matches DB columns
+  const [selectedJobTypes, setSelectedJobTypes] = useState<string[]>([]);
+  const [selectedExperienceLevels, setSelectedExperienceLevels] = useState<string[]>([]);
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
   
-  const [expandedFilter, setExpandedFilter] = useState<string | null>("category"); // Default open category
+  // Default open the first filter
+  const [expandedFilter, setExpandedFilter] = useState<string | null>("job_type"); 
 
-  // Derived Unique Values from Active Jobs (Dynamic generation)
+  // Derived Unique Values from Active Jobs (Dynamic generation from DB data)
   const activeJobs = useMemo(() => jobs.filter(j => j.is_active), [jobs]);
 
-  // 1. Dynamic Categories
-  const uniqueCategories = useMemo(() => {
+  // 1. Dynamic Job Types
+  const uniqueJobTypes = useMemo(() => {
     const items = new Set<string>();
     activeJobs.forEach(job => { 
-      if (job.category) items.add(job.category); 
+      if (job.job_type) items.add(job.job_type); 
     });
     return Array.from(items).sort();
   }, [activeJobs]);
 
-  // 2. Dynamic Sub-Categories (Dependent on selected category if any)
-  const uniqueSubCategories = useMemo(() => {
+  // 2. Dynamic Experience Levels
+  const uniqueExperienceLevels = useMemo(() => {
     const items = new Set<string>();
     activeJobs.forEach(job => { 
-      // Only show subcategories that match the selected category (if one is selected)
-      // If multiple categories are selected, show subcategories for all of them
-      const matchesCategory = selectedCategories.length === 0 || (job.category && selectedCategories.includes(job.category));
-      
-      if (matchesCategory && job.subcategory) {
-        items.add(job.subcategory);
-      }
+      if (job.experience_level) items.add(job.experience_level); 
     });
     return Array.from(items).sort();
-  }, [activeJobs, selectedCategories]);
+  }, [activeJobs]);
 
+  // 3. Dynamic Locations
   const uniqueLocations = useMemo(() => {
     const items = new Set<string>();
-    activeJobs.forEach(job => { if (job.location) items.add(job.location); });
+    activeJobs.forEach(job => { 
+      if (job.location) items.add(job.location); 
+    });
     return Array.from(items).sort();
   }, [activeJobs]);
 
@@ -75,20 +74,19 @@ const CareerOpportunities = () => {
         const matchesSearch = 
           job.title?.toLowerCase().includes(term) ||
           job.location?.toLowerCase().includes(term) ||
-          job.category?.toLowerCase().includes(term) ||
-          job.subcategory?.toLowerCase().includes(term) ||
-          job.company?.toLowerCase().includes(term);
+          job.company?.toLowerCase().includes(term) ||
+          job.job_type?.toLowerCase().includes(term);
         if (!matchesSearch) return false;
       }
       
-      // Category Filter
-      if (selectedCategories.length > 0) {
-        if (!job.category || !selectedCategories.includes(job.category)) return false;
+      // Job Type Filter
+      if (selectedJobTypes.length > 0) {
+        if (!job.job_type || !selectedJobTypes.includes(job.job_type)) return false;
       }
 
-      // Sub-Category Filter
-      if (selectedSubCategories.length > 0) {
-        if (!job.subcategory || !selectedSubCategories.includes(job.subcategory)) return false;
+      // Experience Level Filter
+      if (selectedExperienceLevels.length > 0) {
+        if (!job.experience_level || !selectedExperienceLevels.includes(job.experience_level)) return false;
       }
 
       // Location Filter
@@ -98,7 +96,7 @@ const CareerOpportunities = () => {
 
       return true;
     });
-  }, [activeJobs, searchTerm, selectedCategories, selectedSubCategories, selectedLocations]);
+  }, [activeJobs, searchTerm, selectedJobTypes, selectedExperienceLevels, selectedLocations]);
 
   // Toggle Handlers
   const toggleFilter = (
@@ -114,8 +112,8 @@ const CareerOpportunities = () => {
   };
 
   const clearFilters = () => {
-    setSelectedCategories([]);
-    setSelectedSubCategories([]);
+    setSelectedJobTypes([]);
+    setSelectedExperienceLevels([]);
     setSelectedLocations([]);
     setSearchTerm("");
   };
@@ -124,9 +122,9 @@ const CareerOpportunities = () => {
     setExpandedFilter(prev => prev === filterName ? null : filterName);
   };
 
-  const hasActiveFilters = selectedCategories.length > 0 || selectedSubCategories.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
+  const hasActiveFilters = selectedJobTypes.length > 0 || selectedExperienceLevels.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
 
-  // Helper for filter sections (Design kept exactly as requested)
+  // Helper for filter sections
   const FilterSection = ({ 
     title, 
     items, 
@@ -194,7 +192,6 @@ const CareerOpportunities = () => {
   return (
     <div className="bg-white min-h-screen font-sans text-slate-900 pb-12">
       <NavBar />
-      {/* Restored exact Gradient Header */}
       <div className="h-[240px] w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] relative overflow-hidden mt-16"></div>
 
       <div className="max-w-[1100px] mx-auto px-5 relative z-10 -mt-10">
@@ -204,7 +201,7 @@ const CareerOpportunities = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full py-4 pl-5 pr-14 border border-slate-200 rounded-lg text-[15px] outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
-            placeholder="Search by role, category or location"
+            placeholder="Search by role, company or location"
           />
           <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
             {searchTerm ? (
@@ -237,19 +234,19 @@ const CareerOpportunities = () => {
             <p className="text-sm font-semibold text-slate-600 mb-4">Filters</p>
             
             <FilterSection 
-              title="Category" 
-              id="category" 
-              items={uniqueCategories} 
-              selectedItems={selectedCategories} 
-              onToggle={(item) => toggleFilter(item, selectedCategories, setSelectedCategories)}
+              title="Job Type" 
+              id="job_type" 
+              items={uniqueJobTypes} 
+              selectedItems={selectedJobTypes} 
+              onToggle={(item) => toggleFilter(item, selectedJobTypes, setSelectedJobTypes)}
             />
 
             <FilterSection 
-              title="Sub-Category" 
-              id="subcategory" 
-              items={uniqueSubCategories} 
-              selectedItems={selectedSubCategories} 
-              onToggle={(item) => toggleFilter(item, selectedSubCategories, setSelectedSubCategories)}
+              title="Experience Level" 
+              id="experience_level" 
+              items={uniqueExperienceLevels} 
+              selectedItems={selectedExperienceLevels} 
+              onToggle={(item) => toggleFilter(item, selectedExperienceLevels, setSelectedExperienceLevels)}
             />
 
             <FilterSection 
@@ -283,13 +280,21 @@ const CareerOpportunities = () => {
                       <MapPin className="w-4 h-4 opacity-70" />
                       <span>{job.location}</span>
                     </div>
-                    {/* Display Category / Subcategory instead of Type if available, or both */}
-                    {job.category && (
+                    
+                    {job.job_type && (
                        <div className="flex items-center gap-2">
                          <Briefcase className="w-4 h-4 opacity-70" />
-                         <span>{job.category} {job.subcategory ? `• ${job.subcategory}` : ''}</span>
+                         <span>{job.job_type}</span>
                        </div>
                     )}
+                    
+                    {job.experience_level && (
+                       <div className="flex items-center gap-2">
+                         <GraduationCap className="w-4 h-4 opacity-70" />
+                         <span>{job.experience_level}</span>
+                       </div>
+                    )}
+
                     {job.company && (
                       <div className="flex items-center gap-2">
                         <Building className="w-4 h-4 opacity-70" />
