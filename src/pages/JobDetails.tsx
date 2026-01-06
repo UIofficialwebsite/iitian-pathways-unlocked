@@ -8,7 +8,6 @@ import {
   MapPin, 
   Briefcase, 
   Clock, 
-  Calendar, 
   Share2, 
   ArrowLeft,
   Loader2,
@@ -17,17 +16,15 @@ import {
   Link as LinkIcon,
   Twitter
 } from "lucide-react";
-import { motion } from "framer-motion";
 
 const JobDetails = () => {
   const { jobId } = useParams<{ jobId: string }>();
   const navigate = useNavigate();
   const { jobs, contentLoading } = useBackend();
 
-  // Find the specific job
   const job = jobs.find(j => j.id === jobId);
 
-  // Add Manrope font
+  // Add Manrope font dynamically
   useEffect(() => {
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap';
@@ -59,9 +56,8 @@ const JobDetails = () => {
     <div className="bg-slate-50 min-h-screen font-['Manrope'] text-slate-600">
       <NavBar />
 
-      {/* HERO HEADER: LEFT ALIGNED & SOOTHING */}
+      {/* HERO HEADER */}
       <header className="relative pt-[120px] pb-[140px] border-b border-slate-200 bg-white">
-        {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
             src="https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&q=80&w=2000" 
@@ -101,6 +97,7 @@ const JobDetails = () => {
           </div>
 
           <div className="flex gap-3">
+            {/* THIS BUTTON OPENS THE EXTERNAL APPLICATION LINK */}
             <Button 
               asChild
               className="bg-blue-600 hover:bg-blue-700 text-white px-7 py-6 rounded-lg font-bold text-base shadow-lg shadow-blue-600/20 transition-all transform hover:-translate-y-px"
@@ -116,7 +113,7 @@ const JobDetails = () => {
         </div>
       </header>
 
-      {/* CONTENT LAYOUT: OVERLAPPING */}
+      {/* CONTENT LAYOUT */}
       <main className="max-w-[1140px] mx-auto px-6 relative z-20 -mt-20 pb-24 grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
         
         {/* Main Job Info */}
@@ -125,10 +122,10 @@ const JobDetails = () => {
           
           <div className="prose prose-slate max-w-none text-[16px] leading-relaxed text-slate-600">
             <p className="mb-6">
-              {job.description || "We are seeking a high-energy individual to join our growing team. This role focuses on identifying new opportunities, building high-value solutions, and scaling our operations."}
+              {job.description || "We are seeking a high-energy individual to join our growing team."}
             </p>
 
-            {job.requirements && job.requirements.length > 0 && (
+            {job.requirements && (
               <>
                 <h3 className="text-lg font-bold text-slate-900 mt-8 mb-4">Requirements</h3>
                 <ul className="list-disc pl-5 space-y-2">
@@ -142,15 +139,15 @@ const JobDetails = () => {
               </>
             )}
 
-            {job.skills && job.skills.length > 0 && (
+            {job.skills && (
               <>
                 <h3 className="text-lg font-bold text-slate-900 mt-8 mb-4">Skills Required</h3>
                 <div className="flex flex-wrap gap-2">
-                  {Array.isArray(job.skills) && job.skills.map((skill: string, i: number) => (
+                  {Array.isArray(job.skills) ? job.skills.map((skill: string, i: number) => (
                     <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-sm font-medium">
                       {skill}
                     </span>
-                  ))}
+                  )) : null}
                 </div>
               </>
             )}
@@ -190,18 +187,10 @@ const JobDetails = () => {
           <div className="bg-white border border-slate-200 rounded-xl p-8 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.04)]">
             <h2 className="text-[16px] font-bold text-slate-900 mb-3">Share this role</h2>
             <div className="flex gap-2.5 mt-3">
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-600 hover:text-white transition-colors">
-                <Linkedin className="w-4 h-4" />
-              </button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-black hover:text-white transition-colors">
-                <Twitter className="w-4 h-4" />
-              </button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-800 hover:text-white transition-colors">
-                <Facebook className="w-4 h-4" />
-              </button>
-              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-slate-800 hover:text-white transition-colors">
-                <LinkIcon className="w-4 h-4" />
-              </button>
+              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-600 hover:text-white transition-colors"><Linkedin className="w-4 h-4" /></button>
+              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-black hover:text-white transition-colors"><Twitter className="w-4 h-4" /></button>
+              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-blue-800 hover:text-white transition-colors"><Facebook className="w-4 h-4" /></button>
+              <button className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold hover:bg-slate-800 hover:text-white transition-colors"><LinkIcon className="w-4 h-4" /></button>
             </div>
           </div>
         </aside>
