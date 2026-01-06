@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- JOB HELP CARD COMPONENT ---
+// --- JOB HELP CARD COMPONENT (The "Banner") ---
 const JobHelpCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -204,7 +204,8 @@ const CareerOpportunities = () => {
     <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900">
       
       {/* 1. Header is Sticky - Stays at top while scrolling */}
-      <div className="sticky top-0 z-50 bg-white shrink-0 shadow-sm border-b border-slate-100">
+      {/* Restored original container style slightly (removed shadow/border to blend with gradient if preferred) */}
+      <div className="sticky top-0 z-50 bg-white shrink-0">
         <NavBar />
       </div>
 
@@ -254,9 +255,9 @@ const CareerOpportunities = () => {
             {/* 3. Grid Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
-              {/* Left Column: Filters - STICKY but NO internal SCROLL */}
-              {/* 'sticky top-24' keeps it visible while you scroll, but we removed max-h and overflow */}
-              <div className="hidden lg:block sticky top-24">
+              {/* Left Column: Filters - STICKY but handles overflow */}
+              {/* Added max-h-screen and scrollbar-hide to allow reaching the banner on small screens while looking 'fixed' */}
+              <div className="hidden lg:block sticky top-24 max-h-[calc(100vh-2rem)] overflow-y-auto no-scrollbar">
                 <p className="text-sm font-semibold text-slate-600 mb-4 py-2">Filters</p>
                 
                 <FilterSection 
@@ -283,6 +284,7 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
+                {/* The "Banner" is here */}
                 <JobHelpCard />
               </div>
 
