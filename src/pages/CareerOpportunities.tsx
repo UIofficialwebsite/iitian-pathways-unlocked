@@ -22,8 +22,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- JOB HELP CARD COMPONENT (The "Banner") ---
-const JobHelpCard = () => {
+// --- HERO BANNER COMPONENT (Transformed from JobHelpCard) ---
+const HeroBanner = ({ 
+  searchTerm, 
+  setSearchTerm 
+}: { 
+  searchTerm: string; 
+  setSearchTerm: (s: string) => void;
+}) => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
   const subject = encodeURIComponent("Job Application / Resume Submission");
@@ -38,30 +44,65 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    <div className="w-full bg-white border border-slate-200 rounded-[20px] p-6 shadow-sm flex flex-col mt-6">
-      <div className="w-full h-[180px] bg-slate-50 rounded-xl mb-6 flex justify-center items-center overflow-hidden relative">
-        <div className="absolute w-[140px] h-[140px] bg-[#2563eb] opacity-[0.03] rounded-full -top-5 -right-5 pointer-events-none"></div>
-        <img 
-          src="https://cdni.iconscout.com/illustration/premium/thumb/man-searching-for-job-illustration-download-in-svg-png-gif-file-formats--business-person-employee-interview-hiring-pack-human-resources-illustrations-4841963.png" 
-          alt="Searching illustration" 
-          className="max-w-[90%] h-auto relative z-10"
-        />
+    <div className="relative w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] pt-12 pb-24 px-6 mb-16">
+      <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
+        
+        {/* Left Side: Text Content */}
+        <div className="flex-1 text-center md:text-left space-y-4">
+          <Badge className="bg-blue-600 text-white hover:bg-blue-700 mb-2">Hiring Now</Badge>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight font-sans">
+            Can't find the right job?
+          </h1>
+          <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl">
+            Drop in your resume and we'll get back to you when we have suitable openings that match your profile!
+          </p>
+          <div className="pt-2">
+            <a 
+              href={mailtoLink}
+              className="inline-flex items-center justify-center px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
+            >
+              Apply via Email
+            </a>
+          </div>
+        </div>
+
+        {/* Right Side: Illustration */}
+        <div className="w-full max-w-[300px] md:max-w-[400px] flex justify-center md:justify-end relative">
+           <div className="absolute w-[200px] h-[200px] bg-white opacity-40 rounded-full blur-3xl -z-10 top-10 right-10"></div>
+           <img 
+            src="https://cdni.iconscout.com/illustration/premium/thumb/man-searching-for-job-illustration-download-in-svg-png-gif-file-formats--business-person-employee-interview-hiring-pack-human-resources-illustrations-4841963.png" 
+            alt="Searching illustration" 
+            className="w-full h-auto drop-shadow-md"
+          />
+        </div>
       </div>
 
-      <h2 className="text-lg font-extrabold text-slate-800 mb-3 tracking-tight font-sans">
-        Can't find the right job?
-      </h2>
-      
-      <p className="text-sm leading-relaxed text-slate-500 mb-6 font-sans">
-        Drop in your resume and we'll get back to you when we have suitable openings that match your profile!
-      </p>
-
-      <a 
-        href={mailtoLink}
-        className="inline-block self-start px-6 py-2.5 border-[1.5px] border-blue-600 text-blue-600 font-bold text-sm rounded-lg hover:bg-blue-600 hover:text-white transition-all shadow-sm hover:shadow-md hover:-translate-y-px font-sans decoration-0"
-      >
-        Apply Here
-      </a>
+      {/* --- SEARCH BAR (Placed in the middle of lower length) --- */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[90%] max-w-[800px] z-20">
+        <div className="relative w-full shadow-xl bg-white rounded-full border border-slate-200">
+          <input 
+            type="text" 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full py-4 pl-8 pr-16 rounded-full text-[16px] outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
+            placeholder="Search by role, company or location..."
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            {searchTerm ? (
+              <button 
+                onClick={() => setSearchTerm("")} 
+                className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            ) : (
+              <div className="p-2 bg-blue-600 rounded-full text-white shadow-md">
+                <Search className="w-5 h-5" />
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -203,62 +244,42 @@ const CareerOpportunities = () => {
   return (
     <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900">
       
-      {/* 1. Header is Sticky - Stays at top while scrolling */}
-      {/* Restored original container style slightly (removed shadow/border to blend with gradient if preferred) */}
-      <div className="sticky top-0 z-50 bg-white shrink-0">
+      {/* 1. Sticky Header */}
+      <div className="sticky top-0 z-50 bg-white shrink-0 shadow-sm border-b border-slate-100">
         <NavBar />
       </div>
 
-      {/* 2. Main Content Area */}
+      {/* 2. Scrollable Content */}
       <div className="flex-1 flex flex-col relative">
-        {/* Background Gradient */}
-        <div className="absolute top-0 left-0 w-full h-[240px] bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] -z-10 mt-0"></div>
+        
+        {/* HERO BANNER SECTION (Includes Search) */}
+        <HeroBanner searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-        <div className="max-w-[1100px] w-full mx-auto px-5 flex flex-col flex-1 pt-8 pb-16">
+        <div className="max-w-[1100px] w-full mx-auto px-5 flex flex-col flex-1 pb-16">
             
-            {/* Top Search & Stats Area */}
-            <div className="shrink-0 mb-4">
-                <div className="relative w-full mb-8 shadow-sm bg-white rounded-lg mt-8">
-                  <input 
-                    type="text" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full py-4 pl-5 pr-14 border border-slate-200 rounded-lg text-[15px] outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
-                    placeholder="Search by role, company or location"
-                  />
-                  <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400">
-                    {searchTerm ? (
-                      <button onClick={() => setSearchTerm("")} className="hover:text-slate-600"><X className="w-5 h-5" /></button>
-                    ) : (
-                      <Search className="w-5 h-5" />
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-2xl font-medium text-slate-800">
-                      {openings.length} {openings.length === 1 ? 'Open job' : 'Open jobs'} available
-                    </h1>
-                    {hasActiveFilters && (
-                      <button onClick={clearFilters} className="text-xs flex items-center gap-1 text-red-500 font-medium hover:text-red-600 transition-colors">
-                        <FilterX className="w-3 h-3" /> Clear filters
-                      </button>
-                    )}
-                  </div>
-                  <button className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
-                    Newest First <ChevronDown className="w-4 h-4 text-slate-500" />
+            {/* Stats & Sort Controls */}
+            <div className="shrink-0 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-2xl font-bold text-slate-800">
+                  {openings.length} {openings.length === 1 ? 'Job Opening' : 'Job Openings'}
+                </h2>
+                {hasActiveFilters && (
+                  <button onClick={clearFilters} className="text-xs flex items-center gap-1 text-red-500 font-medium hover:text-red-600 transition-colors bg-red-50 px-2 py-1 rounded-full border border-red-100">
+                    <FilterX className="w-3 h-3" /> Clear filters
                   </button>
-                </div>
+                )}
+              </div>
+              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
+                Newest First <ChevronDown className="w-4 h-4 text-slate-500" />
+              </button>
             </div>
 
-            {/* 3. Grid Layout */}
+            {/* Main Grid: Filters + Jobs */}
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
-              {/* Left Column: Filters - STICKY but handles overflow */}
-              {/* Added max-h-screen and scrollbar-hide to allow reaching the banner on small screens while looking 'fixed' */}
-              <div className="hidden lg:block sticky top-24 max-h-[calc(100vh-2rem)] overflow-y-auto no-scrollbar">
-                <p className="text-sm font-semibold text-slate-600 mb-4 py-2">Filters</p>
+              {/* Left Column: Filters - Sticky */}
+              <div className="hidden lg:block sticky top-24 z-30">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Filter By</p>
                 
                 <FilterSection 
                   title="Job Type" 
@@ -283,12 +304,9 @@ const CareerOpportunities = () => {
                   selectedItems={selectedLocations} 
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
-
-                {/* The "Banner" is here */}
-                <JobHelpCard />
               </div>
 
-              {/* Right Column: Jobs - Natural Height */}
+              {/* Right Column: Jobs List */}
               <div className="min-h-[500px]">
                 <div className="space-y-5">
                   {contentLoading ? (
@@ -303,52 +321,69 @@ const CareerOpportunities = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.3 }}
-                        className="bg-white border border-slate-900 rounded-xl p-6 hover:shadow-md transition-all duration-300"
+                        className="bg-white border border-slate-200 shadow-sm rounded-xl p-6 hover:shadow-md transition-all duration-300 hover:border-blue-200 group"
                       >
-                        <h2 className="text-xl font-medium text-slate-900 mb-3">{job.title}</h2>
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-6 text-sm text-slate-500">
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4 opacity-70" />
-                            <span>{job.location}</span>
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h2 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors">{job.title}</h2>
+                            {job.company && (
+                              <div className="flex items-center gap-2 mt-1 text-slate-600 font-medium text-sm">
+                                <Building className="w-4 h-4 text-slate-400" />
+                                <span>{job.company}</span>
+                              </div>
+                            )}
+                          </div>
+                          <button className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
+                            <Bookmark className="w-5 h-5" />
+                          </button>
+                        </div>
+                        
+                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 my-4 text-sm text-slate-500">
+                          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                            <span>{job.location || 'Remote'}</span>
                           </div>
                           
                           {job.job_type && (
-                            <div className="flex items-center gap-2">
-                              <Briefcase className="w-4 h-4 opacity-70" />
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                              <Briefcase className="w-3.5 h-3.5 text-slate-400" />
                               <span>{job.job_type}</span>
                             </div>
                           )}
                           
                           {job.experience_level && (
-                            <div className="flex items-center gap-2">
-                              <GraduationCap className="w-4 h-4 opacity-70" />
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                              <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
                               <span>{job.experience_level}</span>
                             </div>
                           )}
-
-                          {job.company && (
-                            <div className="flex items-center gap-2">
-                              <Building className="w-4 h-4 opacity-70" />
-                              <span>{job.company}</span>
-                            </div>
-                          )}
                         </div>
-                        <div className="flex items-center gap-3">
+                        
+                        <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end">
                           <Button 
                             onClick={() => navigate(`/career/job/${job.id}`)}
-                            className="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 hover:border-blue-300 font-medium px-6 py-2 h-auto rounded-md transition-all duration-200"
+                            className="bg-slate-900 hover:bg-blue-600 text-white font-medium px-6 h-10 rounded-lg transition-all duration-200 shadow-sm"
                           >
-                            View and Apply
+                            View Details & Apply
                           </Button>
-                          <button className="p-2.5 rounded-md border border-slate-200 text-slate-400 hover:text-blue-500 hover:border-blue-200 hover:bg-blue-50 transition-all"><Bookmark className="w-5 h-5" /></button>
                         </div>
                       </motion.div>
                     ))
                   ) : (
-                    <div className="text-center py-16 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-                      <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                      <p className="text-slate-600">No open positions found matching your criteria.</p>
-                      <button onClick={clearFilters} className="text-sm text-blue-600 font-medium mt-2 hover:underline">Clear all filters</button>
+                    <div className="text-center py-20 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
+                        <Search className="w-8 h-8 text-slate-300" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-1">No jobs found</h3>
+                      <p className="text-slate-500 max-w-xs mx-auto mb-6">
+                        We couldn't find any positions matching your current filters.
+                      </p>
+                      <button 
+                        onClick={clearFilters} 
+                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-all text-sm"
+                      >
+                        Clear all filters
+                      </button>
                     </div>
                   )}
                 </div>
@@ -357,7 +392,7 @@ const CareerOpportunities = () => {
         </div>
       </div>
       
-      {/* 4. Footer - Stays at bottom */}
+      {/* 4. Footer */}
       <Footer />
     </div>
   );
