@@ -34,7 +34,8 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    <div className="bg-white w-full p-[30px] rounded-[20px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
+    // Updated: border-slate-400 for balanced dark grey
+    <div className="bg-white w-full p-[30px] rounded-[20px] border border-slate-400 shadow-sm text-left mt-6">
        {/* Illustration Frame */}
        <div className="w-full h-[200px] mb-[25px] flex justify-center items-center overflow-hidden">
            <img 
@@ -192,7 +193,8 @@ const CareerOpportunities = () => {
   const hasActiveFilters = selectedJobTypes.length > 0 || selectedExperienceLevels.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
 
   const FilterSection = ({ title, items, selectedItems, id, onToggle }: { title: string, items: string[], selectedItems: string[], id: string, onToggle: (item: string) => void }) => (
-    <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mb-3 shrink-0">
+    // Updated: Slightly darker border for filters to match the theme better
+    <div className="border border-slate-300 rounded-lg bg-white overflow-hidden mb-3 shrink-0">
       <div 
         className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => toggleExpanded(id)}
@@ -215,7 +217,7 @@ const CareerOpportunities = () => {
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="overflow-hidden bg-slate-50/50 border-t border-slate-200"
+            className="overflow-hidden bg-slate-50/50 border-t border-slate-300"
           >
             <div className="p-4 space-y-2 max-h-[300px] overflow-y-auto custom-scrollbar">
               {items.length > 0 ? items.map((item) => (
@@ -328,8 +330,8 @@ const CareerOpportunities = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.3 }}
-                        // Updated: thin black border, no glow on hover
-                        className="bg-white border border-black rounded-lg p-6"
+                        // Updated: border-slate-400 (balanced dark grey), no hover glow
+                        className="bg-white border border-slate-400 rounded-lg p-6"
                       >
                         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                           {/* Job Details Section */}
@@ -365,8 +367,8 @@ const CareerOpportunities = () => {
 
                           {/* Action Section: Bookmark Box + Button in same row */}
                           <div className="shrink-0 mt-4 md:mt-0 flex items-center gap-3">
-                             {/* Bookmark - Box Style */}
-                            <button className="h-10 w-10 flex items-center justify-center border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-blue-600 transition-colors shadow-sm bg-white">
+                             {/* Bookmark - Box Style, matching slate-400 border theme */}
+                            <button className="h-10 w-10 flex items-center justify-center border border-slate-400 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-blue-600 transition-colors shadow-sm bg-white">
                               <Bookmark className="w-5 h-5" />
                             </button>
 
