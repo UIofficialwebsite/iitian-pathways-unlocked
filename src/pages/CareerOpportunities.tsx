@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- RESUME DROP CARD (Updated Design) ---
+// --- RESUME DROP CARD (Squared Design) ---
 const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -38,7 +38,8 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    <div className="bg-white w-full p-[30px] rounded-[20px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
+    // Removed rounded-[20px] to make it squared
+    <div className="bg-white w-full p-[30px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
        {/* Illustration Frame */}
        <div className="w-full h-[200px] mb-[25px] flex justify-center items-center overflow-hidden">
            <img 
@@ -311,7 +312,7 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
-                {/* --- RESUME DROP BUTTON (With New Design) --- */}
+                {/* --- RESUME DROP BUTTON (With New Squared Design) --- */}
                 <ResumeDropCard />
 
               </div>
