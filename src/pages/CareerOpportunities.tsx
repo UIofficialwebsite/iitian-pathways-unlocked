@@ -15,15 +15,14 @@ import {
   X,
   Check,
   FilterX,
-  GraduationCap,
-  Mail
+  GraduationCap
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- RESUME DROP CARD (Moved from HeroBanner) ---
+// --- RESUME DROP CARD (Updated Design) ---
 const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -39,32 +38,36 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-5 mt-6 shadow-md relative overflow-hidden group">
-      <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-5 rounded-full blur-2xl -mr-10 -mt-10"></div>
-      
-      <div className="flex items-center gap-2 mb-3">
-        <Badge variant="secondary" className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border-0">
-          Job Assistance
-        </Badge>
-      </div>
-      
-      <h3 className="font-bold text-lg mb-2 text-white">Can't find the right job?</h3>
-      <p className="text-sm text-slate-300 mb-5 leading-relaxed">
-        Drop in your resume and we'll get back to you when we have suitable openings!
-      </p>
-      
-      <a 
-        href={mailtoLink}
-        className="flex items-center justify-center w-full py-2.5 bg-white text-slate-900 font-bold text-sm rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md gap-2"
-      >
-        <Mail className="w-4 h-4" />
-        Apply via Email
-      </a>
+    <div className="bg-white w-full p-[30px] rounded-[20px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
+       {/* Illustration Frame */}
+       <div className="w-full h-[200px] mb-[25px] flex justify-center items-center overflow-hidden">
+           <img 
+             src="https://i.ibb.co/L9p6QpL/job-search-placeholder.png" 
+             alt="Job Search Illustration" 
+             className="max-w-full h-auto object-contain"
+           />
+       </div>
+
+       {/* Text Section */}
+       <h2 className="text-[22px] font-bold text-[#2c3e50] mb-[12px]">
+         Can’t find the right job?
+       </h2>
+       <p className="text-[16px] leading-[1.5] text-[#5d6d7e] mb-[30px]">
+         Drop in your resume and we’ll get back to you when we have suitable openings that match your profile!
+       </p>
+
+       {/* Action Button */}
+       <a 
+         href={mailtoLink}
+         className="inline-block px-[28px] py-[12px] border-[1.5px] border-[#2575e6] rounded-[10px] bg-transparent text-[#2575e6] text-[18px] font-semibold no-underline transition-all duration-200 hover:bg-[#f0f7ff] hover:text-[#1a5bb8] hover:border-[#1a5bb8]"
+       >
+         Apply Here
+       </a>
     </div>
   );
 };
 
-// --- HERO BANNER COMPONENT (Simplified) ---
+// --- HERO BANNER COMPONENT (Visual Only + Search) ---
 const HeroBanner = ({ 
   searchTerm, 
   setSearchTerm 
@@ -73,29 +76,11 @@ const HeroBanner = ({
   setSearchTerm: (s: string) => void;
 }) => {
   return (
-    <div className="relative w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] pt-12 pb-24 px-6 mb-16">
-      <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
-        
-        {/* Left Side: Generic Title */}
-        <div className="flex-1 text-center md:text-left space-y-4">
-          <Badge className="bg-blue-600 text-white hover:bg-blue-700 mb-2">Careers</Badge>
-          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight font-sans">
-            Join Our Team
-          </h1>
-          <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl">
-            Explore exciting opportunities to work with top talent and shape the future of education.
-          </p>
-        </div>
-
-        {/* Right Side: Illustration */}
-        <div className="w-full max-w-[300px] md:max-w-[400px] flex justify-center md:justify-end relative">
-           <div className="absolute w-[200px] h-[200px] bg-white opacity-40 rounded-full blur-3xl -z-10 top-10 right-10"></div>
-           <img 
-            src="https://cdni.iconscout.com/illustration/premium/thumb/man-searching-for-job-illustration-download-in-svg-png-gif-file-formats--business-person-employee-interview-hiring-pack-human-resources-illustrations-4841963.png" 
-            alt="Searching illustration" 
-            className="w-full h-auto drop-shadow-md"
-          />
-        </div>
+    <div className="relative w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] h-[280px] mb-16">
+      {/* Background Effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute w-[400px] h-[400px] bg-white opacity-40 rounded-full blur-3xl -z-10 top-[-50px] right-[-50px]"></div>
+        <div className="absolute w-[300px] h-[300px] bg-blue-100 opacity-40 rounded-full blur-3xl -z-10 bottom-[-50px] left-[-50px]"></div>
       </div>
 
       {/* --- SEARCH BAR --- */}
@@ -326,7 +311,7 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
-                {/* --- MOVED RESUME DROP BUTTON HERE --- */}
+                {/* --- RESUME DROP BUTTON (With New Design) --- */}
                 <ResumeDropCard />
 
               </div>
