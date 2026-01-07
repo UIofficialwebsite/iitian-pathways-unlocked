@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- RESUME DROP CARD (Squared Design) ---
+// --- RESUME DROP CARD (Squared & Fixed as requested) ---
 const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -38,7 +38,6 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    // Removed rounded-[20px] to make it squared
     <div className="bg-white w-full p-[30px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
        {/* Illustration Frame */}
        <div className="w-full h-[200px] mb-[25px] flex justify-center items-center overflow-hidden">
@@ -68,7 +67,7 @@ If teaching then subject:
   );
 };
 
-// --- HERO BANNER COMPONENT (Visual Only + Search) ---
+// --- HERO BANNER COMPONENT (Full Width) ---
 const HeroBanner = ({ 
   searchTerm, 
   setSearchTerm 
@@ -262,7 +261,8 @@ const CareerOpportunities = () => {
         {/* HERO BANNER SECTION (Includes Search) */}
         <HeroBanner searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-        <div className="max-w-[1100px] w-full mx-auto px-5 flex flex-col flex-1 pb-16">
+        {/* FULL WIDTH CONTAINER */}
+        <div className="w-full px-6 lg:px-10 flex flex-col flex-1 pb-16">
             
             {/* Stats & Sort Controls */}
             <div className="shrink-0 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -312,7 +312,7 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
-                {/* --- RESUME DROP BUTTON (With New Squared Design) --- */}
+                {/* --- RESUME DROP BUTTON (Squared & Fixed) --- */}
                 <ResumeDropCard />
 
               </div>
