@@ -284,13 +284,14 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION (REPLACED) */}
-        <section className="py-20 bg-white border-t border-slate-100">
-          <div className="max-w-[1100px] w-full mx-auto px-4 sm:px-6 flex flex-col md:flex-row gap-12 lg:gap-16 items-center">
+        {/* TEAM TESTIMONIALS SECTION (UPDATED) */}
+        <section className="py-20 bg-white">
+          {/* Full Width Block Container with Rounded Corners */}
+          <div className="w-full px-8 md:px-12 py-12 border border-slate-200 rounded-[30px] flex flex-col md:flex-row gap-12 lg:gap-16 items-center">
             
             {/* Left Side Content */}
             <div className="flex-1 text-center md:text-left">
-              <div className="text-[80px] text-[#f0f4f8] leading-[0.5] mb-4 font-serif">“</div>
+              <div className="text-[80px] text-slate-700 leading-[0.5] mb-4 font-serif">“</div>
               <h2 className="text-[42px] font-bold text-[#1a202c] mb-5 tracking-tight leading-[1.1]">
                 Hear from the team!
               </h2>
