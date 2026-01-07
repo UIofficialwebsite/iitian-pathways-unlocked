@@ -328,7 +328,8 @@ const CareerOpportunities = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.3 }}
-                        className="bg-white border border-slate-200 rounded-lg p-6 hover:border-blue-300 transition-colors duration-200"
+                        // Updated: thin black border, no glow on hover
+                        className="bg-white border border-black rounded-lg p-6"
                       >
                         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
                           {/* Job Details Section */}
