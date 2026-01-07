@@ -10,14 +10,15 @@ import {
   Loader2,
   X,
   Check,
-  FilterX
+  FilterX,
+  Bookmark // Imported but previously unused, now used again
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- RESUME DROP CARD (Rounded Corners & Lighter Border) ---
+// --- RESUME DROP CARD ---
 const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -327,7 +328,6 @@ const CareerOpportunities = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.3 }}
-                        // Removed "border-black" and "shadow-sm", kept simplified border
                         className="bg-white border border-slate-200 rounded-lg p-6 hover:border-blue-300 transition-colors duration-200"
                       >
                         <div className="flex flex-col md:flex-row justify-between items-start gap-4">
@@ -362,8 +362,13 @@ const CareerOpportunities = () => {
                             </div>
                           </div>
 
-                          {/* Action Button: Kept at Right */}
-                          <div className="shrink-0 mt-4 md:mt-0">
+                          {/* Action Section: Bookmark + Button */}
+                          <div className="shrink-0 mt-4 md:mt-0 flex flex-row md:flex-col items-end gap-3">
+                             {/* Restored Bookmark Icon */}
+                            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
+                              <Bookmark className="w-5 h-5" />
+                            </button>
+
                             <Button 
                               onClick={() => navigate(`/career/job/${job.id}`)}
                               className="bg-slate-900 hover:bg-blue-600 text-white font-medium px-6 h-10 rounded-lg transition-all duration-200 shadow-sm"
