@@ -11,7 +11,7 @@ import {
   X,
   Check,
   FilterX,
-  Bookmark // Imported but previously unused, now used again
+  Bookmark
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
@@ -362,10 +362,10 @@ const CareerOpportunities = () => {
                             </div>
                           </div>
 
-                          {/* Action Section: Bookmark + Button */}
-                          <div className="shrink-0 mt-4 md:mt-0 flex flex-row md:flex-col items-end gap-3">
-                             {/* Restored Bookmark Icon */}
-                            <button className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
+                          {/* Action Section: Bookmark Box + Button in same row */}
+                          <div className="shrink-0 mt-4 md:mt-0 flex items-center gap-3">
+                             {/* Bookmark - Box Style */}
+                            <button className="h-10 w-10 flex items-center justify-center border border-slate-300 rounded-lg hover:bg-slate-50 text-slate-400 hover:text-blue-600 transition-colors shadow-sm bg-white">
                               <Bookmark className="w-5 h-5" />
                             </button>
 
