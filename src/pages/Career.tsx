@@ -225,15 +225,15 @@ const Career = () => {
         </section>
 
         {/* WHY JOIN US - NEW REDESIGNED SECTION */}
-        <section className="py-20 bg-slate-50/50">
+        <section className="py-24 bg-[#f9fafb]">
           <div className="max-w-[1000px] w-full mx-auto px-6">
             
             {/* Header */}
             <div className="text-center mb-14">
-              <h1 className="text-[2.5rem] font-bold text-slate-900 mb-4 tracking-tight">
+              <h1 className="text-[2.5rem] font-bold text-[#111827] mb-4 tracking-tight">
                 Why join us?
               </h1>
-              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              <p className="text-lg text-[#4b5563] max-w-2xl mx-auto">
                 Become a part of the mission to provide high quality affordable education to Bharat!
               </p>
             </div>
@@ -242,52 +242,52 @@ const Career = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Benefit 1 */}
-              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center shrink-0">
                   <GraduationCap className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Role with a purpose</h3>
-                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Role with a purpose</h3>
+                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
                     An opportunity to enhance the quality of education in Bharat and create a lasting social impact.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 2 */}
-              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors">
+              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center shrink-0">
                   <Award className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Opportunity to the deserving</h3>
-                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Opportunity to the deserving</h3>
+                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
                     We foster a meritocratic environment where talent is recognized and hard work is rewarded with growth.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 3 */}
-              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0 group-hover:bg-green-100 transition-colors">
+              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-[#ecfdf5] text-[#10b981] flex items-center justify-center shrink-0">
                   <Users className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Collaborative culture</h3>
-                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Collaborative culture</h3>
+                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
                     Work with an approachable and cooperative team with no hierarchy or airs around designations.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 4 */}
-              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
+              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-[#fffbeb] text-[#f59e0b] flex items-center justify-center shrink-0">
                   <CalendarCheck className="w-7 h-7" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Flexible working policy</h3>
-                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Flexible working policy</h3>
+                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
                     Maintain harmony with flexible working hours and employee-friendly leave policies designed for you.
                   </p>
                 </div>
@@ -297,12 +297,12 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION */}
-        <section className="py-20 bg-white">
-          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm max-w-[1400px] mx-auto">
+        {/* TEAM TESTIMONIALS SECTION (Full Width Layout) */}
+        <section className="w-full px-4 mb-20">
+          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
             
             {/* Left Side Content */}
-            <div className="flex-1 text-left pl-4">
+            <div className="flex-1 text-left">
               <div className="text-[80px] text-slate-700 leading-[0.5] mb-4 font-serif">“</div>
               <h2 className="text-[42px] font-bold text-[#1a202c] mb-5 tracking-tight leading-[1.1]">
                 Hear from the team!
@@ -313,7 +313,7 @@ const Career = () => {
             </div>
 
             {/* Right Side Testimonials */}
-            <div className="flex-[1.2] flex flex-col gap-6 w-full pr-4">
+            <div className="flex-[1.2] flex flex-col gap-6 w-full">
               
               {/* Card 1: Ishika Ray */}
               <div className="relative p-8 md:p-10 rounded-2xl bg-[#fff9f2] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200 w-full">
