@@ -15,21 +15,16 @@ import {
   X,
   Check,
   FilterX,
-  GraduationCap
+  GraduationCap,
+  Mail
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- HERO BANNER COMPONENT (Transformed from JobHelpCard) ---
-const HeroBanner = ({ 
-  searchTerm, 
-  setSearchTerm 
-}: { 
-  searchTerm: string; 
-  setSearchTerm: (s: string) => void;
-}) => {
+// --- RESUME DROP CARD (Moved from HeroBanner) ---
+const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
   const subject = encodeURIComponent("Job Application / Resume Submission");
@@ -44,26 +39,52 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
+    <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-5 mt-6 shadow-md relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-20 h-20 bg-white opacity-5 rounded-full blur-2xl -mr-10 -mt-10"></div>
+      
+      <div className="flex items-center gap-2 mb-3">
+        <Badge variant="secondary" className="bg-blue-500/20 text-blue-100 hover:bg-blue-500/30 border-0">
+          Job Assistance
+        </Badge>
+      </div>
+      
+      <h3 className="font-bold text-lg mb-2 text-white">Can't find the right job?</h3>
+      <p className="text-sm text-slate-300 mb-5 leading-relaxed">
+        Drop in your resume and we'll get back to you when we have suitable openings!
+      </p>
+      
+      <a 
+        href={mailtoLink}
+        className="flex items-center justify-center w-full py-2.5 bg-white text-slate-900 font-bold text-sm rounded-lg hover:bg-blue-50 transition-all shadow-sm hover:shadow-md gap-2"
+      >
+        <Mail className="w-4 h-4" />
+        Apply via Email
+      </a>
+    </div>
+  );
+};
+
+// --- HERO BANNER COMPONENT (Simplified) ---
+const HeroBanner = ({ 
+  searchTerm, 
+  setSearchTerm 
+}: { 
+  searchTerm: string; 
+  setSearchTerm: (s: string) => void;
+}) => {
+  return (
     <div className="relative w-full bg-gradient-to-br from-[#f0f4c3] via-[#d1e3ff] to-[#f3e5f5] pt-12 pb-24 px-6 mb-16">
       <div className="max-w-[1100px] mx-auto flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
         
-        {/* Left Side: Text Content */}
+        {/* Left Side: Generic Title */}
         <div className="flex-1 text-center md:text-left space-y-4">
-          <Badge className="bg-blue-600 text-white hover:bg-blue-700 mb-2">Hiring Now</Badge>
-          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight font-sans">
-            Can't find the right job?
+          <Badge className="bg-blue-600 text-white hover:bg-blue-700 mb-2">Careers</Badge>
+          <h1 className="text-3xl md:text-5xl font-extrabold text-slate-800 tracking-tight font-sans">
+            Join Our Team
           </h1>
           <p className="text-base md:text-lg text-slate-600 leading-relaxed max-w-xl">
-            Drop in your resume and we'll get back to you when we have suitable openings that match your profile!
+            Explore exciting opportunities to work with top talent and shape the future of education.
           </p>
-          <div className="pt-2">
-            <a 
-              href={mailtoLink}
-              className="inline-flex items-center justify-center px-8 py-3 bg-slate-900 text-white font-bold text-sm rounded-lg hover:bg-slate-800 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1"
-            >
-              Apply via Email
-            </a>
-          </div>
         </div>
 
         {/* Right Side: Illustration */}
@@ -77,7 +98,7 @@ If teaching then subject:
         </div>
       </div>
 
-      {/* --- SEARCH BAR (Placed in the middle of lower length) --- */}
+      {/* --- SEARCH BAR --- */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-[90%] max-w-[800px] z-20">
         <div className="relative w-full shadow-xl bg-white rounded-full border border-slate-200">
           <input 
@@ -278,7 +299,7 @@ const CareerOpportunities = () => {
             <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
               
               {/* Left Column: Filters - Sticky */}
-              <div className="hidden lg:block sticky top-24 z-30">
+              <div className="hidden lg:block sticky top-24 z-30 h-fit">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Filter By</p>
                 
                 <FilterSection 
@@ -304,6 +325,10 @@ const CareerOpportunities = () => {
                   selectedItems={selectedLocations} 
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
+
+                {/* --- MOVED RESUME DROP BUTTON HERE --- */}
+                <ResumeDropCard />
+
               </div>
 
               {/* Right Column: Jobs List */}
