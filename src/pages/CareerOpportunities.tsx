@@ -3,26 +3,21 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { 
-  MapPin, 
-  Briefcase, 
-  Building, 
   Search,
   ChevronDown,
   Plus,
   Minus,
-  Bookmark,
   Loader2,
   X,
   Check,
-  FilterX,
-  GraduationCap
+  FilterX
 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
-// --- RESUME DROP CARD (Rounded Corners + Black Border) ---
+// --- RESUME DROP CARD (Rounded Corners & Lighter Border) ---
 const ResumeDropCard = () => {
   const emailTo = "unknowniitians@gmail.com";
   const emailCc = "support@unknowniitians.live";
@@ -38,8 +33,7 @@ If teaching then subject:
   const mailtoLink = `mailto:${emailTo}?cc=${emailCc}&subject=${subject}&body=${body}`;
 
   return (
-    // Updated: rounded-[20px] restored, border-black added
-    <div className="bg-white w-full p-[30px] rounded-[20px] border border-black shadow-sm text-left mt-6">
+    <div className="bg-white w-full p-[30px] rounded-[20px] border border-[#d1d9e6] shadow-[0_2px_10px_rgba(0,0,0,0.05)] text-left mt-6">
        {/* Illustration Frame */}
        <div className="w-full h-[200px] mb-[25px] flex justify-center items-center overflow-hidden">
            <img 
@@ -50,17 +44,17 @@ If teaching then subject:
        </div>
 
        {/* Text Section */}
-       <h2 className="text-[22px] font-bold text-[#2c3e50] mb-[12px] font-sans">
+       <h2 className="text-[22px] font-semibold text-[#2c3e50] mb-[12px]">
          Can’t find the right job?
        </h2>
-       <p className="text-[16px] leading-[1.5] text-[#5d6d7e] mb-[30px] font-sans">
+       <p className="text-[16px] leading-[1.5] text-[#5d6d7e] mb-[30px]">
          Drop in your resume and we’ll get back to you when we have suitable openings that match your profile!
        </p>
 
        {/* Action Button */}
        <a 
          href={mailtoLink}
-         className="inline-block px-[28px] py-[12px] border-[1.5px] border-[#2575e6] rounded-[10px] bg-transparent text-[#2575e6] text-[18px] font-semibold no-underline transition-all duration-200 hover:bg-[#f0f7ff] hover:text-[#1a5bb8] hover:border-[#1a5bb8] font-sans"
+         className="inline-block px-[28px] py-[12px] border-[1.5px] border-[#2575e6] rounded-[10px] bg-transparent text-[#2575e6] text-[18px] font-semibold no-underline transition-all duration-200 hover:bg-[#f0f7ff] hover:text-[#1a5bb8] hover:border-[#1a5bb8]"
        >
          Apply Here
        </a>
@@ -68,7 +62,7 @@ If teaching then subject:
   );
 };
 
-// --- HERO BANNER COMPONENT (Unchanged Wireframe) ---
+// --- HERO BANNER COMPONENT ---
 const HeroBanner = ({ 
   searchTerm, 
   setSearchTerm 
@@ -91,7 +85,7 @@ const HeroBanner = ({
             type="text" 
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full py-4 pl-8 pr-16 rounded-full text-[16px] outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400 font-sans"
+            className="w-full py-4 pl-8 pr-16 rounded-full text-[16px] outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all text-slate-700 placeholder:text-slate-400"
             placeholder="Search by role, company or location..."
           />
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -197,13 +191,12 @@ const CareerOpportunities = () => {
   const hasActiveFilters = selectedJobTypes.length > 0 || selectedExperienceLevels.length > 0 || selectedLocations.length > 0 || searchTerm !== "";
 
   const FilterSection = ({ title, items, selectedItems, id, onToggle }: { title: string, items: string[], selectedItems: string[], id: string, onToggle: (item: string) => void }) => (
-    // Updated: border-black added
-    <div className="border border-black rounded-lg bg-white overflow-hidden mb-3 shrink-0">
+    <div className="border border-slate-200 rounded-lg bg-white overflow-hidden mb-3 shrink-0">
       <div 
         className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors"
         onClick={() => toggleExpanded(id)}
       >
-        <span className="text-sm text-slate-900 font-bold flex items-center gap-2 font-sans">
+        <span className="text-sm text-slate-800 font-medium flex items-center gap-2">
           {title}
           {selectedItems.length > 0 && (
             <Badge variant="secondary" className="h-5 w-5 p-0 flex items-center justify-center rounded-full text-[10px] bg-blue-100 text-blue-700">
@@ -228,7 +221,7 @@ const CareerOpportunities = () => {
                 <button
                   key={item}
                   onClick={(e) => { e.stopPropagation(); onToggle(item); }}
-                  className={`flex items-center w-full text-left text-sm py-2 px-2 rounded-md transition-colors font-sans ${
+                  className={`flex items-center w-full text-left text-sm py-2 px-2 rounded-md transition-colors ${
                     selectedItems.includes(item) ? "bg-blue-50 text-blue-700 font-medium" : "text-slate-600 hover:bg-slate-100"
                   }`}
                 >
@@ -240,7 +233,7 @@ const CareerOpportunities = () => {
                   {item}
                 </button>
               )) : (
-                <p className="text-xs text-slate-400 italic font-sans">No options available</p>
+                <p className="text-xs text-slate-400 italic">No options available</p>
               )}
             </div>
           </motion.div>
@@ -250,8 +243,7 @@ const CareerOpportunities = () => {
   );
 
   return (
-    // Applied global Inter font family style
-    <div className="bg-white min-h-screen flex flex-col font-sans text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+    <div className="bg-white min-h-screen flex flex-col text-slate-900" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       
       {/* 1. Sticky Header */}
       <div className="sticky top-0 z-50 bg-white shrink-0 shadow-sm border-b border-slate-100">
@@ -270,16 +262,16 @@ const CareerOpportunities = () => {
             {/* Stats & Sort Controls */}
             <div className="shrink-0 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
-                <h2 className="text-2xl font-bold text-slate-900 font-sans">
+                <h2 className="text-2xl font-medium text-slate-900">
                   {openings.length} {openings.length === 1 ? 'Job Opening' : 'Job Openings'}
                 </h2>
                 {hasActiveFilters && (
-                  <button onClick={clearFilters} className="text-xs flex items-center gap-1 text-red-500 font-medium hover:text-red-600 transition-colors bg-red-50 px-2 py-1 rounded-full border border-red-100 font-sans">
+                  <button onClick={clearFilters} className="text-xs flex items-center gap-1 text-red-500 font-medium hover:text-red-600 transition-colors bg-red-50 px-2 py-1 rounded-full border border-red-100">
                     <FilterX className="w-3 h-3" /> Clear filters
                   </button>
                 )}
               </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-black rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors font-sans">
+              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-700 hover:bg-slate-50 transition-colors">
                 Newest First <ChevronDown className="w-4 h-4 text-slate-500" />
               </button>
             </div>
@@ -289,7 +281,7 @@ const CareerOpportunities = () => {
               
               {/* Left Column: Filters - Sticky */}
               <div className="hidden lg:block sticky top-24 z-30 h-fit">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 font-sans">Filter By</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4">Filter By</p>
                 
                 <FilterSection 
                   title="Job Type" 
@@ -315,7 +307,7 @@ const CareerOpportunities = () => {
                   onToggle={(item) => toggleFilter(item, selectedLocations, setSelectedLocations)}
                 />
 
-                {/* --- RESUME DROP BUTTON (With Rounded Corners & Black Border) --- */}
+                {/* --- RESUME DROP BUTTON --- */}
                 <ResumeDropCard />
 
               </div>
@@ -335,52 +327,50 @@ const CareerOpportunities = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ duration: 0.3 }}
-                        // Updated: border-black added
-                        className="bg-white border border-black shadow-sm rounded-xl p-6 hover:shadow-md transition-all duration-300 group"
+                        // Removed "border-black" and "shadow-sm", kept simplified border
+                        className="bg-white border border-slate-200 rounded-lg p-6 hover:border-blue-300 transition-colors duration-200"
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div>
-                            <h2 className="text-xl font-bold text-slate-900 group-hover:text-blue-700 transition-colors font-sans">{job.title}</h2>
+                        <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                          {/* Job Details Section */}
+                          <div className="flex-1">
+                            <h2 className="text-xl font-medium text-slate-900 mb-1">{job.title}</h2>
                             {job.company && (
-                              <div className="flex items-center gap-2 mt-1 text-slate-600 font-medium text-sm font-sans">
-                                <Building className="w-4 h-4 text-slate-400" />
-                                <span>{job.company}</span>
+                              <div className="text-slate-500 text-sm mb-4">
+                                {job.company}
                               </div>
                             )}
-                          </div>
-                          <button className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition-colors">
-                            <Bookmark className="w-5 h-5" />
-                          </button>
-                        </div>
-                        
-                        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 my-4 text-sm text-slate-500 font-sans">
-                          <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{job.location || 'Remote'}</span>
-                          </div>
-                          
-                          {job.job_type && (
-                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                              <Briefcase className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{job.job_type}</span>
+                            
+                            {/* Tags: Rectangular, Greyish BG, Dark Grey Text */}
+                            <div className="flex flex-wrap items-center gap-3 text-sm">
+                              {job.location && (
+                                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-sm border border-slate-200">
+                                  {job.location}
+                                </span>
+                              )}
+                              
+                              {job.job_type && (
+                                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-sm border border-slate-200">
+                                  {job.job_type}
+                                </span>
+                              )}
+                              
+                              {job.experience_level && (
+                                <span className="bg-slate-100 text-slate-700 px-3 py-1 rounded-sm border border-slate-200">
+                                  {job.experience_level}
+                                </span>
+                              )}
                             </div>
-                          )}
-                          
-                          {job.experience_level && (
-                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                              <GraduationCap className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{job.experience_level}</span>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="pt-4 mt-4 border-t border-slate-100 flex justify-end">
-                          <Button 
-                            onClick={() => navigate(`/career/job/${job.id}`)}
-                            className="bg-slate-900 hover:bg-blue-600 text-white font-medium px-6 h-10 rounded-lg transition-all duration-200 shadow-sm font-sans"
-                          >
-                            View Details & Apply
-                          </Button>
+                          </div>
+
+                          {/* Action Button: Kept at Right */}
+                          <div className="shrink-0 mt-4 md:mt-0">
+                            <Button 
+                              onClick={() => navigate(`/career/job/${job.id}`)}
+                              className="bg-slate-900 hover:bg-blue-600 text-white font-medium px-6 h-10 rounded-lg transition-all duration-200 shadow-sm"
+                            >
+                              View Details & Apply
+                            </Button>
+                          </div>
                         </div>
                       </motion.div>
                     ))
@@ -389,13 +379,13 @@ const CareerOpportunities = () => {
                       <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-slate-100">
                         <Search className="w-8 h-8 text-slate-300" />
                       </div>
-                      <h3 className="text-lg font-semibold text-slate-900 mb-1 font-sans">No jobs found</h3>
-                      <p className="text-slate-500 max-w-xs mx-auto mb-6 font-sans">
+                      <h3 className="text-lg font-medium text-slate-900 mb-1">No jobs found</h3>
+                      <p className="text-slate-500 max-w-xs mx-auto mb-6">
                         We couldn't find any positions matching your current filters.
                       </p>
                       <button 
                         onClick={clearFilters} 
-                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-all text-sm font-sans"
+                        className="px-4 py-2 bg-white border border-slate-300 text-slate-700 font-medium rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-all text-sm"
                       >
                         Clear all filters
                       </button>
