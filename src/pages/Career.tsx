@@ -4,9 +4,14 @@ import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building, 
   Check, 
+  FileText,
+  Loader2,
   ArrowRight,
   GraduationCap,
   Star,
@@ -17,6 +22,8 @@ import {
   CalendarCheck,
   UserCheck
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const Career = () => {
@@ -35,10 +42,9 @@ const Career = () => {
         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         
-        {/* HERO SECTION - Full Width Banner */}
-        <section className="w-full px-4 mb-20">
-          {/* Removed max-w-7xl to keep it full width as requested */}
-          <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
+        {/* HERO SECTION - Consistent Width */}
+        <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
             <div className="flex-1 w-full text-left z-10">
               <div className="inline-flex items-center bg-white border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide shadow-sm">
@@ -99,7 +105,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Join UI Section - Consistent Max Width */}
+        {/* Join UI Section - Consistent Width */}
         <section className="py-20 bg-slate-50 border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-12 items-center">
@@ -127,16 +133,16 @@ const Career = () => {
           </div>
         </section>
 
-        {/* WHY JOIN US */}
+        {/* WHY JOIN US - Aligned Header to Center */}
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
-            {/* Header - Left Aligned */}
-            <div className="text-left mb-10">
+            {/* Header - Center Aligned */}
+            <div className="text-center mb-10">
               <h1 className="text-[2.5rem] font-bold text-[#111827] mb-3 tracking-tight">
                 Why join us?
               </h1>
-              <p className="text-lg text-[#4b5563] max-w-2xl">
+              <p className="text-lg text-[#4b5563] max-w-2xl mx-auto">
                 Become a part of the mission to provide high quality affordable education to Bharat!
               </p>
             </div>
@@ -200,7 +206,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION */}
+        {/* TEAM TESTIMONIALS SECTION - Consistent Width */}
         <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
             
@@ -252,9 +258,9 @@ const Career = () => {
           </div>
         </section>
 
-        {/* NEW RECRUITER PORTAL SECTION */}
-        <section className="py-24 bg-white border-t border-slate-200 flex justify-center px-4">
-          <div className="w-full max-w-[900px] bg-[#f8faff] rounded-[32px] border border-slate-200 flex flex-col md:flex-row overflow-hidden relative shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] min-h-[400px]">
+        {/* NEW RECRUITER PORTAL SECTION - Aligned with other sections (max-w-7xl) */}
+        <section className="py-24 bg-white border-t border-slate-200 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto w-full bg-[#f8faff] rounded-[32px] border border-slate-200 flex flex-col md:flex-row overflow-hidden relative shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] min-h-[400px]">
             
             {/* Dot Grid Background */}
             <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
