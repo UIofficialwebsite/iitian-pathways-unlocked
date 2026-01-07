@@ -126,7 +126,10 @@ const Career = () => {
     <>
       <NavBar />
       
-      <main className="pt-24 pb-20 bg-white min-h-screen font-sans text-slate-900">
+      <main 
+        className="pt-24 pb-20 bg-white min-h-screen text-slate-900"
+        style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+      >
         
         {/* HERO SECTION - Full Width Rounded Block - WHITE BACKGROUND */}
         <section className="w-full px-4 mb-20">
@@ -281,32 +284,54 @@ const Career = () => {
           </div>
         </section>
 
-        {/* How We Make Remarkable Change */}
-        <section className="py-20 bg-slate-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold mb-4 text-slate-900">How do we make remarkable change?</h2>
-              <p className="max-w-3xl mx-auto text-lg text-slate-600">
-                Unknown IITians creates remarkable change in the educational field by offering students the opportunity to earn while they learn. We provide skill-building resources, paid internships, and real-world experiences that empower students.
+        {/* TEAM TESTIMONIALS SECTION (REPLACED) */}
+        <section className="py-20 bg-white border-t border-slate-100">
+          <div className="max-w-[1100px] w-full mx-auto px-4 sm:px-6 flex flex-col md:flex-row gap-12 lg:gap-16 items-center">
+            
+            {/* Left Side Content */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="text-[80px] text-[#f0f4f8] leading-[0.5] mb-4 font-serif">“</div>
+              <h2 className="text-[42px] font-bold text-[#1a202c] mb-5 tracking-tight leading-[1.1]">
+                Hear from the team!
+              </h2>
+              <p className="text-lg text-[#64748b] leading-[1.6] max-w-sm mx-auto md:mx-0">
+                Get a sneak-peek into all the magic and professional growth that happens at UI.
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-xl p-8 md:p-14 relative overflow-hidden border border-slate-200">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full -mt-32 -mr-32 blur-3xl"></div>
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-50 rounded-full -mb-32 -ml-32 blur-3xl"></div>
+            {/* Right Side Testimonials */}
+            <div className="flex-[1.3] flex flex-col gap-6 w-full">
               
-              <div className="relative">
-                <blockquote className="text-xl md:text-2xl text-slate-800 italic font-medium text-center mb-8 leading-relaxed">
-                  "Don't just think about placement; think about building your own empire. Success isn't limited to your degree—it begins with the growth you nurture today. Train yourself, work on your skills, and create something great, because true success comes from starting now, not after your studies."
-                </blockquote>
-                
-                <div className="flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="font-bold text-lg text-slate-900">Anonymous</p>
-                    <p className="text-slate-500">Founder, Unknown IITians</p>
-                  </div>
-                </div>
+              {/* Card 1: Ishika Ray */}
+              <div className="relative p-8 md:p-9 rounded-2xl bg-[#fff9f2] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200">
+                 <svg className="absolute top-0 right-0 w-[200px] h-[200px] opacity-[0.05] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,20 Q25,10 50,20 T100,20 M0,40 Q25,30 50,40 T100,40 M0,60 Q25,50 50,60 T100,60" fill="none" stroke="#d97706" strokeWidth="1.5"/>
+                 </svg>
+                 
+                 <div className="relative z-10">
+                    <h3 className="text-[19px] font-bold text-[#1a202c] mb-0.5">Ishika Ray</h3>
+                    <p className="text-[14px] font-medium text-[#94a3b8] uppercase tracking-[0.5px] mb-4">Educator, Mathematics Department</p>
+                    <p className="text-[16px] leading-[1.6] text-[#475569]">
+                      Amazing. The environment is really understanding. I have worked for several platforms before, but to be very honest, I can say that UI provides a significantly better professional experience to work with.
+                    </p>
+                 </div>
               </div>
+
+              {/* Card 2: Diya Gehlot */}
+              <div className="relative p-8 md:p-9 rounded-2xl bg-[#f7faff] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200">
+                 <svg className="absolute top-0 right-0 w-[200px] h-[200px] opacity-[0.05] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <path d="M0,20 Q25,10 50,20 T100,20 M0,40 Q25,30 50,40 T100,40 M0,60 Q25,50 50,60 T100,60" fill="none" stroke="#4f46e5" strokeWidth="1.5"/>
+                 </svg>
+
+                 <div className="relative z-10">
+                    <h3 className="text-[19px] font-bold text-[#1a202c] mb-0.5">Diya Gehlot</h3>
+                    <p className="text-[14px] font-medium text-[#94a3b8] uppercase tracking-[0.5px] mb-4">Educator, Mathematics Department</p>
+                    <p className="text-[16px] leading-[1.6] text-[#475569]">
+                      Honestly, it was a really great experience. I really enjoyed working here because the workflow is managed so efficiently without unnecessary stress. I've worked on other channels before, but I never received this level of ease and support, and that’s the best part about UI. I also gained new insights from the leadership, which helped me improve my professional skills. The supportive atmosphere made it easy for me to focus and give my best. Overall, it was an amazing experience, and I’m grateful to be part of this team.
+                    </p>
+                 </div>
+              </div>
+
             </div>
           </div>
         </section>
