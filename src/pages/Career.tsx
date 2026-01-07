@@ -133,9 +133,9 @@ const Career = () => {
         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         
-        {/* HERO SECTION */}
-        <section className="w-full px-4 mb-20">
-          <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
+        {/* HERO SECTION - Consistent Width */}
+        <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
             <div className="flex-1 w-full text-left z-10">
               <div className="inline-flex items-center bg-white border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide shadow-sm">
@@ -196,7 +196,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Join UI Section */}
+        {/* Join UI Section - Consistent Width */}
         <section className="py-20 bg-slate-50 border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-12 items-center">
@@ -224,9 +224,9 @@ const Career = () => {
           </div>
         </section>
 
-        {/* WHY JOIN US - UPDATED SECTION (White BG, Rectangular Cards, Normal Align) */}
+        {/* WHY JOIN US - Consistent Width & Styling */}
         <section className="py-12 bg-white">
-          <div className="max-w-[1000px] w-full mx-auto px-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
             {/* Header - Left Aligned */}
             <div className="text-left mb-10">
@@ -297,9 +297,9 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION (Full Width Layout) */}
-        <section className="w-full px-4 mb-20">
-          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
+        {/* TEAM TESTIMONIALS SECTION - Consistent Width */}
+        <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
             
             {/* Left Side Content */}
             <div className="flex-1 text-left">
@@ -349,7 +349,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Employee Verification Section */}
+        {/* Employee Verification Section - Consistent Width */}
         <section className="py-24 bg-white border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
