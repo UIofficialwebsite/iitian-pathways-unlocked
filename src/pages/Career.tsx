@@ -4,14 +4,9 @@ import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   Building, 
   Check, 
-  FileText,
-  Loader2,
   ArrowRight,
   GraduationCap,
   Star,
@@ -19,106 +14,13 @@ import {
   Briefcase,
   User,
   Award,
-  CalendarCheck
+  CalendarCheck,
+  UserCheck
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 
 const Career = () => {
   const navigate = useNavigate();
-  const [verificationTab, setVerificationTab] = useState<"intern" | "employer">("intern");
-  const [empId, setEmpId] = useState("");
-  const [empName, setEmpName] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<null | { verified: boolean, message: string, details?: any }>(null);
-  const { toast } = useToast();
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setVerifying(true);
-
-    if (!empId || !empName) {
-      setVerificationResult({
-        verified: false,
-        message: "Please enter both employee ID and name."
-      });
-      toast({
-        title: "Incomplete Information",
-        description: "Please enter both employee ID and name.",
-        variant: "destructive",
-      });
-      setVerifying(false);
-      return;
-    }
-
-    try {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .eq("employee_code", empId)
-        .eq("full_name", empName)
-        .maybeSingle();
-
-      if (error) {
-        setVerificationResult({
-          verified: false,
-          message: "Error occurred. Please try again later."
-        });
-        toast({ title: "Verification Error", description: error.message, variant: "destructive" });
-      } else if (!data) {
-        setVerificationResult({
-          verified: false,
-          message: "No records found for the provided ID and name combination."
-        });
-        toast({
-          title: "Verification Failed",
-          description: "We couldn't find a match for your credentials.",
-          variant: "destructive",
-        });
-      } else {
-        let statusText = "";
-        if (data.status === 'active') {
-          statusText = "Active";
-        } else if (data.status === 'completed') {
-          statusText = "Completed";
-        } else {
-          statusText = "Terminated";
-        }
-
-        setVerificationResult({
-          verified: true,
-          message: data.status === 'active' 
-            ? `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} is currently ACTIVE.` 
-            : `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} status is ${statusText.toUpperCase()}.`,
-          details: {
-            name: data.full_name,
-            employeeId: data.employee_code,
-            position: data.position,
-            department: data.department,
-            employeeType: data.employee_type,
-            startDate: data.start_date ? new Date(data.start_date).toLocaleDateString() : "N/A",
-            endDate: data.end_date ? new Date(data.end_date).toLocaleDateString() : "N/A",
-            status: statusText,
-            isActive: data.is_active,
-            verificationCertificateUrl: data.verification_certificate_url
-          }
-        });
-        toast({
-          title: "Verification Successful",
-          description: "Record matched in employee database.",
-          variant: "default",
-        });
-      }
-    } catch (error) {
-      console.error("Verification error:", error);
-      setVerificationResult({
-        verified: false,
-        message: "An unexpected error occurred. Please try again."
-      });
-    }
-    setVerifying(false);
-  };
 
   const scrollToOpenings = () => {
     navigate('/career/openings');
@@ -133,9 +35,10 @@ const Career = () => {
         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         
-        {/* HERO SECTION - Consistent Width */}
-        <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
+        {/* HERO SECTION - Full Width Banner */}
+        <section className="w-full px-4 mb-20">
+          {/* Removed max-w-7xl to keep it full width as requested */}
+          <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
             <div className="flex-1 w-full text-left z-10">
               <div className="inline-flex items-center bg-white border border-slate-200 text-slate-600 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-medium mb-8 tracking-wide shadow-sm">
@@ -196,7 +99,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Join UI Section - Consistent Width */}
+        {/* Join UI Section - Consistent Max Width */}
         <section className="py-20 bg-slate-50 border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 gap-12 items-center">
@@ -224,7 +127,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* WHY JOIN US - Consistent Width & Styling */}
+        {/* WHY JOIN US */}
         <section className="py-12 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             
@@ -297,7 +200,7 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION - Consistent Width */}
+        {/* TEAM TESTIMONIALS SECTION */}
         <section className="w-full mb-20 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
             
@@ -349,180 +252,66 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Employee Verification Section - Consistent Width */}
-        <section className="py-24 bg-white border-t border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12">
-              <div className="inline-flex items-center justify-center p-2 bg-white border border-slate-200 rounded-full mb-4 shadow-sm">
-                <FileText className="h-5 w-5 text-blue-600" />
+        {/* NEW RECRUITER PORTAL SECTION */}
+        <section className="py-24 bg-white border-t border-slate-200 flex justify-center px-4">
+          <div className="w-full max-w-[900px] bg-[#f8faff] rounded-[32px] border border-slate-200 flex flex-col md:flex-row overflow-hidden relative shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] min-h-[400px]">
+            
+            {/* Dot Grid Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1.2px,transparent_1.2px)] [background-size:24px_24px] opacity-40 z-0 pointer-events-none"></div>
+
+            {/* Left Content */}
+            <div className="relative z-10 flex-[1.2] p-10 md:p-[60px] flex flex-col justify-between bg-gradient-to-r from-[#f8faff] via-[#f8faff] to-transparent">
+              <div className="mb-8">
+                <h1 className="text-[38px] font-extrabold text-slate-900 mb-4 tracking-[-1.5px] leading-tight">
+                  Recruiter Portal
+                </h1>
+                <p className="text-lg text-slate-600 leading-relaxed max-w-md">
+                  Verify candidate professional history and department roles instantly. Access our secure registry for authenticated records.
+                </p>
               </div>
-              <h2 className="text-3xl font-bold text-slate-900">Employee Verification</h2>
-              <p className="mt-3 text-slate-600 max-w-2xl mx-auto">
-                Verify employment status and role at Unknown IITians
-              </p>
+
+              {/* Get Details Button */}
+              <button 
+                onClick={() => navigate('/intern-verification')}
+                className="bg-slate-900 text-white px-8 py-4 rounded-xl text-base font-semibold flex items-center gap-3 w-fit border border-white/10 hover:bg-slate-800 transition-colors shadow-sm group"
+              >
+                Get Details
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:translate-x-1 transition-transform">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
             </div>
 
-            <div className="max-w-3xl mx-auto">
-              <Card className="shadow-lg border-0 bg-white overflow-hidden ring-1 ring-slate-200">
-                <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-8 pt-8">
-                  <CardTitle className="text-2xl font-bold text-slate-900 text-center">Verification Portal</CardTitle>
-                  <CardDescription className="text-center text-slate-500 mt-2">
-                    Enter credentials to verify intern or employee records
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-8 px-8 pb-8">
-                  <Tabs 
-                    defaultValue="intern" 
-                    value={verificationTab}
-                    onValueChange={(value) => setVerificationTab(value as "intern" | "employer")}
-                    className="w-full"
-                  >
-                    <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-100 p-1 rounded-lg">
-                      <TabsTrigger 
-                        value="intern" 
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm transition-all"
-                      >
-                        For Interns
-                      </TabsTrigger>
-                      <TabsTrigger 
-                        value="employer" 
-                        className="rounded-md data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-sm transition-all"
-                      >
-                        For Employers
-                      </TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="intern" className="focus-visible:outline-none">
-                      <form onSubmit={handleVerify} className="space-y-5">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          <div className="space-y-2">
-                            <label htmlFor="empId" className="block text-sm font-medium text-slate-700">
-                              Employee ID
-                            </label>
-                            <Input 
-                              id="empId" 
-                              placeholder="e.g., UI12345" 
-                              value={empId}
-                              onChange={(e) => setEmpId(e.target.value)}
-                              required
-                              className="border-slate-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                            />
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <label htmlFor="empName" className="block text-sm font-medium text-slate-700">
-                              Full Name
-                            </label>
-                            <Input 
-                              id="empName" 
-                              placeholder="Name as registered" 
-                              value={empName}
-                              onChange={(e) => setEmpName(e.target.value)}
-                              required
-                              className="border-slate-300 focus:ring-2 focus:ring-blue-100 focus:border-blue-400"
-                            />
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          type="submit" 
-                          className="w-full bg-slate-900 hover:bg-blue-800 text-white py-6 mt-2"
-                          disabled={verifying}
-                        >
-                          {verifying ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...
-                            </>
-                          ) : "Verify Credentials"}
-                        </Button>
-                      </form>
-                      
-                      {verificationResult && (
-                        <div className={`mt-8 p-5 rounded-lg border ${
-                          verificationResult.verified 
-                            ? 'bg-green-50/50 border-green-200' 
-                            : 'bg-red-50/50 border-red-200'
-                        }`}>
-                          <div className="flex items-center mb-2">
-                            {verificationResult.verified ? (
-                              <Check className="h-5 w-5 text-green-600 mr-2" />
-                            ) : (
-                              <div className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center mr-2">
-                                <span className="text-red-500 font-bold text-xs">!</span>
-                              </div>
-                            )}
-                            <h3 className={`text-sm font-semibold ${
-                              verificationResult.verified ? 'text-green-800' : 'text-red-800'
-                            }`}>
-                              {verificationResult.verified ? 'Verification Successful' : 'Verification Failed'}
-                            </h3>
-                          </div>
-                          
-                          <p className={`text-sm mb-4 ${
-                            verificationResult.verified ? 'text-green-700' : 'text-red-700'
-                          }`}>
-                            {verificationResult.message}
-                          </p>
-                          
-                          {verificationResult.verified && verificationResult.details && (
-                            <div className="bg-white rounded-md p-4 border border-green-100 shadow-sm text-sm space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Name:</span>
-                                <span className="text-slate-900 font-medium">{verificationResult.details.name}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">ID:</span>
-                                <span className="text-slate-900 font-mono bg-slate-100 px-2 py-0.5 rounded text-xs">{verificationResult.details.employeeId}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-500">Position:</span>
-                                <span className="text-slate-900">{verificationResult.details.position}</span>
-                              </div>
-                              <div className="flex justify-between border-t border-slate-100 pt-2 mt-2">
-                                <span className="text-slate-500">Status:</span>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                  verificationResult.details.status === 'Active'
-                                    ? 'bg-green-100 text-green-800'
-                                    : 'bg-blue-100 text-blue-800'
-                                }`}>
-                                  {verificationResult.details.status}
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="employer" className="focus-visible:outline-none">
-                      <div className="space-y-6 pt-2">
-                        <div className="bg-blue-50 border border-blue-100 rounded-lg p-5">
-                          <p className="text-blue-800 text-sm leading-relaxed">
-                            For employers looking to verify employment status of a candidate, please email your official request to <span className="font-semibold">verification@unknowniitians.com</span>
-                          </p>
-                        </div>
-                        
-                        <div className="space-y-4">
-                            <h4 className="text-sm font-semibold text-slate-900">Required Information:</h4>
-                            <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 marker:text-blue-400">
-                              <li>Your company name and contact details</li>
-                              <li>Candidate's name and Employee ID (if available)</li>
-                              <li>Purpose of verification</li>
-                              <li>Your professional relation to the candidate</li>
-                            </ul>
-                        </div>
-                        
-                        <Button className="w-full bg-slate-900 hover:bg-slate-800 text-white h-12 mt-2">
-                          Contact Verification Team
-                        </Button>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+            {/* Right Visual Area */}
+            <div className="flex-1 flex justify-center items-center relative z-10 p-10 md:p-0">
+              {/* ID Card Graphic */}
+              <div className="relative w-[240px] h-[160px] bg-white rounded-[18px] border-[4px] border-slate-900 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.1)] flex p-[22px] gap-[15px]">
+                
+                {/* Profile Pic Placeholder */}
+                <div className="w-[65px] h-[75px] border-[3.5px] border-slate-900 rounded-xl flex justify-center items-end bg-slate-50 overflow-hidden shrink-0">
+                  <User className="w-[50px] h-[50px] text-slate-900 -mb-1" strokeWidth={1.5} fill="currentColor" />
+                </div>
+
+                {/* Lines */}
+                <div className="flex-1 flex flex-col gap-3 pt-1.5">
+                  <div className="h-1.5 bg-slate-900 rounded-full w-full"></div>
+                  <div className="h-1.5 bg-slate-900 rounded-full w-[85%]"></div>
+                  <div className="h-1.5 bg-slate-900 rounded-full w-full"></div>
+                  <div className="h-1.5 bg-slate-900 rounded-full w-[65%]"></div>
+                </div>
+
+                {/* Verified Badge */}
+                <div className="absolute -left-10 bottom-4 w-[84px] h-[84px] bg-emerald-500 rounded-full border-[6px] border-[#f8faff] flex items-center justify-center shadow-[0_10px_25px_rgba(16,185,129,0.25)]">
+                  <Check className="w-11 h-11 text-white" strokeWidth={3} />
+                </div>
+
+              </div>
             </div>
+
           </div>
         </section>
+
       </main>
 
       <Footer />
