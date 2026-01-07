@@ -224,16 +224,16 @@ const Career = () => {
           </div>
         </section>
 
-        {/* WHY JOIN US - NEW REDESIGNED SECTION */}
-        <section className="py-24 bg-[#f9fafb]">
+        {/* WHY JOIN US - UPDATED SECTION (White BG, Rectangular Cards, Normal Align) */}
+        <section className="py-12 bg-white">
           <div className="max-w-[1000px] w-full mx-auto px-6">
             
-            {/* Header */}
-            <div className="text-center mb-14">
-              <h1 className="text-[2.5rem] font-bold text-[#111827] mb-4 tracking-tight">
+            {/* Header - Left Aligned */}
+            <div className="text-left mb-10">
+              <h1 className="text-[2.5rem] font-bold text-[#111827] mb-3 tracking-tight">
                 Why join us?
               </h1>
-              <p className="text-lg text-[#4b5563] max-w-2xl mx-auto">
+              <p className="text-lg text-[#4b5563] max-w-2xl">
                 Become a part of the mission to provide high quality affordable education to Bharat!
               </p>
             </div>
@@ -242,52 +242,52 @@ const Career = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Benefit 1 */}
-              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center shrink-0">
-                  <GraduationCap className="w-7 h-7" />
+              <div className="bg-white p-6 rounded-lg border border-slate-200 hover:border-blue-200 transition-colors duration-200 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#eff6ff] text-[#3b82f6] flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Role with a purpose</h3>
-                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
+                  <h3 className="text-lg font-bold text-[#111827] mb-2">Role with a purpose</h3>
+                  <p className="text-[#4b5563] leading-[1.5] text-sm">
                     An opportunity to enhance the quality of education in Bharat and create a lasting social impact.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 2 */}
-              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center shrink-0">
-                  <Award className="w-7 h-7" />
+              <div className="bg-white p-6 rounded-lg border border-slate-200 hover:border-purple-200 transition-colors duration-200 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#f5f3ff] text-[#8b5cf6] flex items-center justify-center shrink-0">
+                  <Award className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Opportunity to the deserving</h3>
-                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
+                  <h3 className="text-lg font-bold text-[#111827] mb-2">Opportunity to the deserving</h3>
+                  <p className="text-[#4b5563] leading-[1.5] text-sm">
                     We foster a meritocratic environment where talent is recognized and hard work is rewarded with growth.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 3 */}
-              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-[#ecfdf5] text-[#10b981] flex items-center justify-center shrink-0">
-                  <Users className="w-7 h-7" />
+              <div className="bg-white p-6 rounded-lg border border-slate-200 hover:border-green-200 transition-colors duration-200 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#ecfdf5] text-[#10b981] flex items-center justify-center shrink-0">
+                  <Users className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Collaborative culture</h3>
-                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
+                  <h3 className="text-lg font-bold text-[#111827] mb-2">Collaborative culture</h3>
+                  <p className="text-[#4b5563] leading-[1.5] text-sm">
                     Work with an approachable and cooperative team with no hierarchy or airs around designations.
                   </p>
                 </div>
               </div>
 
               {/* Benefit 4 */}
-              <div className="bg-white p-8 rounded-2xl border border-[rgba(0,0,0,0.03)] shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
-                <div className="w-14 h-14 rounded-xl bg-[#fffbeb] text-[#f59e0b] flex items-center justify-center shrink-0">
-                  <CalendarCheck className="w-7 h-7" />
+              <div className="bg-white p-6 rounded-lg border border-slate-200 hover:border-orange-200 transition-colors duration-200 flex items-start gap-5">
+                <div className="w-12 h-12 rounded-lg bg-[#fffbeb] text-[#f59e0b] flex items-center justify-center shrink-0">
+                  <CalendarCheck className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-[1.25rem] font-semibold text-[#111827] mb-2">Flexible working policy</h3>
-                  <p className="text-[#4b5563] leading-[1.6] text-[0.95rem]">
+                  <h3 className="text-lg font-bold text-[#111827] mb-2">Flexible working policy</h3>
+                  <p className="text-[#4b5563] leading-[1.5] text-sm">
                     Maintain harmony with flexible working hours and employee-friendly leave policies designed for you.
                   </p>
                 </div>
