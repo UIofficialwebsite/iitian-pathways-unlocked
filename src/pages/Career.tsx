@@ -284,27 +284,27 @@ const Career = () => {
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION (UPDATED) */}
-        <section className="py-20 bg-white">
+        {/* TEAM TESTIMONIALS SECTION (Wider Layout) */}
+        <section className="w-full px-4 mb-20 bg-white">
           {/* Full Width Block Container with Rounded Corners */}
-          <div className="w-full px-8 md:px-12 py-12 border border-slate-200 rounded-[30px] flex flex-col md:flex-row gap-12 lg:gap-16 items-center">
+          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
             
             {/* Left Side Content */}
-            <div className="flex-1 text-center md:text-left">
+            <div className="flex-1 text-left">
               <div className="text-[80px] text-slate-700 leading-[0.5] mb-4 font-serif">“</div>
               <h2 className="text-[42px] font-bold text-[#1a202c] mb-5 tracking-tight leading-[1.1]">
                 Hear from the team!
               </h2>
-              <p className="text-lg text-[#64748b] leading-[1.6] max-w-sm mx-auto md:mx-0">
+              <p className="text-lg text-[#64748b] leading-[1.6]">
                 Get a sneak-peek into all the magic and professional growth that happens at UI.
               </p>
             </div>
 
             {/* Right Side Testimonials */}
-            <div className="flex-[1.3] flex flex-col gap-6 w-full">
+            <div className="flex-[1.2] flex flex-col gap-6 w-full">
               
               {/* Card 1: Ishika Ray */}
-              <div className="relative p-8 md:p-9 rounded-2xl bg-[#fff9f2] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="relative p-8 md:p-10 rounded-2xl bg-[#fff9f2] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200 w-full">
                  <svg className="absolute top-0 right-0 w-[200px] h-[200px] opacity-[0.05] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <path d="M0,20 Q25,10 50,20 T100,20 M0,40 Q25,30 50,40 T100,40 M0,60 Q25,50 50,60 T100,60" fill="none" stroke="#d97706" strokeWidth="1.5"/>
                  </svg>
@@ -319,7 +319,7 @@ const Career = () => {
               </div>
 
               {/* Card 2: Diya Gehlot */}
-              <div className="relative p-8 md:p-9 rounded-2xl bg-[#f7faff] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200">
+              <div className="relative p-8 md:p-10 rounded-2xl bg-[#f7faff] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200 w-full">
                  <svg className="absolute top-0 right-0 w-[200px] h-[200px] opacity-[0.05] pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
                     <path d="M0,20 Q25,10 50,20 T100,20 M0,40 Q25,30 50,40 T100,40 M0,60 Q25,50 50,60 T100,60" fill="none" stroke="#4f46e5" strokeWidth="1.5"/>
                  </svg>
