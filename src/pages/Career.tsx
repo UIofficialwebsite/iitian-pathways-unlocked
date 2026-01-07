@@ -17,7 +17,9 @@ import {
   Star,
   Users,
   Briefcase,
-  User
+  User,
+  Award,
+  CalendarCheck
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -131,7 +133,7 @@ const Career = () => {
         style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
       >
         
-        {/* HERO SECTION - Full Width Rounded Block - WHITE BACKGROUND */}
+        {/* HERO SECTION */}
         <section className="w-full px-4 mb-20">
           <div className="w-full bg-white border border-slate-200 rounded-2xl p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-24 items-center overflow-hidden relative shadow-sm">
             
@@ -222,75 +224,85 @@ const Career = () => {
           </div>
         </section>
 
-        {/* Why Work at UI Section */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl font-bold text-slate-900">Why work at Unknown IITians</h2>
-              <p className="mt-4 text-xl text-blue-600 font-semibold">
-                Earn Today, Build Tomorrow, Succeed Forever
+        {/* WHY JOIN US - NEW REDESIGNED SECTION */}
+        <section className="py-20 bg-slate-50/50">
+          <div className="max-w-[1000px] w-full mx-auto px-6">
+            
+            {/* Header */}
+            <div className="text-center mb-14">
+              <h1 className="text-[2.5rem] font-bold text-slate-900 mb-4 tracking-tight">
+                Why join us?
+              </h1>
+              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+                Become a part of the mission to provide high quality affordable education to Bharat!
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {[
-                {
-                  title: "A Platform for Growth",
-                  description: "Our company is built on helping individuals discover and unlock their full potential. Working with us means you'll be part of a community that values personal development, career advancement, and success.",
-                  icon: GraduationCap
-                },
-                {
-                  title: "Earn While You Learn",
-                  description: "College students often look for ways to manage their expenses, and our internships offer the perfect solution. You can earn money while gaining hands-on experience and making progress toward your career goals.",
-                  icon: Star
-                },
-                {
-                  title: "No Middlemen",
-                  description: "At Unknown IITians, we don't act as a mediator. You get direct access to internship openings based on your skills and interests. If you have the required skills, you can join and begin your journey without delays.",
-                  icon: Users
-                },
-                {
-                  title: "A Stepping Stone",
-                  description: "An internship with Unknown IITians is more than just a learning experience; it's a chance to set the foundation for your future career. You'll gain insights into the industry, develop a strong work ethic, and build a network.",
-                  icon: Briefcase
-                },
-                {
-                  title: "No Experience? No Problem!",
-                  description: "You don't need to have extensive experience to get started. We welcome students with basic skills who are eager to learn and grow. The internships we offer are a perfect starting point to build your knowledge.",
-                  icon: User
-                },
-                {
-                  title: "Paid Opportunities",
-                  description: "Once you've completed the training and feel confident in your abilities, you can directly apply for paid internships and roles. Unknown IITians helps bridge the gap between learning and earning.",
-                  icon: Building
-                }
-              ].map((item, index) => (
-                <motion.div 
-                  key={index} 
-                  className="flex flex-col items-center text-center p-8 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300"
-                  initial={{ y: 30, opacity: 0 }}
-                  whileInView={{ y: 0, opacity: 1 }}
-                  viewport={{ once: true, margin: "-50px" }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <div className="rounded-full bg-white p-4 mb-6 shadow-sm border border-slate-100">
-                    <item.icon className="h-8 w-8 text-blue-600" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-slate-900">{item.title}</h3>
-                  <p className="text-slate-600 leading-relaxed">{item.description}</p>
-                </motion.div>
-              ))}
+            {/* Benefits Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Benefit 1 */}
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 group-hover:bg-blue-100 transition-colors">
+                  <GraduationCap className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Role with a purpose</h3>
+                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                    An opportunity to enhance the quality of education in Bharat and create a lasting social impact.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 2 */}
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 group-hover:bg-purple-100 transition-colors">
+                  <Award className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Opportunity to the deserving</h3>
+                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                    We foster a meritocratic environment where talent is recognized and hard work is rewarded with growth.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 3 */}
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0 group-hover:bg-green-100 transition-colors">
+                  <Users className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Collaborative culture</h3>
+                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                    Work with an approachable and cooperative team with no hierarchy or airs around designations.
+                  </p>
+                </div>
+              </div>
+
+              {/* Benefit 4 */}
+              <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300 flex items-start gap-6 group">
+                <div className="w-14 h-14 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
+                  <CalendarCheck className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Flexible working policy</h3>
+                  <p className="text-slate-600 leading-relaxed text-[0.95rem]">
+                    Maintain harmony with flexible working hours and employee-friendly leave policies designed for you.
+                  </p>
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
 
-        {/* TEAM TESTIMONIALS SECTION (Wider Layout) */}
-        <section className="w-full px-4 mb-20 bg-white">
-          {/* Full Width Block Container with Rounded Corners */}
-          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm">
+        {/* TEAM TESTIMONIALS SECTION */}
+        <section className="py-20 bg-white">
+          <div className="w-full bg-white border border-slate-200 rounded-[30px] p-8 md:p-12 lg:p-16 flex flex-col md:flex-row gap-12 lg:gap-20 items-center shadow-sm max-w-[1400px] mx-auto">
             
             {/* Left Side Content */}
-            <div className="flex-1 text-left">
+            <div className="flex-1 text-left pl-4">
               <div className="text-[80px] text-slate-700 leading-[0.5] mb-4 font-serif">“</div>
               <h2 className="text-[42px] font-bold text-[#1a202c] mb-5 tracking-tight leading-[1.1]">
                 Hear from the team!
@@ -301,7 +313,7 @@ const Career = () => {
             </div>
 
             {/* Right Side Testimonials */}
-            <div className="flex-[1.2] flex flex-col gap-6 w-full">
+            <div className="flex-[1.2] flex flex-col gap-6 w-full pr-4">
               
               {/* Card 1: Ishika Ray */}
               <div className="relative p-8 md:p-10 rounded-2xl bg-[#fff9f2] overflow-hidden text-left shadow-sm hover:shadow-md transition-shadow duration-200 w-full">
