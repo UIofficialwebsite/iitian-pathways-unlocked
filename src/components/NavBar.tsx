@@ -18,6 +18,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
@@ -104,50 +112,52 @@ const NavBar = () => {
               About
             </Link>
             
-            {/* Dynamic Courses Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0"
-                >
-                  Courses
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[600px] p-6 bg-[#f9f9f9] border-gray-200">
-                {courseCategories.length === 0 ? (
-                  <div className="text-center p-4 text-gray-500">
-                    No active batches currently available.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-6">
-                    {courseCategories.map((category) => {
-                      const style = getCategoryStyle(category);
-                      const IconComponent = style.icon;
-                      
-                      return (
-                        <DropdownMenuItem key={category} asChild className="p-0 focus:bg-transparent">
-                          <Link 
-                            to={`/courses?category=${style.slug}`}
-                            className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm transition-colors duration-200 hover:border-black group outline-none"
-                          >
-                            <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
-                              <IconComponent className="w-8 h-8" />
-                            </div>
-                            <div className="text-xl font-medium text-neutral-900">
-                              {category}
-                            </div>
-                          </Link>
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </div>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Dynamic Courses Menu (Hover Trigger) */}
+            <NavigationMenu>
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger 
+                    className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent text-base font-normal h-auto p-0"
+                  >
+                    Courses
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent>
+                    <div className="w-[600px] p-6 bg-[#f9f9f9] rounded-lg border-none shadow-none">
+                       {courseCategories.length === 0 ? (
+                         <div className="text-center p-4 text-gray-500">
+                           No active batches currently available.
+                         </div>
+                       ) : (
+                         <div className="grid grid-cols-2 gap-6">
+                            {courseCategories.map((category) => {
+                              const style = getCategoryStyle(category);
+                              const IconComponent = style.icon;
+                              
+                              return (
+                                <NavigationMenuLink key={category} asChild>
+                                  <Link 
+                                    to={`/courses?category=${style.slug}`}
+                                    className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm transition-all duration-200 hover:border-black group outline-none"
+                                  >
+                                    <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
+                                      <IconComponent className="w-8 h-8" />
+                                    </div>
+                                    <div className="text-xl font-medium text-neutral-900">
+                                      {category}
+                                    </div>
+                                  </Link>
+                                </NavigationMenuLink>
+                              );
+                            })}
+                         </div>
+                       )}
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             
-            {/* Exam Prep Dropdown */}
+            {/* Exam Prep Dropdown (Standard Click) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0">
