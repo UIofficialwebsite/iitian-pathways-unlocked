@@ -7,11 +7,7 @@ import {
   Atom, 
   Stethoscope, 
   GraduationCap, 
-  Trophy, 
-  BookOpen, 
-  Cpu, 
-  Calculator, 
-  Globe 
+  BookOpen 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,14 +18,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
@@ -44,7 +32,7 @@ const NavBar = () => {
     window.location.href = '/';
   };
 
-  // Dynamically extract unique categories from available courses
+  // Dynamically extract unique categories from the database
   const courseCategories = useMemo(() => {
     const categories = new Set<string>();
     if (courses && courses.length > 0) {
@@ -57,65 +45,38 @@ const NavBar = () => {
     return Array.from(categories).sort();
   }, [courses]);
 
-  // Helper to map dynamic category names to professional icons and colors
+  // Helper to assign icons based on category keywords
   const getCategoryStyle = (category: string) => {
     const normalize = category.toLowerCase();
     
+    // Check for keywords to assign professional icons dynamically
     if (normalize.includes('jee')) {
       return { 
         icon: Atom, 
-        color: "text-orange-500", 
-        slug: 'jee',
-        label: "IIT JEE"
+        color: "text-[#f39c12]", // Orange/Yellow 
+        slug: 'jee'
       };
     }
     if (normalize.includes('neet')) {
       return { 
         icon: Stethoscope, 
-        color: "text-red-500", 
-        slug: 'neet',
-        label: "NEET" 
+        color: "text-[#e74c3c]", // Red
+        slug: 'neet'
       };
     }
     if (normalize.includes('iitm') || normalize.includes('bs')) {
       return { 
         icon: GraduationCap, 
-        color: "text-green-600", 
-        slug: 'iitm-bs',
-        label: "IITM BS" 
-      };
-    }
-    if (normalize.includes('olympiad')) {
-      return { 
-        icon: Trophy, 
-        color: "text-yellow-600", 
-        slug: 'olympiad',
-        label: category 
-      };
-    }
-    if (normalize.includes('gate')) {
-      return { 
-        icon: Calculator, 
-        color: "text-yellow-500", 
-        slug: 'gate',
-        label: "GATE" 
-      };
-    }
-    if (normalize.includes('ese')) {
-      return { 
-        icon: Cpu, 
-        color: "text-blue-500", 
-        slug: 'ese',
-        label: "ESE" 
+        color: "text-[#2ecc71]", // Green
+        slug: 'iitm-bs'
       };
     }
     
-    // Default fallback
+    // Generic fallback for any other category found in the DB
     return { 
       icon: BookOpen, 
       color: "text-gray-600", 
-      slug: category.toLowerCase().replace(/\s+/g, '-'),
-      label: category 
+      slug: category.toLowerCase().replace(/\s+/g, '-')
     };
   };
 
@@ -143,71 +104,53 @@ const NavBar = () => {
               About
             </Link>
             
-            {/* Dynamic Courses Dropdown (Hover) */}
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger 
-                    className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent text-base font-normal h-auto p-0"
-                  >
-                    Courses
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    <div className="w-[600px] p-6 bg-[#f9f9f9] rounded-lg">
-                       {courseCategories.length === 0 ? (
-                         <div className="text-center p-4 text-gray-500">
-                           No active batches currently available.
-                         </div>
-                       ) : (
-                         <div className="grid grid-cols-2 gap-6">
-                            {/* Link to All Courses */}
-                            <NavigationMenuLink asChild>
-                                <Link 
-                                  to="/courses"
-                                  className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm hover:-translate-y-[3px] hover:shadow-md hover:border-black/15 transition-all duration-200 group"
-                                >
-                                  <div className="w-12 h-12 flex justify-center items-center mr-5 bg-gray-50 rounded-full">
-                                    <Globe className="w-6 h-6 text-royal" />
-                                  </div>
-                                  <div className="text-xl font-medium text-neutral-900">
-                                    All Courses
-                                  </div>
-                                </Link>
-                            </NavigationMenuLink>
-
-                            {/* Dynamic Category Cards */}
-                            {courseCategories.map((category) => {
-                              const style = getCategoryStyle(category);
-                              const IconComponent = style.icon;
-                              
-                              return (
-                                <NavigationMenuLink key={category} asChild>
-                                  <Link 
-                                    to={`/courses?category=${style.slug}`}
-                                    className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm hover:-translate-y-[3px] hover:shadow-md hover:border-black/15 transition-all duration-200 group"
-                                  >
-                                    <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
-                                      <IconComponent className="w-8 h-8" />
-                                    </div>
-                                    <div className="text-xl font-medium text-neutral-900">
-                                      {style.label}
-                                    </div>
-                                  </Link>
-                                </NavigationMenuLink>
-                              );
-                            })}
-                         </div>
-                       )}
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
+            {/* Dynamic Courses Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0"
+                >
+                  Courses
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-[600px] p-6 bg-[#f9f9f9] border-gray-200">
+                {courseCategories.length === 0 ? (
+                  <div className="text-center p-4 text-gray-500">
+                    No active batches currently available.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-6">
+                    {courseCategories.map((category) => {
+                      const style = getCategoryStyle(category);
+                      const IconComponent = style.icon;
+                      
+                      return (
+                        <DropdownMenuItem key={category} asChild className="p-0 focus:bg-transparent">
+                          <Link 
+                            to={`/courses?category=${style.slug}`}
+                            className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm transition-colors duration-200 hover:border-black group outline-none"
+                          >
+                            <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
+                              <IconComponent className="w-8 h-8" />
+                            </div>
+                            <div className="text-xl font-medium text-neutral-900">
+                              {category}
+                            </div>
+                          </Link>
+                        </DropdownMenuItem>
+                      );
+                    })}
+                  </div>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {/* Exam Prep Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base">
+                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0">
                   Exam Prep
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
@@ -296,29 +239,29 @@ const NavBar = () => {
                 About
               </Link>
               
-              {/* Mobile Courses Section - Dynamic */}
+              {/* Mobile Courses Section */}
               <div className="block px-3 py-2 text-gray-700 font-medium">
                 Courses
               </div>
               <div className="pl-6 space-y-2 mb-2">
-                 <Link to="/courses" className="flex items-center text-gray-600 hover:text-royal py-1">
-                    <Globe className="w-5 h-5 mr-2" />
-                    All Courses
-                 </Link>
-                 {courseCategories.map((category) => {
-                    const style = getCategoryStyle(category);
-                    const IconComponent = style.icon;
-                    return (
-                      <Link 
-                        key={category}
-                        to={`/courses?category=${style.slug}`}
-                        className="flex items-center text-gray-600 hover:text-royal py-1"
-                      >
-                         <IconComponent className={`w-5 h-5 mr-2 ${style.color}`} />
-                         {style.label}
-                      </Link>
-                    );
-                 })}
+                 {courseCategories.length > 0 ? (
+                    courseCategories.map((category) => {
+                      const style = getCategoryStyle(category);
+                      const IconComponent = style.icon;
+                      return (
+                        <Link 
+                          key={category}
+                          to={`/courses?category=${style.slug}`}
+                          className="flex items-center text-gray-600 hover:text-royal py-1"
+                        >
+                           <IconComponent className={`w-5 h-5 mr-2 ${style.color}`} />
+                           {category}
+                        </Link>
+                      );
+                    })
+                 ) : (
+                   <span className="text-sm text-gray-500 italic px-2">No active batches</span>
+                 )}
               </div>
 
               <Link to="/exam-preparation" className="block px-3 py-2 text-gray-700 hover:text-royal">
