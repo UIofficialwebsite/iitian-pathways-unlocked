@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { 
+  Menu, 
+  X, 
+  ChevronDown, 
+  Atom, 
+  Stethoscope, 
+  GraduationCap, 
+  Trophy, 
+  BookOpen, 
+  Cpu, 
+  Calculator, 
+  Globe 
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -20,75 +32,98 @@ import {
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { courses } = useBackend();
 
   const handleSignOut = async () => {
     await signOut();
     window.location.href = '/';
   };
 
-  // Inject FontAwesome for the specific icons requested
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css";
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-
-    return () => {
-      if (document.head.contains(link)) {
-        document.head.removeChild(link);
-      }
-    };
-  }, []);
-
-  // Data for the Courses Dropdown Grid
-  const courseCards = [
-    {
-      label: "IIT JEE",
-      iconClass: "fa-solid fa-atom",
-      colorClass: "text-[#f39c12]", // Orange/Yellow
-      link: "/courses?category=jee"
-    },
-    {
-      label: "NEET",
-      iconClass: "fa-solid fa-hand-holding-medical",
-      colorClass: "text-[#e74c3c]", // Red
-      link: "/courses?category=neet"
-    },
-    {
-      label: "ESE",
-      iconClass: "fa-solid fa-helmet-safety",
-      colorClass: "text-[#3498db]", // Blue
-      link: "/courses?category=ese"
-    },
-    {
-      label: "GATE",
-      iconClass: "fa-solid fa-lightbulb",
-      colorClass: "text-[#f1c40f]", // Yellow
-      link: "/courses?category=gate"
-    },
-    {
-      label: "AE/JE",
-      iconClass: "fa-solid fa-laptop-code",
-      colorClass: "text-[#2ecc71]", // Green
-      link: "/courses?category=ae-je"
-    },
-    {
-      label: "Olympiad",
-      iconClass: "fa-solid fa-award",
-      colorClass: "text-[#e67e22]", // Orange
-      link: "/courses?category=olympiad"
+  // Dynamically extract unique categories from available courses
+  const courseCategories = useMemo(() => {
+    const categories = new Set<string>();
+    if (courses && courses.length > 0) {
+      courses.forEach(course => {
+        if (course.exam_category) {
+          categories.add(course.exam_category);
+        }
+      });
     }
-  ];
+    return Array.from(categories).sort();
+  }, [courses]);
+
+  // Helper to map dynamic category names to professional icons and colors
+  const getCategoryStyle = (category: string) => {
+    const normalize = category.toLowerCase();
+    
+    if (normalize.includes('jee')) {
+      return { 
+        icon: Atom, 
+        color: "text-orange-500", 
+        slug: 'jee',
+        label: "IIT JEE"
+      };
+    }
+    if (normalize.includes('neet')) {
+      return { 
+        icon: Stethoscope, 
+        color: "text-red-500", 
+        slug: 'neet',
+        label: "NEET" 
+      };
+    }
+    if (normalize.includes('iitm') || normalize.includes('bs')) {
+      return { 
+        icon: GraduationCap, 
+        color: "text-green-600", 
+        slug: 'iitm-bs',
+        label: "IITM BS" 
+      };
+    }
+    if (normalize.includes('olympiad')) {
+      return { 
+        icon: Trophy, 
+        color: "text-yellow-600", 
+        slug: 'olympiad',
+        label: category 
+      };
+    }
+    if (normalize.includes('gate')) {
+      return { 
+        icon: Calculator, 
+        color: "text-yellow-500", 
+        slug: 'gate',
+        label: "GATE" 
+      };
+    }
+    if (normalize.includes('ese')) {
+      return { 
+        icon: Cpu, 
+        color: "text-blue-500", 
+        slug: 'ese',
+        label: "ESE" 
+      };
+    }
+    
+    // Default fallback
+    return { 
+      icon: BookOpen, 
+      color: "text-gray-600", 
+      slug: category.toLowerCase().replace(/\s+/g, '-'),
+      label: category 
+    };
+  };
 
   return (
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-center items-center h-16 relative">
-          {/* Logo - positioned on the left side of center group */}
+          {/* Logo */}
           <div className="flex items-center absolute left-0">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img
@@ -108,7 +143,7 @@ const NavBar = () => {
               About
             </Link>
             
-            {/* Courses Navigation Menu (Hover Trigger) */}
+            {/* Dynamic Courses Dropdown (Hover) */}
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -119,30 +154,57 @@ const NavBar = () => {
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[600px] p-6 bg-[#f9f9f9] rounded-lg">
-                       <div className="grid grid-cols-2 gap-6">
-                          {courseCards.map((card, index) => (
-                            <NavigationMenuLink key={index} asChild>
-                              <Link 
-                                to={card.link}
-                                className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm hover:-translate-y-[3px] hover:shadow-md hover:border-black/15 transition-all duration-200 group"
-                              >
-                                <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${card.colorClass}`}>
-                                  <i className={card.iconClass}></i>
-                                </div>
-                                <div className="text-xl font-medium text-neutral-900">
-                                  {card.label}
-                                </div>
-                              </Link>
+                       {courseCategories.length === 0 ? (
+                         <div className="text-center p-4 text-gray-500">
+                           No active batches currently available.
+                         </div>
+                       ) : (
+                         <div className="grid grid-cols-2 gap-6">
+                            {/* Link to All Courses */}
+                            <NavigationMenuLink asChild>
+                                <Link 
+                                  to="/courses"
+                                  className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm hover:-translate-y-[3px] hover:shadow-md hover:border-black/15 transition-all duration-200 group"
+                                >
+                                  <div className="w-12 h-12 flex justify-center items-center mr-5 bg-gray-50 rounded-full">
+                                    <Globe className="w-6 h-6 text-royal" />
+                                  </div>
+                                  <div className="text-xl font-medium text-neutral-900">
+                                    All Courses
+                                  </div>
+                                </Link>
                             </NavigationMenuLink>
-                          ))}
-                       </div>
+
+                            {/* Dynamic Category Cards */}
+                            {courseCategories.map((category) => {
+                              const style = getCategoryStyle(category);
+                              const IconComponent = style.icon;
+                              
+                              return (
+                                <NavigationMenuLink key={category} asChild>
+                                  <Link 
+                                    to={`/courses?category=${style.slug}`}
+                                    className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm hover:-translate-y-[3px] hover:shadow-md hover:border-black/15 transition-all duration-200 group"
+                                  >
+                                    <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
+                                      <IconComponent className="w-8 h-8" />
+                                    </div>
+                                    <div className="text-xl font-medium text-neutral-900">
+                                      {style.label}
+                                    </div>
+                                  </Link>
+                                </NavigationMenuLink>
+                              );
+                            })}
+                         </div>
+                       )}
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
             
-            {/* Exam Prep Dropdown (Standard Click) */}
+            {/* Exam Prep Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base">
@@ -172,7 +234,7 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* User Authentication - positioned on the right side */}
+          {/* User Authentication */}
           <div className="hidden md:flex items-center absolute right-0">
             {user ? (
               <div className="flex items-center space-x-4">
@@ -234,21 +296,29 @@ const NavBar = () => {
                 About
               </Link>
               
-              {/* Mobile Courses Section */}
+              {/* Mobile Courses Section - Dynamic */}
               <div className="block px-3 py-2 text-gray-700 font-medium">
                 Courses
               </div>
               <div className="pl-6 space-y-2 mb-2">
-                {courseCards.map((card) => (
-                  <Link 
-                    key={card.label}
-                    to={card.link}
-                    className="flex items-center text-gray-600 hover:text-royal py-1"
-                  >
-                     <i className={`${card.iconClass} w-6 text-center mr-2 ${card.colorClass}`}></i>
-                     {card.label}
-                  </Link>
-                ))}
+                 <Link to="/courses" className="flex items-center text-gray-600 hover:text-royal py-1">
+                    <Globe className="w-5 h-5 mr-2" />
+                    All Courses
+                 </Link>
+                 {courseCategories.map((category) => {
+                    const style = getCategoryStyle(category);
+                    const IconComponent = style.icon;
+                    return (
+                      <Link 
+                        key={category}
+                        to={`/courses?category=${style.slug}`}
+                        className="flex items-center text-gray-600 hover:text-royal py-1"
+                      >
+                         <IconComponent className={`w-5 h-5 mr-2 ${style.color}`} />
+                         {style.label}
+                      </Link>
+                    );
+                 })}
               </div>
 
               <Link to="/exam-preparation" className="block px-3 py-2 text-gray-700 hover:text-royal">
