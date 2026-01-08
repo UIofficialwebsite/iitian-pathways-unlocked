@@ -26,7 +26,7 @@ const PrivacyPolicy = () => {
             </p>
           </div>
 
-          {/* Main Content - Clean Text Layout */}
+          {/* Main Content */}
           <div className="space-y-16">
             
             {/* Introduction */}
@@ -37,9 +37,11 @@ const PrivacyPolicy = () => {
               <p>
                 By accessing or using the Platform, you agree to be bound by the terms of this Privacy Policy. If you do not agree with these terms, please do not use the Platform. By providing your information, you consent to the collection and use of the information you disclose on our Platform in accordance with this Privacy Policy.
               </p>
-              <div className="bg-gray-50 border-l-4 border-gray-900 p-6 my-8">
+              
+              {/* Greyish Block: Note */}
+              <div className="bg-gray-50 rounded-xl p-6 md:p-8 my-8">
                 <p className="text-base text-gray-700">
-                  <strong>Note:</strong> We may update this Privacy Policy from time to time to reflect changes in our practices. We encourage you to review this page periodically for the latest information on our privacy practices.
+                  <strong className="text-gray-900">Note:</strong> We may update this Privacy Policy from time to time to reflect changes in our practices. We encourage you to review this page periodically for the latest information on our privacy practices.
                 </p>
               </div>
             </section>
@@ -109,18 +111,22 @@ const PrivacyPolicy = () => {
                 <p>
                   We value your privacy and restrict the sharing of your personal information:
                 </p>
-                <div className="space-y-6 pl-4 border-l-2 border-gray-100">
-                  <div>
-                    <strong className="text-gray-900 block mb-1">3.1 Service Providers & Legal</strong>
-                    <p>We may share your information with payment service providers, regulatory authorities, and third-party agencies if required by law or to respond to legal processes.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                  {/* Greyish Blocks for Sub-points */}
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <strong className="text-gray-900 block mb-2 text-lg">3.1 Service Providers & Legal</strong>
+                    <p className="text-sm leading-relaxed">We may share your information with payment service providers, regulatory authorities, and third-party agencies if required by law or to respond to legal processes.</p>
                   </div>
-                  <div>
-                    <strong className="text-gray-900 block mb-1">3.2 Business Transfers</strong>
-                    <p>We may share or sell collected information if Unknown IITians merges with or is acquired by another business entity. The new entity will be required to follow this Privacy Policy.</p>
+                  
+                  <div className="bg-gray-50 rounded-xl p-6">
+                    <strong className="text-gray-900 block mb-2 text-lg">3.2 Business Transfers</strong>
+                    <p className="text-sm leading-relaxed">We may share or sell collected information if Unknown IITians merges with or is acquired by another business entity. The new entity will be required to follow this Privacy Policy.</p>
                   </div>
-                  <div>
-                    <strong className="text-gray-900 block mb-1">3.3 Anonymized Data</strong>
-                    <p>We do not disclose personal information to advertisers. However, we may share aggregate, anonymized data to help advertisers reach specific target audiences without identifying individuals.</p>
+
+                  <div className="bg-gray-50 rounded-xl p-6 md:col-span-2">
+                    <strong className="text-gray-900 block mb-2 text-lg">3.3 Anonymized Data</strong>
+                    <p className="text-sm leading-relaxed">We do not disclose personal information to advertisers. However, we may share aggregate, anonymized data to help advertisers reach specific target audiences without identifying individuals.</p>
                   </div>
                 </div>
               </div>
@@ -141,17 +147,19 @@ const PrivacyPolicy = () => {
                 <p>
                   We provide all users with the opportunity to opt-out of receiving non-essential (promotional, marketing-related) communications.
                 </p>
-                <p>
-                  If you wish to remove your contact information from all lists and newsletters, please contact us at:
-                </p>
-                <a href="mailto:support@unknowniitians.com" className="text-royal font-medium hover:underline inline-block mt-2">
-                  support@unknowniitians.com
-                </a>
+                
+                {/* Greyish Block: Contact */}
+                <div className="bg-gray-50 rounded-xl p-6 mt-4">
+                  <p className="mb-2">If you wish to remove your contact information from all lists and newsletters, please contact us at:</p>
+                  <a href="mailto:support@unknowniitians.com" className="text-gray-900 font-semibold hover:text-royal transition-colors">
+                    support@unknowniitians.com
+                  </a>
+                </div>
               </div>
             </section>
 
             {/* Footer Legal Note */}
-            <div className="pt-10 border-t border-gray-100 mt-10">
+            <div className="pt-10 border-t border-gray-100 mt-16">
                <p className="text-sm text-gray-400">
                  All other terms and conditions applicable under the Terms of Service will be applicable to you and read along with this Privacy Policy.
                </p>
