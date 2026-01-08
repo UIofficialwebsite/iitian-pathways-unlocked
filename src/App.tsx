@@ -51,6 +51,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/courses/category/:examCategory" element={<Courses />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
