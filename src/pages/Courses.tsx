@@ -15,7 +15,9 @@ import {
   Newspaper, 
   CalendarDays, 
   ChevronRight,
-  ArrowRight
+  ArrowRight,
+  Filter,
+  Layers
 } from "lucide-react";
 
 // Helper to normalize category titles
@@ -48,9 +50,8 @@ const Courses = () => {
   }, [courses, categoryParam]);
 
   // 2. Derive Level 2 Filters (Sub-categories like Class 11, 12, Dropper)
-  // We extract these dynamically from course titles or tags to avoid hardcoding
   const subCategoryFilters = useMemo(() => {
-    const keywords = ["Class 11", "Class 12", "Dropper", "Crash Course", "Foundation"];
+    const keywords = ["Class 11", "Class 12", "Dropper", "Crash Course", "Foundation", "Target 2025", "Target 2026"];
     const availableFilters = new Set<string>();
 
     filteredCourses.forEach(course => {
@@ -71,78 +72,83 @@ const Courses = () => {
     <>
       <NavBar />
       
-      {/* Main Content Wrapper with top padding for fixed navbar */}
+      {/* Main Content Wrapper - pt-16 ensures banner starts exactly after fixed navbar */}
       <main className="pt-16 min-h-screen bg-[#f5f7ff]">
         
-        {/* --- 1. Banner Section --- */}
-        <section className="relative w-full h-[350px] md:h-[450px] overflow-hidden">
+        {/* --- 1. Hero Banner (Hanging from Nav) --- */}
+        <section className="relative w-full h-[320px] md:h-[400px] overflow-hidden bg-gray-900">
           <HeroCarousel />
-          {/* Overlay for text readability */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end pb-16 justify-center pointer-events-none">
-             <div className="text-center text-white px-4">
-                <h1 className="text-4xl md:text-6xl font-extrabold mb-4 tracking-tight drop-shadow-md">
-                  {formatCategoryTitle(categoryParam)} 
-                  <span className="text-royal-light ml-3">Preparation</span>
+          {/* Dark Overlay for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-center pb-10">
+             <div className="text-center text-white px-4 max-w-4xl mx-auto mt-8">
+                <span className="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-sm text-sm font-medium mb-4 border border-white/10">
+                  {categoryParam ? `${formatCategoryTitle(categoryParam)} Portal` : 'Course Portal'}
+                </span>
+                <h1 className="text-3xl md:text-5xl font-extrabold mb-4 tracking-tight drop-shadow-xl">
+                  Master Your <span className="text-royal-light">{formatCategoryTitle(categoryParam)}</span> Prep
                 </h1>
-                <p className="text-lg md:text-2xl text-gray-100 max-w-3xl mx-auto font-light">
-                  Comprehensive study material, live batches, and guidance to help you crack the exam.
+                <p className="text-gray-200 text-lg md:text-xl max-w-2xl mx-auto font-light leading-relaxed">
+                  Access premium batches, study materials, and expert guidance tailored for your success.
                 </p>
              </div>
           </div>
         </section>
 
-        {/* --- 2. Quick Access Tabs (Custom Design) --- */}
-        <section className="relative z-20 -mt-10 px-4 mb-16">
+        {/* --- 2. Quick Access Tabs (Overlapping/Hanging Design) --- */}
+        <section className="relative z-20 px-4 -mt-12 mb-16">
           <div className="max-w-7xl mx-auto">
-            {/* Scrollable container for mobile */}
-            <div className="flex flex-nowrap overflow-x-auto gap-6 pb-8 pt-6 px-2 md:grid md:grid-cols-4 md:overflow-visible">
+            <div className="bg-white rounded-3xl shadow-xl p-8 md:p-10 border border-gray-100">
               
-              {/* PDF Bank (Red) */}
-              <QuickAccessCard 
-                title="PDF Bank" 
-                subtitle="Access PDF Bank"
-                icon={FileText}
-                theme="red"
-                onClick={() => navigate('/dashboard?tab=library')}
-              />
+              {/* Grid for Tabs */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
+                
+                {/* PDF Bank (Red) */}
+                <QuickAccessCard 
+                  title="PDF Bank" 
+                  subtitle="Digital Library"
+                  icon={FileText}
+                  theme="red"
+                  onClick={() => navigate('/dashboard?tab=library')}
+                />
 
-              {/* Notes (Yellow) */}
-              <QuickAccessCard 
-                title="Notes" 
-                subtitle="Read Study Notes"
-                icon={StickyNote}
-                theme="yellow"
-                onClick={() => navigate('/notes')}
-              />
+                {/* Notes (Yellow) */}
+                <QuickAccessCard 
+                  title="Notes" 
+                  subtitle="Chapter-wise Notes"
+                  icon={StickyNote}
+                  theme="yellow"
+                  onClick={() => navigate('/notes')}
+                />
 
-              {/* News (Green) */}
-              <QuickAccessCard 
-                title="News" 
-                subtitle="Latest Notifications"
-                icon={Newspaper}
-                theme="green"
-                onClick={() => navigate('/news')}
-              />
+                {/* News (Green) */}
+                <QuickAccessCard 
+                  title="News" 
+                  subtitle="Exam Updates"
+                  icon={Newspaper}
+                  theme="green"
+                  onClick={() => navigate('/news')}
+                />
 
-              {/* Important Dates (Blue) */}
-              <QuickAccessCard 
-                title="Dates" 
-                subtitle="Important Timelines"
-                icon={CalendarDays}
-                theme="blue"
-                onClick={() => navigate('/important-dates')}
-              />
+                {/* Important Dates (Blue) */}
+                <QuickAccessCard 
+                  title="Dates" 
+                  subtitle="Key Timelines"
+                  icon={CalendarDays}
+                  theme="blue"
+                  onClick={() => navigate('/important-dates')}
+                />
 
+              </div>
             </div>
           </div>
         </section>
 
-        {/* --- 3. Featured Batches --- */}
+        {/* --- 3. Featured Batches Section --- */}
         <section className="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           <div className="flex justify-between items-end mb-8">
+           <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900">Featured Batches</h2>
-                <p className="text-gray-500 mt-2">Top rated courses for {formatCategoryTitle(categoryParam)}</p>
+                <p className="text-gray-500 mt-2">Top rated courses to accelerate your preparation</p>
               </div>
            </div>
 
@@ -154,38 +160,44 @@ const Courses = () => {
                   <CourseCard course={course} index={index} key={course.id} />
                 ))
               ) : (
-                <div className="col-span-full py-12 text-center bg-white rounded-2xl border border-dashed border-gray-300">
-                  <p className="text-gray-500 text-lg">No active batches found currently.</p>
+                <div className="col-span-full py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <Layers className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900">No active batches found</h3>
+                  <p className="text-gray-500 mt-1">We couldn't find any batches for this category right now.</p>
                 </div>
               )}
            </div>
-
-           {/* View All Button */}
-           <div className="flex justify-center mt-10">
-             <Button 
-               onClick={() => navigate(`/courses/search?category=${categoryParam || 'all'}`)}
-               variant="outline"
-               className="rounded-full px-8 py-6 text-base border-royal/20 text-royal hover:bg-royal/5"
-             >
-               View All Courses
-             </Button>
-           </div>
         </section>
 
-        {/* --- 4. Level 2 Filters (Explore by Target) --- */}
+        {/* --- 4. 2nd Level Filters (Explore by Target) --- */}
         {subCategoryFilters.length > 0 && (
-          <section className="py-12 bg-white mt-12">
+          <section className="py-16 bg-white mt-12 border-t border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-               <h2 className="text-2xl font-bold text-gray-900 mb-6">Explore by Target</h2>
-               <div className="flex flex-wrap gap-4">
+               <div className="text-center mb-10">
+                 <h2 className="text-2xl font-bold text-gray-900">Browse by Class & Target</h2>
+                 <p className="text-gray-500 mt-2">Find the specific course that matches your current academic stage.</p>
+               </div>
+               
+               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                  {subCategoryFilters.map((filter) => (
                    <button
                      key={filter}
                      onClick={() => navigate(`/courses/search?category=${categoryParam}&q=${filter}`)}
-                     className="px-6 py-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-white hover:border-royal hover:shadow-md transition-all duration-200 flex items-center group"
+                     className="relative p-6 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-royal/30 hover:shadow-lg transition-all duration-300 group text-left flex flex-col justify-between h-32"
                    >
-                     <span className="font-medium text-gray-700 group-hover:text-royal">{filter}</span>
-                     <ArrowRight className="ml-2 w-4 h-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                     <div className="flex justify-between items-start">
+                       <span className="font-semibold text-lg text-gray-800 group-hover:text-royal transition-colors">
+                         {filter}
+                       </span>
+                       <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                         <ArrowRight className="w-4 h-4 text-royal" />
+                       </div>
+                     </div>
+                     <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">
+                       View Batches
+                     </p>
                    </button>
                  ))}
                </div>
@@ -201,7 +213,7 @@ const Courses = () => {
                 Student Feedback
               </h2>
               <p className="mt-2 text-lg text-gray-500">
-                Hear from students who cracked their exams with us.
+                Hear from students who cracked {formatCategoryTitle(categoryParam)} with us.
               </p>
             </div>
             <StaggerTestimonials />
@@ -216,7 +228,7 @@ const Courses = () => {
   );
 };
 
-// --- Custom Quick Access Card Component ---
+// --- Custom Quick Access Card Component (Ditto Design) ---
 interface QuickAccessCardProps {
   title: string;
   subtitle: string;
@@ -226,30 +238,34 @@ interface QuickAccessCardProps {
 }
 
 const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickAccessCardProps) => {
-  // Theme configuration map
+  // Theme configuration matching the requested "Ditto" look
   const themes = {
     red: {
       bg: "bg-[#fff1f1]",
       border: "border-[#ffdcdc]",
       iconColor: "text-[#e74c3c]",
+      iconBg: "bg-white",
       watermarkColor: "text-[#e74c3c]"
     },
     yellow: {
       bg: "bg-[#fff9e6]",
       border: "border-[#ffecb3]",
       iconColor: "text-[#f39c12]",
+      iconBg: "bg-white",
       watermarkColor: "text-[#f39c12]"
     },
     green: {
       bg: "bg-[#effbf2]",
       border: "border-[#d4f2dc]",
-      iconColor: "text-[#27ae60]",
-      watermarkColor: "text-[#27ae60]"
+      iconColor: "text-[#2ecc71]",
+      iconBg: "bg-white",
+      watermarkColor: "text-[#2ecc71]"
     },
     blue: {
       bg: "bg-[#eef7ff]",
       border: "border-[#d6eaff]",
       iconColor: "text-[#3498db]",
+      iconBg: "bg-white",
       watermarkColor: "text-[#3498db]"
     }
   };
@@ -259,31 +275,29 @@ const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickA
   return (
     <div 
       onClick={onClick}
-      className="relative pt-8 min-w-[260px] flex-1 cursor-pointer group transition-transform duration-300 hover:-translate-y-2"
+      className="relative group cursor-pointer mt-6 md:mt-0" // Margin top on mobile for spacing
     >
-      {/* Overlapping Top Icon */}
-      <div className="absolute top-0 left-6 w-14 h-14 bg-white rounded-full shadow-[0_6px_15px_rgba(0,0,0,0.1)] flex items-center justify-center z-10">
+      {/* 1. The Hanging Icon (Centered on Top Border) */}
+      <div className={`absolute top-0 left-8 -translate-y-1/2 w-14 h-14 rounded-full ${currentTheme.iconBg} shadow-lg flex items-center justify-center z-10 transition-transform group-hover:scale-110 duration-300`}>
         <Icon className={`w-6 h-6 ${currentTheme.iconColor}`} />
       </div>
 
-      {/* Main Card Body */}
-      <div className={`relative h-full rounded-2xl p-6 pt-10 overflow-hidden border ${currentTheme.bg} ${currentTheme.border}`}>
+      {/* 2. The Inner Card Content */}
+      <div className={`pt-10 pb-6 px-6 rounded-2xl border ${currentTheme.border} ${currentTheme.bg} relative overflow-hidden h-full transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-lg`}>
         
-        {/* Text Content */}
-        <div className="relative z-10 flex flex-col h-full justify-center">
-          <h3 className="text-xl font-bold text-gray-900 mb-1">{title}</h3>
-          <p className="text-sm text-gray-600">{subtitle}</p>
+        {/* Text */}
+        <div className="relative z-10">
+          <h3 className="text-xl font-bold text-gray-900">{title}</h3>
+          <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
         </div>
 
-        {/* Right Chevron */}
+        {/* Chevron */}
         <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-gray-800 transition-colors">
           <ChevronRight className="w-5 h-5" />
         </div>
 
-        {/* Watermark Icon */}
-        <Icon 
-          className={`absolute -bottom-4 -right-2 w-24 h-24 opacity-5 -rotate-12 pointer-events-none ${currentTheme.watermarkColor}`} 
-        />
+        {/* Watermark Icon (Faded & Clipped) */}
+        <Icon className={`absolute -bottom-3 -right-3 w-24 h-24 opacity-[0.08] -rotate-12 pointer-events-none ${currentTheme.watermarkColor}`} />
       </div>
     </div>
   );
