@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
@@ -20,167 +20,159 @@ import {
   BookOpen,
   GraduationCap,
   Sparkles,
-  MapPin
+  Atom,
+  Stethoscope,
+  ClipboardList,
+  Clock
 } from "lucide-react";
 
-// Define exam categories
-const EXAM_CATEGORIES = [
-  { id: "all", name: "All Courses", icon: Layers },
-  { id: "jee", name: "JEE", icon: GraduationCap },
-  { id: "neet", name: "NEET", icon: BookOpen },
-  { id: "iitm-bs", name: "IITM BS", icon: Sparkles },
-];
-
-// Helper to normalize category titles
-const formatCategoryTitle = (param: string | null) => {
-  if (!param || param === "all") return "All Courses";
-  if (param === "iitm-bs") return "IITM BS";
-  return param.toUpperCase();
+// Exam category configuration
+const EXAM_CONFIG: Record<string, {
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: React.ElementType;
+  gradient: string;
+  accentColor: string;
+  quickLinks: { title: string; subtitle: string; icon: React.ElementType; theme: 'red' | 'yellow' | 'green' | 'blue'; href: string }[];
+  subFilters: string[];
+}> = {
+  jee: {
+    title: "JEE 2026",
+    subtitle: "Exam Dates, Syllabus & Preparation",
+    description: "IIT JEE will be conducted in two sessions by NTA, followed by JEE Advanced organized by IIT Roorkee. The exam covers Class 11 and 12 Physics, Chemistry, and Mathematics. Access comprehensive study materials and expert guidance.",
+    icon: Atom,
+    gradient: "from-orange-600 via-amber-600 to-yellow-500",
+    accentColor: "orange",
+    quickLinks: [
+      { title: "PDF Bank", subtitle: "JEE Digital Library", icon: FileText, theme: "red", href: "/exam-preparation/jee?tab=pyqs" },
+      { title: "Notes", subtitle: "Chapter-wise Notes", icon: StickyNote, theme: "yellow", href: "/exam-preparation/jee?tab=notes" },
+      { title: "Test Series", subtitle: "Practice Tests", icon: Newspaper, theme: "green", href: "/exam-preparation/jee?tab=tests" },
+      { title: "Important Dates", subtitle: "Key Timelines", icon: CalendarDays, theme: "blue", href: "/exam-preparation/jee?tab=dates" },
+    ],
+    subFilters: ["Class 11", "Class 12", "Dropper", "Target 2025", "Target 2026", "Crash Course"],
+  },
+  neet: {
+    title: "NEET 2026",
+    subtitle: "Exam Dates, Syllabus & Preparation",
+    description: "NEET-UG is the single entrance exam for MBBS, BDS, and other medical courses in India. Master Biology, Physics, and Chemistry with our comprehensive preparation programs designed by top educators.",
+    icon: Stethoscope,
+    gradient: "from-rose-600 via-red-600 to-pink-500",
+    accentColor: "red",
+    quickLinks: [
+      { title: "PDF Bank", subtitle: "NEET Digital Library", icon: FileText, theme: "red", href: "/exam-preparation/neet?tab=pyqs" },
+      { title: "Notes", subtitle: "Subject Notes", icon: StickyNote, theme: "yellow", href: "/exam-preparation/neet?tab=notes" },
+      { title: "Test Series", subtitle: "Mock Tests", icon: Newspaper, theme: "green", href: "/exam-preparation/neet?tab=tests" },
+      { title: "Important Dates", subtitle: "Exam Schedule", icon: CalendarDays, theme: "blue", href: "/exam-preparation/neet?tab=dates" },
+    ],
+    subFilters: ["Class 11", "Class 12", "Dropper", "Repeater", "Target 2025", "Target 2026", "Crash Course"],
+  },
+  "iitm-bs": {
+    title: "IITM BS Degree",
+    subtitle: "Data Science & Electronic Systems",
+    description: "The IIT Madras BS Degree in Data Science & Electronic Systems offers world-class education accessible to students nationwide. Access curated study materials, notes, and expert guidance for Foundation, Diploma, and Degree levels.",
+    icon: GraduationCap,
+    gradient: "from-emerald-600 via-teal-600 to-cyan-500",
+    accentColor: "emerald",
+    quickLinks: [
+      { title: "Notes", subtitle: "Week-wise Notes", icon: StickyNote, theme: "yellow", href: "/exam-preparation/iitm-bs?tab=notes" },
+      { title: "PYQs", subtitle: "Previous Papers", icon: ClipboardList, theme: "red", href: "/exam-preparation/iitm-bs?tab=pyqs" },
+      { title: "Tools", subtitle: "Calculators", icon: Newspaper, theme: "green", href: "/iitm-tools" },
+      { title: "Important Dates", subtitle: "Exam Schedule", icon: CalendarDays, theme: "blue", href: "/exam-preparation/iitm-bs?tab=dates" },
+    ],
+    subFilters: ["Foundation", "Diploma", "Degree", "Data Science", "Electronic Systems"],
+  },
 };
 
-// Get dynamic description based on category
-const getCategoryDescription = (category: string | null) => {
-  switch (category?.toLowerCase()) {
-    case "jee":
-      return "IIT JEE will be conducted in two sessions by NTA, followed by JEE Advanced organized by IIT Roorkee. The exam covers Class 11 and 12 Physics, Chemistry, and Mathematics.";
-    case "neet":
-      return "NEET-UG is the single entrance exam for MBBS, BDS, and other medical courses. Master Biology, Physics, and Chemistry with our comprehensive preparation programs.";
-    case "iitm-bs":
-      return "The IIT Madras BS Degree in Data Science & Electronic Systems offers world-class education. Access curated study materials and expert guidance for every level.";
-    default:
-      return "Access premium batches, study materials, and expert guidance tailored for your academic success. Choose your exam category to get started.";
-  }
-};
-
-// Sub-category keywords for each exam type
-const getSubCategoryKeywords = (category: string | null) => {
-  switch (category?.toLowerCase()) {
-    case "jee":
-      return ["Class 11", "Class 12", "Dropper", "Crash Course", "Target 2025", "Target 2026"];
-    case "neet":
-      return ["Class 11", "Class 12", "Dropper", "Crash Course", "Repeater", "Target 2025", "Target 2026"];
-    case "iitm-bs":
-      return ["Foundation", "Diploma", "Degree", "Data Science", "Electronic Systems"];
-    default:
-      return [];
-  }
+// Format display title
+const formatCategoryTitle = (slug: string | undefined) => {
+  if (!slug) return "All Courses";
+  if (slug === "iitm-bs") return "IITM BS";
+  return slug.toUpperCase();
 };
 
 const Courses = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const { examCategory } = useParams<{ examCategory?: string }>();
   const navigate = useNavigate();
   const { courses, contentLoading } = useBackend();
   
-  // Primary category filter state
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  // Secondary filter state
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
-
-  // Sync with URL params
+  // Secondary filter state - resets when exam category changes
+  const [selectedSubFilter, setSelectedSubFilter] = useState<string | null>(null);
+  
+  // Reset sub-filter when category changes
   useEffect(() => {
-    const cat = searchParams.get("category");
-    if (cat) {
-      setSelectedCategory(cat);
-    }
-  }, [searchParams]);
+    setSelectedSubFilter(null);
+  }, [examCategory]);
 
-  // Handle primary category change
-  const handleCategoryChange = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setSelectedSubCategory(null); // Reset secondary filter
-    if (categoryId === "all") {
-      setSearchParams({});
-    } else {
-      setSearchParams({ category: categoryId });
-    }
-  };
+  // Get config for current category
+  const config = examCategory ? EXAM_CONFIG[examCategory] : null;
+  const isExamSpecificPage = !!examCategory && !!config;
 
-  // Handle secondary filter change
-  const handleSubCategoryChange = (subCat: string) => {
-    setSelectedSubCategory(prev => prev === subCat ? null : subCat);
-  };
-
-  // 1. Filter courses by primary category
-  const filteredByCategory = useMemo(() => {
-    if (selectedCategory === "all") return courses;
+  // Filter courses by exam category
+  const categoryCourses = useMemo(() => {
+    if (!examCategory) return courses;
     return courses.filter(course => {
-      const cat = course.exam_category?.toLowerCase();
-      const param = selectedCategory.toLowerCase();
-      if (param === "iitm-bs") return cat === "iitm bs" || cat === "iitm_bs" || cat === "iitm-bs";
-      return cat === param;
+      const cat = course.exam_category?.toLowerCase().replace(/[\s_]/g, '-');
+      return cat === examCategory || 
+             course.exam_category?.toLowerCase() === examCategory.replace('-', ' ') ||
+             course.exam_category?.toLowerCase() === examCategory.replace('-', '_');
     });
-  }, [courses, selectedCategory]);
+  }, [courses, examCategory]);
 
-  // 2. Get available sub-categories based on current courses
-  const availableSubCategories = useMemo(() => {
-    if (selectedCategory === "all") return [];
-    const keywords = getSubCategoryKeywords(selectedCategory);
+  // Get available sub-filters based on courses
+  const availableSubFilters = useMemo(() => {
+    if (!config) return [];
     const available = new Set<string>();
-
-    filteredByCategory.forEach(course => {
-      const title = course.title.toLowerCase();
-      const level = course.level?.toLowerCase() || "";
-      const branch = course.branch?.toLowerCase() || "";
-      
-      keywords.forEach(key => {
-        const keyLower = key.toLowerCase();
-        if (title.includes(keyLower) || level.includes(keyLower) || branch.includes(keyLower)) {
-          available.add(key);
+    
+    categoryCourses.forEach(course => {
+      const searchText = `${course.title} ${course.level || ''} ${course.branch || ''} ${course.course_type || ''}`.toLowerCase();
+      config.subFilters.forEach(filter => {
+        if (searchText.includes(filter.toLowerCase())) {
+          available.add(filter);
         }
       });
     });
-
+    
     return Array.from(available).sort();
-  }, [filteredByCategory, selectedCategory]);
+  }, [categoryCourses, config]);
 
-  // 3. Filter by secondary category
+  // Filter by secondary filter
   const filteredCourses = useMemo(() => {
-    if (!selectedSubCategory) return filteredByCategory;
-    return filteredByCategory.filter(course => {
-      const title = course.title.toLowerCase();
-      const level = course.level?.toLowerCase() || "";
-      const branch = course.branch?.toLowerCase() || "";
-      const subCatLower = selectedSubCategory.toLowerCase();
-      return title.includes(subCatLower) || level.includes(subCatLower) || branch.includes(subCatLower);
+    if (!selectedSubFilter) return categoryCourses;
+    return categoryCourses.filter(course => {
+      const searchText = `${course.title} ${course.level || ''} ${course.branch || ''} ${course.course_type || ''}`.toLowerCase();
+      return searchText.includes(selectedSubFilter.toLowerCase());
     });
-  }, [filteredByCategory, selectedSubCategory]);
+  }, [categoryCourses, selectedSubFilter]);
 
-  // 4. Group courses by type for display
+  // Group courses by type
   const groupedCourses = useMemo(() => {
-    if (selectedSubCategory) {
-      // If sub-category is selected, no grouping needed
-      return { [selectedSubCategory]: filteredCourses };
-    }
-    
-    if (selectedCategory === "all") {
-      return { "All Courses": filteredCourses };
-    }
-
-    // Group by course_type or use default
-    const groups: Record<string, typeof filteredCourses> = {};
-    
-    filteredCourses.forEach(course => {
-      const courseType = course.course_type || "General";
-      if (!groups[courseType]) {
-        groups[courseType] = [];
-      }
-      groups[courseType].push(course);
-    });
-
-    // If only one group, return without grouping
-    if (Object.keys(groups).length <= 1) {
+    if (selectedSubFilter || !isExamSpecificPage) {
       return { "Available Batches": filteredCourses };
     }
+    
+    const groups: Record<string, typeof filteredCourses> = {};
+    filteredCourses.forEach(course => {
+      const type = course.course_type || "General";
+      if (!groups[type]) groups[type] = [];
+      groups[type].push(course);
+    });
+    
+    return Object.keys(groups).length <= 1 ? { "Available Batches": filteredCourses } : groups;
+  }, [filteredCourses, selectedSubFilter, isExamSpecificPage]);
 
-    return groups;
-  }, [filteredCourses, selectedCategory, selectedSubCategory]);
-
-  // Featured courses (always show top 3 bestsellers or most popular)
+  // Featured courses for current category
   const featuredCourses = useMemo(() => {
-    return courses
-      .filter(c => c.bestseller || (c.students_enrolled && c.students_enrolled > 50))
-      .slice(0, 3);
-  }, [courses]);
+    const pool = isExamSpecificPage ? categoryCourses : courses;
+    return pool.filter(c => c.bestseller || (c.students_enrolled && c.students_enrolled > 50)).slice(0, 3);
+  }, [courses, categoryCourses, isExamSpecificPage]);
+
+  // All exam categories for overview page
+  const examCategories = [
+    { id: "jee", ...EXAM_CONFIG.jee },
+    { id: "neet", ...EXAM_CONFIG.neet },
+    { id: "iitm-bs", ...EXAM_CONFIG["iitm-bs"] },
+  ];
 
   return (
     <>
@@ -188,8 +180,15 @@ const Courses = () => {
       
       <main className="pt-16 min-h-screen bg-gradient-to-b from-slate-50 to-white">
         
-        {/* --- HERO BANNER (Hanging from Nav - ~440px height) --- */}
-        <section className="relative w-full min-h-[360px] md:min-h-[440px] bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 overflow-hidden">
+        {/* === HERO BANNER (No gap from navbar) === */}
+        <section 
+          key={examCategory || "all"} 
+          className={`relative w-full min-h-[360px] md:min-h-[440px] overflow-hidden ${
+            isExamSpecificPage 
+              ? `bg-gradient-to-br ${config.gradient}` 
+              : "bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800"
+          }`}
+        >
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
@@ -198,138 +197,168 @@ const Courses = () => {
           </div>
           
           {/* Gradient Orbs */}
-          <div className="absolute top-10 right-10 w-72 h-72 bg-purple-500/30 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-10 right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 left-10 w-96 h-96 bg-black/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
               
               {/* Left Side - Title & Description */}
-              <div className="text-white space-y-6">
-                <div className="flex items-center gap-2">
+              <motion.div 
+                key={examCategory || "overview"}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="text-white space-y-6"
+              >
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/30">
-                    <MapPin className="w-3 h-3 mr-1" />
-                    {selectedCategory !== "all" ? `${formatCategoryTitle(selectedCategory)} Portal` : "Course Portal"}
+                    {isExamSpecificPage ? (
+                      <>
+                        {React.createElement(config.icon, { className: "w-3 h-3 mr-1" })}
+                        {config.title} Portal
+                      </>
+                    ) : (
+                      <>
+                        <Layers className="w-3 h-3 mr-1" />
+                        All Courses
+                      </>
+                    )}
                   </Badge>
-                  {selectedCategory !== "all" && (
-                    <Badge className="bg-amber-500/90 text-white border-amber-400 animate-pulse">
+                  {isExamSpecificPage && (
+                    <Badge className="bg-white/90 text-gray-900 border-white animate-pulse">
+                      <Clock className="w-3 h-3 mr-1" />
                       Live Classes Available
                     </Badge>
                   )}
                 </div>
 
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-                  {selectedCategory !== "all" ? (
+                  {isExamSpecificPage ? (
                     <>
-                      {formatCategoryTitle(selectedCategory)} 2026: 
-                      <span className="block text-purple-300">Exam Dates, Syllabus & Prep</span>
+                      {config.title}:
+                      <span className="block text-white/80">{config.subtitle}</span>
                     </>
                   ) : (
                     <>
                       Master Your Exams
-                      <span className="block text-purple-300">With Expert Guidance</span>
+                      <span className="block text-white/80">With Expert Guidance</span>
                     </>
                   )}
                 </h1>
 
-                <p className="text-gray-200 text-base md:text-lg leading-relaxed max-w-xl">
-                  {getCategoryDescription(selectedCategory === "all" ? null : selectedCategory)}
+                <p className="text-white/90 text-base md:text-lg leading-relaxed max-w-xl">
+                  {isExamSpecificPage 
+                    ? config.description 
+                    : "Access premium batches, study materials, and expert guidance tailored for your academic success. Choose your exam category to get started."
+                  }
                 </p>
-              </div>
+              </motion.div>
 
-              {/* Right Side - Highlight Cards */}
-              <div className="hidden lg:grid grid-cols-2 gap-4">
-                <QuickAccessCard 
-                  title="PDF Bank" 
-                  subtitle="Access Digital Library"
-                  icon={FileText}
-                  theme="red"
-                  onClick={() => navigate('/dashboard?tab=library')}
-                />
-                <QuickAccessCard 
-                  title="Notes" 
-                  subtitle="Chapter-wise Notes"
-                  icon={StickyNote}
-                  theme="yellow"
-                  onClick={() => navigate('/notes')}
-                />
-                <QuickAccessCard 
-                  title="Test Series" 
-                  subtitle="Practice Tests"
-                  icon={Newspaper}
-                  theme="green"
-                  onClick={() => navigate('/tests')}
-                />
-                <QuickAccessCard 
-                  title="Important Dates" 
-                  subtitle="Key Timelines"
-                  icon={CalendarDays}
-                  theme="blue"
-                  onClick={() => navigate('/important-dates')}
-                />
-              </div>
+              {/* Right Side - Quick Access Cards (Desktop) */}
+              {isExamSpecificPage && (
+                <motion.div 
+                  key={`quick-${examCategory}`}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                  className="hidden lg:grid grid-cols-2 gap-4"
+                >
+                  {config.quickLinks.map((link, idx) => (
+                    <QuickAccessCard 
+                      key={idx}
+                      title={link.title} 
+                      subtitle={link.subtitle}
+                      icon={link.icon}
+                      theme={link.theme}
+                      onClick={() => navigate(link.href)}
+                    />
+                  ))}
+                </motion.div>
+              )}
+
+              {/* Overview page - Exam category cards */}
+              {!isExamSpecificPage && (
+                <div className="hidden lg:grid grid-cols-1 gap-4">
+                  {examCategories.slice(0, 3).map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => navigate(`/courses/category/${cat.id}`)}
+                      className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-left transition-all duration-300 hover:bg-white/20 hover:scale-[1.02] group flex items-center gap-4"
+                    >
+                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                        {React.createElement(cat.icon, { className: "w-6 h-6 text-white" })}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-white">{cat.title}</h4>
+                        <p className="text-sm text-white/70">{cat.subtitle}</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </section>
 
-        {/* Mobile Quick Access Cards */}
-        <section className="lg:hidden -mt-8 relative z-20 px-4 mb-8">
-          <div className="grid grid-cols-2 gap-3">
-            <QuickAccessCardMobile icon={FileText} title="PDF Bank" theme="red" onClick={() => navigate('/dashboard?tab=library')} />
-            <QuickAccessCardMobile icon={StickyNote} title="Notes" theme="yellow" onClick={() => navigate('/notes')} />
-            <QuickAccessCardMobile icon={Newspaper} title="Tests" theme="green" onClick={() => navigate('/tests')} />
-            <QuickAccessCardMobile icon={CalendarDays} title="Dates" theme="blue" onClick={() => navigate('/important-dates')} />
-          </div>
-        </section>
+        {/* === MOBILE QUICK ACCESS (Exam-specific only) === */}
+        {isExamSpecificPage && (
+          <section className="lg:hidden -mt-6 relative z-20 px-4 mb-6">
+            <motion.div 
+              key={`mobile-quick-${examCategory}`}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="grid grid-cols-4 gap-2"
+            >
+              {config.quickLinks.map((link, idx) => (
+                <QuickAccessCardMobile 
+                  key={idx}
+                  icon={link.icon} 
+                  title={link.title.split(' ')[0]} 
+                  theme={link.theme} 
+                  onClick={() => navigate(link.href)} 
+                />
+              ))}
+            </motion.div>
+          </section>
+        )}
 
-        {/* --- BREADCRUMB NAVIGATION --- */}
+        {/* === BREADCRUMB NAVIGATION === */}
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <Link to="/" className="flex items-center gap-1 hover:text-indigo-600 transition-colors">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Home className="w-4 h-4" />
               <span>Home</span>
             </Link>
-            <ChevronRight className="w-4 h-4 text-gray-400" />
-            <span className="font-medium text-gray-900">{formatCategoryTitle(selectedCategory === "all" ? null : selectedCategory)}</span>
+            <ChevronRight className="w-4 h-4" />
+            <Link to="/courses" className="hover:text-primary transition-colors">
+              Courses
+            </Link>
+            {isExamSpecificPage && (
+              <>
+                <ChevronRight className="w-4 h-4" />
+                <span className="font-medium text-foreground">{formatCategoryTitle(examCategory)}</span>
+              </>
+            )}
           </div>
         </nav>
 
-        {/* --- PRIMARY CATEGORY FILTER --- */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-6">
-          <div className="flex flex-wrap items-center gap-3">
-            {EXAM_CATEGORIES.map((category) => {
-              const Icon = category.icon;
-              const isActive = selectedCategory === category.id;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryChange(category.id)}
-                  className={`
-                    flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-300
-                    ${isActive 
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30 scale-105" 
-                      : "bg-white text-gray-700 border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600"
-                    }
-                  `}
-                >
-                  <Icon className="w-4 h-4" />
-                  {category.name}
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* --- FEATURED COURSES SECTION (Always Visible) --- */}
+        {/* === FEATURED BATCHES SECTION === */}
         {featuredCourses.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-b border-border">
             <div className="flex items-center gap-3 mb-6">
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Sparkles className="w-5 h-5 text-amber-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">Featured Batches</h2>
-                <p className="text-gray-500 text-sm">Top rated courses to accelerate your preparation</p>
+                <h2 className="text-2xl font-bold text-foreground">Featured Batches</h2>
+                <p className="text-muted-foreground text-sm">
+                  {isExamSpecificPage 
+                    ? `Top rated ${formatCategoryTitle(examCategory)} courses`
+                    : "Premium courses to accelerate your preparation"
+                  }
+                </p>
               </div>
             </div>
 
@@ -345,42 +374,48 @@ const Courses = () => {
           </section>
         )}
 
-        {/* --- SECONDARY FILTER (Appears after category selection) --- */}
-        <AnimatePresence>
-          {selectedCategory !== "all" && availableSubCategories.length > 0 && (
+        {/* === SECONDARY CONTEXTUAL FILTER (Exam-specific only) === */}
+        <AnimatePresence mode="wait">
+          {isExamSpecificPage && availableSubFilters.length > 0 && (
             <motion.section 
+              key={`filters-${examCategory}`}
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
               transition={{ duration: 0.3 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 border-t border-gray-100"
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
             >
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Filter by Target / Level</h3>
+              <h3 className="text-lg font-semibold text-foreground mb-4">Filter by Level / Target</h3>
               <div className="flex flex-wrap gap-2">
-                {availableSubCategories.map((subCat) => {
-                  const isActive = selectedSubCategory === subCat;
-                  return (
-                    <button
-                      key={subCat}
-                      onClick={() => handleSubCategoryChange(subCat)}
-                      className={`
-                        px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                        ${isActive 
-                          ? "bg-purple-600 text-white shadow-md" 
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }
-                      `}
-                    >
-                      {subCat}
-                    </button>
-                  );
-                })}
+                <button
+                  onClick={() => setSelectedSubFilter(null)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    !selectedSubFilter 
+                      ? "bg-primary text-primary-foreground shadow-md" 
+                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  }`}
+                >
+                  All
+                </button>
+                {availableSubFilters.map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setSelectedSubFilter(prev => prev === filter ? null : filter)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      selectedSubFilter === filter 
+                        ? "bg-primary text-primary-foreground shadow-md" 
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
               </div>
             </motion.section>
           )}
         </AnimatePresence>
 
-        {/* --- COURSE CARDS GRID (Grouped by Sub-types) --- */}
+        {/* === COURSE LISTINGS (Grouped by type) === */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {contentLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -388,13 +423,18 @@ const Courses = () => {
             </div>
           ) : (
             Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
-              <div key={groupName} className="mb-12">
+              <motion.div 
+                key={groupName} 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="mb-12"
+              >
                 {Object.keys(groupedCourses).length > 1 && (
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="h-8 w-1 bg-indigo-600 rounded-full" />
-                    <h3 className="text-xl font-bold text-gray-900">{groupName}</h3>
-                    <Badge variant="secondary" className="bg-gray-100 text-gray-600">
-                      {groupCourses.length} Courses
+                    <div className="h-8 w-1 bg-primary rounded-full" />
+                    <h3 className="text-xl font-bold text-foreground">{groupName}</h3>
+                    <Badge variant="secondary">
+                      {groupCourses.length} {groupCourses.length === 1 ? 'Course' : 'Courses'}
                     </Badge>
                   </div>
                 )}
@@ -406,27 +446,56 @@ const Courses = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-16 text-center bg-white rounded-2xl border border-dashed border-gray-300">
-                    <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                      <Layers className="w-8 h-8 text-gray-400" />
+                  <div className="py-16 text-center bg-card rounded-2xl border border-dashed border-border">
+                    <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+                      <Layers className="w-8 h-8 text-muted-foreground" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900">No courses found</h3>
-                    <p className="text-gray-500 mt-1">Try adjusting your filters or check back later.</p>
+                    <h3 className="text-lg font-medium text-foreground">No courses found</h3>
+                    <p className="text-muted-foreground mt-1">Try adjusting your filters or check back later.</p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             ))
           )}
         </section>
 
-        {/* --- STUDENT TESTIMONIALS --- */}
-        <section className="py-16 bg-gradient-to-b from-white to-slate-50">
+        {/* === EXAM CATEGORY CARDS (Overview page only) === */}
+        {!isExamSpecificPage && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <h2 className="text-2xl font-bold text-foreground mb-8">Browse by Exam Category</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {examCategories.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => navigate(`/courses/category/${cat.id}`)}
+                  className={`group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${cat.gradient}`}
+                >
+                  <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
+                  <div className="relative z-10">
+                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                      {React.createElement(cat.icon, { className: "w-7 h-7 text-white" })}
+                    </div>
+                    <h3 className="text-xl font-bold text-white mb-2">{cat.title}</h3>
+                    <p className="text-white/80 text-sm mb-4">{cat.subtitle}</p>
+                    <div className="flex items-center gap-2 text-white/90 text-sm font-medium">
+                      <span>Explore Courses</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* === TESTIMONIALS === */}
+        <section className="py-16 bg-gradient-to-b from-background to-muted/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
                 Student Success Stories
               </h2>
-              <p className="mt-2 text-lg text-gray-500">
+              <p className="mt-2 text-lg text-muted-foreground">
                 Hear from students who achieved their goals with us.
               </p>
             </div>
@@ -442,7 +511,7 @@ const Courses = () => {
   );
 };
 
-// --- Quick Access Card for Desktop ---
+// === Quick Access Card (Desktop) ===
 interface QuickAccessCardProps {
   title: string;
   subtitle: string;
@@ -480,7 +549,7 @@ const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickA
   );
 };
 
-// --- Quick Access Card for Mobile ---
+// === Quick Access Card (Mobile) ===
 interface QuickAccessCardMobileProps {
   title: string;
   icon: React.ElementType;
@@ -501,11 +570,10 @@ const QuickAccessCardMobile = ({ title, icon: Icon, theme, onClick }: QuickAcces
   return (
     <button 
       onClick={onClick}
-      className={`${t.bg} rounded-xl p-3 flex items-center gap-2 shadow-sm hover:shadow-md transition-all`}
+      className={`${t.bg} rounded-xl p-3 flex flex-col items-center gap-1 shadow-sm hover:shadow-md transition-all text-center`}
     >
-      <Icon className={`w-4 h-4 ${t.iconColor}`} />
-      <span className="text-sm font-medium text-gray-700">{title}</span>
-      <ChevronRight className="w-4 h-4 text-gray-400 ml-auto" />
+      <Icon className={`w-5 h-5 ${t.iconColor}`} />
+      <span className="text-xs font-medium text-gray-700">{title}</span>
     </button>
   );
 };

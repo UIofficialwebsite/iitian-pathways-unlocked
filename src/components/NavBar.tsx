@@ -136,7 +136,7 @@ const NavBar = () => {
                               return (
                                 <NavigationMenuLink key={category} asChild>
                                   <Link 
-                                    to={`/courses?category=${style.slug}`}
+                                    to={`/courses/category/${style.slug}`}
                                     className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm transition-all duration-200 hover:border-black group outline-none"
                                   >
                                     <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
@@ -258,10 +258,10 @@ const NavBar = () => {
                     courseCategories.map((category) => {
                       const style = getCategoryStyle(category);
                       const IconComponent = style.icon;
-                      return (
+                       return (
                         <Link 
                           key={category}
-                          to={`/courses?category=${style.slug}`}
+                          to={`/courses/category/${style.slug}`}
                           className="flex items-center text-gray-600 hover:text-royal py-1"
                         >
                            <IconComponent className={`w-5 h-5 mr-2 ${style.color}`} />
