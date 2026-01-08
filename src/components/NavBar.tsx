@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,14 +12,42 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { courses } = useBackend();
 
   const handleSignOut = async () => {
     await signOut();
     window.location.href = '/';
+  };
+
+  // Dynamically get unique categories from available courses
+  const courseCategories = useMemo(() => {
+    const categories = new Set<string>();
+    courses.forEach(course => {
+      if (course.exam_category) {
+        categories.add(course.exam_category);
+      }
+    });
+    return Array.from(categories).sort();
+  }, [courses]);
+
+  // Helper to generate the correct query parameter for the Courses page
+  const getCategoryLink = (category: string) => {
+    let slug = category.toLowerCase().replace(/\s+/g, '-');
+    // Match the expected params in Courses.tsx
+    if (category === 'IITM BS' || category === 'IITM_BS') slug = 'iitm-bs';
+    if (category === 'JEE') slug = 'jee';
+    if (category === 'NEET') slug = 'neet';
+    return `/courses?category=${slug}`;
+  };
+
+  const formatCategoryName = (category: string) => {
+    if (category === 'IITM_BS') return 'IITM BS';
+    return category;
   };
 
   return (
@@ -46,9 +73,29 @@ const NavBar = () => {
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors">
               About
             </Link>
-            <Link to="/courses" className="text-gray-700 hover:text-royal transition-colors">
-              Courses
-            </Link>
+            
+            {/* Courses Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center">
+                  Courses
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link to="/courses">All Courses</Link>
+                </DropdownMenuItem>
+                {courseCategories.length > 0 && <DropdownMenuSeparator />}
+                {courseCategories.map((category) => (
+                  <DropdownMenuItem key={category} asChild>
+                    <Link to={getCategoryLink(category)}>
+                      {formatCategoryName(category)}
+                    </Link>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             {/* Exam Prep Dropdown */}
             <DropdownMenu>
@@ -141,9 +188,21 @@ const NavBar = () => {
               <Link to="/about" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 About
               </Link>
+              
+              {/* Mobile Courses Section */}
               <Link to="/courses" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 Courses
               </Link>
+              {courseCategories.map((category) => (
+                <Link 
+                  key={category}
+                  to={getCategoryLink(category)}
+                  className="block px-3 py-2 text-gray-700 hover:text-royal ml-4"
+                >
+                  {formatCategoryName(category)}
+                </Link>
+              ))}
+
               <Link to="/exam-preparation" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 Exam Preparation
               </Link>
