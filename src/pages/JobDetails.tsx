@@ -111,7 +111,7 @@ const JobDetails = () => {
           <nav className="text-[13px] font-[600] text-[#2563eb] mb-6 tracking-[0.01em]">
             <span className="cursor-pointer hover:underline" onClick={() => navigate('/career/openings')}>Open Jobs</span>
             <span className="text-[#94a3b8] mx-2 font-[400]">/</span>
-            <span>{job.department || 'General'}</span>
+            <span>{job.job_type || 'General'}</span>
             <span className="text-[#94a3b8] mx-2 font-[400]">/</span>
             <span className="text-[#64748b]">{job.title}</span>
           </nav>

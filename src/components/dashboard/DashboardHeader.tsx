@@ -22,6 +22,7 @@ const viewNames: Record<ActiveView, string> = {
   enrollments: 'My Enrollments',
   library: 'Digital Library',
   regularBatches: 'Regular Batches',
+  fastTrackBatches: 'FastTrack Batches',
   coming_soon: 'Coming Soon',
 };
 

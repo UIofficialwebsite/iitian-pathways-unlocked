@@ -91,8 +91,9 @@ serve(async (req: Request) => {
     });
 
   } catch (error) {
-    console.error("Error in verify-cashfree-payment function:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    console.error("Error in verify-cashfree-payment function:", errorMessage);
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
