@@ -32,7 +32,7 @@ const PrivacyPolicy = () => {
             {/* Introduction */}
             <section className="text-lg text-gray-600 leading-relaxed space-y-6">
               <p>
-                Please read the following Privacy Policy regarding the services made available on <strong className="text-gray-900">www.unknowniitians.com</strong> and its associated platforms (collectively referred to as the "Platform").
+                Please read the following Privacy Policy regarding the services made available on <strong className="text-gray-900">www.unknowniitians.live</strong> and its associated platforms (collectively referred to as the "Platform").
               </p>
               <p>
                 By accessing or using the Platform, you agree to be bound by the terms of this Privacy Policy. If you do not agree with these terms, please do not use the Platform. By providing your information, you consent to the collection and use of the information you disclose on our Platform in accordance with this Privacy Policy.
@@ -151,7 +151,7 @@ const PrivacyPolicy = () => {
                 {/* Greyish Block: Contact */}
                 <div className="bg-gray-50 rounded-xl p-6 mt-4">
                   <p className="mb-2">If you wish to remove your contact information from all lists and newsletters, please contact us at:</p>
-                  <a href="mailto:support@unknowniitians.com" className="text-gray-900 font-semibold hover:text-royal transition-colors">
+                  <a href="mailto:support@unknowniitians.live" className="text-gray-900 font-semibold hover:text-royal transition-colors">
                     support@unknowniitians.com
                   </a>
                 </div>
