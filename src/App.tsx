@@ -9,6 +9,7 @@ import EmailPopup from "@/components/EmailPopup";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import CourseListing from "./pages/CourseListing";
 import Courses from "./pages/Courses";
 import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
@@ -52,6 +53,7 @@ const App = () => (
               <Route path="/auth" element={<Auth />} />
               <Route path="/courses" element={<Courses />} />
               <Route path="/courses/category/:examCategory" element={<Courses />} />
+              <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -7,7 +7,6 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
 import { supabase } from "@/integrations/supabase/client";
-import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { 
   FileText, 
@@ -26,21 +25,7 @@ const Courses = () => {
   const { courses, contentLoading } = useBackend();
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [bannerLoading, setBannerLoading] = useState(true);
-  
-  // Sticky Filter Ref
-  const filterRef = useRef<HTMLDivElement>(null);
-  const [isSticky, setIsSticky] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (filterRef.current) {
-        const offset = filterRef.current.offsetTop - 64; // 64px for Navbar height
-        setIsSticky(window.scrollY > offset);
-      }
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [selectedBranch, setSelectedBranch] = useState<string>("all");
 
   useEffect(() => {
     const fetchBanner = async () => {
@@ -74,68 +59,97 @@ const Courses = () => {
     return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
-  const categoryCourses = useMemo(() => {
-    if (!examCategory) return courses;
-    return courses.filter(course => 
-      course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
+  // Filter courses based on selected branch
+  const branchFilteredCourses = useMemo(() => {
+    let filtered = [...courses];
+    
+    // First filter by exam category from URL
+    if (examCategory) {
+      filtered = filtered.filter(course => 
+        course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
+      );
+    }
+    
+    // Then filter by selected branch tab
+    if (selectedBranch !== 'all') {
+      filtered = filtered.filter(course => 
+        course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === selectedBranch.toLowerCase()
+      );
+    }
+    
+    return filtered;
+  }, [courses, examCategory, selectedBranch]);
+
+  // Get featured courses (bestsellers or first 3)
+  const featuredCourses = useMemo(() => {
+    const bestsellers = branchFilteredCourses.filter(c => c.bestseller);
+    return bestsellers.length >= 3 ? bestsellers.slice(0, 3) : branchFilteredCourses.slice(0, 3);
+  }, [branchFilteredCourses]);
+
+  // Get power/newly launched courses for second section
+  const powerCourses = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 60);
+    
+    const newOrPower = branchFilteredCourses.filter(course => 
+      (course.created_at && new Date(course.created_at) > thirtyDaysAgo) ||
+      course.course_type?.toLowerCase().includes('power')
     );
-  }, [courses, examCategory]);
+    
+    // If not enough power/new courses, use remaining courses
+    if (newOrPower.length < 3) {
+      const featuredIds = new Set(featuredCourses.map(c => c.id));
+      const remaining = branchFilteredCourses.filter(c => !featuredIds.has(c.id));
+      return remaining.slice(0, 3);
+    }
+    
+    return newOrPower.slice(0, 3);
+  }, [branchFilteredCourses, featuredCourses]);
 
-  // Grouping logic for sections
-  const groupedCourses = useMemo(() => {
-    const groups: Record<string, typeof categoryCourses> = {};
-    categoryCourses.forEach(course => {
-      const type = course.course_type || "General Batches";
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(course);
-    });
-    return groups;
-  }, [categoryCourses]);
-
-  // Get unique branches for the filter bar
+  // Get unique branches for filter
   const availableBranches = useMemo(() => {
-    const branches = Array.from(new Set(courses.map(c => c.exam_category))).filter(Boolean);
+    const branches = Array.from(new Set(courses.map(c => c.exam_category))).filter(Boolean) as string[];
     return branches;
   }, [courses]);
 
   return (
-    <div className="min-h-screen font-sans text-zinc-800 w-full overflow-x-hidden bg-white relative">
+    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-background relative">
       <NavBar />
       
       <main className="pt-16">
         {/* TOP SECTION: Geometric Background */}
-        <div className="relative overflow-hidden bg-[#fcfdff]">
+        <div className="relative overflow-hidden bg-muted/20">
           <div 
-            className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-blue-100/50 to-transparent z-0 pointer-events-none"
+            className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-primary/5 to-transparent z-0 pointer-events-none"
             style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
           />
           <div 
-            className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-blue-50/80 to-transparent z-0 pointer-events-none"
+            className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-primary/10 to-transparent z-0 pointer-events-none"
             style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }}
           />
 
           <div className="relative z-10">
             {/* BANNER SECTION */}
-            <section className="w-full h-[160px] md:h-[260px] bg-zinc-100 overflow-hidden mb-4">
+            <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden mb-4">
               {bannerLoading ? (
-                <div className="w-full h-full animate-pulse bg-zinc-200" />
+                <div className="w-full h-full animate-pulse bg-muted" />
               ) : bannerImage ? (
                 <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-r from-zinc-200 to-zinc-300" />
+                <div className="w-full h-full bg-gradient-to-r from-muted to-muted/80" />
               )}
             </section>
 
             {/* BREADCRUMB */}
             <nav className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-              <div className="flex items-center gap-1.5 text-[12px] text-zinc-500 font-medium">
-                <Link to="/" className="hover:text-primary"><Home className="w-3.5 h-3.5" /></Link>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3.5 h-3.5" /></Link>
                 <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                <span className="uppercase tracking-wide text-zinc-400">Courses</span>
+                <span className="uppercase tracking-wide text-muted-foreground">Courses</span>
                 {examCategory && (
                   <>
                     <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                    <span className="font-bold text-zinc-900 uppercase">{currentCategoryData?.name}</span>
+                    <span className="font-bold text-foreground uppercase">{currentCategoryData?.name}</span>
                   </>
                 )}
               </div>
@@ -143,10 +157,10 @@ const Courses = () => {
 
             {/* HEADER SECTION */}
             <section className="max-w-6xl mx-auto px-4 md:px-8 pb-8">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 mb-3 tracking-tight leading-tight">
+              <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-3 tracking-tight leading-tight">
                 {currentCategoryData?.name} 2026: Resources & Prep
               </h1>
-              <p className="text-zinc-600 text-[13px] md:text-sm leading-relaxed max-w-4xl font-medium">
+              <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-4xl font-medium">
                 Access our specialized study hub featuring updated syllabus, comprehensive PDF banks, 
                 and the latest exam alerts curated by expert IITians.
               </p>
@@ -155,12 +169,12 @@ const Courses = () => {
             {/* QUICK LINKS */}
             {examCategory && (
               <section className="max-w-6xl mx-auto px-4 md:px-8 mb-16">
-                <div className="bg-white rounded-2xl border border-zinc-100 p-8 md:p-10 pt-14 md:pt-14 shadow-sm">
+                <div className="bg-card rounded-2xl border border-border p-8 md:p-10 pt-14 md:pt-14 shadow-sm">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12">
-                    <QuickLinkTab title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} bgColor="bg-[#e8efff]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="PDF Bank" desc="Access Notes & PDFs" icon={FileText} bgColor="bg-[#feeceb]" iconColor="text-[#f43f5e]" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Important Dates" desc="Check Exam Schedule" icon={ClipboardList} bgColor="bg-[#e1f7e7]" iconColor="text-[#22c55e]" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Latest News" desc="Stay Updated on Exams" icon={BookOpen} bgColor="bg-[#e0f0ff]" iconColor="text-[#0ea5e9]" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} bgColor="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600 dark:text-blue-400" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="PDF Bank" desc="Access Notes & PDFs" icon={FileText} bgColor="bg-rose-100 dark:bg-rose-900/30" iconColor="text-rose-500 dark:text-rose-400" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="Important Dates" desc="Check Exam Schedule" icon={ClipboardList} bgColor="bg-green-100 dark:bg-green-900/30" iconColor="text-green-500 dark:text-green-400" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="Latest News" desc="Stay Updated on Exams" icon={BookOpen} bgColor="bg-sky-100 dark:bg-sky-900/30" iconColor="text-sky-500 dark:text-sky-400" onClick={() => navigate('/digital-library')} />
                   </div>
                 </div>
               </section>
@@ -168,72 +182,115 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR */}
-        <div 
-          ref={filterRef}
-          className={`w-full z-40 transition-all duration-300 ${isSticky ? 'fixed top-16 bg-white shadow-md py-3 border-b border-zinc-100' : 'relative py-6 bg-white'}`}
-        >
-          <div className="max-w-6xl mx-auto px-4 md:px-8 flex items-center gap-4 overflow-x-auto no-scrollbar">
-            <span className="text-sm font-bold text-zinc-400 uppercase whitespace-nowrap">Explore:</span>
-            <button 
-              onClick={() => navigate('/courses')}
-              className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${!examCategory ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
-            >
-              All Branches
-            </button>
-            {availableBranches.map((branch) => (
-              <button
-                key={branch}
-                onClick={() => navigate(`/courses/${branch.toLowerCase().replace(/[\s_]/g, '-')}`)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${examCategory === branch.toLowerCase().replace(/[\s_]/g, '-') ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'}`}
+        {/* BRANCH FILTER BAR */}
+        <div className="w-full bg-background border-b border-border">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
+            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+              <button 
+                onClick={() => setSelectedBranch('all')}
+                className={`px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 ${
+                  selectedBranch === 'all' 
+                    ? 'border-primary text-primary' 
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
               >
-                {branch}
+                All Batches
               </button>
-            ))}
+              {availableBranches.map((branch) => (
+                <button
+                  key={branch}
+                  onClick={() => setSelectedBranch(branch.toLowerCase().replace(/[\s_]/g, '-'))}
+                  className={`px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 ${
+                    selectedBranch === branch.toLowerCase().replace(/[\s_]/g, '-') 
+                      ? 'border-primary text-primary' 
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {branch}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        <Separator className="invisible" />
-
-        {/* COURSES LISTING SECTION */}
-        <div className="pb-24 bg-white relative z-10">
+        {/* COURSES LISTING SECTIONS */}
+        <div className="pb-24 bg-background">
           <section className="max-w-6xl mx-auto px-4 md:px-8">
+            
             {contentLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
                 {Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}
               </div>
             ) : (
-              Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
-                <div key={groupName} className="mb-20 pt-10">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                    <div>
-                      <h3 className="text-xl font-black text-zinc-900 uppercase tracking-tight">{groupName}</h3>
-                      <div className="h-1 w-12 bg-black mt-1" />
+              <>
+                {/* FEATURED BATCHES SECTION */}
+                {featuredCourses.length > 0 && (
+                  <div className="pt-10 mb-16">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg md:text-xl font-bold text-foreground">Featured Batches</h3>
+                        <div className="h-0.5 w-12 bg-primary mt-1" />
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Show only 3 cards initially */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {groupCourses.slice(0, 3).map((course, index) => (
-                      <CourseCard course={course} index={index} key={course.id} />
-                    ))}
-                  </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {featuredCourses.map((course, index) => (
+                        <CourseCard course={course} index={index} key={course.id} />
+                      ))}
+                    </div>
 
-                  {/* Middle Aligned View All Button */}
-                  {groupCourses.length > 3 && (
-                    <div className="flex justify-center mt-12">
+                    <div className="flex justify-center mt-10">
                       <Button 
                         variant="outline" 
-                        className="rounded-full px-8 border-2 border-zinc-200 font-bold hover:bg-black hover:text-white transition-all group"
-                        onClick={() => navigate(`/courses/${examCategory || 'all'}`)}
+                        className="rounded-full px-8 py-2 border-2 border-border font-semibold hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all group"
+                        onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?filter=featured`)}
                       >
-                        View All {groupName} 
+                        View All Batches
                         <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </Button>
                     </div>
-                  )}
-                </div>
-              ))
+                  </div>
+                )}
+
+                {/* POWER / NEWLY LAUNCHED SECTION */}
+                {powerCourses.length > 0 && (
+                  <div className="mb-16">
+                    <div className="flex items-center justify-between mb-6">
+                      <div>
+                        <h3 className="text-lg md:text-xl font-bold text-foreground">Power Batches & New Launches</h3>
+                        <div className="h-0.5 w-12 bg-primary mt-1" />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {powerCourses.map((course, index) => (
+                        <CourseCard course={course} index={index} key={course.id} />
+                      ))}
+                    </div>
+
+                    <div className="flex justify-center mt-10">
+                      <Button 
+                        variant="outline" 
+                        className="rounded-full px-8 py-2 border-2 border-border font-semibold hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all group"
+                        onClick={() => navigate(`/courses/listing/${examCategory || 'all'}`)}
+                      >
+                        View All Courses
+                        <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Fallback if no courses */}
+                {featuredCourses.length === 0 && powerCourses.length === 0 && (
+                  <div className="text-center py-16">
+                    <p className="text-lg text-muted-foreground">No courses available for this category yet.</p>
+                    <Button variant="outline" onClick={() => navigate('/courses')} className="mt-4">
+                      Browse All Courses
+                    </Button>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>
@@ -245,20 +302,27 @@ const Courses = () => {
   );
 };
 
-// Replicated Tab Card Component (Matches existing design)
-const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: any) => (
+// Quick Link Tab Component
+const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: {
+  title: string;
+  desc: string;
+  icon: React.ElementType;
+  bgColor: string;
+  iconColor: string;
+  onClick: () => void;
+}) => (
   <button 
     onClick={onClick}
-    className={`group relative h-[110px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left ${bgColor}`}
+    className={`group relative h-[110px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-transparent transition-all hover:border-primary text-left ${bgColor}`}
   >
-    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10 border border-zinc-50">
+    <div className="absolute -top-6 left-5 w-12 h-12 bg-card rounded-full flex items-center justify-center shadow-md z-10 border border-border">
       <Icon className={`w-5 h-5 ${iconColor}`} />
     </div>
     <div className="mt-2">
-      <h3 className="text-sm md:text-base font-bold text-zinc-900 mb-0.5 font-sans tracking-tight">{title}</h3>
-      <p className="text-[11px] md:text-xs text-zinc-500 font-medium leading-tight">{desc}</p>
+      <h3 className="text-sm md:text-base font-bold text-foreground mb-0.5 tracking-tight">{title}</h3>
+      <p className="text-xs text-muted-foreground font-medium leading-tight">{desc}</p>
     </div>
-    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-hover:text-black transition-colors" />
+    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
   </button>
 );
 
