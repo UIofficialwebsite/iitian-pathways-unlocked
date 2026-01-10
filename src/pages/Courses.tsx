@@ -130,10 +130,10 @@ const Courses = () => {
                     <div className="h-0.5 w-10 bg-[#1E3A8A] mt-1.5 rounded-full" />
                   </div>
                   
-                  {/* Aspect Ratio Balanced Grid */}
-                  <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible gap-4 md:gap-6 no-scrollbar pb-6 md:pb-0 snap-x snap-mandatory">
+                  {/* Responsive Horizontal Scroll Grid */}
+                  <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0">
                     {branchCourses.map((course, index) => (
-                      <div key={course.id} className="min-w-[280px] md:min-w-0 flex-shrink-0 snap-start">
+                      <div key={course.id} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0 snap-start">
                         <CourseCard course={course} index={index} />
                       </div>
                     ))}

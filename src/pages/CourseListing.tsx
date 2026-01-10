@@ -303,8 +303,12 @@ const CourseListing = () => {
         <div className="pb-32">
           <section className="max-w-6xl mx-auto px-4 md:px-8">
             {contentLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {Array.from({ length: 6 }).map((_, i) => <CourseCardSkeleton key={i} />)}
+              <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0">
+                    <CourseCardSkeleton />
+                  </div>
+                ))}
               </div>
             ) : filteredCourses.length === 0 ? (
               <div className="text-center py-24 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
@@ -324,9 +328,12 @@ const CourseListing = () => {
                     <span className="text-sm font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">{groupCourses.length}</span>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {/* Responsive Horizontal Scroll Grid */}
+                  <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0">
                     {groupCourses.map((course, index) => (
-                      <CourseCard course={course} index={index} key={course.id} />
+                      <div key={course.id} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0 snap-start">
+                        <CourseCard course={course} index={index} />
+                      </div>
                     ))}
                   </div>
                 </div>
