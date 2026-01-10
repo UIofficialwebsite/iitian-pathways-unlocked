@@ -74,7 +74,7 @@ const Courses = () => {
       
       <main className="pt-16">
         {/* BANNER - REDUCED HEIGHT */}
-        <section className="w-full h-[140px] md:h-[220px] bg-muted overflow-hidden relative z-10">
+        <section className="w-full h-[140px] md:h-[220px] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
           ) : bannerImage ? (
@@ -84,7 +84,7 @@ const Courses = () => {
           )}
         </section>
 
-        {/* HERO AREA WITH GEOMETRIC BACKGROUND */}
+        {/* HERO AREA WITH GLASSY GEOMETRIC BACKGROUND */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-8 md:py-10">
           <div 
             className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none"
@@ -110,7 +110,7 @@ const Courses = () => {
               comprehensive PDF banks, and essential exam alerts.
             </p>
 
-            {/* QUICK LINKS SECTION - WHITE BG / FLOATING ICONS */}
+            {/* QUICK LINKS SECTION - WHITE BG / DITTO DESIGN */}
             {examCategory && (
               <section className="mt-4 bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-black/5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-14 mt-4">
@@ -136,29 +136,29 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* BRANCH FILTER BAR - INTER FONT, BLUE TEXT, PIPE SEPARATORS */}
+        {/* BRANCH FILTER BAR - INTER FONT, BLUE TEXT, NON-BOLD, PIPE SEPARATORS */}
         <div className="w-full bg-white border-y border-border sticky top-16 z-30">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center flex-wrap gap-x-3 gap-y-2 text-[#1E40AF] font-sans">
               <button 
                 onClick={() => navigate(`/courses/listing/${examCategory || 'all'}`)}
-                className="text-sm font-bold whitespace-nowrap hover:underline transition-all"
+                className="text-sm font-normal whitespace-nowrap hover:underline transition-all"
               >
                 All Batches
               </button>
               
-              {availableBranches.length > 0 && <span className="text-gray-300">|</span>}
+              {availableBranches.length > 0 && <span className="text-gray-300 font-light px-1">|</span>}
 
               {availableBranches.map((branch, index) => (
                 <React.Fragment key={branch}>
                   <button
                     onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                    className="text-sm font-bold whitespace-nowrap hover:underline transition-all"
+                    className="text-sm font-normal whitespace-nowrap hover:underline transition-all"
                   >
                     {branch}
                   </button>
                   {index < availableBranches.length - 1 && (
-                    <span className="text-gray-300">|</span>
+                    <span className="text-gray-300 font-light px-1">|</span>
                   )}
                 </React.Fragment>
               ))}
@@ -166,7 +166,7 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* BRANCH SECTIONS */}
+        {/* DYNAMIC BRANCH SECTIONS */}
         <div className="pb-24 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-12">
             {contentLoading ? (
@@ -214,6 +214,7 @@ const Courses = () => {
   );
 };
 
+// QUICK LINK CARD COMPONENT (MATCHES HTML DESIGN)
 const QuickLinkCard = ({ title, desc, icon: Icon, cardColor, iconColor, onClick }: {
   title: string; desc: string; icon: React.ElementType; cardColor: string; iconColor: string; onClick: () => void;
 }) => (
