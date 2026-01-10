@@ -79,8 +79,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       <div className="flex items-end justify-between mb-[20px] px-1">
         <div>
           <div className="flex items-center">
-            <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.discounted_price?.toLocaleString()}</span>
-            <span className="text-[14px] text-[#94a3b8] line-through ml-1.5 font-normal">₹{course.price?.toLocaleString()}</span>
+            {course.discounted_price && course.discounted_price < course.price ? (
+              <>
+                <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.discounted_price.toLocaleString()}</span>
+                <span className="text-[14px] text-[#94a3b8] line-through ml-1.5 font-normal">₹{course.price?.toLocaleString()}</span>
+              </>
+            ) : (
+              <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.price?.toLocaleString()}</span>
+            )}
           </div>
           <span className="block text-[10px] font-normal text-[#94a3b8] mt-[2px] uppercase">(FOR FULL BATCH)</span>
         </div>
