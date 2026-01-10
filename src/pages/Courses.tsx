@@ -12,9 +12,9 @@ import {
   FileText, 
   ChevronRight,
   Home,
-  BookOpen,
-  ClipboardList,
-  Monitor,
+  LayoutList,
+  Newspaper,
+  CalendarDays,
 } from "lucide-react";
 
 const Courses = () => {
@@ -25,6 +25,7 @@ const Courses = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [bannerLoading, setBannerLoading] = useState(true);
 
+  // FETCH BANNER LOGIC
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
@@ -51,6 +52,7 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
+  // CATEGORY LOGIC
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
@@ -73,8 +75,8 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION - RESTORED */}
-        <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden relative z-10">
+        {/* BANNER */}
+        <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
           ) : bannerImage ? (
@@ -84,12 +86,14 @@ const Courses = () => {
           )}
         </section>
 
-        {/* HEADER SECTION - GLASSY BLUE / WHITE GEOMETRIC BACKGROUND */}
+        {/* HERO AREA WITH GEOMETRIC BACKGROUND */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-12">
+          {/* Top-Left Geometric Shape */}
           <div 
             className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none"
             style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
           />
+          {/* Bottom-Right Geometric Shape */}
           <div 
             className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none"
             style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }}
@@ -106,39 +110,36 @@ const Courses = () => {
               {currentCategoryData?.name} 2026: Exam Dates, Syllabus, Pattern & Eligibility
             </h1>
             <p className="text-[#555] text-base md:text-lg leading-relaxed max-w-4xl mb-12">
-              Access specialized study resources curated by expert IITians. Our hub provides the most updated syllabus, 
-              comprehensive PDF banks, and essential exam alerts to guide your preparation.
+              Explore specialized resources curated by expert IITians. Get the latest {currentCategoryData?.name} alerts, comprehensive PDF banks, and detailed roadmap to success.
             </p>
 
-            {/* QUICK LINKS SECTION - WHITE BACKGROUND WITH FLOATING ICONS */}
+            {/* QUICK LINKS SECTION - WHITE BACKGROUND */}
             {examCategory && (
-              <section className="mt-8">
-                <div className="bg-white p-10 md:p-12 rounded-2xl shadow-sm border border-black/5">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-16 mt-6">
-                    <QuickLinkCard 
-                      title="Blog" desc="Read Our Latest Blogs" icon={Monitor} 
-                      cardColor="bg-[#e8efff]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/blog')} 
-                    />
-                    <QuickLinkCard 
-                      title="PDF Bank" desc="Access PDF Bank" icon={FileText} 
-                      cardColor="bg-[#feeceb]" iconColor="text-[#f43f5e]" onClick={() => navigate('/digital-library')} 
-                    />
-                    <QuickLinkCard 
-                      title="Test Series" desc="Explore Test Series" icon={ClipboardList} 
-                      cardColor="bg-[#e1f7e7]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/test-series')} 
-                    />
-                    <QuickLinkCard 
-                      title="Books" desc="Find Preparation Books" icon={BookOpen} 
-                      cardColor="bg-[#e0f0ff]" iconColor="text-[#f43f5e]" onClick={() => navigate('/books')} 
-                    />
-                  </div>
+              <section className="mt-8 bg-white p-12 md:p-14 rounded-3xl shadow-sm border border-black/5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-16">
+                  <QuickLinkCard 
+                    title="PDF Bank" desc="Access PDF Bank" icon={FileText} 
+                    cardColor="bg-[#feeceb]" iconColor="text-[#f43f5e]" onClick={() => navigate('/digital-library')} 
+                  />
+                  <QuickLinkCard 
+                    title="News" desc="Stay Updated on Exams" icon={Newspaper} 
+                    cardColor="bg-[#e8f0fe]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/digital-library')} 
+                  />
+                  <QuickLinkCard 
+                    title="Important Dates" desc="Check Exam Schedule" icon={CalendarDays} 
+                    cardColor="bg-[#e1f7e7]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/digital-library')} 
+                  />
+                  <QuickLinkCard 
+                    title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} 
+                    cardColor="bg-[#e0f0ff]" iconColor="text-[#f43f5e]" onClick={() => navigate('/digital-library')} 
+                  />
                 </div>
               </section>
             )}
           </div>
         </div>
 
-        {/* WEBSITE BRANCH TABS - DYNAMIC FROM DATABASE */}
+        {/* BRANCH TABS */}
         <div className="w-full bg-white border-y border-border sticky top-16 z-30">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
@@ -161,11 +162,11 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* DYNAMIC SECTIONS: Exam category - branch Courses */}
+        {/* BRANCH SECTIONS */}
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-16">
             {contentLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pt-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}
               </div>
             ) : (
@@ -188,7 +189,7 @@ const Courses = () => {
                     <div className="flex justify-center mt-14">
                       <Button 
                         variant="default" 
-                        className="rounded-md px-14 py-8 text-lg font-bold shadow-xl bg-[#1E40AF] text-white hover:bg-[#1E3A8A] transition-all hover:scale-105"
+                        className="rounded-lg px-14 py-8 text-lg font-bold shadow-xl bg-[#1E40AF] text-white hover:bg-[#1E3A8A] transition-all hover:scale-105"
                         onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
                       >
                         View All Courses
@@ -202,26 +203,26 @@ const Courses = () => {
         </div>
       </main>
       <Footer />
-      <EmailPopup />
     </div>
   );
 };
 
+// QUICK LINK CARD COMPONENT (REDUCED HEIGHT)
 const QuickLinkCard = ({ title, desc, icon: Icon, cardColor, iconColor, onClick }: {
   title: string; desc: string; icon: React.ElementType; cardColor: string; iconColor: string; onClick: () => void;
 }) => (
   <button 
     onClick={onClick}
-    className={`group relative h-[125px] w-full rounded-xl px-6 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left ${cardColor}`}
+    className={`group relative h-[130px] w-full rounded-xl px-6 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left ${cardColor}`}
   >
-    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10">
-      <Icon className={`w-5.5 h-5.5 ${iconColor}`} />
+    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10 border border-black/5">
+      <Icon className={`w-6 h-6 ${iconColor}`} />
     </div>
     <div className="mt-4">
-      <h3 className="text-lg font-bold text-[#1a1a1a] mb-1">{title}</h3>
-      <p className="text-sm text-[#555] font-medium">{desc}</p>
+      <h3 className="text-lg font-bold text-[#1a1a1a] mb-1 leading-tight">{title}</h3>
+      <p className="text-[0.85rem] text-[#5f6368] font-medium">{desc}</p>
     </div>
-    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1a1a1a] group-hover:translate-x-1 transition-transform" />
+    <ChevronRight className="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1a1a1a]" />
   </button>
 );
 
