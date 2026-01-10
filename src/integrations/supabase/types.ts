@@ -80,6 +80,36 @@ export type Database = {
         }
         Relationships: []
       }
+      app_routes: {
+        Row: {
+          component_name: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          path: string
+          route_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          component_name: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          path: string
+          route_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          component_name?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          path?: string
+          route_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       batch_schedule: {
         Row: {
           batch_name: string
@@ -725,6 +755,27 @@ export type Database = {
           subject?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      page_banners: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          page_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          page_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          page_path?: string
         }
         Relationships: []
       }

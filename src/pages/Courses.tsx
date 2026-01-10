@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import EmailPopup from "@/components/EmailPopup";
@@ -8,6 +8,7 @@ import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
 import { StaggerTestimonials } from "@/components/ui/stagger-testimonials";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   FileText, 
   ChevronRight,
@@ -22,8 +23,52 @@ import {
 const Courses = () => {
   const { examCategory } = useParams<{ examCategory?: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { courses, contentLoading } = useBackend();
   const [selectedSubFilter, setSelectedSubFilter] = useState<string | null>(null);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const [bannerLoading, setBannerLoading] = useState(true);
+  
+  // Fetch banner image from page_banners table
+  useEffect(() => {
+    const fetchBanner = async () => {
+      setBannerLoading(true);
+      try {
+        // Determine the path to search for
+        const currentPath = location.pathname;
+        const searchPaths = [
+          currentPath, // Full path like /courses/category/jee
+          examCategory || 'courses', // Just the exam category like 'jee' or 'courses'
+        ];
+        
+        const { data, error } = await supabase
+          .from('page_banners')
+          .select('image_url, page_path')
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Find matching banner - check for exact path match first, then partial
+          const matchingBanner = data.find(banner => 
+            searchPaths.some(path => 
+              banner.page_path === path || 
+              banner.page_path === path.replace('/courses/category/', '') ||
+              path.includes(banner.page_path)
+            )
+          );
+          
+          setBannerImage(matchingBanner?.image_url || data[0]?.image_url || null);
+        }
+      } catch (err) {
+        console.error('Error fetching banner:', err);
+      } finally {
+        setBannerLoading(false);
+      }
+    };
+    
+    fetchBanner();
+  }, [location.pathname, examCategory]);
   
   useEffect(() => {
     setSelectedSubFilter(null);
@@ -78,11 +123,17 @@ const Courses = () => {
         {/* === 1. BANNER SECTION === */}
         <section className="w-full">
           <div className="w-full h-[200px] md:h-[350px] lg:h-[400px] overflow-hidden bg-zinc-100">
-            <img 
-              src="/lovable-uploads/uibanner.png" 
-              alt="Banner" 
-              className="w-full h-full object-cover"
-            />
+            {bannerLoading ? (
+              <div className="w-full h-full bg-zinc-200 animate-pulse" />
+            ) : bannerImage ? (
+              <img 
+                src={bannerImage} 
+                alt="Banner" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-r from-zinc-200 to-zinc-300" />
+            )}
           </div>
         </section>
 
