@@ -12,16 +12,13 @@ import {
   FileText, 
   ChevronRight,
   Home,
-  Atom,
-  Stethoscope,
-  GraduationCap,
   Monitor,
-  LayoutList,
   BookOpen,
-  Sparkles
+  Sparkles,
+  ClipboardList
 } from "lucide-react";
 
-// Exam category configuration preserved for dynamic content (Titles/Descriptions)
+// Exam category configuration preserved for dynamic content
 const EXAM_CONFIG: Record<string, {
   title: string;
   subtitle: string;
@@ -52,12 +49,40 @@ const EXAM_CONFIG: Record<string, {
   },
 };
 
-// Standardized Quick Links for all pages - pointing to Digital Library
+// Standardized Quick Links point to Digital Library as per "Ditto" snippet metadata
 const STANDARDIZED_QUICK_LINKS = [
-  { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue" as const, href: "/digital-library" },
-  { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red" as const, href: "/digital-library" },
-  { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green" as const, href: "/digital-library" },
-  { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan" as const, href: "/digital-library" },
+  { 
+    title: "Syllabus", 
+    subtitle: "Read Our Latest Blogs", 
+    icon: Monitor, 
+    cardClass: "bg-[#e8f0fe]", 
+    iconColor: "text-[#4a6cf7]", 
+    href: "/digital-library" 
+  },
+  { 
+    title: "PDF Bank", 
+    subtitle: "Access PDF Bank", 
+    icon: FileText, 
+    cardClass: "bg-[#feeceb]", 
+    iconColor: "text-[#f43f5e]", 
+    href: "/digital-library" 
+  },
+  { 
+    title: "Important Dates", 
+    subtitle: "Explore Test Series", 
+    icon: ClipboardList, 
+    cardClass: "bg-[#e1f7e7]", 
+    iconColor: "text-[#4a6cf7]", 
+    href: "/digital-library" 
+  },
+  { 
+    title: "Latest News", 
+    subtitle: "Find Preparation Books", 
+    icon: BookOpen, 
+    cardClass: "bg-[#e0f0ff]", 
+    iconColor: "text-[#f43f5e]", 
+    href: "/digital-library" 
+  },
 ];
 
 const formatCategoryTitle = (slug: string | undefined) => {
@@ -70,7 +95,6 @@ const Courses = () => {
   const { examCategory } = useParams<{ examCategory?: string }>();
   const navigate = useNavigate();
   const { courses, contentLoading } = useBackend();
-  
   const [selectedSubFilter, setSelectedSubFilter] = useState<string | null>(null);
   
   useEffect(() => {
@@ -80,7 +104,6 @@ const Courses = () => {
   const config = examCategory ? EXAM_CONFIG[examCategory] : null;
   const isExamSpecificPage = !!examCategory && !!config;
 
-  // Logic Preserved: Filtering category courses
   const categoryCourses = useMemo(() => {
     if (!examCategory) return courses;
     return courses.filter(course => {
@@ -91,7 +114,6 @@ const Courses = () => {
     });
   }, [courses, examCategory]);
 
-  // Logic Preserved: Available Sub-filters
   const availableSubFilters = useMemo(() => {
     if (!config) return [];
     const available = new Set<string>();
@@ -104,7 +126,6 @@ const Courses = () => {
     return Array.from(available).sort();
   }, [categoryCourses, config]);
 
-  // Logic Preserved: Filtered courses based on sub-filter
   const filteredCourses = useMemo(() => {
     if (!selectedSubFilter) return categoryCourses;
     return categoryCourses.filter(course => {
@@ -113,7 +134,6 @@ const Courses = () => {
     });
   }, [categoryCourses, selectedSubFilter]);
 
-  // Logic Preserved: Grouping courses
   const groupedCourses = useMemo(() => {
     if (selectedSubFilter || !isExamSpecificPage) return { "Available Batches": filteredCourses };
     const groups: Record<string, typeof filteredCourses> = {};
@@ -125,21 +145,20 @@ const Courses = () => {
     return Object.keys(groups).length <= 1 ? { "Available Batches": filteredCourses } : groups;
   }, [filteredCourses, selectedSubFilter, isExamSpecificPage]);
 
-  // Logic Preserved: Featured courses
   const featuredCourses = useMemo(() => {
     const pool = isExamSpecificPage ? categoryCourses : courses;
     return pool.filter(c => c.bestseller || (c.students_enrolled && c.students_enrolled > 50)).slice(0, 3);
   }, [courses, categoryCourses, isExamSpecificPage]);
 
   return (
-    <div className="bg-white min-h-screen font-sans text-zinc-800 w-full">
+    <div className="bg-white min-h-screen font-sans text-zinc-800 w-full overflow-x-hidden">
       <NavBar />
       
       <main className="pt-16">
         
-        {/* === BANNER SECTION === */}
+        {/* === 1. BANNER SECTION (Precise height for 100% zoomness) === */}
         <section className="w-full relative">
-          <div className="w-full h-[250px] md:h-[400px] overflow-hidden bg-slate-100">
+          <div className="w-full h-[250px] md:h-[380px] lg:h-[450px] overflow-hidden bg-slate-100">
             <img 
               src={isExamSpecificPage ? config.bannerImage : "/lovable-uploads/uibanner.png"} 
               alt="" 
@@ -149,48 +168,44 @@ const Courses = () => {
           </div>
         </section>
 
-        {/* === BREADCRUMB POSITION: Strictly below banner === */}
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-b border-zinc-100">
-          <div className="flex items-center gap-1 text-[13px] text-zinc-500">
-            <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
+        {/* === 2. BREADCRUMBS: Positioned below banner as requested === */}
+        <nav className="max-w-7xl mx-auto px-4 md:px-8 py-4">
+          <div className="flex items-center gap-1 text-xs md:text-sm text-zinc-500">
+            <Link to="/" className="flex items-center gap-1 hover:text-primary">
               <Home className="w-3.5 h-3.5" />
               <span>Home</span>
             </Link>
-            <ChevronRight className="w-4 h-4 opacity-50" />
-            <Link to="/courses" className="hover:text-primary transition-colors">
-              Courses
-            </Link>
+            <ChevronRight className="w-4 h-4 opacity-40" />
+            <Link to="/courses" className="hover:text-primary">Courses</Link>
             {isExamSpecificPage && (
               <>
-                <ChevronRight className="w-4 h-4 opacity-50" />
-                <span className="font-medium text-zinc-900">{formatCategoryTitle(examCategory)}</span>
+                <ChevronRight className="w-4 h-4 opacity-40" />
+                <span className="font-semibold text-zinc-900">{formatCategoryTitle(examCategory)}</span>
               </>
             )}
           </div>
         </nav>
 
-        {/* === TITLE & DESCRIPTION SECTION === */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
-          <div className="space-y-3">
-            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-zinc-900 leading-tight">
-              {isExamSpecificPage ? (
-                <>{config.title}: <span className="text-primary">{config.subtitle}</span></>
-              ) : (
-                <>Master Your Exams <span className="text-primary">With Expert Guidance</span></>
-              )}
-            </h1>
-            <p className="text-zinc-600 text-sm md:text-base leading-relaxed max-w-5xl">
-              {isExamSpecificPage ? config.description : "Access premium batches, study materials, and expert guidance tailored for academic success."}
-            </p>
-          </div>
+        {/* === 3. HEADER CONTENT === */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 pt-4 pb-8">
+          <h1 className="text-2xl md:text-5xl font-bold text-zinc-900 mb-4 tracking-tight">
+            {isExamSpecificPage ? (
+              <>{config.title}: <span className="text-primary">{config.subtitle}</span></>
+            ) : (
+              <>Master Your Exams <span className="text-primary">With Expert Guidance</span></>
+            )}
+          </h1>
+          <p className="text-zinc-600 text-sm md:text-lg leading-relaxed max-w-5xl">
+            {isExamSpecificPage ? config.description : "Access premium batches and curated study materials tailored for academic success."}
+          </p>
         </section>
 
-        {/* === QUICK LINKS SECTION: point to digital library for all === */}
+        {/* === 4. QUICK LINKS SECTION: Ditto Design Implementation === */}
         {isExamSpecificPage && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <section className="max-w-7xl mx-auto px-4 md:px-8 py-12 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-[15px] gap-y-[45px]">
               {STANDARDIZED_QUICK_LINKS.map((link, idx) => (
-                <QuickLinkCard 
+                <DittoQuickLinkCard 
                   key={idx}
                   {...link}
                   onClick={() => navigate(link.href)}
@@ -200,22 +215,22 @@ const Courses = () => {
           </section>
         )}
 
-        {/* === CONTENT LISTING SECTION === */}
+        {/* === 5. COURSES LISTING SECTION === */}
         <div className="bg-white pb-24">
           
-          {/* Featured Courses Section */}
+          {/* Featured Courses */}
           {featuredCourses.length > 0 && (
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-zinc-50">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="p-2 bg-amber-50 rounded-lg">
-                  <Sparkles className="w-5 h-5 text-amber-600" />
+            <section className="max-w-7xl mx-auto px-4 md:px-8 py-12">
+              <div className="flex items-center gap-3 mb-10">
+                <div className="p-2.5 bg-amber-50 rounded-xl">
+                  <Sparkles className="w-6 h-6 text-amber-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-zinc-900">Featured Batches</h2>
-                  <p className="text-zinc-500 text-xs">Top rated courses for your preparation</p>
+                  <h2 className="text-2xl font-bold text-zinc-900 tracking-tight">Featured Batches</h2>
+                  <p className="text-zinc-500 text-sm font-medium">Top rated courses for your preparation</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {contentLoading ? (
                   Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)
                 ) : (
@@ -227,15 +242,15 @@ const Courses = () => {
             </section>
           )}
 
-          {/* Dynamic Sub-Filters */}
+          {/* Sub-Filters Tabs */}
           <AnimatePresence>
             {isExamSpecificPage && availableSubFilters.length > 0 && (
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sticky top-[80px] z-10 bg-white/80 backdrop-blur-md">
-                <div className="flex flex-wrap gap-2 pb-2">
+              <section className="max-w-7xl mx-auto px-4 md:px-8 py-6 sticky top-[80px] z-20 bg-white/95 backdrop-blur-sm border-y border-zinc-100 mb-8">
+                <div className="flex flex-wrap gap-2.5">
                   <button
                     onClick={() => setSelectedSubFilter(null)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                      !selectedSubFilter ? "bg-primary text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                    className={`px-5 py-2 rounded-full text-xs font-bold transition-all border ${
+                      !selectedSubFilter ? "bg-primary border-primary text-white shadow-md" : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400"
                     }`}
                   >
                     All Batches
@@ -244,8 +259,8 @@ const Courses = () => {
                     <button
                       key={filter}
                       onClick={() => setSelectedSubFilter(prev => prev === filter ? null : filter)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                        selectedSubFilter === filter ? "bg-primary text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
+                      className={`px-5 py-2 rounded-full text-xs font-bold transition-all border ${
+                        selectedSubFilter === filter ? "bg-primary border-primary text-white shadow-md" : "bg-white border-zinc-200 text-zinc-600 hover:border-zinc-400"
                       }`}
                     >
                       {filter}
@@ -256,22 +271,25 @@ const Courses = () => {
             )}
           </AnimatePresence>
 
-          {/* Main Batches Grid */}
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Main Grid */}
+          <section className="max-w-7xl mx-auto px-4 md:px-8">
             {contentLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {Array.from({ length: 6 }).map((_, i) => <CourseCardSkeleton key={i} />)}
               </div>
             ) : (
               Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
-                <div key={groupName} className="mb-12 last:mb-0">
+                <div key={groupName} className="mb-16 last:mb-0">
                   {Object.keys(groupedCourses).length > 1 && (
-                    <div className="flex items-center justify-between mb-6 border-b border-zinc-100 pb-4">
-                      <h3 className="text-lg font-bold text-zinc-900">{groupName}</h3>
-                      <button className="text-primary text-xs font-bold hover:underline">View All →</button>
+                    <div className="flex items-center justify-between mb-8 border-b border-zinc-100 pb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="h-7 w-1.5 bg-primary rounded-full" />
+                        <h3 className="text-xl md:text-2xl font-bold text-zinc-900">{groupName}</h3>
+                      </div>
+                      <button className="text-primary text-sm font-bold hover:underline">View All →</button>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {groupCourses.map((course, index) => (
                       <CourseCard course={course} index={index} key={course.id} />
                     ))}
@@ -282,10 +300,10 @@ const Courses = () => {
           </section>
 
           {/* Testimonials */}
-          <section className="py-20 bg-zinc-50/50 mt-12 border-t border-zinc-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <h2 className="text-2xl font-bold mb-4 text-zinc-900">Student Success Stories</h2>
-              <p className="text-zinc-500 text-sm mb-12">Hear from those who achieved their goals with us</p>
+          <section className="py-24 bg-zinc-50 border-t border-zinc-100 mt-20">
+            <div className="max-w-7xl mx-auto px-4 md:px-8 text-center">
+              <h2 className="text-3xl font-bold mb-4 text-zinc-900">Student Success Stories</h2>
+              <p className="text-zinc-500 mb-16 text-lg">Hear from those who achieved their goals with us</p>
               <StaggerTestimonials />
             </div>
           </section>
@@ -298,36 +316,28 @@ const Courses = () => {
   );
 };
 
-// Reusable Quick Link Card (Physics Wallah UI style)
-const QuickLinkCard = ({ title, subtitle, icon: Icon, theme, onClick }: any) => {
-  const themes = {
-    blue: "bg-[#EEF4FF] border-[#E0EAFF]",
-    red: "bg-[#FEF3F2] border-[#FEE4E2]",
-    green: "bg-[#EDFCF2] border-[#D3F8DF]",
-    cyan: "bg-[#EFF8FF] border-[#D1E9FF]",
-  };
-  const iconColors = {
-    blue: "text-blue-600",
-    red: "text-red-600",
-    green: "text-emerald-600",
-    cyan: "text-sky-600",
-  };
-
+// Reusable Ditto Quick Link Card component
+const DittoQuickLinkCard = ({ title, subtitle, icon: Icon, cardClass, iconColor, onClick }: any) => {
   return (
     <button 
       onClick={onClick}
-      className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-lg active:scale-[0.98] group bg-white ${themes[theme as keyof typeof themes]}`}
+      className={`relative h-[140px] rounded-[12px] p-5 flex flex-col justify-center border-2 border-transparent transition-all duration-200 hover:border-black overflow-visible text-left group ${cardClass}`}
     >
-      <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-lg bg-white shadow-sm`}>
-          <Icon className={`w-6 h-6 ${iconColors[theme as keyof typeof iconColors]}`} />
-        </div>
-        <div className="text-left">
-          <h4 className="text-sm font-bold text-zinc-900 leading-tight">{title}</h4>
-          <p className="text-[11px] text-zinc-500 font-medium">{subtitle}</p>
-        </div>
+      {/* Absolute Icon Tab */}
+      <div className="absolute top-[-24px] left-5 w-[50px] h-[50px] bg-white rounded-full flex items-center justify-center shadow-[0_4px_10px_rgba(0,0,0,0.1)] z-10 group-hover:shadow-lg transition-shadow">
+        <Icon className={`w-6 h-6 ${iconColor}`} />
       </div>
-      <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
+      
+      {/* Text Content */}
+      <h3 className="text-[#1a1a1a] text-[1.1rem] font-bold mb-[6px] mt-[10px]">
+        {title}
+      </h3>
+      <p className="text-[#5f6368] text-[0.85rem] font-normal leading-snug">
+        {subtitle}
+      </p>
+      
+      {/* Right Chevron */}
+      <ChevronRight className="absolute right-5 top-[55%] -translate-y-1/2 text-[#1a1a1a] w-[18px] h-[18px] opacity-30 group-hover:opacity-100 transition-opacity" />
     </button>
   );
 };
