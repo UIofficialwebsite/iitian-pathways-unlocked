@@ -25,7 +25,6 @@ const Courses = () => {
   const { courses, contentLoading } = useBackend();
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [bannerLoading, setBannerLoading] = useState(true);
-  const [selectedBranch, setSelectedBranch] = useState<string>("all");
 
   useEffect(() => {
     const fetchBanner = async () => {
@@ -53,40 +52,37 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
+  // Extract unique branches from the branch column
+  const availableBranches = useMemo(() => {
+    const branches = Array.from(new Set(courses.map(c => c.branch))).filter(Boolean) as string[];
+    return branches;
+  }, [courses]);
+
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
-    const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
-    return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
+    // Match based on branch instead of exam_category
+    const match = courses.find(c => c.branch?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
+    return match ? { name: match.branch } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
-  // Filter courses based on selected branch
   const branchFilteredCourses = useMemo(() => {
     let filtered = [...courses];
     
-    // First filter by exam category from URL
+    // Filter by branch from URL
     if (examCategory) {
       filtered = filtered.filter(course => 
-        course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
-      );
-    }
-    
-    // Then filter by selected branch tab
-    if (selectedBranch !== 'all') {
-      filtered = filtered.filter(course => 
-        course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === selectedBranch.toLowerCase()
+        course.branch?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
       );
     }
     
     return filtered;
-  }, [courses, examCategory, selectedBranch]);
+  }, [courses, examCategory]);
 
-  // Get featured courses (bestsellers or first 3)
   const featuredCourses = useMemo(() => {
     const bestsellers = branchFilteredCourses.filter(c => c.bestseller);
     return bestsellers.length >= 3 ? bestsellers.slice(0, 3) : branchFilteredCourses.slice(0, 3);
   }, [branchFilteredCourses]);
 
-  // Get power/newly launched courses for second section
   const powerCourses = useMemo(() => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 60);
@@ -96,7 +92,6 @@ const Courses = () => {
       course.course_type?.toLowerCase().includes('power')
     );
     
-    // If not enough power/new courses, use remaining courses
     if (newOrPower.length < 3) {
       const featuredIds = new Set(featuredCourses.map(c => c.id));
       const remaining = branchFilteredCourses.filter(c => !featuredIds.has(c.id));
@@ -106,18 +101,11 @@ const Courses = () => {
     return newOrPower.slice(0, 3);
   }, [branchFilteredCourses, featuredCourses]);
 
-  // Get unique branches for filter
-  const availableBranches = useMemo(() => {
-    const branches = Array.from(new Set(courses.map(c => c.exam_category))).filter(Boolean) as string[];
-    return branches;
-  }, [courses]);
-
   return (
     <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-background relative">
       <NavBar />
       
       <main className="pt-16">
-        {/* TOP SECTION: Geometric Background */}
         <div className="relative overflow-hidden bg-muted/20">
           <div 
             className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-primary/5 to-transparent z-0 pointer-events-none"
@@ -129,7 +117,6 @@ const Courses = () => {
           />
 
           <div className="relative z-10">
-            {/* BANNER SECTION */}
             <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden mb-4">
               {bannerLoading ? (
                 <div className="w-full h-full animate-pulse bg-muted" />
@@ -140,7 +127,6 @@ const Courses = () => {
               )}
             </section>
 
-            {/* BREADCRUMB */}
             <nav className="max-w-6xl mx-auto px-4 md:px-8 py-4">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
                 <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3.5 h-3.5" /></Link>
@@ -155,7 +141,6 @@ const Courses = () => {
               </div>
             </nav>
 
-            {/* HEADER SECTION */}
             <section className="max-w-6xl mx-auto px-4 md:px-8 pb-8">
               <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-3 tracking-tight leading-tight">
                 {currentCategoryData?.name} 2026: Resources & Prep
@@ -166,7 +151,6 @@ const Courses = () => {
               </p>
             </section>
 
-            {/* QUICK LINKS */}
             {examCategory && (
               <section className="max-w-6xl mx-auto px-4 md:px-8 mb-16">
                 <div className="bg-card rounded-2xl border border-border p-8 md:p-10 pt-14 md:pt-14 shadow-sm">
@@ -182,48 +166,47 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* BRANCH FILTER BAR */}
         <div className="w-full bg-background border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
               <button 
-                onClick={() => setSelectedBranch('all')}
+                onClick={() => navigate('/courses/listing/all')}
                 className={`px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 ${
-                  selectedBranch === 'all' 
+                  !examCategory || examCategory === 'all'
                     ? 'border-primary text-primary' 
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                All Batches
+                All Branches
               </button>
-              {availableBranches.map((branch) => (
-                <button
-                  key={branch}
-                  onClick={() => setSelectedBranch(branch.toLowerCase().replace(/[\s_]/g, '-'))}
-                  className={`px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 ${
-                    selectedBranch === branch.toLowerCase().replace(/[\s_]/g, '-') 
-                      ? 'border-primary text-primary' 
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {branch}
-                </button>
-              ))}
+              {availableBranches.map((branch) => {
+                const branchSlug = branch.toLowerCase().replace(/[\s_]/g, '-');
+                return (
+                  <button
+                    key={branch}
+                    onClick={() => navigate(`/courses/listing/${branchSlug}`)} // Navigate on selection
+                    className={`px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 ${
+                      examCategory === branchSlug 
+                        ? 'border-primary text-primary' 
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {branch}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
 
-        {/* COURSES LISTING SECTIONS */}
         <div className="pb-24 bg-background">
           <section className="max-w-6xl mx-auto px-4 md:px-8">
-            
             {contentLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
                 {Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}
               </div>
             ) : (
               <>
-                {/* FEATURED BATCHES SECTION */}
                 {featuredCourses.length > 0 && (
                   <div className="pt-10 mb-16">
                     <div className="flex items-center justify-between mb-6">
@@ -232,13 +215,11 @@ const Courses = () => {
                         <div className="h-0.5 w-12 bg-primary mt-1" />
                       </div>
                     </div>
-                    
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {featuredCourses.map((course, index) => (
                         <CourseCard course={course} index={index} key={course.id} />
                       ))}
                     </div>
-
                     <div className="flex justify-center mt-10">
                       <Button 
                         variant="outline" 
@@ -252,7 +233,6 @@ const Courses = () => {
                   </div>
                 )}
 
-                {/* POWER / NEWLY LAUNCHED SECTION */}
                 {powerCourses.length > 0 && (
                   <div className="mb-16">
                     <div className="flex items-center justify-between mb-6">
@@ -261,13 +241,11 @@ const Courses = () => {
                         <div className="h-0.5 w-12 bg-primary mt-1" />
                       </div>
                     </div>
-                    
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {powerCourses.map((course, index) => (
                         <CourseCard course={course} index={index} key={course.id} />
                       ))}
                     </div>
-
                     <div className="flex justify-center mt-10">
                       <Button 
                         variant="outline" 
@@ -281,12 +259,11 @@ const Courses = () => {
                   </div>
                 )}
 
-                {/* Fallback if no courses */}
                 {featuredCourses.length === 0 && powerCourses.length === 0 && (
                   <div className="text-center py-16">
-                    <p className="text-lg text-muted-foreground">No courses available for this category yet.</p>
+                    <p className="text-lg text-muted-foreground">No courses available for this branch yet.</p>
                     <Button variant="outline" onClick={() => navigate('/courses')} className="mt-4">
-                      Browse All Courses
+                      Browse All Branches
                     </Button>
                   </div>
                 )}
@@ -295,14 +272,12 @@ const Courses = () => {
           </section>
         </div>
       </main>
-
       <Footer />
       <EmailPopup />
     </div>
   );
 };
 
-// Quick Link Tab Component
 const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: {
   title: string;
   desc: string;
