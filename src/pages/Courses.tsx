@@ -73,7 +73,7 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* REDUCED ZOOM BANNER */}
+        {/* BANNER - REDUCED HEIGHT */}
         <section className="w-full h-[140px] md:h-[220px] bg-muted overflow-hidden relative z-10">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
@@ -84,7 +84,7 @@ const Courses = () => {
           )}
         </section>
 
-        {/* HERO AREA WITH GEOMETRIC GLASSY BACKGROUND */}
+        {/* HERO AREA WITH GEOMETRIC BACKGROUND */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-8 md:py-10">
           <div 
             className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none"
@@ -99,7 +99,7 @@ const Courses = () => {
             <nav className="flex items-center gap-2 text-[#666] text-xs mb-4 font-medium">
               <Home className="w-3.5 h-3.5" />
               <ChevronRight className="w-3 h-3" />
-              <span className="uppercase">{currentCategoryData?.name}</span>
+              <span className="uppercase tracking-tight">{currentCategoryData?.name}</span>
             </nav>
 
             <h1 className="text-2xl md:text-4xl font-extrabold text-[#1a1a1a] mb-3 tracking-tight leading-tight">
@@ -110,7 +110,7 @@ const Courses = () => {
               comprehensive PDF banks, and essential exam alerts.
             </p>
 
-            {/* QUICK LINKS SECTION - WHITE BACKGROUND / DITTO DESIGN */}
+            {/* QUICK LINKS SECTION - WHITE BG / FLOATING ICONS */}
             {examCategory && (
               <section className="mt-4 bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-black/5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-14 mt-4">
@@ -136,24 +136,31 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* BRANCH TABS */}
+        {/* BRANCH FILTER BAR - INTER FONT, BLUE TEXT, PIPE SEPARATORS */}
         <div className="w-full bg-white border-y border-border sticky top-16 z-30">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 py-3">
-            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
+            <div className="flex items-center flex-wrap gap-x-3 gap-y-2 text-[#1E40AF] font-sans">
               <button 
                 onClick={() => navigate(`/courses/listing/${examCategory || 'all'}`)}
-                className="px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
+                className="text-sm font-bold whitespace-nowrap hover:underline transition-all"
               >
                 All Batches
               </button>
-              {availableBranches.map((branch) => (
-                <button
-                  key={branch}
-                  onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                  className="px-4 py-1.5 text-xs font-bold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
-                >
-                  {branch}
-                </button>
+              
+              {availableBranches.length > 0 && <span className="text-gray-300">|</span>}
+
+              {availableBranches.map((branch, index) => (
+                <React.Fragment key={branch}>
+                  <button
+                    onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
+                    className="text-sm font-bold whitespace-nowrap hover:underline transition-all"
+                  >
+                    {branch}
+                  </button>
+                  {index < availableBranches.length - 1 && (
+                    <span className="text-gray-300">|</span>
+                  )}
+                </React.Fragment>
               ))}
             </div>
           </div>
@@ -178,11 +185,13 @@ const Courses = () => {
                       </h3>
                       <div className="h-1 w-12 bg-[#1E40AF] mt-2 rounded-full" />
                     </div>
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {branchCourses.map((course, index) => (
                         <CourseCard course={course} index={index} key={course.id} />
                       ))}
                     </div>
+
                     <div className="flex justify-center mt-12">
                       <Button 
                         variant="default" 
@@ -199,6 +208,7 @@ const Courses = () => {
           </section>
         </div>
       </main>
+
       <Footer />
     </div>
   );
