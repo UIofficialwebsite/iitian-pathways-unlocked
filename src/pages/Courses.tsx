@@ -52,22 +52,22 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
-  // STICKING TO ORIGINAL TITLE & DESCRIPTION LOGIC
+  // PRESERVED ORIGINAL TITLE LOGIC (Case Sensitive as per DB)
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
     return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
-  // Filter courses strictly by the exam category chosen in NavBar
+  // Filter base courses by category from NavBar
   const categoryCourses = useMemo(() => {
-    if (!examCategory) return courses;
+    if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
       course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
     );
   }, [courses, examCategory]);
 
-  // Dynamically get relevant branches for the current category ONLY
+  // Get unique branches ONLY for the chosen category
   const availableBranches = useMemo(() => {
     const branches = Array.from(new Set(categoryCourses.map(c => c.branch))).filter(Boolean) as string[];
     return branches;
@@ -110,23 +110,10 @@ const Courses = () => {
                 and the latest exam alerts curated by expert IITians.
               </p>
             </section>
-
-            {examCategory && (
-              <section className="max-w-6xl mx-auto px-4 md:px-8 mb-16">
-                <div className="bg-card rounded-2xl border border-border p-8 md:p-10 pt-14 md:pt-14 shadow-sm">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12">
-                    <QuickLinkTab title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} bgColor="bg-blue-100 dark:bg-blue-900/30" iconColor="text-blue-600 dark:text-blue-400" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="PDF Bank" desc="Access Notes & PDFs" icon={FileText} bgColor="bg-rose-100 dark:bg-rose-900/30" iconColor="text-rose-500 dark:text-rose-400" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Important Dates" desc="Check Exam Schedule" icon={ClipboardList} bgColor="bg-green-100 dark:bg-green-900/30" iconColor="text-green-500 dark:text-green-400" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Latest News" desc="Stay Updated on Exams" icon={BookOpen} bgColor="bg-sky-100 dark:bg-sky-900/30" iconColor="text-sky-500 dark:text-sky-400" onClick={() => navigate('/digital-library')} />
-                  </div>
-                </div>
-              </section>
-            )}
           </div>
         </div>
 
-        {/* RELEVANT BRANCH FILTER BAR */}
+        {/* BRANCH FILTERS BAR */}
         <div className="w-full bg-background border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
@@ -157,7 +144,6 @@ const Courses = () => {
               </div>
             ) : (
               <div className="pt-10">
-                {/* BRANCH SECTIONS */}
                 {availableBranches.map((branch) => {
                   const branchCourses = categoryCourses.filter(c => c.branch === branch).slice(0, 3);
                   if (branchCourses.length === 0) return null;
@@ -166,23 +152,24 @@ const Courses = () => {
                     <div key={branch} className="mb-24">
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          <h3 className="text-xl md:text-2xl font-bold text-foreground">{branch} Batches</h3>
+                          {/* Heading format: Exam category - branch Courses */}
+                          <h3 className="text-xl md:text-2xl font-bold text-foreground">
+                            {currentCategoryData?.name} - {branch} Courses
+                          </h3>
                           <div className="h-1 w-12 bg-primary mt-2" />
                         </div>
                       </div>
                       
-                      {/* 3 Cards in a row */}
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                         {branchCourses.map((course, index) => (
                           <CourseCard course={course} index={index} key={course.id} />
                         ))}
                       </div>
 
-                      {/* Middle-aligned, color-filled rectangular button */}
                       <div className="flex justify-center mt-12">
                         <Button 
                           variant="default" 
-                          className="rounded-lg px-12 py-7 text-lg font-bold shadow-xl bg-primary text-white hover:bg-primary-dark transition-all hover:scale-105"
+                          className="rounded-lg px-12 py-7 text-lg font-bold shadow-xl bg-primary text-white hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
                           onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
                         >
                           View All Courses
@@ -196,13 +183,13 @@ const Courses = () => {
           </section>
         </div>
       </main>
+
       <Footer />
-      <EmailPopup />
     </div>
   );
 };
 
-// QuickLinkTab component logic...
+// QuickLinkTab implementation...
 const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: {
   title: string; desc: string; icon: React.ElementType; bgColor: string; iconColor: string; onClick: () => void;
 }) => (
