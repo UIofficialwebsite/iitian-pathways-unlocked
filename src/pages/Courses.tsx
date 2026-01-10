@@ -17,7 +17,6 @@ import {
   ChevronRight,
   Home,
   Layers,
-  BookOpen,
   GraduationCap,
   Sparkles,
   Atom,
@@ -26,12 +25,13 @@ import {
   Clock
 } from "lucide-react";
 
-// Exam category configuration
+// Exam category configuration with added banner images to avoid hardcoding in JSX
 const EXAM_CONFIG: Record<string, {
   title: string;
   subtitle: string;
   description: string;
   icon: React.ElementType;
+  bannerImage: string;
   gradient: string;
   accentColor: string;
   quickLinks: { title: string; subtitle: string; icon: React.ElementType; theme: 'red' | 'yellow' | 'green' | 'blue'; href: string }[];
@@ -42,6 +42,7 @@ const EXAM_CONFIG: Record<string, {
     subtitle: "Exam Dates, Syllabus & Preparation",
     description: "IIT JEE will be conducted in two sessions by NTA, followed by JEE Advanced organized by IIT Roorkee. The exam covers Class 11 and 12 Physics, Chemistry, and Mathematics. Access comprehensive study materials and expert guidance.",
     icon: Atom,
+    bannerImage: "/lovable-uploads/uibanner.png",
     gradient: "from-orange-600 via-amber-600 to-yellow-500",
     accentColor: "orange",
     quickLinks: [
@@ -57,6 +58,7 @@ const EXAM_CONFIG: Record<string, {
     subtitle: "Exam Dates, Syllabus & Preparation",
     description: "NEET-UG is the single entrance exam for MBBS, BDS, and other medical courses in India. Master Biology, Physics, and Chemistry with our comprehensive preparation programs designed by top educators.",
     icon: Stethoscope,
+    bannerImage: "/lovable-uploads/uibanner.png",
     gradient: "from-rose-600 via-red-600 to-pink-500",
     accentColor: "red",
     quickLinks: [
@@ -72,6 +74,7 @@ const EXAM_CONFIG: Record<string, {
     subtitle: "Data Science & Electronic Systems",
     description: "The IIT Madras BS Degree in Data Science & Electronic Systems offers world-class education accessible to students nationwide. Access curated study materials, notes, and expert guidance for Foundation, Diploma, and Degree levels.",
     icon: GraduationCap,
+    bannerImage: "/lovable-uploads/uibanner.png",
     gradient: "from-emerald-600 via-teal-600 to-cyan-500",
     accentColor: "emerald",
     quickLinks: [
@@ -126,7 +129,7 @@ const Courses = () => {
     
     categoryCourses.forEach(course => {
       const searchText = `${course.title} ${course.level || ''} ${course.branch || ''} ${course.course_type || ''}`.toLowerCase();
-      config.subFilters.forEach(filter => {
+      config.subFilters.forEach((filter: string) => {
         if (searchText.includes(filter.toLowerCase())) {
           available.add(filter);
         }
@@ -174,158 +177,102 @@ const Courses = () => {
     { id: "iitm-bs", ...EXAM_CONFIG["iitm-bs"] },
   ];
 
+  const defaultBanner = "/lovable-uploads/uibanner.png";
+
   return (
     <>
       <NavBar />
       
-      <main className="pt-16 min-h-screen bg-gradient-to-b from-slate-50 to-white">
+      <main className="pt-16 min-h-screen bg-white">
         
-        {/* === HERO BANNER (No gap from navbar) === */}
-        <section 
-          key={examCategory || "all"} 
-          className={`relative w-full min-h-[360px] md:min-h-[440px] overflow-hidden ${
-            isExamSpecificPage 
-              ? `bg-gradient-to-br ${config.gradient}` 
-              : "bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800"
-          }`}
-        >
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }} />
-          </div>
-          
-          {/* Gradient Orbs */}
-          <div className="absolute top-10 right-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 left-10 w-96 h-96 bg-black/10 rounded-full blur-3xl" />
-
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-              
-              {/* Left Side - Title & Description */}
-              <motion.div 
-                key={examCategory || "overview"}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="text-white space-y-6"
-              >
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Badge className="bg-white/20 text-white border-white/30 backdrop-blur-sm hover:bg-white/30">
-                    {isExamSpecificPage ? (
-                      <>
-                        {React.createElement(config.icon, { className: "w-3 h-3 mr-1" })}
-                        {config.title} Portal
-                      </>
-                    ) : (
-                      <>
-                        <Layers className="w-3 h-3 mr-1" />
-                        All Courses
-                      </>
-                    )}
-                  </Badge>
-                  {isExamSpecificPage && (
-                    <Badge className="bg-white/90 text-gray-900 border-white animate-pulse">
-                      <Clock className="w-3 h-3 mr-1" />
-                      Live Classes Available
-                    </Badge>
-                  )}
-                </div>
-
-                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-                  {isExamSpecificPage ? (
-                    <>
-                      {config.title}:
-                      <span className="block text-white/80">{config.subtitle}</span>
-                    </>
-                  ) : (
-                    <>
-                      Master Your Exams
-                      <span className="block text-white/80">With Expert Guidance</span>
-                    </>
-                  )}
-                </h1>
-
-                <p className="text-white/90 text-base md:text-lg leading-relaxed max-w-xl">
-                  {isExamSpecificPage 
-                    ? config.description 
-                    : "Access premium batches, study materials, and expert guidance tailored for your academic success. Choose your exam category to get started."
-                  }
-                </p>
-              </motion.div>
-
-              {/* Right Side - Quick Access Cards (Desktop) */}
-              {isExamSpecificPage && (
-                <motion.div 
-                  key={`quick-${examCategory}`}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="hidden lg:grid grid-cols-2 gap-4"
-                >
-                  {config.quickLinks.map((link, idx) => (
-                    <QuickAccessCard 
-                      key={idx}
-                      title={link.title} 
-                      subtitle={link.subtitle}
-                      icon={link.icon}
-                      theme={link.theme}
-                      onClick={() => navigate(link.href)}
-                    />
-                  ))}
-                </motion.div>
-              )}
-
-              {/* Overview page - Exam category cards */}
-              {!isExamSpecificPage && (
-                <div className="hidden lg:grid grid-cols-1 gap-4">
-                  {examCategories.slice(0, 3).map((cat) => (
-                    <button
-                      key={cat.id}
-                      onClick={() => navigate(`/courses/category/${cat.id}`)}
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-left transition-all duration-300 hover:bg-white/20 hover:scale-[1.02] group flex items-center gap-4"
-                    >
-                      <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                        {React.createElement(cat.icon, { className: "w-6 h-6 text-white" })}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white">{cat.title}</h4>
-                        <p className="text-sm text-white/70">{cat.subtitle}</p>
-                      </div>
-                      <ChevronRight className="w-5 h-5 text-white/50 group-hover:translate-x-1 transition-transform" />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+        {/* === 1. BANNER SECTION (No alt text) === */}
+        <section className="relative w-full h-[240px] md:h-[380px] overflow-hidden">
+          <img 
+            src={isExamSpecificPage ? (config.bannerImage || defaultBanner) : defaultBanner} 
+            alt="" 
+            className="w-full h-full object-cover"
+          />
+          {/* Subtle overlay for gradient categories */}
+          {isExamSpecificPage && (
+            <div className={`absolute inset-0 bg-gradient-to-t from-black/20 to-transparent`} />
+          )}
         </section>
 
-        {/* === MOBILE QUICK ACCESS (Exam-specific only) === */}
+        {/* === 2. WRITING SECTION (Below Banner) === */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          <motion.div 
+            key={examCategory || "overview"}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-6"
+          >
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge variant="outline" className="border-primary text-primary hover:bg-primary/5">
+                {isExamSpecificPage ? (
+                  <>
+                    {React.createElement(config.icon, { className: "w-3 h-3 mr-1" })}
+                    {config.title} Portal
+                  </>
+                ) : (
+                  <>
+                    <Layers className="w-3 h-3 mr-1" />
+                    All Courses
+                  </>
+                )}
+              </Badge>
+              {isExamSpecificPage && (
+                <Badge className="bg-primary text-primary-foreground border-none">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Live Classes Available
+                </Badge>
+              )}
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-gray-900">
+              {isExamSpecificPage ? (
+                <>
+                  {config.title}:
+                  <span className="block text-primary">{config.subtitle}</span>
+                </>
+              ) : (
+                <>
+                  Master Your Exams
+                  <span className="block text-primary">With Expert Guidance</span>
+                </>
+              )}
+            </h1>
+
+            <p className="text-gray-600 text-base md:text-lg leading-relaxed max-w-4xl">
+              {isExamSpecificPage 
+                ? config.description 
+                : "Access premium batches, study materials, and expert guidance tailored for your academic success. Choose your exam category to get started."
+              }
+            </p>
+          </motion.div>
+        </section>
+
+        {/* === 3. QUICK LINKS SECTION === */}
         {isExamSpecificPage && (
-          <section className="lg:hidden -mt-6 relative z-20 px-4 mb-6">
-            <motion.div 
-              key={`mobile-quick-${examCategory}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-4 gap-2"
-            >
-              {config.quickLinks.map((link, idx) => (
-                <QuickAccessCardMobile 
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <h3 className="text-lg font-bold text-gray-900 mb-6">Quick Resources</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {config.quickLinks.map((link: any, idx: number) => (
+                <QuickAccessCard 
                   key={idx}
-                  icon={link.icon} 
-                  title={link.title.split(' ')[0]} 
-                  theme={link.theme} 
-                  onClick={() => navigate(link.href)} 
+                  title={link.title} 
+                  subtitle={link.subtitle}
+                  icon={link.icon}
+                  theme={link.theme}
+                  onClick={() => navigate(link.href)}
                 />
               ))}
-            </motion.div>
+            </div>
           </section>
         )}
 
         {/* === BREADCRUMB NAVIGATION === */}
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-t border-gray-100">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Home className="w-4 h-4" />
@@ -346,8 +293,8 @@ const Courses = () => {
 
         {/* === FEATURED BATCHES SECTION === */}
         {featuredCourses.length > 0 && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-b border-border">
-            <div className="flex items-center gap-3 mb-6">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="flex items-center gap-3 mb-8">
               <div className="p-2 bg-amber-100 rounded-lg">
                 <Sparkles className="w-5 h-5 text-amber-600" />
               </div>
@@ -374,37 +321,35 @@ const Courses = () => {
           </section>
         )}
 
-        {/* === SECONDARY CONTEXTUAL FILTER (Exam-specific only) === */}
+        {/* === SECONDARY CONTEXTUAL FILTER === */}
         <AnimatePresence mode="wait">
           {isExamSpecificPage && availableSubFilters.length > 0 && (
             <motion.section 
               key={`filters-${examCategory}`}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-slate-50/50 rounded-2xl mb-8"
             >
-              <h3 className="text-lg font-semibold text-foreground mb-4">Filter by Level / Target</h3>
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-500 mb-4">Filter by Level / Target</h3>
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedSubFilter(null)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                     !selectedSubFilter 
                       ? "bg-primary text-primary-foreground shadow-md" 
-                      : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                      : "bg-white border border-gray-200 text-gray-700 hover:border-primary/50"
                   }`}
                 >
-                  All
+                  All Batches
                 </button>
                 {availableSubFilters.map((filter) => (
                   <button
                     key={filter}
                     onClick={() => setSelectedSubFilter(prev => prev === filter ? null : filter)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                       selectedSubFilter === filter 
                         ? "bg-primary text-primary-foreground shadow-md" 
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                        : "bg-white border border-gray-200 text-gray-700 hover:border-primary/50"
                     }`}
                   >
                     {filter}
@@ -427,13 +372,13 @@ const Courses = () => {
                 key={groupName} 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="mb-12"
+                className="mb-16"
               >
                 {Object.keys(groupedCourses).length > 1 && (
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="h-8 w-1 bg-primary rounded-full" />
-                    <h3 className="text-xl font-bold text-foreground">{groupName}</h3>
-                    <Badge variant="secondary">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="h-8 w-1.5 bg-primary rounded-full" />
+                    <h3 className="text-2xl font-bold text-foreground">{groupName}</h3>
+                    <Badge variant="secondary" className="font-semibold">
                       {groupCourses.length} {groupCourses.length === 1 ? 'Course' : 'Courses'}
                     </Badge>
                   </div>
@@ -446,12 +391,12 @@ const Courses = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="py-16 text-center bg-card rounded-2xl border border-dashed border-border">
-                    <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
-                      <Layers className="w-8 h-8 text-muted-foreground" />
+                  <div className="py-16 text-center bg-white rounded-2xl border-2 border-dashed border-gray-100">
+                    <div className="mx-auto w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                      <Layers className="w-8 h-8 text-gray-300" />
                     </div>
-                    <h3 className="text-lg font-medium text-foreground">No courses found</h3>
-                    <p className="text-muted-foreground mt-1">Try adjusting your filters or check back later.</p>
+                    <h3 className="text-lg font-medium text-gray-900">No courses found</h3>
+                    <p className="text-gray-500 mt-1">Try adjusting your filters or check back later.</p>
                   </div>
                 )}
               </motion.div>
@@ -461,23 +406,23 @@ const Courses = () => {
 
         {/* === EXAM CATEGORY CARDS (Overview page only) === */}
         {!isExamSpecificPage && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <h2 className="text-2xl font-bold text-foreground mb-8">Browse by Exam Category</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 border-t border-gray-100">
+            <h2 className="text-2xl font-bold text-gray-900 mb-10 text-center">Browse by Exam Category</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {examCategories.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => navigate(`/courses/category/${cat.id}`)}
-                  className={`group relative overflow-hidden rounded-2xl p-6 text-left transition-all duration-300 hover:scale-[1.02] hover:shadow-xl bg-gradient-to-br ${cat.gradient}`}
+                  className={`group relative overflow-hidden rounded-3xl p-8 text-left transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br ${cat.gradient}`}
                 >
-                  <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-2xl" />
+                  <div className="absolute top-4 right-4 w-24 h-24 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-colors" />
                   <div className="relative z-10">
-                    <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-                      {React.createElement(cat.icon, { className: "w-7 h-7 text-white" })}
+                    <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mb-6 border border-white/30">
+                      {React.createElement(cat.icon, { className: "w-8 h-8 text-white" })}
                     </div>
-                    <h3 className="text-xl font-bold text-white mb-2">{cat.title}</h3>
-                    <p className="text-white/80 text-sm mb-4">{cat.subtitle}</p>
-                    <div className="flex items-center gap-2 text-white/90 text-sm font-medium">
+                    <h3 className="text-2xl font-bold text-white mb-3">{cat.title}</h3>
+                    <p className="text-white/80 text-sm mb-6 line-clamp-2">{cat.subtitle}</p>
+                    <div className="flex items-center gap-2 text-white font-semibold">
                       <span>Explore Courses</span>
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </div>
@@ -489,14 +434,15 @@ const Courses = () => {
         )}
 
         {/* === TESTIMONIALS === */}
-        <section className="py-16 bg-gradient-to-b from-background to-muted/30">
+        <section className="py-20 bg-slate-50 border-t border-gray-100">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl font-extrabold tracking-tight text-gray-900 md:text-4xl">
                 Student Success Stories
               </h2>
-              <p className="mt-2 text-lg text-muted-foreground">
-                Hear from students who achieved their goals with us.
+              <div className="w-20 h-1.5 bg-primary mx-auto mt-4 rounded-full" />
+              <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+                Join thousands of students who have transformed their preparation with our expert-led programs.
               </p>
             </div>
             <StaggerTestimonials />
@@ -511,7 +457,7 @@ const Courses = () => {
   );
 };
 
-// === Quick Access Card (Desktop) ===
+// === Quick Access Card Component ===
 interface QuickAccessCardProps {
   title: string;
   subtitle: string;
@@ -522,10 +468,10 @@ interface QuickAccessCardProps {
 
 const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickAccessCardProps) => {
   const themes = {
-    red: { bg: "bg-red-50/90", border: "border-red-200/50", iconColor: "text-red-500", iconBg: "bg-red-100" },
-    yellow: { bg: "bg-amber-50/90", border: "border-amber-200/50", iconColor: "text-amber-500", iconBg: "bg-amber-100" },
-    green: { bg: "bg-emerald-50/90", border: "border-emerald-200/50", iconColor: "text-emerald-500", iconBg: "bg-emerald-100" },
-    blue: { bg: "bg-blue-50/90", border: "border-blue-200/50", iconColor: "text-blue-500", iconBg: "bg-blue-100" },
+    red: { bg: "bg-red-50", border: "border-red-100", iconColor: "text-red-600", iconBg: "bg-red-100/50" },
+    yellow: { bg: "bg-amber-50", border: "border-amber-100", iconColor: "text-amber-600", iconBg: "bg-amber-100/50" },
+    green: { bg: "bg-emerald-50", border: "border-emerald-100", iconColor: "text-emerald-600", iconBg: "bg-emerald-100/50" },
+    blue: { bg: "bg-blue-50", border: "border-blue-100", iconColor: "text-blue-600", iconBg: "bg-blue-100/50" },
   };
 
   const t = themes[theme];
@@ -533,47 +479,21 @@ const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickA
   return (
     <button 
       onClick={onClick}
-      className={`${t.bg} ${t.border} backdrop-blur-sm border rounded-xl p-4 text-left transition-all duration-300 hover:scale-105 hover:shadow-lg group`}
+      className={`${t.bg} ${t.border} border-2 rounded-2xl p-4 text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-1 group bg-white`}
     >
-      <div className="flex items-center gap-3">
-        <div className={`${t.iconBg} p-2 rounded-lg`}>
+      <div className="flex flex-col h-full">
+        <div className={`${t.iconBg} p-2.5 rounded-xl w-fit mb-3 transition-transform group-hover:scale-110`}>
           <Icon className={`w-5 h-5 ${t.iconColor}`} />
         </div>
         <div>
-          <h4 className="font-semibold text-gray-900 text-sm">{title}</h4>
-          <p className="text-xs text-gray-600">{subtitle}</p>
+          <h4 className="font-bold text-gray-900 text-sm mb-1">{title}</h4>
+          <p className="text-[10px] md:text-xs text-gray-500 font-medium leading-tight">{subtitle}</p>
         </div>
-        <ChevronRight className="w-4 h-4 text-gray-400 ml-auto group-hover:translate-x-1 transition-transform" />
+        <div className="mt-4 flex items-center text-[10px] font-bold uppercase tracking-wider text-gray-400 group-hover:text-primary transition-colors">
+          <span>Access</span>
+          <ChevronRight className="w-3 h-3 ml-1 group-hover:translate-x-0.5 transition-transform" />
+        </div>
       </div>
-    </button>
-  );
-};
-
-// === Quick Access Card (Mobile) ===
-interface QuickAccessCardMobileProps {
-  title: string;
-  icon: React.ElementType;
-  theme: 'red' | 'yellow' | 'green' | 'blue';
-  onClick: () => void;
-}
-
-const QuickAccessCardMobile = ({ title, icon: Icon, theme, onClick }: QuickAccessCardMobileProps) => {
-  const themes = {
-    red: { bg: "bg-red-50", iconColor: "text-red-500" },
-    yellow: { bg: "bg-amber-50", iconColor: "text-amber-500" },
-    green: { bg: "bg-emerald-50", iconColor: "text-emerald-500" },
-    blue: { bg: "bg-blue-50", iconColor: "text-blue-500" },
-  };
-
-  const t = themes[theme];
-
-  return (
-    <button 
-      onClick={onClick}
-      className={`${t.bg} rounded-xl p-3 flex flex-col items-center gap-1 shadow-sm hover:shadow-md transition-all text-center`}
-    >
-      <Icon className={`w-5 h-5 ${t.iconColor}`} />
-      <span className="text-xs font-medium text-gray-700">{title}</span>
     </button>
   );
 };
