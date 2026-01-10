@@ -26,7 +26,7 @@ const CourseCard = ({ course, index }: CourseCardProps) => {
       className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-colors duration-200 hover:border-[#1E3A8A] font-['Public_Sans',sans-serif]"
       style={{ borderRadius: '6px' }}
     >
-      {/* Banner - Zoomed out height */}
+      {/* Banner */}
       <div 
         className="w-full h-[180px] bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"
         style={{ borderRadius: '6px' }}
@@ -42,18 +42,19 @@ const CourseCard = ({ course, index }: CourseCardProps) => {
 
       {/* Header Section */}
       <div className="flex items-start gap-2 mb-[18px] px-1">
-        <h2 className="text-[20px] font-[700] text-[#1a1a1a] flex-1 leading-[1.2] line-clamp-2 h-[48px]">
+        {/* ONLY TITLE IS BOLD */}
+        <h2 className="text-[20px] font-bold text-[#1a1a1a] flex-1 leading-[1.2] line-clamp-2 h-[48px]">
           {course.title}
         </h2>
         
         <div className="flex flex-col gap-1.5 shrink-0 mt-1">
           {course.bestseller && (
-            <span className="bg-[#f59e0b] text-white text-[10px] font-[700] px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
+            <span className="bg-[#f59e0b] text-white text-[10px] font-normal px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
               NEW
             </span>
           )}
           {course.language && (
-            <span className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-[700] px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-normal px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
               {course.language}
             </span>
           )}
@@ -67,55 +68,55 @@ const CourseCard = ({ course, index }: CourseCardProps) => {
         </div>
       </div>
 
-      {/* Info Rows */}
+      {/* Info Rows - Non bold */}
       <div className="mb-[22px] px-1 space-y-2">
-        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px]">
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
           <GraduationCap className="w-4 h-4" />
-          <span>For <b className="text-[#1a1a1a] font-[700] uppercase">{course.exam_category}</b> Aspirants</span>
+          <span>For <span className="text-[#1a1a1a] font-normal uppercase">{course.exam_category}</span> Aspirants</span>
         </div>
-        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px]">
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
           <Clock className="w-4 h-4" />
-          <span>Starts on <b className="text-[#1a1a1a] font-[700]">{formatDate(course.start_date)}</b> Ends on <b className="text-[#1a1a1a] font-[700]">{formatDate(course.end_date)}</b></span>
+          <span>Starts on <span className="text-[#1a1a1a]">{formatDate(course.start_date)}</span> Ends on <span className="text-[#1a1a1a]">{formatDate(course.end_date)}</span></span>
         </div>
       </div>
 
-      {/* Pricing Section */}
+      {/* Pricing Section - Non bold except price figure */}
       <div className="flex items-end justify-between mb-[20px] px-1">
         <div className="price-group">
           <div className="flex items-center">
-            <span className="text-[24px] font-[800] text-[#1E3A8A]">
+            <span className="text-[24px] font-bold text-[#1E3A8A]">
               ₹{course.discounted_price?.toLocaleString() || course.price?.toLocaleString()}
             </span>
             {course.discounted_price && (
-              <span className="text-[14px] text-[#94a3b8] line-through font-[500] ml-1.5">
+              <span className="text-[14px] text-[#94a3b8] line-through font-normal ml-1.5">
                 ₹{course.price?.toLocaleString()}
               </span>
             )}
           </div>
-          <span className="block text-[10px] font-[700] text-[#94a3b8] mt-[3px] uppercase">
+          <span className="block text-[10px] font-normal text-[#94a3b8] mt-[3px] uppercase">
             (FOR FULL BATCH)
           </span>
         </div>
 
         {discountPercent > 0 && (
-          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-[12px] py-[8px] text-[11px] font-[800] flex items-center gap-[6px] shrink-0" style={{ borderRadius: '6px' }}>
+          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-[12px] py-[8px] text-[11px] font-normal flex items-center gap-[6px] shrink-0" style={{ borderRadius: '6px' }}>
             <Tag className="w-[13px] h-[13px]" />
             Discount of {discountPercent}% applied
           </div>
         )}
       </div>
 
-      {/* Action Buttons */}
+      {/* Action Buttons - Non bold text */}
       <div className="flex gap-[12px]">
         <Link 
           to={`/course/${course.id}`} 
-          className="flex-1 border-[2px] border-[#1E3A8A] text-[#1E3A8A] bg-white h-[45px] flex items-center justify-center text-[13px] font-[800] uppercase transition-all hover:bg-blue-50"
+          className="flex-1 border-[2px] border-[#1E3A8A] text-[#1E3A8A] bg-white h-[45px] flex items-center justify-center text-[13px] font-normal uppercase transition-all hover:bg-blue-50"
           style={{ borderRadius: '8px' }}
         >
           Explore
         </Link>
         <button 
-          className="flex-1 bg-[#1E3A8A] text-white border-none h-[45px] flex items-center justify-center text-[13px] font-[800] uppercase transition-all hover:opacity-90"
+          className="flex-1 bg-[#1E3A8A] text-white border-none h-[45px] flex items-center justify-center text-[13px] font-normal uppercase transition-all hover:opacity-90"
           style={{ borderRadius: '8px' }}
         >
           Buy Now
