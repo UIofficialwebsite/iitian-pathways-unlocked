@@ -52,14 +52,14 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
-  // PRESERVED ORIGINAL TITLE LOGIC (Case Sensitive as per DB)
+  // Restored original Title/Category Logic
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
     return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
-  // Filter base courses by category from NavBar
+  // Filter courses by the category selected in the NavBar
   const categoryCourses = useMemo(() => {
     if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
@@ -67,7 +67,7 @@ const Courses = () => {
     );
   }, [courses, examCategory]);
 
-  // Get unique branches ONLY for the chosen category
+  // Extract unique branches for the current category
   const availableBranches = useMemo(() => {
     const branches = Array.from(new Set(categoryCourses.map(c => c.branch))).filter(Boolean) as string[];
     return branches;
@@ -78,10 +78,8 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
+        {/* HEADER & BANNER SECTION */}
         <div className="relative overflow-hidden bg-muted/20">
-          <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-primary/5 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
-          <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-primary/10 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
-
           <div className="relative z-10">
             <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden mb-4">
               {bannerLoading ? <div className="w-full h-full animate-pulse bg-muted" /> : bannerImage ? <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-r from-muted to-muted/80" />}
@@ -110,10 +108,24 @@ const Courses = () => {
                 and the latest exam alerts curated by expert IITians.
               </p>
             </section>
+
+            {/* QUICK LINKS SECTION - Updated with Blue Background */}
+            {examCategory && (
+              <section className="max-w-6xl mx-auto px-4 md:px-8 mb-16">
+                <div className="bg-[#1E40AF] rounded-2xl border border-blue-800 p-8 md:p-10 pt-14 md:pt-14 shadow-xl">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12">
+                    <QuickLinkTab title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="PDF Bank" desc="Access Notes & PDFs" icon={FileText} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="Important Dates" desc="Check Exam Schedule" icon={ClipboardList} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
+                    <QuickLinkTab title="Latest News" desc="Stay Updated on Exams" icon={BookOpen} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
         </div>
 
-        {/* BRANCH FILTERS BAR */}
+        {/* RELEVANT BRANCH FILTER TABS */}
         <div className="w-full bg-background border-b border-border">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
@@ -136,6 +148,7 @@ const Courses = () => {
           </div>
         </div>
 
+        {/* DYNAMIC BRANCH SECTIONS */}
         <div className="pb-24 bg-background">
           <section className="max-w-6xl mx-auto px-4 md:px-8">
             {contentLoading ? (
@@ -145,6 +158,7 @@ const Courses = () => {
             ) : (
               <div className="pt-10">
                 {availableBranches.map((branch) => {
+                  // Only show 3 cards per branch in this overview
                   const branchCourses = categoryCourses.filter(c => c.branch === branch).slice(0, 3);
                   if (branchCourses.length === 0) return null;
                   
@@ -152,7 +166,7 @@ const Courses = () => {
                     <div key={branch} className="mb-24">
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          {/* Heading format: Exam category - branch Courses */}
+                          {/* Heading: Exam category - branch Courses */}
                           <h3 className="text-xl md:text-2xl font-bold text-foreground">
                             {currentCategoryData?.name} - {branch} Courses
                           </h3>
@@ -166,10 +180,11 @@ const Courses = () => {
                         ))}
                       </div>
 
+                      {/* Middle-aligned rectangular color-filled button */}
                       <div className="flex justify-center mt-12">
                         <Button 
                           variant="default" 
-                          className="rounded-lg px-12 py-7 text-lg font-bold shadow-xl bg-primary text-white hover:bg-primary/90 transition-all hover:scale-105 active:scale-95"
+                          className="rounded-md px-12 py-7 text-lg font-bold shadow-lg bg-royal hover:bg-royal-dark text-white transition-all hover:scale-105"
                           onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
                         >
                           View All Courses
@@ -185,23 +200,27 @@ const Courses = () => {
       </main>
 
       <Footer />
+      <EmailPopup />
     </div>
   );
 };
 
-// QuickLinkTab implementation...
+// QuickLinkTab with restored logic
 const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: {
   title: string; desc: string; icon: React.ElementType; bgColor: string; iconColor: string; onClick: () => void;
 }) => (
-  <button onClick={onClick} className={`group relative h-[110px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-transparent transition-all hover:border-primary text-left ${bgColor}`}>
-    <div className="absolute -top-6 left-5 w-12 h-12 bg-card rounded-full flex items-center justify-center shadow-md z-10 border border-border">
-      <Icon className={`w-5 h-5 ${iconColor}`} />
+  <button 
+    onClick={onClick} 
+    className={`group relative h-[110px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-white/20 transition-all hover:border-white text-left ${bgColor}`}
+  >
+    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10 border border-blue-200">
+      <Icon className={`w-5 h-5 text-blue-800`} />
     </div>
     <div className="mt-2">
-      <h3 className="text-sm md:text-base font-bold text-foreground mb-0.5 tracking-tight">{title}</h3>
-      <p className="text-xs text-muted-foreground font-medium leading-tight">{desc}</p>
+      <h3 className="text-sm md:text-base font-bold text-white mb-0.5 tracking-tight">{title}</h3>
+      <p className="text-xs text-white/80 font-medium leading-tight">{desc}</p>
     </div>
-    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
   </button>
 );
 
