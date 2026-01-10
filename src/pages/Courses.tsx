@@ -12,6 +12,7 @@ import {
   FileText, 
   ChevronRight,
   Home,
+  Monitor,
   LayoutList,
   BookOpen,
   ClipboardList
@@ -74,93 +75,77 @@ const Courses = () => {
     return Array.from(filters).sort();
   }, [categoryCourses]);
 
-  const filteredCourses = useMemo(() => {
-    if (!selectedSubFilter) return categoryCourses;
-    return categoryCourses.filter(course => 
+  const groupedCourses = useMemo(() => {
+    const filtered = !selectedSubFilter ? categoryCourses : categoryCourses.filter(course => 
       course.level === selectedSubFilter || course.course_type === selectedSubFilter
     );
+    return { "Available Batches": filtered };
   }, [categoryCourses, selectedSubFilter]);
 
-  const groupedCourses = useMemo(() => {
-    if (selectedSubFilter || !examCategory) return { "Available Batches": filteredCourses };
-    const groups: Record<string, typeof filteredCourses> = {};
-    filteredCourses.forEach(course => {
-      const type = course.course_type || "General";
-      if (!groups[type]) groups[type] = [];
-      groups[type].push(course);
-    });
-    return groups;
-  }, [filteredCourses, selectedSubFilter, examCategory]);
-
   return (
-    <div className="bg-white min-h-screen font-sans text-zinc-800 w-full overflow-x-hidden">
+    <div className="bg-[#f0f2f5] min-h-screen font-sans text-zinc-800 w-full overflow-x-hidden">
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION */}
-        <section className="w-full h-[160px] md:h-[280px] bg-zinc-100 overflow-hidden">
+        {/* Banner Section */}
+        <section className="w-full h-[160px] md:h-[260px] bg-zinc-200 overflow-hidden">
           {bannerLoading ? (
-            <div className="w-full h-full animate-pulse bg-zinc-200" />
+            <div className="w-full h-full animate-pulse bg-zinc-300" />
           ) : bannerImage ? (
             <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-r from-zinc-200 to-zinc-300" />
+            <div className="w-full h-full bg-gradient-to-r from-zinc-300 to-zinc-400" />
           )}
         </section>
 
-        {/* BREADCRUMB - Smaller font for zoom */}
-        <nav className="max-w-7xl mx-auto px-4 md:px-8 py-3">
-          <div className="flex items-center gap-1 text-[11px] text-zinc-400 font-medium">
+        {/* Breadcrumb & Title Section */}
+        <div className="max-w-7xl mx-auto px-4 md:px-8 pt-6 pb-2">
+           <nav className="flex items-center gap-1 text-[11px] text-zinc-500 mb-4 font-medium uppercase">
             <Link to="/" className="hover:text-primary"><Home className="w-3 h-3" /></Link>
             <ChevronRight className="w-3.5 h-3.5 opacity-40" />
             <Link to="/courses" className="hover:text-primary">Courses</Link>
             {examCategory && (
               <>
                 <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                <span className="font-semibold text-zinc-800 uppercase">{currentCategoryData?.name}</span>
+                <span className="font-bold text-zinc-900">{currentCategoryData?.name}</span>
               </>
             )}
-          </div>
-        </nav>
-
-        {/* HEADER SECTION - Reduced sizes */}
-        <section className="max-w-7xl mx-auto px-4 md:px-8 pb-4">
-          <h1 className="text-xl md:text-2xl font-bold text-zinc-900 mb-1.5 uppercase tracking-tight font-sans">
-            {examCategory ? `${currentCategoryData?.name} 2026 Preparation` : "All Courses"}
+          </nav>
+          <h1 className="text-xl md:text-2xl font-bold text-zinc-900 mb-1 uppercase tracking-tight font-sans">
+            {examCategory ? `${currentCategoryData?.name} 2026: Preparation Resources` : "All Premium Courses"}
           </h1>
-          <p className="text-zinc-500 text-[12px] md:text-xs leading-relaxed max-w-3xl font-medium font-sans">
-            Comprehensive resources and expert guidance to help you succeed in your competitive exams.
+          <p className="text-zinc-500 text-[12px] md:text-xs leading-relaxed max-w-2xl font-medium font-sans">
+            Explore our curated resources, batches, and study material designed by expert IITians.
           </p>
-        </section>
+        </div>
 
-        {/* QUICK LINKS SECTION: White Block with Blue Background Effect */}
+        {/* QUICK LINKS SECTION: White Block with Blue Background Glow */}
         {examCategory && (
-          <section className="relative py-8 md:py-12 overflow-hidden">
-            {/* Background Blue Effect (Right Side) */}
-            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-blue-500/5 blur-[100px] pointer-events-none rounded-full" />
+          <section className="relative py-12 overflow-hidden">
+            {/* Background Blue Glow (Right Side) */}
+            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-blue-600/5 blur-[120px] pointer-events-none rounded-full" />
             
             <div className="max-w-7xl mx-auto px-4 md:px-8 relative z-10">
-              {/* White Section Block */}
-              <div className="bg-white rounded-2xl border border-zinc-100 p-6 md:p-8 shadow-sm">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+              <div className="bg-white rounded-xl p-8 md:p-10 shadow-sm border border-zinc-100">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12 md:gap-6">
                   <QuickLinkCard 
-                    title="Syllabus" desc="Detailed Course Roadmap" 
-                    icon={LayoutList} iconColor="text-blue-600" 
+                    title="Blog" desc="Read Our Latest Blogs" 
+                    icon={Monitor} bgColor="bg-[#e8efff]" iconColor="text-[#4a6cf7]" 
                     onClick={() => navigate('/digital-library')} 
                   />
                   <QuickLinkCard 
-                    title="PDF Bank" desc="Study Materials & Notes" 
-                    icon={FileText} iconColor="text-rose-500" 
+                    title="PDF Bank" desc="Access PDF Bank" 
+                    icon={FileText} bgColor="bg-[#feeceb]" iconColor="text-[#f43f5e]" 
                     onClick={() => navigate('/digital-library')} 
                   />
                   <QuickLinkCard 
-                    title="Important Dates" desc="Upcoming Exam Alerts" 
-                    icon={ClipboardList} iconColor="text-emerald-500" 
+                    title="Test Series" desc="Explore JEE 2026 Test Series" 
+                    icon={ClipboardList} bgColor="bg-[#e1f7e7]" iconColor="text-[#4a6cf7]" 
                     onClick={() => navigate('/digital-library')} 
                   />
                   <QuickLinkCard 
-                    title="News" desc="Latest Exam Updates" 
-                    icon={BookOpen} iconColor="text-sky-500" 
+                    title="Books" desc="Find Preparation Books" 
+                    icon={BookOpen} bgColor="bg-[#e0f0ff]" iconColor="text-[#f43f5e]" 
                     onClick={() => navigate('/digital-library')} 
                   />
                 </div>
@@ -169,8 +154,8 @@ const Courses = () => {
           </section>
         )}
 
-        {/* COURSES LISTING */}
-        <div className="bg-white pb-20">
+        {/* Courses Listing */}
+        <div className="bg-white pb-20 pt-10">
           <section className="max-w-7xl mx-auto px-4 md:px-8">
             {availableSubFilters.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-8 py-3 sticky top-[64px] bg-white/95 backdrop-blur-sm z-20 border-b border-zinc-100">
@@ -203,8 +188,8 @@ const Courses = () => {
             ) : (
               Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
                 <div key={groupName} className="mb-10">
-                  <h3 className="text-base font-bold text-zinc-900 mb-6 border-l-4 border-primary pl-3">{groupName}</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <h3 className="text-sm font-bold text-zinc-900 mb-6 uppercase tracking-widest opacity-60">{groupName}</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {groupCourses.map((course, index) => (
                       <CourseCard course={course} index={index} key={course.id} />
                     ))}
@@ -222,23 +207,23 @@ const Courses = () => {
   );
 };
 
-// Updated Tab/Card: White background with Black hover border
-const QuickLinkCard = ({ title, desc, icon: Icon, iconColor, onClick }: any) => (
+// Design for Quick Link Cards based on your provided HTML structure
+const QuickLinkCard = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: any) => (
   <button 
     onClick={onClick}
-    className="group relative h-[90px] md:h-[100px] bg-white rounded-xl p-4 flex flex-col justify-center border border-zinc-100 transition-all hover:border-black text-left"
+    className={`group relative h-[110px] md:h-[120px] rounded-xl p-5 flex flex-col justify-center border-1.5 border-transparent transition-all hover:border-black text-left ${bgColor}`}
   >
-    {/* Clean Icon Background */}
-    <div className="absolute -top-[18px] left-[15px] w-[36px] h-[36px] bg-white rounded-full flex items-center justify-center shadow-sm z-10 border border-zinc-100">
-      <Icon className={`w-3.5 h-3.5 ${iconColor}`} />
+    {/* Overlapping Circular Icon */}
+    <div className="absolute -top-[23px] left-[15px] w-[46px] h-[46px] bg-white rounded-full flex items-center justify-center shadow-[0_3px_8px_rgba(0,0,0,0.1)] z-10 border border-zinc-50">
+      <Icon className={`w-5 h-5 ${iconColor}`} />
     </div>
     
-    <div className="mt-1">
-      <h3 className="text-xs md:text-sm font-bold text-zinc-900 mb-0.5 font-sans uppercase tracking-tight">{title}</h3>
+    <div className="mt-2">
+      <h3 className="text-sm md:text-base font-bold text-zinc-900 mb-0.5 font-sans uppercase tracking-tight">{title}</h3>
       <p className="text-[10px] md:text-[11px] text-zinc-500 font-medium font-sans leading-tight">{desc}</p>
     </div>
     
-    <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-300 group-hover:text-black transition-colors" />
+    <ChevronRight className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-hover:text-black transition-colors" />
   </button>
 );
 
