@@ -25,6 +25,7 @@ const Courses = () => {
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   const [bannerLoading, setBannerLoading] = useState(true);
 
+  // Fetch Banner Logic
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
@@ -51,12 +52,14 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
+  // Title Logic based on DB Category
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
     return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
+  // Filter courses strictly by the category selected in NavBar
   const categoryCourses = useMemo(() => {
     if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
@@ -64,6 +67,7 @@ const Courses = () => {
     );
   }, [courses, examCategory]);
 
+  // Dynamically get branches relevant to the current category ONLY
   const availableBranches = useMemo(() => {
     return Array.from(new Set(categoryCourses.map(c => c.branch))).filter(Boolean) as string[];
   }, [categoryCourses]);
@@ -73,7 +77,7 @@ const Courses = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER - REDUCED HEIGHT */}
+        {/* Banner Section - Reduced Zoom */}
         <section className="w-full h-[140px] md:h-[220px] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
@@ -84,7 +88,7 @@ const Courses = () => {
           )}
         </section>
 
-        {/* HERO AREA WITH GLASSY GEOMETRIC BACKGROUND */}
+        {/* Hero Section with Geometric Glassy Background */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-8 md:py-10">
           <div 
             className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none"
@@ -96,21 +100,21 @@ const Courses = () => {
           />
 
           <div className="relative z-10 w-full max-w-6xl">
-            <nav className="flex items-center gap-2 text-[#666] text-xs mb-4 font-medium">
+            <nav className="flex items-center gap-2 text-[#666] text-xs mb-4 font-medium font-sans">
               <Home className="w-3.5 h-3.5" />
               <ChevronRight className="w-3 h-3" />
               <span className="uppercase tracking-tight">{currentCategoryData?.name}</span>
             </nav>
 
-            <h1 className="text-2xl md:text-4xl font-extrabold text-[#1a1a1a] mb-3 tracking-tight leading-tight">
+            <h1 className="text-2xl md:text-4xl font-extrabold text-[#1a1a1a] mb-3 tracking-tight leading-tight font-sans">
               {currentCategoryData?.name} 2026: Exam Dates, Syllabus, Pattern & Eligibility
             </h1>
-            <p className="text-[#555] text-sm md:text-base leading-relaxed max-w-4xl mb-10">
+            <p className="text-[#555] text-sm md:text-base leading-relaxed max-w-4xl mb-10 font-sans">
               Access specialized study resources curated by expert IITians. Our hub provides the most updated syllabus, 
               comprehensive PDF banks, and essential exam alerts.
             </p>
 
-            {/* QUICK LINKS SECTION - WHITE BG / DITTO DESIGN */}
+            {/* Quick Links Section - White Background / Ditto Design */}
             {examCategory && (
               <section className="mt-4 bg-white p-8 md:p-10 rounded-2xl shadow-sm border border-black/5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-14 mt-4">
@@ -136,15 +140,16 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* BRANCH FILTER BAR - INTER FONT, BLUE TEXT, NON-BOLD, PIPE SEPARATORS */}
+        {/* Branch Filter Bar - Inter Font, Blue Text, Non-Bold, Pipe Separators, Hover Distance */}
         <div className="w-full bg-white border-y border-border sticky top-16 z-30">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-            <div className="flex items-center flex-wrap gap-x-3 gap-y-2 text-[#1E40AF] font-sans">
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-[#1E40AF] font-sans">
               <button 
                 onClick={() => navigate(`/courses/listing/${examCategory || 'all'}`)}
-                className="text-sm font-normal whitespace-nowrap hover:underline transition-all"
+                className="relative text-sm font-normal whitespace-nowrap group pb-1.5"
               >
                 All Batches
+                <span className="absolute left-0 bottom-0 w-full h-[2px] bg-[#1E40AF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out origin-left" />
               </button>
               
               {availableBranches.length > 0 && <span className="text-gray-300 font-light px-1">|</span>}
@@ -153,9 +158,10 @@ const Courses = () => {
                 <React.Fragment key={branch}>
                   <button
                     onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                    className="text-sm font-normal whitespace-nowrap hover:underline transition-all"
+                    className="relative text-sm font-normal whitespace-nowrap group pb-1.5"
                   >
                     {branch}
+                    <span className="absolute left-0 bottom-0 w-full h-[2px] bg-[#1E40AF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-200 ease-out origin-left" />
                   </button>
                   {index < availableBranches.length - 1 && (
                     <span className="text-gray-300 font-light px-1">|</span>
@@ -166,7 +172,7 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* DYNAMIC BRANCH SECTIONS */}
+        {/* Dynamic Branch Sections */}
         <div className="pb-24 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-12">
             {contentLoading ? (
@@ -180,7 +186,8 @@ const Courses = () => {
                 return (
                   <div key={branch} className="mb-20">
                     <div className="mb-8">
-                      <h3 className="text-xl md:text-2xl font-black text-[#1a1a1a]">
+                      {/* Batch Category Title: Inter font, No underline */}
+                      <h3 className="text-xl md:text-2xl font-black text-[#1a1a1a] font-sans no-underline">
                         {currentCategoryData?.name} - {branch} Courses
                       </h3>
                       <div className="h-1 w-12 bg-[#1E40AF] mt-2 rounded-full" />
@@ -195,7 +202,7 @@ const Courses = () => {
                     <div className="flex justify-center mt-12">
                       <Button 
                         variant="default" 
-                        className="rounded-md px-12 py-6 text-base font-bold shadow-lg bg-[#1E40AF] text-white hover:bg-[#1E3A8A] transition-all hover:scale-105"
+                        className="rounded-md px-12 py-6 text-base font-bold shadow-lg bg-[#1E40AF] text-white hover:bg-[#1E3A8A] transition-all hover:scale-105 active:scale-95 border-none"
                         onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
                       >
                         View All Courses
@@ -210,17 +217,18 @@ const Courses = () => {
       </main>
 
       <Footer />
+      <EmailPopup />
     </div>
   );
 };
 
-// QUICK LINK CARD COMPONENT (MATCHES HTML DESIGN)
+// QuickLink Card Helper
 const QuickLinkCard = ({ title, desc, icon: Icon, cardColor, iconColor, onClick }: {
   title: string; desc: string; icon: React.ElementType; cardColor: string; iconColor: string; onClick: () => void;
 }) => (
   <button 
     onClick={onClick}
-    className={`group relative h-[115px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left ${cardColor}`}
+    className={`group relative h-[115px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left font-sans ${cardColor}`}
   >
     <div className="absolute -top-6 left-5 w-11 h-11 bg-white rounded-full flex items-center justify-center shadow-md z-10 border border-black/5">
       <Icon className={`w-5.5 h-5.5 ${iconColor}`} />
