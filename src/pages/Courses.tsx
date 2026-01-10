@@ -7,88 +7,58 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
 import { StaggerTestimonials } from "@/components/ui/stagger-testimonials";
-import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, 
-  StickyNote, 
-  Newspaper, 
-  CalendarDays, 
   ChevronRight,
   Home,
-  Layers,
-  Sparkles,
   Atom,
   Stethoscope,
   GraduationCap,
-  ClipboardList,
-  Clock,
   Monitor,
   LayoutList,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from "lucide-react";
 
-// Exam category configuration - Standardized links to Digital Library for all
+// Exam category configuration preserved for dynamic content (Titles/Descriptions)
 const EXAM_CONFIG: Record<string, {
   title: string;
   subtitle: string;
   description: string;
-  icon: React.ElementType;
   bannerImage: string;
-  gradient: string;
-  accentColor: string;
-  quickLinks: { title: string; subtitle: string; icon: React.ElementType; theme: 'blue' | 'red' | 'green' | 'cyan'; href: string }[];
   subFilters: string[];
 }> = {
   jee: {
     title: "JEE 2026",
     subtitle: "Exam Dates, Syllabus & Preparation",
     description: "IIT JEE will be conducted in two sessions by NTA, followed by JEE Advanced organized by IIT Roorkee. The exam covers Class 11 and 12 Physics, Chemistry, and Mathematics. Access comprehensive study materials and expert guidance.",
-    icon: Atom,
     bannerImage: "/lovable-uploads/uibanner.png",
-    gradient: "from-orange-600 via-amber-600 to-yellow-500",
-    accentColor: "orange",
-    quickLinks: [
-      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
-      { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
-      { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
-    ],
     subFilters: ["Class 11", "Class 12", "Dropper", "Target 2025", "Target 2026", "Crash Course"],
   },
   neet: {
     title: "NEET 2026",
     subtitle: "Exam Dates, Syllabus & Preparation",
     description: "NEET-UG is the single entrance exam for MBBS, BDS, and other medical courses in India. Master Biology, Physics, and Chemistry with our comprehensive preparation programs designed by top educators.",
-    icon: Stethoscope,
     bannerImage: "/lovable-uploads/uibanner.png",
-    gradient: "from-rose-600 via-red-600 to-pink-500",
-    accentColor: "red",
-    quickLinks: [
-      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
-      { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
-      { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
-    ],
     subFilters: ["Class 11", "Class 12", "Dropper", "Repeater", "Target 2025", "Target 2026", "Crash Course"],
   },
   "iitm-bs": {
     title: "IITM BS Degree",
     subtitle: "Data Science & Electronic Systems",
     description: "The IIT Madras BS Degree in Data Science & Electronic Systems offers world-class education accessible to students nationwide. Access curated study materials, notes, and expert guidance for Foundation, Diploma, and Degree levels.",
-    icon: GraduationCap,
     bannerImage: "/lovable-uploads/uibanner.png",
-    gradient: "from-emerald-600 via-teal-600 to-cyan-500",
-    accentColor: "emerald",
-    quickLinks: [
-      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
-      { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
-      { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
-    ],
     subFilters: ["Foundation", "Diploma", "Degree", "Data Science", "Electronic Systems"],
   },
 };
+
+// Standardized Quick Links for all pages - pointing to Digital Library
+const STANDARDIZED_QUICK_LINKS = [
+  { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue" as const, href: "/digital-library" },
+  { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red" as const, href: "/digital-library" },
+  { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green" as const, href: "/digital-library" },
+  { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan" as const, href: "/digital-library" },
+];
 
 const formatCategoryTitle = (slug: string | undefined) => {
   if (!slug) return "All Courses";
@@ -110,6 +80,7 @@ const Courses = () => {
   const config = examCategory ? EXAM_CONFIG[examCategory] : null;
   const isExamSpecificPage = !!examCategory && !!config;
 
+  // Logic Preserved: Filtering category courses
   const categoryCourses = useMemo(() => {
     if (!examCategory) return courses;
     return courses.filter(course => {
@@ -120,6 +91,7 @@ const Courses = () => {
     });
   }, [courses, examCategory]);
 
+  // Logic Preserved: Available Sub-filters
   const availableSubFilters = useMemo(() => {
     if (!config) return [];
     const available = new Set<string>();
@@ -132,6 +104,7 @@ const Courses = () => {
     return Array.from(available).sort();
   }, [categoryCourses, config]);
 
+  // Logic Preserved: Filtered courses based on sub-filter
   const filteredCourses = useMemo(() => {
     if (!selectedSubFilter) return categoryCourses;
     return categoryCourses.filter(course => {
@@ -140,6 +113,7 @@ const Courses = () => {
     });
   }, [categoryCourses, selectedSubFilter]);
 
+  // Logic Preserved: Grouping courses
   const groupedCourses = useMemo(() => {
     if (selectedSubFilter || !isExamSpecificPage) return { "Available Batches": filteredCourses };
     const groups: Record<string, typeof filteredCourses> = {};
@@ -151,114 +125,97 @@ const Courses = () => {
     return Object.keys(groups).length <= 1 ? { "Available Batches": filteredCourses } : groups;
   }, [filteredCourses, selectedSubFilter, isExamSpecificPage]);
 
+  // Logic Preserved: Featured courses
   const featuredCourses = useMemo(() => {
     const pool = isExamSpecificPage ? categoryCourses : courses;
     return pool.filter(c => c.bestseller || (c.students_enrolled && c.students_enrolled > 50)).slice(0, 3);
   }, [courses, categoryCourses, isExamSpecificPage]);
 
   return (
-    <>
+    <div className="bg-white min-h-screen font-sans text-zinc-800 w-full">
       <NavBar />
       
-      {/* Background set to White for all sections */}
-      <main className="pt-16 min-h-screen bg-white font-sans">
+      <main className="pt-16">
         
-        {/* === 1. BANNER SECTION (Adjusted height for 100% zoomness) === */}
-        <section className="w-full">
-          <div className="w-full h-[280px] md:h-[420px] lg:h-[480px] overflow-hidden bg-slate-100">
+        {/* === BANNER SECTION === */}
+        <section className="w-full relative">
+          <div className="w-full h-[250px] md:h-[400px] overflow-hidden bg-slate-100">
             <img 
               src={isExamSpecificPage ? config.bannerImage : "/lovable-uploads/uibanner.png"} 
               alt="" 
               className="w-full h-full object-cover"
+              loading="eager"
             />
           </div>
         </section>
 
-        {/* === 2. BREADCRUMB POSITION (Now strictly BELOW Banner) === */}
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        {/* === BREADCRUMB POSITION: Strictly below banner === */}
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-b border-zinc-100">
+          <div className="flex items-center gap-1 text-[13px] text-zinc-500">
             <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
-              <Home className="w-4 h-4" />
+              <Home className="w-3.5 h-3.5" />
               <span>Home</span>
             </Link>
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-4 h-4 opacity-50" />
             <Link to="/courses" className="hover:text-primary transition-colors">
               Courses
             </Link>
             {isExamSpecificPage && (
               <>
-                <ChevronRight className="w-4 h-4" />
-                <span className="font-medium text-foreground">{formatCategoryTitle(examCategory)}</span>
+                <ChevronRight className="w-4 h-4 opacity-50" />
+                <span className="font-medium text-zinc-900">{formatCategoryTitle(examCategory)}</span>
               </>
             )}
           </div>
         </nav>
 
-        {/* === 3. WRITING SECTION (Aligned correctly) === */}
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-8">
-          <motion.div 
-            key={examCategory || "overview"}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="space-y-4"
-          >
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#111827]">
+        {/* === TITLE & DESCRIPTION SECTION === */}
+        <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-4">
+          <div className="space-y-3">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-zinc-900 leading-tight">
               {isExamSpecificPage ? (
-                <>
-                  {config.title}: <span className="text-primary">{config.subtitle}</span>
-                </>
+                <>{config.title}: <span className="text-primary">{config.subtitle}</span></>
               ) : (
-                <>
-                  Master Your Exams <span className="text-primary">With Expert Guidance</span>
-                </>
+                <>Master Your Exams <span className="text-primary">With Expert Guidance</span></>
               )}
             </h1>
-
-            <p className="text-[#4b5563] text-base md:text-lg leading-relaxed max-w-4xl">
-              {isExamSpecificPage 
-                ? config.description 
-                : "Access premium batches, study materials, and expert guidance tailored for your academic success."
-              }
+            <p className="text-zinc-600 text-sm md:text-base leading-relaxed max-w-5xl">
+              {isExamSpecificPage ? config.description : "Access premium batches, study materials, and expert guidance tailored for academic success."}
             </p>
-          </motion.div>
+          </div>
         </section>
 
-        {/* === 4. QUICK LINKS SECTION (Consistent redirects) === */}
+        {/* === QUICK LINKS SECTION: point to digital library for all === */}
         {isExamSpecificPage && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-[40px] md:py-[60px]">
-            <div className="bg-white p-6 md:p-[60px_40px_40px_40px] rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-[50px] lg:gap-y-5">
-                {config.quickLinks.map((link: any, idx: number) => (
-                  <QuickAccessCard 
-                    key={idx}
-                    title={link.title} 
-                    subtitle={link.subtitle}
-                    icon={link.icon}
-                    theme={link.theme}
-                    onClick={() => navigate(link.href)}
-                  />
-                ))}
-              </div>
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {STANDARDIZED_QUICK_LINKS.map((link, idx) => (
+                <QuickLinkCard 
+                  key={idx}
+                  {...link}
+                  onClick={() => navigate(link.href)}
+                />
+              ))}
             </div>
           </section>
         )}
 
-        {/* === 5. BATCHES AND CONTENT SECTION (Bg-white) === */}
+        {/* === CONTENT LISTING SECTION === */}
         <div className="bg-white pb-24">
           
-          {/* Featured Batches Section */}
+          {/* Featured Courses Section */}
           {featuredCourses.length > 0 && (
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-zinc-50">
               <div className="flex items-center gap-3 mb-8">
-                <div className="p-2 bg-amber-100 rounded-lg">
+                <div className="p-2 bg-amber-50 rounded-lg">
                   <Sparkles className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-foreground">Featured Batches</h2>
-                  <p className="text-muted-foreground text-sm">Top rated courses for your preparation</p>
+                  <h2 className="text-xl font-bold text-zinc-900">Featured Batches</h2>
+                  <p className="text-zinc-500 text-xs">Top rated courses for your preparation</p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {contentLoading ? (
                   Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)
                 ) : (
@@ -270,15 +227,15 @@ const Courses = () => {
             </section>
           )}
 
-          {/* Sub Filters */}
+          {/* Dynamic Sub-Filters */}
           <AnimatePresence>
             {isExamSpecificPage && availableSubFilters.length > 0 && (
-              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-8">
-                <div className="flex flex-wrap gap-2">
+              <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sticky top-[80px] z-10 bg-white/80 backdrop-blur-md">
+                <div className="flex flex-wrap gap-2 pb-2">
                   <button
                     onClick={() => setSelectedSubFilter(null)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                      !selectedSubFilter ? "bg-primary text-white shadow-md" : "bg-white border border-gray-200 hover:border-primary"
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      !selectedSubFilter ? "bg-primary text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                     }`}
                   >
                     All Batches
@@ -287,8 +244,8 @@ const Courses = () => {
                     <button
                       key={filter}
                       onClick={() => setSelectedSubFilter(prev => prev === filter ? null : filter)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                        selectedSubFilter === filter ? "bg-primary text-white shadow-md" : "bg-white border border-gray-200 hover:border-primary"
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                        selectedSubFilter === filter ? "bg-primary text-white shadow-md" : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                       }`}
                     >
                       {filter}
@@ -299,7 +256,7 @@ const Courses = () => {
             )}
           </AnimatePresence>
 
-          {/* Main Course Listing */}
+          {/* Main Batches Grid */}
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {contentLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -307,14 +264,14 @@ const Courses = () => {
               </div>
             ) : (
               Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
-                <div key={groupName} className="mb-12">
+                <div key={groupName} className="mb-12 last:mb-0">
                   {Object.keys(groupedCourses).length > 1 && (
-                    <div className="flex items-center gap-3 mb-6">
-                      <div className="h-6 w-1 bg-primary rounded-full" />
-                      <h3 className="text-xl font-bold">{groupName}</h3>
+                    <div className="flex items-center justify-between mb-6 border-b border-zinc-100 pb-4">
+                      <h3 className="text-lg font-bold text-zinc-900">{groupName}</h3>
+                      <button className="text-primary text-xs font-bold hover:underline">View All →</button>
                     </div>
                   )}
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     {groupCourses.map((course, index) => (
                       <CourseCard course={course} index={index} key={course.id} />
                     ))}
@@ -325,60 +282,52 @@ const Courses = () => {
           </section>
 
           {/* Testimonials */}
-          <section className="py-20 bg-slate-50">
+          <section className="py-20 bg-zinc-50/50 mt-12 border-t border-zinc-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-              <h2 className="text-3xl font-bold mb-4">Student Success Stories</h2>
-              <p className="text-muted-foreground mb-12">Hear from those who achieved their goals with us</p>
+              <h2 className="text-2xl font-bold mb-4 text-zinc-900">Student Success Stories</h2>
+              <p className="text-zinc-500 text-sm mb-12">Hear from those who achieved their goals with us</p>
               <StaggerTestimonials />
             </div>
           </section>
         </div>
-
       </main>
 
       <Footer />
       <EmailPopup />
-    </>
+    </div>
   );
 };
 
-// === Quick Access Card Component ===
-interface QuickAccessCardProps {
-  title: string;
-  subtitle: string;
-  icon: React.ElementType;
-  theme: 'blue' | 'red' | 'green' | 'cyan';
-  onClick: () => void;
-}
-
-const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickAccessCardProps) => {
+// Reusable Quick Link Card (Physics Wallah UI style)
+const QuickLinkCard = ({ title, subtitle, icon: Icon, theme, onClick }: any) => {
   const themes = {
-    blue: { bg: "bg-[#e8f0fe]", iconColor: "text-[#3b82f6]" },
-    red: { bg: "bg-[#fef0f0]", iconColor: "text-[#ef4444]" },
-    green: { bg: "bg-[#e7f9ee]", iconColor: "text-[#22c55e]" },
-    cyan: { bg: "bg-[#e8f4ff]", iconColor: "text-[#0ea5e9]" },
+    blue: "bg-[#EEF4FF] border-[#E0EAFF]",
+    red: "bg-[#FEF3F2] border-[#FEE4E2]",
+    green: "bg-[#EDFCF2] border-[#D3F8DF]",
+    cyan: "bg-[#EFF8FF] border-[#D1E9FF]",
   };
-
-  const t = themes[theme];
+  const iconColors = {
+    blue: "text-blue-600",
+    red: "text-red-600",
+    green: "text-emerald-600",
+    cyan: "text-sky-600",
+  };
 
   return (
     <button 
       onClick={onClick}
-      className={`relative h-[180px] rounded-[15px] p-[30px] flex flex-col justify-center border-2 border-transparent transition-all duration-200 hover:border-black overflow-visible ${t.bg} w-full text-left group`}
+      className={`flex items-center justify-between p-4 rounded-xl border transition-all hover:shadow-lg active:scale-[0.98] group bg-white ${themes[theme as keyof typeof themes]}`}
     >
-      <div className="absolute -top-[30px] left-[25px] w-[60px] h-[60px] bg-white rounded-full flex items-center justify-center shadow-[0_5px_15px_rgba(0,0,0,0.08)] z-10">
-        <Icon className={`w-7 h-7 ${t.iconColor}`} />
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-lg bg-white shadow-sm`}>
+          <Icon className={`w-6 h-6 ${iconColors[theme as keyof typeof iconColors]}`} />
+        </div>
+        <div className="text-left">
+          <h4 className="text-sm font-bold text-zinc-900 leading-tight">{title}</h4>
+          <p className="text-[11px] text-zinc-500 font-medium">{subtitle}</p>
+        </div>
       </div>
-      
-      <h3 className="text-[#111827] text-[1.3rem] font-bold mb-[10px] mt-[10px]">
-        {title}
-      </h3>
-      
-      <p className="text-[#4b5563] text-[0.95rem] font-normal leading-tight">
-        {subtitle}
-      </p>
-      
-      <ChevronRight className="absolute right-[25px] top-1/2 -translate-y-1/2 text-[#111827] w-5 h-5" />
+      <ChevronRight className="w-5 h-5 text-zinc-400 group-hover:text-zinc-900 transition-colors" />
     </button>
   );
 };
