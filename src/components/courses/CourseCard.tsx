@@ -1,200 +1,139 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Calendar,
-  Users,
-  GitBranch,
-  Layers,
-  Languages,
-  ImageOff,
-} from "lucide-react";
-import { ShareButton } from '../ShareButton';
-import EnrollButton from "@/components/EnrollButton";
-import { Button } from '@/components/ui/button';
-import { Course } from '@/components/admin/courses/types';
+import React from "react";
+import { Link } from "react-router-dom";
+import { GraduationCap, Clock, Tag } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CourseCardProps {
-  course: Course;
+  course: any;
   index: number;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
-  const navigate = useNavigate();
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
+const CourseCard = ({ course, index }: CourseCardProps) => {
+  // Logic to calculate discount percentage
+  const discountPercent = course.price && course.discounted_price
+    ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
+    : 0;
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return null;
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch {
-      return dateString;
-    }
+  // Format dates to match "14 Apr, 2025"
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "TBA";
+    return new Date(dateStr).toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   };
-
-  const hasImage = !!course.image_url;
-  const isBestseller = !!course.bestseller;
-  const showDiscount = course.discounted_price && course.discounted_price < course.price;
-  const discountPercentage = showDiscount ? Math.round(((course.price - course.discounted_price!) / course.price) * 100) : 0;
 
   return (
-    <motion.div
-      variants={fadeInUp}
-      initial="hidden"
-      animate="visible"
-      transition={{ duration: 0.3, delay: index * 0.1 }}
+    <div 
+      className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-3 shadow-[0_10px_30px_rgba(0,0,0,0.05)] transition-all hover:shadow-md"
+      style={{ borderRadius: '6px' }} // Rectangular slight round
     >
-      <Card className="h-full flex flex-col overflow-hidden relative border-none shadow-xl hover:shadow-2xl transition-all duration-300">
-
-        {/* Discount Ribbon */}
-        {showDiscount && (
-            <div className="absolute top-[-5px] right-[-5px] z-10 w-[75px] h-[75px] overflow-hidden text-right">
-                <span
-                    className="text-xs font-bold text-white uppercase text-center leading-5 transform rotate-45 w-[100px] block bg-red-500 shadow-lg absolute top-[19px] right-[-21px]"
-                    style={{
-                        "background": "#ef4444",
-                        "boxShadow": "0 3px 10px -5px rgba(0, 0, 0, 1)"
-                    }}
-                >
-                    {discountPercentage}% OFF
-                </span>
-            </div>
+      {/* Banner Section */}
+      <div 
+        className="w-full h-[195px] bg-muted relative overflow-hidden mb-4"
+        style={{ borderRadius: '6px' }}
+      >
+        {course.image_url ? (
+          <img 
+            src={course.image_url} 
+            alt={course.title} 
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-[#fce07c] to-[#f9c83d] flex items-center justify-center">
+            <span className="text-white font-black text-2xl text-center px-4 uppercase leading-tight">
+              {course.title}
+            </span>
+          </div>
         )}
+      </div>
 
-        {/* Top Color Bar */}
-        <div className={`h-2 ${isBestseller ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-blue-500 to-blue-700'}`}></div>
-
-        <div className="relative">
-          {hasImage ? (
-              <div className="aspect-video w-full overflow-hidden">
-                  <img
-                      src={course.image_url}
-                      alt={course.title}
-                      className="w-full h-full object-cover"
-                  />
-              </div>
-          ) : (
-               <div className="aspect-video w-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                   <ImageOff className="h-10 w-10 text-gray-400" />
-               </div>
+      {/* Header Section */}
+      <div className="flex items-center gap-2 mb-[18px] px-1">
+        <h2 className="text-[21px] font-bold text-[#1a1a1a] flex-1 leading-tight line-clamp-1">
+          {course.title}
+        </h2>
+        
+        {/* Dynamic Tags */}
+        <div className="flex gap-1.5 shrink-0">
+          {course.bestseller && (
+            <span className="bg-[#f59e0b] text-white text-[11px] font-bold px-2.5 py-1" style={{ borderRadius: '6px' }}>
+              NEW
+            </span>
+          )}
+          {course.language && (
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[11px] font-bold px-2.5 py-1" style={{ borderRadius: '6px' }}>
+              {course.language}
+            </span>
           )}
         </div>
 
-        {/* Bestseller Running Text */}
-        {isBestseller && (
-          <div className="bg-amber-100 text-amber-800 py-0.5 overflow-hidden">
-            <motion.div
-              className="flex whitespace-nowrap"
-              initial={{ x: 0 }}
-              animate={{ x: '-100%' }}
-              transition={{
-                ease: 'linear',
-                duration: 20,
-                repeat: Infinity,
-              }}
-            >
-              <span className="mx-4 text-xs font-semibold">❤️ Trusted by hundreds of Learners</span>
-              <span className="mx-4 text-xs font-semibold">❤️ Trusted by hundreds of Learners</span>
-              <span className="mx-4 text-xs font-semibold">❤️ Trusted by hundreds of Learners</span>
-              <span className="mx-4 text-xs font-semibold">❤️ Trusted by hundreds of Learners</span>
-            </motion.div>
+        {/* WhatsApp Icon */}
+        <div className="whatsapp-icon shrink-0 cursor-pointer hover:opacity-70 transition-opacity">
+          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-black">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.602 6.039L0 24l6.135-1.61a11.748 11.748 0 005.911 1.586h.005c6.634 0 12.032-5.396 12.033-12.03a11.811 11.811 0 00-3.417-8.481z"/>
+          </svg>
+        </div>
+      </div>
+
+      {/* Info Rows */}
+      <div className="mb-[22px] px-1 space-y-2">
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px]">
+          <GraduationCap className="w-4 h-4" />
+          <span>For <span className="text-[#1a1a1a] font-bold uppercase">{course.exam_category}</span> Aspirants</span>
+        </div>
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px]">
+          <Clock className="w-4 h-4" />
+          <span>
+            Starts on <b className="text-[#1a1a1a]">{formatDate(course.start_date)}</b> Ends on <b className="text-[#1a1a1a]">{formatDate(course.end_date)}</b>
+          </span>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <div className="flex items-end justify-between mb-5 px-1">
+        <div>
+          <div className="flex items-center">
+            <span className="text-2xl font-extrabold text-[#5e35b1]">
+              ₹{course.discounted_price?.toLocaleString() || course.price?.toLocaleString()}
+            </span>
+            {course.discounted_price && (
+              <span className="text-sm text-[#94a3b8] line-through font-medium ml-1.5">
+                ₹{course.price?.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <span className="block text-[10px] font-bold text-[#94a3b8] mt-0.5 uppercase">
+            (FOR FULL BATCH)
+          </span>
+        </div>
+
+        {discountPercent > 0 && (
+          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-3 py-2 text-[11px] font-extrabold flex items-center gap-1.5 shrink-0" style={{ borderRadius: '6px' }}>
+            <Tag className="w-3.5 h-3.5" />
+            Discount of {discountPercent}% applied
           </div>
         )}
+      </div>
 
-        <CardHeader className="pb-3">
-            <CardTitle className="text-xl font-extrabold text-gray-800 pr-4 leading-snug">
-                {course.title}
-            </CardTitle>
-
-            <div className="flex flex-wrap items-center gap-2 pt-1">
-                {course.exam_category && (
-                    <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 font-medium">
-                        {course.exam_category}
-                    </Badge>
-                )}
-                {course.branch && (
-                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
-                      <GitBranch className="h-3 w-3 mr-1" /> {course.branch}
-                  </Badge>
-                )}
-                {course.level && (
-                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
-                     <Layers className="h-3 w-3 mr-1" /> {course.level}
-                  </Badge>
-                )}
-                 {course.language && (
-                  <Badge variant="secondary" className="bg-gray-200 text-gray-700">
-                     <Languages className="h-3 w-3 mr-1" /> {course.language}
-                  </Badge>
-                )}
-            </div>
-        </CardHeader>
-
-        <CardContent className="flex-grow">
-          <div className="flex flex-col space-y-2 text-sm text-gray-600 mb-3">
-              <div className="flex items-center">
-                  <Calendar className="h-4 w-4 mr-2 flex-shrink-0 text-red-500" />
-                  <span className="font-semibold mr-1">Batch Starts:</span>
-                  <span className="font-medium">{course.start_date ? formatDate(course.start_date) : 'To be announced soon'}</span>
-              </div>
-
-              <div className="flex items-center">
-                  <Users className="h-4 w-4 mr-2 flex-shrink-0 text-green-500" />
-                  <span className="font-semibold mr-1">Enrolled:</span>
-                  <span className="font-medium">{course.students_enrolled || 0} students</span>
-              </div>
-          </div>
-        </CardContent>
-
-        <CardFooter className="border-t pt-4 flex flex-col mt-auto">
-           <div className="w-full flex items-baseline justify-center mb-4">
-             <span className="text-4xl font-bold text-blue-600">
-                  ₹{showDiscount ? course.discounted_price : course.price}
-              </span>
-              {showDiscount && (
-                <span className="ml-2 text-xl text-gray-400 line-through">
-                    ₹{course.price}
-                </span>
-              )}
-           </div>
-
-           <div className="w-full flex flex-col gap-3">
-              <div className="grid grid-cols-2 gap-3">
-                <Button 
-                  variant="outline" 
-                  className="w-full border-gray-300 text-gray-700 hover:bg-gray-100 font-semibold"
-                  onClick={() => navigate(`/courses/${course.id}`)}
-                >
-                  Explore
-                </Button>
-                <EnrollButton
-                  courseId={course.id}
-                  enrollmentLink={course.enroll_now_link || undefined}
-                  coursePrice={course.discounted_price || course.price}
-                  className={`w-full ${isBestseller ? 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700' : 'bg-blue-600 hover:bg-blue-700'} text-white font-semibold transition-all duration-200`}
-                />
-              </div>
-              <ShareButton
-                url={`${window.location.origin}/courses/${course.id}`}
-                title={course.title}
-                description={course.description}
-                variant="ghost"
-                showText
-                className="w-full"
-              />
-          </div>
-        </CardFooter>
-      </Card>
-    </motion.div>
+      {/* Action Buttons */}
+      <div className="flex gap-3">
+        <Link 
+          to={`/course/${course.id}`} 
+          className="flex-1 border-2 border-[#5e35b1] text-[#5e35b1] bg-white h-11 flex items-center justify-center text-[13px] font-extrabold uppercase transition-opacity hover:opacity-80"
+          style={{ borderRadius: '8px' }}
+        >
+          Explore
+        </Link>
+        <button 
+          className="flex-1 bg-[#5e35b1] text-white border-none h-11 flex items-center justify-center text-[13px] font-extrabold uppercase transition-opacity hover:opacity-90"
+          style={{ borderRadius: '8px' }}
+        >
+          Buy Now
+        </button>
+      </div>
+    </div>
   );
 };
 
