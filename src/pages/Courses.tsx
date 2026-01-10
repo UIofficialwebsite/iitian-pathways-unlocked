@@ -7,20 +7,28 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import CourseCard from "@/components/courses/CourseCard";
 import { StaggerTestimonials } from "@/components/ui/stagger-testimonials";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   FileText, 
+  StickyNote, 
+  Newspaper, 
+  CalendarDays, 
   ChevronRight,
   Home,
+  Layers,
+  Sparkles,
   Atom,
   Stethoscope,
   GraduationCap,
+  ClipboardList,
+  Clock,
   Monitor,
   LayoutList,
   BookOpen
 } from "lucide-react";
 
-// Exam category configuration with standardized links to Digital Library
+// Exam category configuration - Standardized links to Digital Library for all
 const EXAM_CONFIG: Record<string, {
   title: string;
   subtitle: string;
@@ -41,10 +49,10 @@ const EXAM_CONFIG: Record<string, {
     gradient: "from-orange-600 via-amber-600 to-yellow-500",
     accentColor: "orange",
     quickLinks: [
-      { title: "Syllabus", subtitle: "Check Exam Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
+      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
       { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
       { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Exam News", icon: BookOpen, theme: "cyan", href: "/digital-library" },
+      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
     ],
     subFilters: ["Class 11", "Class 12", "Dropper", "Target 2025", "Target 2026", "Crash Course"],
   },
@@ -57,10 +65,10 @@ const EXAM_CONFIG: Record<string, {
     gradient: "from-rose-600 via-red-600 to-pink-500",
     accentColor: "red",
     quickLinks: [
-      { title: "Syllabus", subtitle: "Check Exam Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
+      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
       { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
       { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Exam News", icon: BookOpen, theme: "cyan", href: "/digital-library" },
+      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
     ],
     subFilters: ["Class 11", "Class 12", "Dropper", "Repeater", "Target 2025", "Target 2026", "Crash Course"],
   },
@@ -73,10 +81,10 @@ const EXAM_CONFIG: Record<string, {
     gradient: "from-emerald-600 via-teal-600 to-cyan-500",
     accentColor: "emerald",
     quickLinks: [
-      { title: "Syllabus", subtitle: "Check Exam Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
+      { title: "Syllabus", subtitle: "Course Syllabus", icon: LayoutList, theme: "blue", href: "/digital-library" },
       { title: "PDF Bank", subtitle: "Access PDF Bank", icon: FileText, theme: "red", href: "/digital-library" },
       { title: "Important Dates", subtitle: "Check Exam Dates", icon: Monitor, theme: "green", href: "/digital-library" },
-      { title: "News", subtitle: "Latest Exam News", icon: BookOpen, theme: "cyan", href: "/digital-library" },
+      { title: "News", subtitle: "Latest Updates", icon: BookOpen, theme: "cyan", href: "/digital-library" },
     ],
     subFilters: ["Foundation", "Diploma", "Degree", "Data Science", "Electronic Systems"],
   },
@@ -152,11 +160,12 @@ const Courses = () => {
     <>
       <NavBar />
       
+      {/* Background set to White for all sections */}
       <main className="pt-16 min-h-screen bg-white font-sans">
         
-        {/* === 1. BANNER SECTION === */}
+        {/* === 1. BANNER SECTION (Adjusted height for 100% zoomness) === */}
         <section className="w-full">
-          <div className="w-full h-[250px] md:h-[400px] overflow-hidden bg-slate-200">
+          <div className="w-full h-[280px] md:h-[420px] lg:h-[480px] overflow-hidden bg-slate-100">
             <img 
               src={isExamSpecificPage ? config.bannerImage : "/lovable-uploads/uibanner.png"} 
               alt="" 
@@ -165,8 +174,8 @@ const Courses = () => {
           </div>
         </section>
 
-        {/* === 2. BREADCRUMB POSITION (Directly below banner) === */}
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* === 2. BREADCRUMB POSITION (Now strictly BELOW Banner) === */}
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
               <Home className="w-4 h-4" />
@@ -185,7 +194,7 @@ const Courses = () => {
           </div>
         </nav>
 
-        {/* === 3. WRITING SECTION === */}
+        {/* === 3. WRITING SECTION (Aligned correctly) === */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-8">
           <motion.div 
             key={examCategory || "overview"}
@@ -214,10 +223,10 @@ const Courses = () => {
           </motion.div>
         </section>
 
-        {/* === 4. QUICK LINKS SECTION === */}
+        {/* === 4. QUICK LINKS SECTION (Consistent redirects) === */}
         {isExamSpecificPage && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-[40px] md:py-[60px]">
-            <div className="bg-white p-6 md:p-[60px_40px_40px_40px] rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-gray-100 w-full">
+            <div className="bg-white p-6 md:p-[60px_40px_40px_40px] rounded-[20px] shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100 w-full">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-[50px] lg:gap-y-5">
                 {config.quickLinks.map((link: any, idx: number) => (
                   <QuickAccessCard 
@@ -234,14 +243,15 @@ const Courses = () => {
           </section>
         )}
 
-        {/* === BATCHES SECTION === */}
-        <div className="bg-white pb-20">
-          {/* Featured Batches */}
+        {/* === 5. BATCHES AND CONTENT SECTION (Bg-white) === */}
+        <div className="bg-white pb-24">
+          
+          {/* Featured Batches Section */}
           {featuredCourses.length > 0 && (
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
               <div className="flex items-center gap-3 mb-8">
                 <div className="p-2 bg-amber-100 rounded-lg">
-                  <Monitor className="w-5 h-5 text-amber-600" />
+                  <Sparkles className="w-5 h-5 text-amber-600" />
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">Featured Batches</h2>
@@ -348,6 +358,7 @@ const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickA
     green: { bg: "bg-[#e7f9ee]", iconColor: "text-[#22c55e]" },
     cyan: { bg: "bg-[#e8f4ff]", iconColor: "text-[#0ea5e9]" },
   };
+
   const t = themes[theme];
 
   return (
@@ -358,8 +369,15 @@ const QuickAccessCard = ({ title, subtitle, icon: Icon, theme, onClick }: QuickA
       <div className="absolute -top-[30px] left-[25px] w-[60px] h-[60px] bg-white rounded-full flex items-center justify-center shadow-[0_5px_15px_rgba(0,0,0,0.08)] z-10">
         <Icon className={`w-7 h-7 ${t.iconColor}`} />
       </div>
-      <h3 className="text-[#111827] text-[1.3rem] font-bold mb-[10px] mt-[10px]">{title}</h3>
-      <p className="text-[#4b5563] text-[0.95rem] font-normal leading-tight">{subtitle}</p>
+      
+      <h3 className="text-[#111827] text-[1.3rem] font-bold mb-[10px] mt-[10px]">
+        {title}
+      </h3>
+      
+      <p className="text-[#4b5563] text-[0.95rem] font-normal leading-tight">
+        {subtitle}
+      </p>
+      
       <ChevronRight className="absolute right-[25px] top-1/2 -translate-y-1/2 text-[#111827] w-5 h-5" />
     </button>
   );
