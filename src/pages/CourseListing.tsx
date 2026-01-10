@@ -163,33 +163,52 @@ const CourseListing = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* HEADER SECTION */}
-        <div className="bg-muted/30 border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 py-10">
+        {/* BANNER SECTION */}
+        <div className="w-full">
+          {bannerLoading ? (
+            <div className="h-[200px] md:h-[280px] bg-gradient-to-r from-muted to-muted/50 animate-pulse" />
+          ) : bannerImage ? (
+            <img 
+              src={bannerImage} 
+              alt={`${formatSlug(examCategory || 'courses')} Banner`}
+              className="w-full h-[200px] md:h-[280px] object-cover"
+            />
+          ) : (
+            <div className="h-[200px] md:h-[280px] bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
+              <h2 className="text-3xl md:text-5xl font-black text-foreground/20">{formatSlug(examCategory || 'Courses')}</h2>
+            </div>
+          )}
+        </div>
+
+        {/* BREADCRUMB + TITLE + DESCRIPTION SECTION */}
+        <div className="bg-background border-b border-border">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-6">
+            <nav className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-4 md:mb-6">
               <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3.5 h-3.5" /></Link>
               <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-              <Link to="/courses" className="hover:text-primary transition-colors">COURSES</Link>
-              {examCategory && (
-                <>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                  <span className="font-bold text-foreground uppercase tracking-wider">{formatSlug(examCategory)}</span>
-                </>
-              )}
+              <Link to="/courses" className="hover:text-primary transition-colors uppercase">{examCategory ? formatSlug(examCategory) : 'Courses'}</Link>
               {branchFromUrl && (
                 <>
                   <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                  <span className="font-bold text-primary uppercase tracking-wider">{branchFromUrl}</span>
+                  <span className="font-bold text-foreground uppercase tracking-wider">{branchFromUrl}</span>
                 </>
               )}
+              <ChevronRight className="w-3.5 h-3.5 opacity-40" />
+              <span className="font-bold text-primary uppercase tracking-wider">BATCHES</span>
             </nav>
 
-            <h1 className="text-3xl md:text-5xl font-black text-foreground mb-4 tracking-tight">
-              {branchFromUrl ? `${branchFromUrl} Batches` : examCategory ? `${formatSlug(examCategory)} Courses` : "All Batches"}
+            {/* Title */}
+            <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-foreground mb-3 md:mb-4 tracking-tight leading-tight">
+              {examCategory ? `${formatSlug(examCategory)} Online Coaching` : "All Courses"} 
+              {branchFromUrl && ` For ${branchFromUrl}`} Targeting 2026-27 Exams
             </h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-3xl font-medium">
-              Explore specialized coaching and resources tailored for your {branchFromUrl || formatSlug(examCategory || 'academic')} journey.
+
+            {/* Description */}
+            <p className="text-muted-foreground text-sm md:text-base max-w-4xl font-medium leading-relaxed">
+              UI offers {branchFromUrl || formatSlug(examCategory || 'comprehensive')} coaching, including online classes in multiple languages. 
+              Live and recorded sessions, doubt-solving support, and useful study materials. UI ensures a well-rounded preparation for {formatSlug(examCategory || 'all')} aspirants. 
+              Check {branchFromUrl || formatSlug(examCategory || '')} lectures, study materials, mock test series for preparation.
             </p>
           </div>
         </div>
@@ -197,16 +216,16 @@ const CourseListing = () => {
         {/* STICKY FILTER BAR */}
         <div 
           ref={filterRef}
-          className={`w-full z-40 bg-background border-b border-border transition-all duration-300 ${
+          className={`w-full z-40 bg-background border-b border-border transition-shadow duration-300 ${
             isSticky ? 'fixed top-16 shadow-lg' : 'relative'
           }`}
         >
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-            {/* Primary Branch Filter (Dynamic) */}
-            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar pb-3 mb-3 border-b border-border/50">
+            {/* Primary Branch Filter Tabs */}
+            <div className="flex items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar pb-3 mb-3 border-b border-border/50">
               <button 
                 onClick={() => setSearchParams({})}
-                className={`px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
+                className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
                   !branchFromUrl ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
@@ -216,7 +235,7 @@ const CourseListing = () => {
                 <button
                   key={branch}
                   onClick={() => setSearchParams({ branch: branch })}
-                  className={`px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
+                  className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
                     branchFromUrl === branch ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
@@ -225,15 +244,11 @@ const CourseListing = () => {
               ))}
             </div>
 
-            {/* Secondary Filters (Mode & Price) */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground mr-2">
-                <Filter className="w-3.5 h-3.5" /> REFINE:
-              </div>
-              
+            {/* Secondary Filters Row */}
+            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
               <button
                 onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                   selectedMode === 'online' ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
                 }`}
               >
@@ -241,17 +256,18 @@ const CourseListing = () => {
               </button>
               <button
                 onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
+                className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
                   selectedMode === 'offline' ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
                 }`}
               >
                 Offline
               </button>
 
+              {/* Pricing Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                  className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
                     priceRange ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
                   }`}
                 >
@@ -277,10 +293,25 @@ const CourseListing = () => {
                 )}
               </div>
 
+              {/* Language Dropdown Placeholder */}
+              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all flex items-center gap-1.5">
+                Language <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {/* Power Batch Filter */}
+              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all">
+                Power Batch
+              </button>
+
+              {/* Newly Launched Filter */}
+              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all">
+                Newly Launched
+              </button>
+
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="px-4 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full transition-all flex items-center gap-1"
+                  className="px-3 md:px-4 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full transition-all flex items-center gap-1"
                 >
                   <X className="w-3 h-3" /> Clear All
                 </button>
@@ -290,7 +321,7 @@ const CourseListing = () => {
         </div>
 
         {/* Spacer when sticky */}
-        {isSticky && <div className="h-[120px]" />}
+        {isSticky && <div className="h-[140px]" />}
 
         {/* RESULTS SUMMARY */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6">
@@ -328,7 +359,7 @@ const CourseListing = () => {
                     <span className="text-sm font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">{groupCourses.length}</span>
                   </div>
                   
-                  {/* Responsive Horizontal Scroll Grid */}
+                  {/* Responsive Grid - All cards shown */}
                   <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0">
                     {groupCourses.map((course, index) => (
                       <div key={course.id} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0 snap-start">
