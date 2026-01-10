@@ -15,6 +15,7 @@ import {
   LayoutList,
   BookOpen,
   ClipboardList,
+  Monitor,
   ArrowRight
 } from "lucide-react";
 
@@ -52,14 +53,14 @@ const Courses = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
-  // Restored original Title/Category Logic
+  // RESTORED ORIGINAL TITLE LOGIC (Matches DB Case)
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
     return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
   }, [courses, examCategory]);
 
-  // Filter courses by the category selected in the NavBar
+  // FILTER COURSES BY CATEGORY FROM NAV
   const categoryCourses = useMemo(() => {
     if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
@@ -67,57 +68,68 @@ const Courses = () => {
     );
   }, [courses, examCategory]);
 
-  // Extract unique branches for the current category
+  // GET UNIQUE RELEVANT BRANCHES
   const availableBranches = useMemo(() => {
     const branches = Array.from(new Set(categoryCourses.map(c => c.branch))).filter(Boolean) as string[];
     return branches;
   }, [categoryCourses]);
 
   return (
-    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-background relative">
+    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfdff] relative">
       <NavBar />
       
       <main className="pt-16">
-        {/* HEADER & BANNER SECTION */}
-        <div className="relative overflow-hidden bg-muted/20">
-          <div className="relative z-10">
-            <section className="w-full h-[160px] md:h-[260px] bg-muted overflow-hidden mb-4">
-              {bannerLoading ? <div className="w-full h-full animate-pulse bg-muted" /> : bannerImage ? <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" /> : <div className="w-full h-full bg-gradient-to-r from-muted to-muted/80" />}
-            </section>
+        {/* HEADER SECTION - GLASSY BLUE / WHITE GRADIENT */}
+        <div className="relative overflow-hidden min-h-[400px] flex flex-col items-center px-4 py-12">
+          {/* Top-Left Geometric Shape */}
+          <div 
+            className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none"
+            style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }}
+          />
+          {/* Bottom-Right Geometric Shape */}
+          <div 
+            className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none"
+            style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }}
+          />
 
-            <nav className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-              <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
-                <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3.5 h-3.5" /></Link>
-                <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                <span className="uppercase tracking-wide text-muted-foreground">Courses</span>
-                {examCategory && (
-                  <>
-                    <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                    <span className="font-bold text-foreground uppercase">{currentCategoryData?.name}</span>
-                  </>
-                )}
-              </div>
+          <div className="relative z-10 w-full max-w-6xl">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-2 text-[#666] text-sm mb-6 font-medium">
+              <Home className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
+              <span className="uppercase">{currentCategoryData?.name}</span>
             </nav>
 
-            <section className="max-w-6xl mx-auto px-4 md:px-8 pb-8">
-              <h1 className="text-2xl md:text-3xl font-extrabold text-foreground mb-3 tracking-tight leading-tight">
-                {currentCategoryData?.name} 2026: Resources & Prep
-              </h1>
-              <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-4xl font-medium">
-                Access our specialized study hub featuring updated syllabus, comprehensive PDF banks, 
-                and the latest exam alerts curated by expert IITians.
-              </p>
-            </section>
+            {/* Title & Description */}
+            <h1 className="text-3xl md:text-5xl font-extrabold text-[#1a1a1a] mb-4 tracking-tight leading-tight max-w-4xl">
+              {currentCategoryData?.name} 2026: Exam Dates, Syllabus, Pattern & Eligibility
+            </h1>
+            <p className="text-[#555] text-base md:text-lg leading-relaxed max-w-4xl mb-12">
+              Access specialized study resources curated by expert IITians. Our hub provides the most updated syllabus, 
+              comprehensive PDF banks, and essential exam alerts to guide your preparation.
+            </p>
 
-            {/* QUICK LINKS SECTION - Updated with Blue Background */}
+            {/* QUICK LINKS SECTION - RICH BLUE BACKGROUND */}
             {examCategory && (
-              <section className="max-w-6xl mx-auto px-4 md:px-8 mb-16">
-                <div className="bg-[#1E40AF] rounded-2xl border border-blue-800 p-8 md:p-10 pt-14 md:pt-14 shadow-xl">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-12">
-                    <QuickLinkTab title="Syllabus" desc="Detailed Course Roadmap" icon={LayoutList} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="PDF Bank" desc="Access Notes & PDFs" icon={FileText} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Important Dates" desc="Check Exam Schedule" icon={ClipboardList} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
-                    <QuickLinkTab title="Latest News" desc="Stay Updated on Exams" icon={BookOpen} bgColor="bg-white/10" iconColor="text-white" onClick={() => navigate('/digital-library')} />
+              <section className="mt-8">
+                <div className="bg-[#1E40AF] p-8 md:p-12 rounded-2xl shadow-2xl border border-blue-900">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-16 mt-6">
+                    <QuickLinkCard 
+                      title="Blog" desc="Read Our Latest Blogs" icon={Monitor} 
+                      cardColor="bg-[#e8efff]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/blog')} 
+                    />
+                    <QuickLinkCard 
+                      title="PDF Bank" desc="Access PDF Bank" icon={FileText} 
+                      cardColor="bg-[#feeceb]" iconColor="text-[#f43f5e]" onClick={() => navigate('/digital-library')} 
+                    />
+                    <QuickLinkCard 
+                      title="Test Series" desc="Explore Test Series" icon={ClipboardList} 
+                      cardColor="bg-[#e1f7e7]" iconColor="text-[#4a6cf7]" onClick={() => navigate('/test-series')} 
+                    />
+                    <QuickLinkCard 
+                      title="Books" desc="Find Preparation Books" icon={BookOpen} 
+                      cardColor="bg-[#e0f0ff]" iconColor="text-[#f43f5e]" onClick={() => navigate('/books')} 
+                    />
                   </div>
                 </div>
               </section>
@@ -125,13 +137,13 @@ const Courses = () => {
           </div>
         </div>
 
-        {/* RELEVANT BRANCH FILTER TABS */}
-        <div className="w-full bg-background border-b border-border">
+        {/* BRANCH TABS BAR */}
+        <div className="w-full bg-white border-y border-border sticky top-16 z-30">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
             <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
               <button 
                 onClick={() => navigate(`/courses/listing/${examCategory || 'all'}`)}
-                className="px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
+                className="px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
               >
                 All Batches
               </button>
@@ -139,7 +151,7 @@ const Courses = () => {
                 <button
                   key={branch}
                   onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                  className="px-4 py-2 text-sm font-semibold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
+                  className="px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 border-transparent text-muted-foreground hover:text-foreground"
                 >
                   {branch}
                 </button>
@@ -149,51 +161,47 @@ const Courses = () => {
         </div>
 
         {/* DYNAMIC BRANCH SECTIONS */}
-        <div className="pb-24 bg-background">
-          <section className="max-w-6xl mx-auto px-4 md:px-8">
+        <div className="pb-32 bg-white">
+          <section className="max-w-6xl mx-auto px-4 md:px-8 pt-16">
             {contentLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}
               </div>
             ) : (
-              <div className="pt-10">
-                {availableBranches.map((branch) => {
-                  // Only show 3 cards per branch in this overview
-                  const branchCourses = categoryCourses.filter(c => c.branch === branch).slice(0, 3);
-                  if (branchCourses.length === 0) return null;
-                  
-                  return (
-                    <div key={branch} className="mb-24">
-                      <div className="flex items-center justify-between mb-8">
-                        <div>
-                          {/* Heading: Exam category - branch Courses */}
-                          <h3 className="text-xl md:text-2xl font-bold text-foreground">
-                            {currentCategoryData?.name} - {branch} Courses
-                          </h3>
-                          <div className="h-1 w-12 bg-primary mt-2" />
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {branchCourses.map((course, index) => (
-                          <CourseCard course={course} index={index} key={course.id} />
-                        ))}
-                      </div>
-
-                      {/* Middle-aligned rectangular color-filled button */}
-                      <div className="flex justify-center mt-12">
-                        <Button 
-                          variant="default" 
-                          className="rounded-md px-12 py-7 text-lg font-bold shadow-lg bg-royal hover:bg-royal-dark text-white transition-all hover:scale-105"
-                          onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
-                        >
-                          View All Courses
-                        </Button>
-                      </div>
+              availableBranches.map((branch) => {
+                const branchCourses = categoryCourses.filter(c => c.branch === branch).slice(0, 3);
+                if (branchCourses.length === 0) return null;
+                
+                return (
+                  <div key={branch} className="mb-24">
+                    <div className="mb-10">
+                      {/* Heading Format: Exam category - branch Courses */}
+                      <h3 className="text-2xl md:text-3xl font-black text-[#1a1a1a]">
+                        {currentCategoryData?.name} - {branch} Courses
+                      </h3>
+                      <div className="h-1.5 w-16 bg-[#1E40AF] mt-3 rounded-full" />
                     </div>
-                  );
-                })}
-              </div>
+                    
+                    {/* 3 Cards Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                      {branchCourses.map((course, index) => (
+                        <CourseCard course={course} index={index} key={course.id} />
+                      ))}
+                    </div>
+
+                    {/* Middle-aligned rectangular color-filled button */}
+                    <div className="flex justify-center mt-14">
+                      <Button 
+                        variant="default" 
+                        className="rounded-lg px-14 py-8 text-lg font-bold shadow-xl bg-[#1E40AF] text-white hover:bg-[#1E3A8A] transition-all hover:scale-105 active:scale-95 border-none"
+                        onClick={() => navigate(`/courses/listing/${examCategory || 'all'}?branch=${branch}`)}
+                      >
+                        View All Courses
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })
             )}
           </section>
         </div>
@@ -205,22 +213,25 @@ const Courses = () => {
   );
 };
 
-// QuickLinkTab with restored logic
-const QuickLinkTab = ({ title, desc, icon: Icon, bgColor, iconColor, onClick }: {
-  title: string; desc: string; icon: React.ElementType; bgColor: string; iconColor: string; onClick: () => void;
+// QUICK LINK CARD COMPONENT (Matches provided HTML design)
+const QuickLinkCard = ({ title, desc, icon: Icon, cardColor, iconColor, onClick }: {
+  title: string; desc: string; icon: React.ElementType; cardColor: string; iconColor: string; onClick: () => void;
 }) => (
   <button 
-    onClick={onClick} 
-    className={`group relative h-[110px] w-full rounded-xl px-5 flex flex-col justify-center border-2 border-white/20 transition-all hover:border-white text-left ${bgColor}`}
+    onClick={onClick}
+    className={`group relative h-[125px] w-full rounded-xl px-6 flex flex-col justify-center border-2 border-transparent transition-all hover:border-black text-left ${cardColor}`}
   >
-    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10 border border-blue-200">
-      <Icon className={`w-5 h-5 text-blue-800`} />
+    {/* Floating Tab Icon */}
+    <div className="absolute -top-6 left-5 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md z-10">
+      <Icon className={`w-5.5 h-5.5 ${iconColor}`} />
     </div>
-    <div className="mt-2">
-      <h3 className="text-sm md:text-base font-bold text-white mb-0.5 tracking-tight">{title}</h3>
-      <p className="text-xs text-white/80 font-medium leading-tight">{desc}</p>
+    
+    <div className="mt-4">
+      <h3 className="text-lg font-bold text-[#1a1a1a] mb-1">{title}</h3>
+      <p className="text-sm text-[#555] font-medium">{desc}</p>
     </div>
-    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
+    
+    <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#1a1a1a] group-hover:translate-x-1 transition-transform" />
   </button>
 );
 
