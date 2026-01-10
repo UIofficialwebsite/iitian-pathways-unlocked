@@ -1,7 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Clock, Tag } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Course } from '@/components/admin/courses/types';
 
 interface CourseCardProps {
@@ -12,12 +11,10 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
 
-  // Logic to calculate discount percentage
   const discountPercent = course.price && course.discounted_price
     ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
     : 0;
 
-  // Format dates: "14 Apr, 2025"
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "TBA";
     try {
@@ -33,107 +30,97 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
   return (
     <div 
-      className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-[0_10px_30px_rgba(0,0,0,0.05)] font-['Public_Sans',sans-serif]"
+      className="bg-white w-full border-[1.2px] border-[#e2e8f0] relative p-3 shadow-[0_4px_12px_rgba(0,0,0,0.03)] font-['Public_Sans',sans-serif] flex flex-col h-full"
       style={{ borderRadius: '6px' }}
     >
-      {/* Banner Section */}
+      {/* Banner - Aspect Ratio Container */}
       <div 
-        className="w-full h-[195px] bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"
-        style={{ borderRadius: '6px' }}
+        className="w-full aspect-[16/9] bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-3 flex flex-col justify-center items-center"
+        style={{ borderRadius: '4px' }}
       >
         {course.image_url ? (
           <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="text-white/90 text-[34px] font-[800] text-center uppercase leading-[1.1] px-4">
+          <div className="text-white/90 text-[clamp(18px,5vw,24px)] font-[800] text-center uppercase leading-tight px-3">
             {course.title.split(' ').slice(0, 2).join(' ')}<br/>{course.title.split(' ').slice(2).join(' ')}
           </div>
         )}
       </div>
 
-      {/* Header Section: Title (BOLD) + Tags (NON-BOLD) */}
-      <div className="flex items-start gap-2 mb-[18px] px-1">
-        <h2 className="text-[21px] font-bold text-[#1a1a1a] flex-1 leading-tight line-clamp-2 h-[52px]">
+      {/* Header Section */}
+      <div className="flex items-start gap-2 mb-3 px-0.5">
+        <h2 className="text-[clamp(16px,4vw,18px)] font-bold text-[#1a1a1a] flex-1 leading-[1.3] line-clamp-2 min-h-[2.6em]">
           {course.title}
         </h2>
         
-        <div className="flex flex-col gap-1.5 shrink-0 mt-1">
-          {/* bestseller is NEW tag */}
+        <div className="flex flex-col gap-1 shrink-0 mt-0.5">
           {course.bestseller && (
-            <span className="bg-[#f59e0b] text-white text-[11px] font-normal px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
+            <span className="bg-[#f59e0b] text-white text-[9px] font-normal px-2 py-0.5 text-center" style={{ borderRadius: '4px' }}>
               NEW
             </span>
           )}
-          {/* Language tag matches template Hinglish bg */}
           {course.language && (
-            <span className="bg-[#f3f4f6] text-[#4b5563] text-[11px] font-normal px-[10px] py-[4px] text-center" style={{ borderRadius: '6px' }}>
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[9px] font-normal px-2 py-0.5 text-center" style={{ borderRadius: '4px' }}>
               {course.language}
             </span>
           )}
         </div>
+      </div>
 
-        {/* WhatsApp Icon from Template */}
-        <div className="shrink-0 cursor-pointer hover:opacity-70 transition-opacity">
-          <svg viewBox="0 0 24 24" className="w-6 h-6 fill-black">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.602 6.039L0 24l6.135-1.61a11.748 11.748 0 005.911 1.586h.005c6.634 0 12.032-5.396 12.033-12.03a11.811 11.811 0 00-3.417-8.481z"/>
-          </svg>
+      {/* Info Rows */}
+      <div className="mb-4 px-0.5 space-y-1.5 flex-grow">
+        <div className="flex items-center gap-2 text-[#6b7280] text-[12px] font-normal">
+          <GraduationCap className="w-3.5 h-3.5" />
+          <span className="truncate">For <span className="text-[#1a1a1a] uppercase">{course.exam_category}</span> Aspirants</span>
+        </div>
+        <div className="flex items-center gap-2 text-[#6b7280] text-[12px] font-normal">
+          <Clock className="w-3.5 h-3.5" />
+          <span className="truncate">Starts <span className="text-[#1a1a1a]">{formatDate(course.start_date)}</span></span>
         </div>
       </div>
 
-      {/* Info Rows (NON-BOLD) */}
-      <div className="mb-[22px] px-1 space-y-2">
-        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
-          <GraduationCap className="w-4 h-4" />
-          <span>For <span className="text-[#1a1a1a] uppercase">{course.exam_category}</span> Aspirants</span>
-        </div>
-        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
-          <Clock className="w-4 h-4" />
-          <span>Starts on <b className="text-[#1a1a1a] font-normal">{formatDate(course.start_date)}</b> Ends on <b className="text-[#1a1a1a] font-normal">{formatDate(course.end_date)}</b></span>
-        </div>
-      </div>
-
-      {/* Pricing Section: Price (Bold), Labels (Normal) */}
-      <div className="flex items-end justify-between mb-[20px] px-1">
+      {/* Pricing Section */}
+      <div className="flex items-end justify-between mb-4 px-0.5 pt-2 border-t border-gray-50">
         <div>
           <div className="flex items-center">
-            <span className="text-[24px] font-bold text-[#1E3A8A]">
+            <span className="text-[20px] font-bold text-[#1E3A8A]">
               ₹{course.discounted_price?.toLocaleString() || course.price?.toLocaleString()}
             </span>
             {course.discounted_price && (
-              <span className="text-[14px] text-[#94a3b8] line-through font-normal ml-1.5">
+              <span className="text-[12px] text-[#94a3b8] line-through font-normal ml-1.5">
                 ₹{course.price?.toLocaleString()}
               </span>
             )}
           </div>
-          <span className="block text-[10px] font-normal text-[#94a3b8] mt-[3px] uppercase">
-            (FOR FULL BATCH)
+          <span className="block text-[8px] font-normal text-[#94a3b8] mt-0.5 uppercase">
+            (FULL BATCH)
           </span>
         </div>
 
         {discountPercent > 0 && (
-          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-[12px] py-[8px] text-[11px] font-normal flex items-center gap-[6px] shrink-0" style={{ borderRadius: '6px' }}>
-            <Tag className="w-[13px] h-[13px]" />
-            Discount of {discountPercent}% applied
+          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-2 py-1 text-[9px] font-normal flex items-center gap-1 shrink-0" style={{ borderRadius: '4px' }}>
+            <Tag className="w-3 h-3" />
+            {discountPercent}% OFF
           </div>
         )}
       </div>
 
-      {/* Action Buttons: NON-BOLD Deep Blue */}
-      <div className="flex gap-[12px]">
-        <Button 
-          variant="outline" 
-          className="flex-1 border-[2px] border-[#1E3A8A] text-[#1E3A8A] bg-white h-[45px] text-[13px] font-normal uppercase hover:bg-blue-50"
-          style={{ borderRadius: '8px' }}
-          onClick={() => navigate(`/courses/${course.id}`)}
+      {/* Action Buttons */}
+      <div className="flex gap-2.5">
+        <button 
+          className="flex-1 border-[1.2px] border-[#1E3A8A] text-[#1E3A8A] bg-white h-[38px] flex items-center justify-center text-[11px] font-normal uppercase transition-all hover:bg-blue-50"
+          style={{ borderRadius: '6px' }}
+          onClick={() => navigate(`/course/${course.id}`)}
         >
           Explore
-        </Button>
-        <Button 
-          className="flex-1 bg-[#1E3A8A] text-white border-none h-[45px] text-[13px] font-normal uppercase hover:bg-[#1E3A8A]/90 shadow-md"
-          style={{ borderRadius: '8px' }}
-          onClick={() => navigate(`/courses/${course.id}`)}
+        </button>
+        <button 
+          className="flex-1 bg-[#1E3A8A] text-white border-none h-[38px] flex items-center justify-center text-[11px] font-normal uppercase transition-all hover:opacity-90"
+          style={{ borderRadius: '6px' }}
+          onClick={() => navigate(`/course/${course.id}`)}
         >
           Buy Now
-        </Button>
+        </button>
       </div>
     </div>
   );
