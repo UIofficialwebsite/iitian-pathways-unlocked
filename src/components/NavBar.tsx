@@ -8,7 +8,8 @@ import {
   Stethoscope, 
   GraduationCap, 
   BookOpen,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,7 +43,6 @@ const NavBar = () => {
     window.location.href = '/';
   };
 
-  // Dynamically extract unique categories from the database
   const courseCategories = useMemo(() => {
     const categories = new Set<string>();
     if (courses && courses.length > 0) {
@@ -55,7 +55,6 @@ const NavBar = () => {
     return Array.from(categories).sort();
   }, [courses]);
 
-  // Helper to assign icons based on category keywords
   const getCategoryStyle = (category: string) => {
     const normalize = category.toLowerCase();
     if (normalize.includes('jee')) return { icon: Atom, color: "text-[#f39c12]", slug: 'jee' };
@@ -64,36 +63,33 @@ const NavBar = () => {
     return { icon: BookOpen, color: "text-gray-600", slug: category.toLowerCase().replace(/\s+/g, '-') };
   };
 
+  const examPrepItems = [
+    { title: "JEE Preparation", path: "/exam-preparation/jee", icon: Atom, color: "text-[#f39c12]" },
+    { title: "NEET Preparation", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#e74c3c]" },
+    { title: "IITM BS Preparation", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
+  ];
+
   return (
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[100] h-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full relative">
           
-          {/* Logo Section */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <img
-                src="/lovable-uploads/UI_logo.png" 
-                alt="Unknown IITians Logo" 
-                className="h-10 w-auto"
-              />
+              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-10 w-auto" />
             </Link>
           </div>
 
-          {/* Desktop Navigation Group */}
           <div className="hidden md:flex items-center justify-center space-x-8">
             <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
-            {/* Dynamic Courses Menu */}
             <NavigationMenu className="static">
               <NavigationMenuList className="static">
                 <NavigationMenuItem className="static">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  
-                  {/* Dropdown Container: High Z-index, centered below navbar */}
                   <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
                     <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-[28px]">
                        {courseCategories.length === 0 ? (
@@ -125,31 +121,37 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            {/* Exam Prep Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-medium text-base focus-visible:ring-0">
-                  Exam Prep
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2 bg-white border border-gray-200 shadow-lg">
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/jee" className="cursor-pointer">JEE Preparation</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/neet" className="cursor-pointer">NEET Preparation</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/iitm-bs" className="cursor-pointer">IITM BS Preparation</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Updated Exam Prep Dropdown to match Courses style */}
+            <NavigationMenu className="static">
+              <NavigationMenuList className="static">
+                <NavigationMenuItem className="static">
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
+                    Exam Prep
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
+                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-[28px]">
+                       <div className="grid grid-cols-3 gap-[16px]">
+                          {examPrepItems.map((item) => (
+                            <NavigationMenuLink key={item.path} asChild>
+                              <Link 
+                                to={item.path}
+                                className="flex flex-col items-center text-center gap-[12px] p-[20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 group"
+                              >
+                                <item.icon className={`w-10 h-10 ${item.color}`} />
+                                <span className="text-[16px] font-semibold text-[#1a1a1a]">{item.title}</span>
+                              </Link>
+                            </NavigationMenuLink>
+                          ))}
+                       </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
             
             <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
-          {/* User Section */}
           <div className="hidden md:flex items-center">
             {user ? (
               <DropdownMenu>
@@ -181,63 +183,12 @@ const NavBar = () => {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
             <button onClick={() => setIsOpen(!isOpen)} className="text-gray-700 p-2 focus:outline-none">
               {isOpen ? <X className="h-7 w-7" /> : <Menu className="h-7 w-7" />}
             </button>
           </div>
         </div>
-
-        {/* Mobile Navigation Sidebar */}
-        {isOpen && (
-          <div className="md:hidden fixed inset-0 top-16 bg-white z-[90] overflow-y-auto border-t">
-            <div className="px-6 py-8 space-y-6">
-              <Link to="/" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Home</Link>
-              <Link to="/about" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">About</Link>
-              
-              {/* Mobile Courses Section */}
-              <div className="space-y-4">
-                <button 
-                  onClick={() => setMobileCoursesOpen(!mobileCoursesOpen)}
-                  className="flex items-center justify-between w-full text-xl font-semibold text-gray-800"
-                >
-                  Courses
-                  <ChevronRight className={`h-6 w-6 transition-transform duration-200 ${mobileCoursesOpen ? 'rotate-90' : ''}`} />
-                </button>
-                
-                {mobileCoursesOpen && (
-                  <div className="grid grid-cols-1 gap-3 pl-4">
-                    {courseCategories.map((category) => {
-                      const style = getCategoryStyle(category);
-                      const IconComponent = style.icon;
-                      return (
-                        <Link 
-                          key={category}
-                          to={`/courses/category/${style.slug}`}
-                          onClick={() => setIsOpen(false)}
-                          className="flex items-center p-4 rounded-xl bg-gray-50 border border-gray-100"
-                        >
-                          <IconComponent className={`w-7 h-7 mr-4 ${style.color}`} />
-                          <span className="font-bold text-gray-900">{category}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-
-              <Link to="/exam-preparation" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Exam Preparation</Link>
-              <Link to="/career" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Career</Link>
-              
-              {!user && (
-                <Link to="/auth" onClick={() => setIsOpen(false)} className="block pt-6">
-                  <Button className="w-full bg-royal text-white py-7 text-xl rounded-xl">Sign In</Button>
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   );
