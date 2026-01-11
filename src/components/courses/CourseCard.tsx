@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"; // Added useMemo to imports
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Clock, Tag } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
@@ -41,14 +41,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
   return (
     <div 
-      className={`bg-white w-full relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full transition-all duration-300
-        ${course.bestseller 
-          ? 'border-t-[3px] border-x-[1.5px] border-b-[1.5px] border-t-blue-500/60 border-x-blue-400/20 border-b-[#e2e8f0] shadow-[0_-8px_15px_-3px_rgba(59,130,246,0.15)]' 
-          : 'border-[1.5px] border-[#e2e8f0]'
-        }`}
+      className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full"
       style={{ borderRadius: '6px' }}
     >
-      {/* Banner Section */}
+      {/* Banner Section - Maintains 16:9 ratio to prevent zoom */}
       <div 
         className="w-full aspect-video bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"
         style={{ borderRadius: '6px' }}
@@ -68,22 +64,19 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           {course.title}
         </h2>
         
-        {/* Tags Row - Forced into single row horizontal flex */}
-        <div className="flex flex-row items-center gap-1.5 shrink-0 mt-1 whitespace-nowrap">
+        {/* Tags Row - Single row horizontal flex */}
+        <div className="flex flex-row items-center gap-1.5 shrink-0 mt-1 whitespace-nowrap font-sans">
           {isNewlyLaunched && (
-            <span className="bg-emerald-500 text-white text-[9px] font-bold px-[8px] py-[3px] uppercase tracking-wider" style={{ borderRadius: '4px' }}>NEW</span>
-          )}
-          {course.bestseller && (
-            <span className="bg-blue-600 text-white text-[9px] font-bold px-[8px] py-[3px] uppercase tracking-wider" style={{ borderRadius: '4px' }}>BESTSELLER</span>
+            <span className="bg-[#f59e0b] text-white text-[10px] font-normal px-[10px] py-[3px] text-center uppercase" style={{ borderRadius: '6px' }}>NEW</span>
           )}
           {course.language && (
-            <span className="bg-[#f3f4f6] text-[#4b5563] text-[9px] font-bold px-[8px] py-[3px] uppercase tracking-wider" style={{ borderRadius: '4px' }}>{course.language}</span>
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-normal px-[10px] py-[3px] text-center" style={{ borderRadius: '6px' }}>{course.language}</span>
           )}
         </div>
 
-        {/* WhatsApp Share Button */}
+        {/* WhatsApp Share Button - Black icon */}
         <div className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleWhatsappShare}>
-          <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-[#25D366]">
+          <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-black">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.602 6.039L0 24l6.135-1.61a11.748 11.748 0 005.911 1.586h.005c6.634 0 12.032-5.396 12.033-12.03a11.811 11.811 0 00-3.417-8.481z"/>
           </svg>
         </div>
