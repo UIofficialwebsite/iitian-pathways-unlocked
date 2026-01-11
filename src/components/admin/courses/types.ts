@@ -12,10 +12,12 @@ export interface Course {
   students_enrolled: number | null;
   rating: number | null;
   created_at: string;
+  updated_at?: string | null;
   subject: string | null;
   start_date: string | null;
   end_date: string | null;
   course_type: string | null;
+  batch_type?: string | null;
   branch: string | null;
   level: string | null;
   enroll_now_link: string | null;
