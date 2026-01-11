@@ -87,9 +87,9 @@ const NavBar = () => {
   };
 
   return (
-    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-center items-center h-16 relative">
+    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50 h-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        <div className="flex justify-center items-center h-full relative">
           {/* Logo Section */}
           <div className="flex items-center absolute left-0">
             <Link to="/" className="flex-shrink-0 flex items-center">
@@ -111,23 +111,22 @@ const NavBar = () => {
             </Link>
             
             {/* Professional Grid Design Courses Menu */}
-            <NavigationMenu>
-              <NavigationMenuList>
-                <NavigationMenuItem>
+            <NavigationMenu className="static">
+              <NavigationMenuList className="static">
+                <NavigationMenuItem className="static">
                   <NavigationMenuTrigger 
                     className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent text-base font-normal h-auto p-0"
                   >
                     Courses
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent>
-                    {/* The Section Block Container */}
-                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-[28px]">
+                  {/* Alignment logic: fixed positioning below the 64px (h-16) nav bar */}
+                  <NavigationMenuContent className="fixed top-16 left-0 right-0 flex justify-center bg-transparent border-none shadow-none mt-0">
+                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.06)] p-[28px] mx-auto">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500">
                            No active batches currently available.
                          </div>
                        ) : (
-                         /* THE EXAM GRID */
                          <div className="grid grid-cols-2 gap-[16px]">
                             {courseCategories.map((category) => {
                               const style = getCategoryStyle(category);
@@ -139,11 +138,9 @@ const NavBar = () => {
                                     to={`/courses/category/${style.slug}`}
                                     className="flex items-center gap-[16px] p-[16px_20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer transition-all duration-200 hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] outline-none group"
                                   >
-                                    {/* Icon Styling */}
                                     <div className="w-12 h-12 flex items-center justify-center shrink-0">
                                       <IconComponent className={`w-full h-full ${style.color}`} />
                                     </div>
-                                    {/* Label Styling */}
                                     <span className="text-[17px] font-semibold text-[#1a1a1a]">
                                       {category}
                                     </span>
