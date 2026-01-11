@@ -82,14 +82,13 @@ const NavBar = () => {
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
             {/* Courses Menu */}
-            <NavigationMenu className="h-full">
-              <NavigationMenuList className="h-full">
-                <NavigationMenuItem className="h-full flex items-center">
+            <NavigationMenu className="static">
+              <NavigationMenuList>
+                <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  {/* top-full ensures it sticks to the bottom of the nav container regardless of height */}
-                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
@@ -121,13 +120,13 @@ const NavBar = () => {
             </NavigationMenu>
             
             {/* Exam Prep Menu */}
-            <NavigationMenu className="h-full">
-              <NavigationMenuList className="h-full">
-                <NavigationMenuItem className="h-full flex items-center">
+            <NavigationMenu className="static">
+              <NavigationMenuList>
+                <NavigationMenuItem>
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Exam Prep
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (

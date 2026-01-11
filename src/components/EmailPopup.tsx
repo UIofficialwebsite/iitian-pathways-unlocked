@@ -82,11 +82,6 @@ const EmailPopup = () => {
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Floating trigger button */}
       <div className="fixed bottom-5 right-5 z-50 flex flex-col items-end gap-2">
-        {!open && (
-          <div className="bg-golden text-black py-1 px-3 rounded-lg shadow-lg text-xs animate-fade-in font-semibold">
-            Have queries? Raise a ticket!
-          </div>
-        )}
         <DialogTrigger asChild>
           <button
             className={
