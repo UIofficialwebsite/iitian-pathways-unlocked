@@ -59,24 +59,18 @@ const CourseListing = () => {
     const fetchBanner = async () => {
       setBannerLoading(true);
       try {
-        const { data, error } = await supabase
-          .from('page_banners')
-          .select('image_url, page_path')
-          .order('created_at', { ascending: false });
-        
-        if (error) throw error;
-        if (data && data.length > 0) {
-          // Banner priority: Path match > Category match > Default first
-          const matchingBanner = data.find(banner => 
-            banner.page_path === location.pathname || 
-            banner.page_path === (examCategory || 'courses')
+        const { data } = await supabase.from('page_banners').select('image_url, page_path');
+        if (data) {
+          const match = data.find(b => 
+            b.page_path === location.pathname || 
+            b.page_path === (examCategory || 'courses')
           );
-          setBannerImage(matchingBanner?.image_url || data[0]?.image_url || null);
+          setBannerImage(match?.image_url || null);
         }
-      } catch (err) {
-        console.error('Error fetching banner:', err);
-      } finally {
-        setBannerLoading(false);
+      } catch (err) { 
+        console.error('Error fetching banner:', err); 
+      } finally { 
+        setBannerLoading(false); 
       }
     };
     fetchBanner();
@@ -84,7 +78,13 @@ const CourseListing = () => {
 
   // 4. DATA FILTERING LOGIC
   
-  // Step A: Filter by Exam Category (from NavBar)
+  // For consistent naming and capitalization of categories
+  const currentCategoryData = useMemo(() => {
+    if (!examCategory) return { name: "All Courses" };
+    const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
+    return match ? { name: match.exam_category } : { name: examCategory.replace(/-/g, ' ') };
+  }, [courses, examCategory]);
+
   const categoryFilteredCourses = useMemo(() => {
     if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
@@ -92,29 +92,24 @@ const CourseListing = () => {
     );
   }, [courses, examCategory]);
 
-  // Step B: Get unique branches relevant ONLY to the current category
   const availableBranches = useMemo(() => {
     const branches = Array.from(new Set(categoryFilteredCourses.map(c => c.branch))).filter(Boolean) as string[];
     return branches.sort();
   }, [categoryFilteredCourses]);
 
-  // Step C: Apply all filters (Branch + Mode + Price)
   const filteredCourses = useMemo(() => {
     let result = [...categoryFilteredCourses];
 
-    // Filter by branch (sync with URL param 'branch')
     if (branchFromUrl) {
       result = result.filter(course => course.branch === branchFromUrl);
     }
 
-    // Filter by mode (Online/Offline)
     if (selectedMode) {
       result = result.filter(course => 
         course.course_type?.toLowerCase() === selectedMode.toLowerCase()
       );
     }
 
-    // Filter by price range
     if (priceRange) {
       const price = (course: any) => course.discounted_price || course.price;
       switch (priceRange) {
@@ -136,7 +131,6 @@ const CourseListing = () => {
     return result;
   }, [categoryFilteredCourses, branchFromUrl, selectedMode, priceRange]);
 
-  // Step D: Group final courses by Batch Type
   const groupedCourses = useMemo(() => {
     const groups: Record<string, typeof filteredCourses> = {};
     filteredCourses.forEach(course => {
@@ -147,68 +141,73 @@ const CourseListing = () => {
     return groups;
   }, [filteredCourses]);
 
-  // Helper formatting
-  const formatSlug = (slug: string) => slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-
   const clearAllFilters = () => {
     setSelectedMode(null);
     setPriceRange(null);
-    setSearchParams({}); // Clears branch from URL
+    setSearchParams({}); 
   };
 
   const hasActiveFilters = selectedMode || priceRange || branchFromUrl;
 
   return (
-    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-background">
+    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfdff] relative">
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION */}
-        <div className="w-full">
+        {/* BANNER SECTION - Matches Courses.tsx scale */}
+        <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
-            <div className="h-[200px] md:h-[280px] bg-gradient-to-r from-muted to-muted/50 animate-pulse" />
+            <div className="w-full h-full animate-pulse bg-muted" />
           ) : bannerImage ? (
             <img 
               src={bannerImage} 
-              alt={`${formatSlug(examCategory || 'courses')} Banner`}
-              className="w-full h-[200px] md:h-[280px] object-cover"
+              alt="Banner"
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="h-[200px] md:h-[280px] bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
-              <h2 className="text-3xl md:text-5xl font-black text-foreground/20">{formatSlug(examCategory || 'Courses')}</h2>
+             <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
+              <h2 className="text-2xl font-black text-foreground/20 uppercase tracking-tighter">
+                {currentCategoryData.name}
+              </h2>
             </div>
           )}
-        </div>
+        </section>
 
-        {/* BREADCRUMB + TITLE + DESCRIPTION SECTION */}
-        <div className="bg-background border-b border-border">
-          <div className="max-w-6xl mx-auto px-4 md:px-8 py-6 md:py-10">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium mb-4 md:mb-6">
-              <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3.5 h-3.5" /></Link>
-              <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-              <Link to="/courses" className="hover:text-primary transition-colors uppercase">{examCategory ? formatSlug(examCategory) : 'Courses'}</Link>
+        {/* HERO AREA - Matches Courses.tsx Background & Fonts */}
+        <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
+          {/* Background shapes logic ported from course page */}
+          <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
+          <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
+
+          <div className="relative z-10 w-full max-w-6xl">
+            {/* Breadcrumb - Matches font-family and spacing of Courses.tsx */}
+            <nav className="flex items-center gap-2 text-[#666] text-xs mb-3 font-normal font-['Inter',sans-serif]">
+              <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3 h-3" /></Link>
+              <ChevronRight className="w-3 h-3 opacity-50" />
+              <Link to="/courses" className="hover:text-primary transition-colors uppercase tracking-tight">
+                {currentCategoryData.name}
+              </Link>
               {branchFromUrl && (
                 <>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-                  <span className="font-bold text-foreground uppercase tracking-wider">{branchFromUrl}</span>
+                  <ChevronRight className="w-3 h-3 opacity-50" />
+                  <span className="uppercase tracking-tight text-[#1a1a1a] font-medium">{branchFromUrl}</span>
                 </>
               )}
-              <ChevronRight className="w-3.5 h-3.5 opacity-40" />
-              <span className="font-bold text-primary uppercase tracking-wider">BATCHES</span>
+              <ChevronRight className="w-3 h-3 opacity-50" />
+              <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
 
-            {/* Title */}
-            <h1 className="text-2xl md:text-4xl lg:text-5xl font-black text-foreground mb-3 md:mb-4 tracking-tight leading-tight">
-              {examCategory ? `${formatSlug(examCategory)} Online Coaching` : "All Courses"} 
+            {/* Title - Ported size and font-weight from Courses.tsx */}
+            <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight font-['Inter',sans-serif]">
+              {currentCategoryData.name} Online Coaching 
               {branchFromUrl && ` For ${branchFromUrl}`} Targeting 2026-27 Exams
             </h1>
 
-            {/* Description */}
-            <p className="text-muted-foreground text-sm md:text-base max-w-4xl font-medium leading-relaxed">
-              UI offers {branchFromUrl || formatSlug(examCategory || 'comprehensive')} coaching, including online classes in multiple languages. 
-              Live and recorded sessions, doubt-solving support, and useful study materials. UI ensures a well-rounded preparation for {formatSlug(examCategory || 'all')} aspirants. 
-              Check {branchFromUrl || formatSlug(examCategory || '')} lectures, study materials, mock test series for preparation.
+            {/* Description - Ported text color and size */}
+            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal font-['Inter',sans-serif]">
+              UI offers {branchFromUrl || currentCategoryData.name} coaching, including online classes in multiple languages. 
+              Live and recorded sessions, doubt-solving support, and useful study materials. UI ensures a well-rounded preparation for {currentCategoryData.name} aspirants. 
+              Check {branchFromUrl || currentCategoryData.name} lectures and mock test series for best preparation.
             </p>
           </div>
         </div>
@@ -216,7 +215,7 @@ const CourseListing = () => {
         {/* STICKY FILTER BAR */}
         <div 
           ref={filterRef}
-          className={`w-full z-40 bg-background border-b border-border transition-shadow duration-300 ${
+          className={`w-full z-40 bg-white border-b border-border transition-shadow duration-300 ${
             isSticky ? 'fixed top-16 shadow-lg' : 'relative'
           }`}
         >
@@ -225,8 +224,8 @@ const CourseListing = () => {
             <div className="flex items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar pb-3 mb-3 border-b border-border/50">
               <button 
                 onClick={() => setSearchParams({})}
-                className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
-                  !branchFromUrl ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 font-['Inter',sans-serif] ${
+                  !branchFromUrl ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
                 All Batches
@@ -235,8 +234,8 @@ const CourseListing = () => {
                 <button
                   key={branch}
                   onClick={() => setSearchParams({ branch: branch })}
-                  className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 ${
-                    branchFromUrl === branch ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+                  className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 font-['Inter',sans-serif] ${
+                    branchFromUrl === branch ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-muted-foreground hover:text-foreground'
                   }`}
                 >
                   {branch}
@@ -245,11 +244,11 @@ const CourseListing = () => {
             </div>
 
             {/* Secondary Filters Row */}
-            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+            <div className="flex items-center gap-2 md:gap-3 flex-wrap font-['Inter',sans-serif]">
               <button
                 onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')}
                 className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  selectedMode === 'online' ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
+                  selectedMode === 'online' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
                 }`}
               >
                 Online
@@ -257,7 +256,7 @@ const CourseListing = () => {
               <button
                 onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')}
                 className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  selectedMode === 'offline' ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
+                  selectedMode === 'offline' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
                 }`}
               >
                 Offline
@@ -268,7 +267,7 @@ const CourseListing = () => {
                 <button
                   onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
                   className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
-                    priceRange ? 'bg-primary text-white border-primary' : 'bg-background border-border hover:border-primary/50'
+                    priceRange ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
                   }`}
                 >
                   Pricing <ChevronDown className={`w-3 h-3 transition-transform ${pricingDropdownOpen ? 'rotate-180' : ''}`} />
@@ -284,7 +283,7 @@ const CourseListing = () => {
                       <button
                         key={opt.val}
                         onClick={() => { setPriceRange(opt.val); setPricingDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-muted transition-colors ${priceRange === opt.val ? 'text-primary bg-primary/5' : ''}`}
+                        className={`w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-muted transition-colors ${priceRange === opt.val ? 'text-[#1E3A8A] bg-[#1E3A8A]/5' : ''}`}
                       >
                         {opt.label}
                       </button>
@@ -292,21 +291,6 @@ const CourseListing = () => {
                   </div>
                 )}
               </div>
-
-              {/* Language Dropdown Placeholder */}
-              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all flex items-center gap-1.5">
-                Language <ChevronDown className="w-3 h-3" />
-              </button>
-
-              {/* Power Batch Filter */}
-              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all">
-                Power Batch
-              </button>
-
-              {/* Newly Launched Filter */}
-              <button className="px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border bg-background border-border hover:border-primary/50 transition-all">
-                Newly Launched
-              </button>
 
               {hasActiveFilters && (
                 <button
@@ -325,13 +309,13 @@ const CourseListing = () => {
 
         {/* RESULTS SUMMARY */}
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-6">
-          <p className="text-sm text-muted-foreground font-medium">
+          <p className="text-sm text-muted-foreground font-medium font-['Inter',sans-serif]">
             Found <span className="text-foreground font-bold">{filteredCourses.length}</span> batches matching your criteria.
           </p>
         </div>
 
         {/* MAIN LISTING AREA */}
-        <div className="pb-32">
+        <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8">
             {contentLoading ? (
               <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
@@ -343,8 +327,8 @@ const CourseListing = () => {
               </div>
             ) : filteredCourses.length === 0 ? (
               <div className="text-center py-24 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
-                <p className="text-xl text-muted-foreground font-bold mb-4">No batches found.</p>
-                <Button variant="default" onClick={clearAllFilters} className="font-bold">
+                <p className="text-xl text-muted-foreground font-bold mb-4 font-['Inter',sans-serif]">No batches found.</p>
+                <Button variant="default" onClick={clearAllFilters} className="font-bold bg-[#1E3A8A] hover:bg-[#1E3A8A]/90">
                   Try Resetting Filters
                 </Button>
               </div>
@@ -353,13 +337,12 @@ const CourseListing = () => {
                 <div key={groupName} className="mb-20">
                   <div className="flex items-center justify-between mb-8">
                     <div>
-                      <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">{groupName}</h3>
-                      <div className="h-1.5 w-12 bg-primary mt-2 rounded-full" />
+                      <h3 className="text-xl font-bold text-[#1a1a1a] font-['Inter',sans-serif] uppercase tracking-tight">{groupName}</h3>
+                      <div className="h-1 w-12 bg-[#1E3A8A] mt-2 rounded-full" />
                     </div>
-                    <span className="text-sm font-bold text-muted-foreground bg-muted px-3 py-1 rounded-full">{groupCourses.length}</span>
+                    <span className="text-sm font-bold text-[#1E3A8A] bg-blue-50 px-3 py-1 rounded-full">{groupCourses.length}</span>
                   </div>
                   
-                  {/* Responsive Grid - All cards shown */}
                   <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0">
                     {groupCourses.map((course, index) => (
                       <div key={course.id} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0 snap-start">
