@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import ScrollPersistence from "@/components/ScrollPersistence";
-import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
+
 
 // Page Imports
 import Index from "./pages/Index";
@@ -49,9 +49,6 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollPersistence />
-            
-            {/* Global floating announcement system replaces the top bar */}
-            <FloatingAnnouncementToggle /> 
             
             <Routes>
               <Route path="/" element={<Index />} />

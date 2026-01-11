@@ -7,6 +7,7 @@ import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
+import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
 
 const Index = () => {
   return (
@@ -19,6 +20,7 @@ const Index = () => {
       <ResourceHubSection />
       <TestimonialsSection />
       <Footer />
+      <FloatingAnnouncementToggle />
     </>
   );
 };

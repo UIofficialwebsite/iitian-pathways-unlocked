@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { ChevronUp } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { AnnouncementBar } from "./AnnouncementBar";
 
 const FloatingAnnouncementToggle = () => {
@@ -15,15 +14,16 @@ const FloatingAnnouncementToggle = () => {
         </div>
       )}
 
-      {/* Floating Action Button (Arrow Up) */}
-      <Button
+      {/* Simple black arrow icon - no background */}
+      <button
         onClick={() => setIsOpen(!isOpen)}
-        className="h-14 w-14 rounded-full bg-royal shadow-2xl hover:bg-royal-dark text-white p-0 flex items-center justify-center transition-all active:scale-95 border-2 border-white"
+        className="p-2 transition-all hover:scale-110 active:scale-95"
+        aria-label="Toggle announcements"
       >
         <ChevronUp 
-          className={`h-8 w-8 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} 
+          className={`h-8 w-8 text-black transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} 
         />
-      </Button>
+      </button>
     </div>
   );
 };
