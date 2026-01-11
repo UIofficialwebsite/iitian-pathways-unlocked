@@ -66,7 +66,8 @@ const NavBar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[100] h-16">
+    // Increased z-index to 150 to stay above banners/announcements
+    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[150] h-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full relative">
           
@@ -76,19 +77,19 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* Desktop Nav Items */}
           <div className="hidden md:flex items-center justify-center space-x-8 h-full">
             <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
+            {/* Courses Menu */}
             <NavigationMenu className="h-full">
               <NavigationMenuList className="h-full">
-                <NavigationMenuItem className="h-full flex items-center relative">
+                <NavigationMenuItem className="h-full flex items-center">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  {/* Dynamic Positioning: absolute top-full centers it flush against the navbar bottom */}
-                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                  {/* top-full ensures it sticks to the bottom of the nav container regardless of height */}
+                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
@@ -119,14 +120,14 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
+            {/* Exam Prep Menu */}
             <NavigationMenu className="h-full">
               <NavigationMenuList className="h-full">
-                <NavigationMenuItem className="h-full flex items-center relative">
+                <NavigationMenuItem className="h-full flex items-center">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Exam Prep
                   </NavigationMenuTrigger>
-                  {/* Dynamic Positioning: absolute top-full centers it flush against the navbar bottom */}
-                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
@@ -152,7 +153,7 @@ const NavBar = () => {
             <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
-          <div className="hidden md:flex items-center h-full">
+          <div className="hidden md:flex items-center">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -163,7 +164,7 @@ const NavBar = () => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mt-2" align="end">
+                <DropdownMenuContent className="w-56 mt-2 z-[200]" align="end">
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold">{user.user_metadata?.full_name || 'User'}</span>
