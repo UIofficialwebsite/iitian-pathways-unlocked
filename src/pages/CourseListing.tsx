@@ -147,6 +147,8 @@ const CourseListing = () => {
     setPricingOpen(false);
   };
 
+  const hasActiveFilters = priceRange || branchFromUrl || selectedLevel || selectedSubject;
+
   return (
     <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfcfc] relative">
       <NavBar />
@@ -161,7 +163,7 @@ const CourseListing = () => {
           )}
         </section>
 
-        {/* HERO AREA - Restored original Title/Description logic */}
+        {/* HERO AREA */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
@@ -190,12 +192,12 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR - Left Aligned & Reduced Height/Size */}
+        {/* STICKY FILTER BAR - Left Aligned, Reduced Height, No Shadow */}
         <div 
           ref={filterRef}
-          className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b' : 'relative'}`}
+          className={`w-full z-40 ${isSticky ? 'fixed top-16 bg-white border-b' : 'relative'}`}
         >
-          {/* Branch Tabs - Left Aligned & Reduced Height */}
+          {/* Branch Tabs - Left Aligned */}
           <div className="bg-[#f4f2ff] pt-4 flex justify-start overflow-x-auto no-scrollbar">
             <div className="flex gap-8 px-4 md:px-8 max-w-6xl">
               <button 
@@ -220,7 +222,7 @@ const CourseListing = () => {
             </div>
           </div>
 
-          {/* Pill Filters - Left Aligned & Reduced Size */}
+          {/* Pill Filters - Left Aligned */}
           <div className="bg-white py-3 border-b border-[#f3f4f6] flex justify-start">
             <div className="flex flex-wrap items-center gap-3 px-4 md:px-8 max-w-6xl font-sans">
               
@@ -295,7 +297,7 @@ const CourseListing = () => {
               {/* Language Placeholder */}
               <div className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[13px] text-[#374151] cursor-not-allowed opacity-50 bg-[#f9fafb]">Language</div>
 
-              {(selectedMode || priceRange || branchFromUrl || selectedLevel || selectedSubject) && (
+              {hasActiveFilters && (
                 <button onClick={clearAllFilters} className="px-4 py-1.5 text-[13px] font-bold text-destructive hover:bg-destructive/10 rounded-[30px] flex items-center gap-1">
                   <X className="w-3.5 h-3.5" /> Clear All
                 </button>
@@ -307,7 +309,6 @@ const CourseListing = () => {
         {/* Spacer when sticky */}
         {isSticky && <div className="h-[120px]" />}
 
-        {/* RESULTS AREA */}
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8">
             {contentLoading ? (
