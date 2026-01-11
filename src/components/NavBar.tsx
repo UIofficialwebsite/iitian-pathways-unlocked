@@ -133,19 +133,15 @@ const NavBar = () => {
                   <ChevronDown className="ml-1 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="mt-2">
+              <DropdownMenuContent className="mt-2 bg-white border border-gray-200 shadow-lg">
                 <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation">All Exams</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/jee">JEE Preparation</Link>
+                  <Link to="/exam-preparation/jee" className="cursor-pointer">JEE Preparation</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/neet">NEET Preparation</Link>
+                  <Link to="/exam-preparation/neet" className="cursor-pointer">NEET Preparation</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/iitm-bs">IITM BS Preparation</Link>
+                  <Link to="/exam-preparation/iitm-bs" className="cursor-pointer">IITM BS Preparation</Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
