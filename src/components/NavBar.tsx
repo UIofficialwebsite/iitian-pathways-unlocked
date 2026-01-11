@@ -91,11 +91,11 @@ const NavBar = () => {
                     Courses
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
-                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-[28px]">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
                        ) : (
-                         <div className="grid grid-cols-2 gap-[16px]">
+                         <div className="grid grid-cols-2 gap-3">
                             {courseCategories.map((category) => {
                               const style = getCategoryStyle(category);
                               const IconComponent = style.icon;
@@ -103,12 +103,12 @@ const NavBar = () => {
                                 <NavigationMenuLink key={category} asChild>
                                   <Link 
                                     to={`/courses/category/${style.slug}`}
-                                    className="flex items-center gap-[16px] p-[16px_20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200 group"
+                                    className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
                                   >
-                                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                                    <div className="w-10 h-10 flex items-center justify-center shrink-0">
                                       <IconComponent className={`w-full h-full ${style.color}`} />
                                     </div>
-                                    <span className="text-[17px] font-semibold text-[#1a1a1a]">{category}</span>
+                                    <span className="text-base font-semibold text-[#1a1a1a]">{category}</span>
                                   </Link>
                                 </NavigationMenuLink>
                               );
@@ -129,16 +129,18 @@ const NavBar = () => {
                     Exam Prep
                   </NavigationMenuTrigger>
                   <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
-                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-[28px]">
-                       <div className="grid grid-cols-3 gap-[16px]">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                       <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
                             <NavigationMenuLink key={item.path} asChild>
                               <Link 
                                 to={item.path}
-                                className="flex flex-col items-center text-center gap-[12px] p-[20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] transition-all duration-200 group"
+                                className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
                               >
-                                <item.icon className={`w-10 h-10 ${item.color}`} />
-                                <span className="text-[16px] font-semibold text-[#1a1a1a]">{item.title}</span>
+                                <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                                  <item.icon className={`w-full h-full ${item.color}`} />
+                                </div>
+                                <span className="text-base font-semibold text-[#1a1a1a]">{item.title}</span>
                               </Link>
                             </NavigationMenuLink>
                           ))}
