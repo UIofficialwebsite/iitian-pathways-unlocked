@@ -187,12 +187,12 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR - Left Aligned & Reduced Height/Zoom */}
+        {/* STICKY FILTER BAR - Content containers align with Title/Description */}
         <div 
           ref={filterRef}
           className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}
         >
-          {/* Branch Row */}
+          {/* Row 1: Branch Tabs */}
           <div className="bg-[#f4f2ff]">
             <div className="max-w-6xl mx-auto px-4 md:px-8">
               <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
@@ -219,7 +219,7 @@ const CourseListing = () => {
             </div>
           </div>
 
-          {/* Filter Pills Row */}
+          {/* Row 2: Pill Filters */}
           <div className="bg-white border-b border-[#f3f4f6]">
             <div className="max-w-6xl mx-auto px-4 md:px-8">
               <div className="flex flex-wrap items-center gap-3 py-3 font-sans">
@@ -238,7 +238,7 @@ const CourseListing = () => {
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
                       <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                         {availableLevels.map(lvl => (
-                          <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs">
+                          <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
                             <input 
                               type="checkbox" 
                               checked={tempLevels.includes(lvl)} 
@@ -249,8 +249,8 @@ const CourseListing = () => {
                         ))}
                       </div>
                       <div className="flex gap-2 pt-2 border-t">
-                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded transition-colors">Cancel</button>
-                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0] transition-colors">Apply</button>
+                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
                       </div>
                     </div>
                   )}
@@ -271,7 +271,7 @@ const CourseListing = () => {
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
                       <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                         {availableSubjects.map(sub => (
-                          <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs">
+                          <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
                             <input 
                               type="checkbox" 
                               checked={tempSubjects.includes(sub)} 
@@ -282,8 +282,8 @@ const CourseListing = () => {
                         ))}
                       </div>
                       <div className="flex gap-2 pt-2 border-t">
-                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded transition-colors">Cancel</button>
-                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0] transition-colors">Apply</button>
+                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
                       </div>
                     </div>
                   )}
@@ -304,7 +304,7 @@ const CourseListing = () => {
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
                       <div className="space-y-1.5 mb-3">
                         {['free', 'paid'].map((opt) => (
-                          <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize">
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
                             <input 
                               type="radio" 
                               name="price" 
@@ -316,8 +316,8 @@ const CourseListing = () => {
                         ))}
                       </div>
                       <div className="flex gap-2 pt-2 border-t">
-                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded transition-colors">Cancel</button>
-                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0] transition-colors">Apply</button>
+                        <button onClick={handleCancel} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                        <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
                       </div>
                     </div>
                   )}
@@ -335,17 +335,17 @@ const CourseListing = () => {
         {/* Sticky Spacer */}
         {isSticky && <div className="h-[120px]" />}
 
-        {/* RESULTS SECTION */}
+        {/* RESULTS SECTION - "Showing n Batches" with requested font styling */}
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 font-['Inter',sans-serif]">
             {contentLoading ? (
               <div className="grid lg:grid-cols-3 gap-6">{Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}</div>
             ) : filteredCourses.length === 0 ? (
               <div className="py-20 text-center bg-[#f8faff] rounded-2xl border-2 border-dashed border-slate-200">
-                <p className="text-sm font-semibold text-slate-400">No batches match your selected filters.</p>
+                <p className="text-sm font-normal text-slate-400">No batches match your selected filters.</p>
                 <button 
                   onClick={() => { setSelectedLevels([]); setSelectedSubjects([]); setPriceRange(null); setSearchParams({}); }} 
-                  className="mt-2 text-[#6366f1] text-sm font-bold hover:underline"
+                  className="mt-2 text-[#6366f1] text-sm font-normal hover:underline"
                 >
                   Reset All Filters
                 </button>
@@ -353,11 +353,10 @@ const CourseListing = () => {
             ) : (
               Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
                 <div key={groupName} className="mb-20">
-                  <div className="mb-8">
-                    <h3 className="text-lg md:text-xl font-bold text-[#1a1a1a] uppercase tracking-tight">
+                  <div className="mb-6">
+                    <p className="text-sm md:text-base font-normal text-[#1a1a1a] tracking-tight font-['Inter',sans-serif]">
                       Showing {groupCourses.length} Batches
-                    </h3>
-                    <div className="h-1 w-12 bg-[#6366f1] mt-2 rounded-full" />
+                    </p>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {groupCourses.map((course, index) => (
