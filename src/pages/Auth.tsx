@@ -1,12 +1,7 @@
-
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate, Link } from "react-router-dom";
+import { X } from "lucide-react";
 import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
 import GoogleAuth from "@/components/auth/GoogleAuth";
 import EmailAuth from "@/components/auth/EmailAuth";
 import ProfileSetup from "@/components/profile/ProfileSetup";
@@ -16,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [authTab, setAuthTab] = useState("signin");
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
 
@@ -47,26 +42,15 @@ const Auth = () => {
     }
   }, [user, authLoading, navigate]);
 
-  const handleProfileComplete = () => {
-    navigate('/');
-  };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    );
-  }
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">Loading...</div>;
 
   if (showProfileSetup) {
     return (
       <>
         <NavBar />
-        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 pt-24">
-          <ProfileSetup onComplete={handleProfileComplete} />
+        <div className="min-h-screen flex items-center justify-center bg-white p-4 pt-24 font-['Inter',sans-serif]">
+          <ProfileSetup onComplete={() => navigate('/')} />
         </div>
-        <Footer />
       </>
     );
   }
@@ -74,61 +58,57 @@ const Auth = () => {
   return (
     <>
       <NavBar />
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 pt-24">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center font-bold">
-              Welcome to Unknown IITians
-            </CardTitle>
-            <CardDescription className="text-center">
-              Sign in to access personalized study materials and features
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Tabs value={authTab} onValueChange={setAuthTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin" className="space-y-4">
-                <GoogleAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or continue with email</span>
-                  </div>
-                </div>
-                
-                <EmailAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
-              </TabsContent>
-              
-              <TabsContent value="signup" className="space-y-4">
-                <GoogleAuth isSignUp={true} isLoading={isLoading} setIsLoading={setIsLoading} />
-                
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-white px-2 text-muted-foreground">Or create account with email</span>
-                  </div>
-                </div>
-                
-                <EmailAuth isSignUp={true} isLoading={isLoading} setIsLoading={setIsLoading} />
-              </TabsContent>
-            </Tabs>
-            
-            <div className="text-center text-sm text-gray-600">
-              <p>Your data is secure and protected</p>
+      {/* Background container matches your modal backdrop */}
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
+        
+        {/* THE MODAL CARD */}
+        <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 pt-10 pb-8 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
+          
+          {/* Illustration Area */}
+          <div className="mb-8 flex justify-center">
+            <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
+              <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
+                <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
+                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+
+          <h2 className="text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
+            Sign in to your account <br /> using Google
+          </h2>
+
+          <div className="space-y-4">
+            <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
+            
+            {/* OPTIONAL: Show Email Auth on request */}
+            {!showEmailAuth ? (
+              <button 
+                onClick={() => setShowEmailAuth(true)}
+                className="text-[14px] font-semibold text-[#1d4ed8] hover:underline"
+              >
+                Continue with email instead?
+              </button>
+            ) : (
+              <div className="mt-4 animate-in fade-in duration-300">
+                <EmailAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
+                <button 
+                  onClick={() => setShowEmailAuth(false)}
+                  className="mt-4 text-[13px] text-gray-500 hover:underline"
+                >
+                  Back to Google login
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* FOOTER TERMS */}
+          <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
+            By continuing you agree to our <br />
+            <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+          </div>
+        </div>
       </div>
-      <Footer />
     </>
   );
 };
