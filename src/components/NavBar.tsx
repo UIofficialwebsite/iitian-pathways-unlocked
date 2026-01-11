@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -58,30 +57,28 @@ const NavBar = () => {
   const getCategoryStyle = (category: string) => {
     const normalize = category.toLowerCase();
     
-    // Check for keywords to assign professional icons dynamically
     if (normalize.includes('jee')) {
       return { 
         icon: Atom, 
-        color: "text-[#f39c12]", // Orange/Yellow 
+        color: "text-[#f39c12]", 
         slug: 'jee'
       };
     }
     if (normalize.includes('neet')) {
       return { 
         icon: Stethoscope, 
-        color: "text-[#e74c3c]", // Red
+        color: "text-[#e74c3c]", 
         slug: 'neet'
       };
     }
     if (normalize.includes('iitm') || normalize.includes('bs')) {
       return { 
         icon: GraduationCap, 
-        color: "text-[#2ecc71]", // Green
+        color: "text-[#2ecc71]", 
         slug: 'iitm-bs'
       };
     }
     
-    // Generic fallback for any other category found in the DB
     return { 
       icon: BookOpen, 
       color: "text-gray-600", 
@@ -93,7 +90,7 @@ const NavBar = () => {
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-center items-center h-16 relative">
-          {/* Logo */}
+          {/* Logo Section */}
           <div className="flex items-center absolute left-0">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img
@@ -113,7 +110,7 @@ const NavBar = () => {
               About
             </Link>
             
-            {/* Dynamic Courses Menu (Hover Trigger) */}
+            {/* Professional Grid Design Courses Menu */}
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
@@ -123,13 +120,15 @@ const NavBar = () => {
                     Courses
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
-                    <div className="w-[600px] p-6 bg-[#f9f9f9] rounded-lg border-none shadow-none">
+                    {/* The Section Block Container */}
+                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-[28px]">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500">
                            No active batches currently available.
                          </div>
                        ) : (
-                         <div className="grid grid-cols-2 gap-6">
+                         /* THE EXAM GRID */
+                         <div className="grid grid-cols-2 gap-[16px]">
                             {courseCategories.map((category) => {
                               const style = getCategoryStyle(category);
                               const IconComponent = style.icon;
@@ -138,14 +137,16 @@ const NavBar = () => {
                                 <NavigationMenuLink key={category} asChild>
                                   <Link 
                                     to={`/courses/category/${style.slug}`}
-                                    className="bg-white p-5 rounded-lg flex items-center cursor-pointer border border-black/10 shadow-sm transition-all duration-200 hover:border-black group outline-none"
+                                    className="flex items-center gap-[16px] p-[16px_20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer transition-all duration-200 hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] outline-none group"
                                   >
-                                    <div className={`w-12 h-12 flex justify-center items-center mr-5 text-3xl ${style.color}`}>
-                                      <IconComponent className="w-8 h-8" />
+                                    {/* Icon Styling */}
+                                    <div className="w-12 h-12 flex items-center justify-center shrink-0">
+                                      <IconComponent className={`w-full h-full ${style.color}`} />
                                     </div>
-                                    <div className="text-xl font-medium text-neutral-900">
+                                    {/* Label Styling */}
+                                    <span className="text-[17px] font-semibold text-[#1a1a1a]">
                                       {category}
-                                    </div>
+                                    </span>
                                   </Link>
                                 </NavigationMenuLink>
                               );
@@ -158,7 +159,6 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            {/* Exam Prep Dropdown (Standard Click) */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0">
@@ -188,7 +188,7 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* User Authentication */}
+          {/* User Authentication Section */}
           <div className="hidden md:flex items-center absolute right-0">
             {user ? (
               <div className="flex items-center space-x-4">
@@ -249,11 +249,7 @@ const NavBar = () => {
               <Link to="/about" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 About
               </Link>
-              
-              {/* Mobile Courses Section */}
-              <div className="block px-3 py-2 text-gray-700 font-medium">
-                Courses
-              </div>
+              <div className="block px-3 py-2 text-gray-700 font-medium">Courses</div>
               <div className="pl-6 space-y-2 mb-2">
                  {courseCategories.length > 0 ? (
                     courseCategories.map((category) => {
@@ -274,14 +270,12 @@ const NavBar = () => {
                    <span className="text-sm text-gray-500 italic px-2">No active batches</span>
                  )}
               </div>
-
               <Link to="/exam-preparation" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 Exam Preparation
               </Link>
               <Link to="/career" className="block px-3 py-2 text-gray-700 hover:text-royal">
                 Career
               </Link>
-              
               {user ? (
                 <>
                   <Link to="/dashboard" className="block px-3 py-2 text-gray-700 hover:text-royal">
