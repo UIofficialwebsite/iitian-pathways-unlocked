@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectBlock from "@/components/SubjectBlock";
 import JEEPYQTab from "@/components/JEEPYQTab";
@@ -47,10 +48,8 @@ const JEEPrep = () => {
   }, [jeeNotes]);
 
   // Initialize filters from URL params - subject first, then class
-  // URL format: /exam-preparation/jee/notes/physics/class11
-  // Note: params come unslugified as "Physics", "Class12" but we need proper casing
   const urlSubject = urlParams[0];
-  const urlClass = urlParams[1]?.toLowerCase(); // Convert "Class12" to "class12"
+  const urlClass = urlParams[1]?.toLowerCase();
   
   // Find matching subject from available subjects (case-insensitive)
   const matchedSubject = urlSubject 
@@ -83,7 +82,6 @@ const JEEPrep = () => {
 
   useEffect(() => {
     if (!contentLoading && subjects.length > 0) {
-      // Match URL subject with available subjects
       let newSubject = activeSubject;
       
       if (urlSubject) {
@@ -96,7 +94,6 @@ const JEEPrep = () => {
         }
       }
       
-      // If current subject is not available, update to first available
       const isSubjectAvailable = subjects.some(s => s.toLowerCase() === activeSubject.toLowerCase());
       if (!isSubjectAvailable) {
         newSubject = subjects[0];
@@ -106,19 +103,16 @@ const JEEPrep = () => {
     }
   }, [contentLoading, subjects]);
 
-  // Handle tab changes
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
     updateUrl(newTab, activeSubject, activeClass);
   };
 
-  // Handle subject changes
   const handleSubjectChange = (newSubject: string) => {
     setActiveSubject(newSubject);
     updateUrl(activeTab, newSubject, activeClass);
   };
 
-  // Handle class changes
   const handleClassChange = (newClass: string) => {
     setActiveClass(newClass);
     updateUrl(activeTab, activeSubject, newClass);
@@ -130,7 +124,6 @@ const JEEPrep = () => {
       [id]: (prev[id] || 0) + 1
     }));
     console.log(`Downloading: ${id}`);
-    // Here you would implement the actual download logic
   };
 
   const renderTabContent = (tab: string, content: React.ReactNode) => {
@@ -154,11 +147,9 @@ const JEEPrep = () => {
   const pageDescription = generateSEODescription('jee', activeTab, currentParams);
   const canonicalUrl = generateCanonicalUrl(location.pathname);
 
-  // Update document head for SEO
   useEffect(() => {
     document.title = pageTitle;
     
-    // Update meta description
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
       metaDescription = document.createElement('meta');
@@ -167,7 +158,6 @@ const JEEPrep = () => {
     }
     metaDescription.setAttribute('content', pageDescription);
 
-    // Update canonical URL
     let canonicalLink = document.querySelector('link[rel="canonical"]');
     if (!canonicalLink) {
       canonicalLink = document.createElement('link');
@@ -181,22 +171,20 @@ const JEEPrep = () => {
     <>
       <NavBar />
       
-      <main className="pt-20">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-royal to-royal-dark text-white py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-4xl sm:text-5xl font-bold mb-6">JEE Preparation</h1>
-            <p className="text-xl max-w-3xl mx-auto">
-              Master Physics, Chemistry, and Mathematics with our comprehensive JEE study materials
-            </p>
-          </div>
-        </section>
+      <main className="pt-16">
+        {/* Header with Breadcrumb, Title, Share Button */}
+        <ExamPrepHeader
+          examName="JEE"
+          examPath="/exam-preparation/jee"
+          currentTab={activeTab}
+          pageTitle="JEE Preparation"
+        />
 
-        {/* Main Content */}
-        <section className="py-12 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Filters Row */}
+        <div className="bg-white border-b sticky top-16 z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
             <Tabs defaultValue="notes" value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <div className="overflow-x-auto pb-2">
+              <div className="overflow-x-auto pb-1">
                 <TabsList className="w-full min-w-fit">
                   <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
                     Notes
@@ -215,10 +203,15 @@ const JEEPrep = () => {
                   </TabsTrigger>
                 </TabsList>
               </div>
+            </Tabs>
+          </div>
+        </div>
 
+        {/* Main Content */}
+        <section className="py-8 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsContent value="notes">
-                <h2 className="text-2xl font-bold mb-4">Subject-wise Notes</h2>
-                
                 {/* Subject Filter Tabs */}
                 <div className="mb-6">
                   {contentLoading && subjects.length === 0 ? (
@@ -265,22 +258,18 @@ const JEEPrep = () => {
               </TabsContent>
 
               <TabsContent value="pyqs">
-                <h2 className="text-2xl font-bold mb-4">Previous Year Questions</h2>
                 {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} onFilterChange={updateUrl} />)}
               </TabsContent>
 
               <TabsContent value="study-groups">
-                <h2 className="text-2xl font-bold mb-4">Study Groups</h2>
                 {renderTabContent("study-groups", <StudyGroupsTab examType="JEE" />)}
               </TabsContent>
 
               <TabsContent value="news-updates">
-                <h2 className="text-2xl font-bold mb-4">News & Updates</h2>
                 {renderTabContent("news-updates", <NewsUpdatesTab examType="JEE" />)}
               </TabsContent>
 
               <TabsContent value="important-dates">
-                <h2 className="text-2xl font-bold mb-4">Important Dates</h2>
                 {renderTabContent("important-dates", <ImportantDatesTab examType="JEE" />)}
               </TabsContent>
             </Tabs>
