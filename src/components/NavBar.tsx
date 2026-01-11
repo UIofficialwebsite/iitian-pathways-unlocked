@@ -3,13 +3,10 @@ import { Link } from "react-router-dom";
 import { 
   Menu, 
   X, 
-  ChevronDown, 
   Atom, 
   Stethoscope, 
   GraduationCap, 
-  BookOpen,
-  ChevronRight,
-  FileText
+  BookOpen
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,11 +19,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
+  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-  NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -73,24 +70,26 @@ const NavBar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full relative">
           
-          <div className="flex items-center">
+          <div className="flex items-center h-full">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-10 w-auto" />
             </Link>
           </div>
 
-          <div className="hidden md:flex items-center justify-center space-x-8">
+          {/* Desktop Nav Items */}
+          <div className="hidden md:flex items-center justify-center space-x-8 h-full">
             <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
-            <NavigationMenu className="static">
-              <NavigationMenuList className="static">
-                <NavigationMenuItem className="static">
+            <NavigationMenu className="h-full">
+              <NavigationMenuList className="h-full">
+                <NavigationMenuItem className="h-full flex items-center relative">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded-b-xl border-t-0 shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                  {/* Dynamic Positioning: absolute top-full centers it flush against the navbar bottom */}
+                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
                        ) : (
@@ -120,14 +119,15 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            <NavigationMenu className="static">
-              <NavigationMenuList className="static">
-                <NavigationMenuItem className="static">
+            <NavigationMenu className="h-full">
+              <NavigationMenuList className="h-full">
+                <NavigationMenuItem className="h-full flex items-center relative">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Exam Prep
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded-b-xl border-t-0 shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                  {/* Dynamic Positioning: absolute top-full centers it flush against the navbar bottom */}
+                  <NavigationMenuContent className="absolute top-full left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
                             <NavigationMenuLink key={item.path} asChild>
@@ -152,7 +152,7 @@ const NavBar = () => {
             <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
-          <div className="hidden md:flex items-center">
+          <div className="hidden md:flex items-center h-full">
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
