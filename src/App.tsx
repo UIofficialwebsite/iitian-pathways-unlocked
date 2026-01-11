@@ -7,6 +7,9 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import EmailPopup from "@/components/EmailPopup";
 import ScrollPersistence from "@/components/ScrollPersistence";
+import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle"; // Import the new toggle component
+
+// Page Imports
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import CourseListing from "./pages/CourseListing";
@@ -16,8 +19,8 @@ import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
 import Career from "./pages/Career";
-import CareerOpportunities from "./pages/CareerOpportunities"; // Import this
-import JobDetails from "./pages/JobDetails"; // Import this
+import CareerOpportunities from "./pages/CareerOpportunities";
+import JobDetails from "./pages/JobDetails";
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
 import NotFound from "./pages/NotFound";
@@ -48,6 +51,10 @@ const App = () => (
           <EmailPopup />
           <BrowserRouter>
             <ScrollPersistence />
+            
+            {/* Global floating announcement system replaces the top bar */}
+            <FloatingAnnouncementToggle /> 
+            
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
