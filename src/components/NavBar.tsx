@@ -74,10 +74,7 @@ const NavBar = () => {
   const examPrepItems = [
     { title: "IIT JEE", path: "/exam-preparation/jee", icon: Atom, color: "text-[#3B82F6]" },
     { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
-    { title: "ESE", path: "/exam-preparation/ese", icon: GraduationCap, color: "text-[#F59E0B]" },
-    { title: "GATE", path: "/exam-preparation/gate", icon: Atom, color: "text-[#FCD34D]" },
-    { title: "AE/JE", path: "/exam-preparation/ae-je", icon: BookOpen, color: "text-[#3B82F6]" },
-    { title: "Olympiad", path: "/exam-preparation/olympiad", icon: GraduationCap, color: "text-[#FBBF24]" }
+    { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
   ];
 
   return (
@@ -157,7 +154,27 @@ const NavBar = () => {
 
           <div className="flex items-center">
             {user ? (
-              <Button variant="ghost" onClick={handleSignOut} className="text-red-600 font-sans font-medium">Log out</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="focus:outline-none">
+                    <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-[#1d4ed8] transition-all">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white z-[200]">
+                  <DropdownMenuLabel className="font-normal text-sm text-gray-500 truncate">{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer font-medium">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer font-medium">
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link to="/auth">
                 <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
