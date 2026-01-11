@@ -6,7 +6,7 @@ const FloatingAnnouncementToggle = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-6 z-[1000] flex flex-col items-end gap-4">
+    <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-4">
       {/* Announcement pop-up appears above the arrow button */}
       {isOpen && (
         <div className="w-[320px] sm:w-[400px]">
