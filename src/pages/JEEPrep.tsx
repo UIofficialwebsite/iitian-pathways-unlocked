@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectBlock from "@/components/SubjectBlock";
 import JEEPYQTab from "@/components/JEEPYQTab";
@@ -290,7 +289,6 @@ const JEEPrep = () => {
       </main>
 
       <Footer />
-      <EmailPopup />
     </>
   );
 };

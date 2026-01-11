@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -321,7 +320,6 @@ const Career = () => {
       </main>
 
       <Footer />
-      <EmailPopup />
     </>
   );
 };
