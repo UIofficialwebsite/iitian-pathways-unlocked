@@ -147,6 +147,7 @@ const CourseListing = () => {
     setPricingOpen(false);
   };
 
+  // Fixed ReferenceError: removed selectedMode
   const hasActiveFilters = priceRange || branchFromUrl || selectedLevel || selectedSubject;
 
   return (
@@ -163,7 +164,7 @@ const CourseListing = () => {
           )}
         </section>
 
-        {/* HERO AREA */}
+        {/* HERO AREA - Centered Container for Title & Description */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
@@ -192,116 +193,119 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR - Left Aligned, Reduced Height, No Shadow */}
+        {/* STICKY FILTER BAR - Content containers align with Title/Description */}
         <div 
           ref={filterRef}
-          className={`w-full z-40 ${isSticky ? 'fixed top-16 bg-white border-b' : 'relative'}`}
+          className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}
         >
-          {/* Branch Tabs - Left Aligned */}
-          <div className="bg-[#f4f2ff] pt-4 flex justify-start overflow-x-auto no-scrollbar">
-            <div className="flex gap-8 px-4 md:px-8 max-w-6xl">
-              <button 
-                onClick={() => setSearchParams({})}
-                className={`pb-2 text-[15px] cursor-pointer transition-all whitespace-nowrap font-sans ${
-                  !branchFromUrl ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
-                }`}
-              >
-                All Batches
-              </button>
-              {availableBranches.map((branch) => (
-                <button
-                  key={branch}
-                  onClick={() => setSearchParams({ branch: branch })}
+          {/* Row 1: Branch Tabs (Lavender Background) */}
+          <div className="bg-[#f4f2ff]">
+            <div className="max-w-6xl mx-auto px-4 md:px-8">
+              <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
+                <button 
+                  onClick={() => setSearchParams({})}
                   className={`pb-2 text-[15px] cursor-pointer transition-all whitespace-nowrap font-sans ${
-                    branchFromUrl === branch ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
+                    !branchFromUrl ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
                   }`}
                 >
-                  {branch}
+                  All Batches
                 </button>
-              ))}
+                {availableBranches.map((branch) => (
+                  <button
+                    key={branch}
+                    onClick={() => setSearchParams({ branch: branch })}
+                    className={`pb-2 text-[15px] cursor-pointer transition-all whitespace-nowrap font-sans ${
+                      branchFromUrl === branch ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
+                    }`}
+                  >
+                    {branch}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Pill Filters - Left Aligned */}
-          <div className="bg-white py-3 border-b border-[#f3f4f6] flex justify-start">
-            <div className="flex flex-wrap items-center gap-3 px-4 md:px-8 max-w-6xl font-sans">
-              
-              {/* LEVEL FILTER */}
-              <div className="relative">
-                <button 
-                  onClick={() => setLevelOpen(!levelOpen)} 
-                  className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
-                    selectedLevel ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
-                  }`}
-                >
-                  Level {selectedLevel ? `: ${selectedLevel}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
-                </button>
-                {levelOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[140px] p-1">
-                    <button onClick={() => {setSelectedLevel(null); setLevelOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb]">All Levels</button>
-                    {availableLevels.map(lvl => (
-                      <button key={lvl} onClick={() => {setSelectedLevel(lvl); setLevelOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb] capitalize">{lvl}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* SUBJECT FILTER */}
-              <div className="relative">
-                <button 
-                  onClick={() => setSubjectOpen(!subjectOpen)} 
-                  className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
-                    selectedSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
-                  }`}
-                >
-                  Subject {selectedSubject ? `: ${selectedSubject}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
-                </button>
-                {subjectOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[140px] p-1">
-                    <button onClick={() => {setSelectedSubject(null); setSubjectOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb]">All Subjects</button>
-                    {availableSubjects.map(sub => (
-                      <button key={sub} onClick={() => {setSelectedSubject(sub); setSubjectOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb] capitalize">{sub}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* PRICING FILTER */}
-              <div className="relative">
-                <button 
-                  onClick={() => {setPricingOpen(!pricingOpen); setTempPrice(priceRange);}} 
-                  className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
-                    priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
-                  }`}
-                >
-                  Pricing {priceRange ? `: ${priceRange}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
-                </button>
-                {pricingOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-2xl z-50 min-w-[180px] p-3">
-                    <div className="space-y-1.5 mb-3">
-                      {['free', 'paid'].map((opt) => (
-                        <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded-md">
-                          <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1] w-3.5 h-3.5" />
-                          <span className="text-xs capitalize font-medium">{opt}</span>
-                        </label>
+          {/* Row 2: Secondary Filters (White Background) */}
+          <div className="bg-white border-b border-[#f3f4f6]">
+            <div className="max-w-6xl mx-auto px-4 md:px-8">
+              <div className="flex flex-wrap items-center gap-3 py-3 font-sans">
+                {/* LEVEL FILTER */}
+                <div className="relative">
+                  <button 
+                    onClick={() => setLevelOpen(!levelOpen)} 
+                    className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
+                      selectedLevel ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
+                    }`}
+                  >
+                    Level {selectedLevel ? `: ${selectedLevel}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
+                  </button>
+                  {levelOpen && (
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[140px] p-1">
+                      <button onClick={() => {setSelectedLevel(null); setLevelOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb]">All Levels</button>
+                      {availableLevels.map(lvl => (
+                        <button key={lvl} onClick={() => {setSelectedLevel(lvl); setLevelOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb] capitalize">{lvl}</button>
                       ))}
                     </div>
-                    <div className="flex gap-2 pt-2 border-t border-slate-100">
-                      <button onClick={() => setPricingOpen(false)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded-md transition-colors">Cancel</button>
-                      <button onClick={handleApplyPrice} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded-md hover:bg-[#5255e0] transition-colors">Apply</button>
+                  )}
+                </div>
+
+                {/* SUBJECT FILTER */}
+                <div className="relative">
+                  <button 
+                    onClick={() => setSubjectOpen(!subjectOpen)} 
+                    className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
+                      selectedSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
+                    }`}
+                  >
+                    Subject {selectedSubject ? `: ${selectedSubject}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
+                  </button>
+                  {subjectOpen && (
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[140px] p-1">
+                      <button onClick={() => {setSelectedSubject(null); setSubjectOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb]">All Subjects</button>
+                      {availableSubjects.map(sub => (
+                        <button key={sub} onClick={() => {setSelectedSubject(sub); setSubjectOpen(false);}} className="w-full text-left px-3 py-2 text-xs hover:bg-[#f9fafb] capitalize">{sub}</button>
+                      ))}
                     </div>
-                  </div>
+                  )}
+                </div>
+
+                {/* PRICING FILTER */}
+                <div className="relative">
+                  <button 
+                    onClick={() => {setPricingOpen(!pricingOpen); setTempPrice(priceRange);}} 
+                    className={`px-4 py-1.5 border rounded-[30px] text-[13px] flex items-center transition-all ${
+                      priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
+                    }`}
+                  >
+                    Pricing {priceRange ? `: ${priceRange}` : ''} <ChevronDown className="ml-1.5 w-3.5 h-3.5" />
+                  </button>
+                  {pricingOpen && (
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-2xl z-50 min-w-[180px] p-3">
+                      <div className="space-y-1.5 mb-3">
+                        {['free', 'paid'].map((opt) => (
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded-md">
+                            <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1] w-3.5 h-3.5" />
+                            <span className="text-xs capitalize font-medium">{opt}</span>
+                          </label>
+                        ))}
+                      </div>
+                      <div className="flex gap-2 pt-2 border-t border-slate-100">
+                        <button onClick={() => setPricingOpen(false)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded-md transition-colors">Cancel</button>
+                        <button onClick={handleApplyPrice} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded-md hover:bg-[#5255e0] transition-colors">Apply</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Language Placeholder */}
+                <div className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[13px] text-[#374151] cursor-not-allowed opacity-50 bg-[#f9fafb]">Language</div>
+
+                {hasActiveFilters && (
+                  <button onClick={clearAllFilters} className="px-4 py-1.5 text-[13px] font-bold text-destructive hover:bg-destructive/10 rounded-[30px] flex items-center gap-1">
+                    <X className="w-3.5 h-3.5" /> Clear All
+                  </button>
                 )}
               </div>
-
-              {/* Language Placeholder */}
-              <div className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[13px] text-[#374151] cursor-not-allowed opacity-50 bg-[#f9fafb]">Language</div>
-
-              {hasActiveFilters && (
-                <button onClick={clearAllFilters} className="px-4 py-1.5 text-[13px] font-bold text-destructive hover:bg-destructive/10 rounded-[30px] flex items-center gap-1">
-                  <X className="w-3.5 h-3.5" /> Clear All
-                </button>
-              )}
             </div>
           </div>
         </div>
