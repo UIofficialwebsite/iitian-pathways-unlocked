@@ -51,17 +51,27 @@ const CourseListing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [filterOffset]);
 
-  // BANNER FETCHING - Ported exactly from Courses.tsx logic
+  // BANNER FETCHING - Updated to support full URLs and Query Parameters
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
       try {
         const { data } = await supabase.from('page_banners').select('image_url, page_path');
         if (data) {
-          const match = data.find(b => 
-            b.page_path === location.pathname || 
-            b.page_path === (examCategory || 'courses')
-          );
+          // Construct current relative full path (e.g., /courses/listing/iitm-bs?branch=Data%20Science)
+          const currentFullPath = location.pathname + location.search;
+          
+          const match = data.find(b => {
+            // Normalize path: If DB contains "https://domain.com/path", convert to "/path"
+            const dbPath = b.page_path.replace(/^(?:\/\/|[^\/]+)*\//, '/');
+            
+            return (
+              dbPath === currentFullPath || 
+              dbPath === location.pathname || 
+              dbPath === (examCategory || 'courses')
+            );
+          });
+          
           setBannerImage(match?.image_url || null);
         }
       } catch (err) { 
@@ -71,7 +81,7 @@ const CourseListing = () => {
       }
     };
     fetchBanner();
-  }, [location.pathname, examCategory]);
+  }, [location.pathname, location.search, examCategory]);
 
   // 4. DATA LOGIC
   const currentCategoryData = useMemo(() => {
@@ -130,7 +140,7 @@ const CourseListing = () => {
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION - Matched Height and Styling */}
+        {/* BANNER SECTION - Fixed height constraints */}
         <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
@@ -139,7 +149,7 @@ const CourseListing = () => {
           )}
         </section>
 
-        {/* HERO AREA - Matched Background Gradients, Clip-Paths, and Typography */}
+        {/* HERO AREA - Matches Courses.tsx Gradients and Typography */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
@@ -160,7 +170,7 @@ const CourseListing = () => {
               <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
 
-            {/* Title & Description Typography */}
+            {/* Title & Description */}
             <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight">
               {currentCategoryData.name} Online Coaching {branchFromUrl && ` For ${branchFromUrl}`}
             </h1>
