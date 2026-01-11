@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ChevronRight,
   Home,
+  ChevronDown,
   X
 } from "lucide-react";
 
@@ -91,6 +92,7 @@ const CourseListing = () => {
   const availableLevels = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.level))).filter(Boolean).sort(), [branchFilteredCourses]);
   const availableSubjects = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort(), [branchFilteredCourses]);
 
+  // Main Filter Logic - Instant Batch Loading
   const filteredCourses = useMemo(() => {
     let result = [...branchFilteredCourses];
     if (selectedLevels.length > 0) result = result.filter(c => selectedLevels.includes(c.level || ''));
@@ -103,10 +105,10 @@ const CourseListing = () => {
     if (newlyLaunched) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      result = result.filter(c => new Date(c.created_at) > thirtyDaysAgo);
+      result = result.filter(c => c.created_at && new Date(c.created_at) > thirtyDaysAgo);
     }
     if (fastrackOnly) {
-      result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack') || c.tags?.some(t => t.toLowerCase().includes('fastrack')));
+      result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
     }
     return result;
   }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly]);
@@ -165,7 +167,7 @@ const CourseListing = () => {
               <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
             <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight uppercase tracking-tight">{currentCategoryName} Online Coaching</h1>
-            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal">Access curated coaching and live sessions for {currentCategoryName} preparation. Explore lectures, study materials, and mock test series.</p>
+            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal">Access curated coaching and live sessions for {currentCategoryName} preparation.</p>
           </div>
         </div>
 
@@ -182,12 +184,13 @@ const CourseListing = () => {
           </div>
 
           <div className="bg-white border-b border-[#f3f4f6]">
-            <div className="max-w-6xl mx-auto px-4 md:px-8">
-              <div className="flex flex-wrap items-center gap-3 py-3 font-sans">
-                {/* Level Dropdown */}
+            <div className="max-w-6xl mx-auto px-4 md:px-8 overflow-x-auto no-scrollbar">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max">
+                {/* Level Multi-Selector */}
                 <div className="relative">
                   <button onClick={() => toggleDropdown('level')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedLevels.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                    Level {selectedLevels.length > 0 ? `(${selectedLevels.length})` : ''} <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180 border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    Level {selectedLevels.length > 0 ? `(${selectedLevels.length})` : ''} 
+                    <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'level' && (
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
@@ -203,10 +206,11 @@ const CourseListing = () => {
                   )}
                 </div>
 
-                {/* Subject Dropdown */}
+                {/* Subject Multi-Selector */}
                 <div className="relative">
                   <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                    Subject {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180 border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    Subject {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
+                    <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'subject' && (
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
@@ -225,7 +229,8 @@ const CourseListing = () => {
                 {/* Pricing Dropdown */}
                 <div className="relative">
                   <button onClick={() => toggleDropdown('pricing')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                    Pricing {priceRange ? `: ${priceRange}` : ''} <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180 border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    Pricing {priceRange ? `: ${priceRange}` : ''} 
+                    <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'pricing' && (
                     <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
@@ -241,8 +246,8 @@ const CourseListing = () => {
                   )}
                 </div>
 
-                <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all ${newlyLaunched ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Newly Launched</button>
-                <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batches</button>
+                <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${newlyLaunched ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Newly Launched</button>
+                <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batches</button>
               </div>
             </div>
           </div>
