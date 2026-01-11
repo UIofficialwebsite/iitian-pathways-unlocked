@@ -58,9 +58,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         )}
       </div>
 
-      {/* Header: Bold Title + Tags in One Row */}
+      {/* Header: Full Title + Tags in One Row */}
       <div className="flex items-start justify-between gap-2 mb-[18px] px-1">
-        <h2 className="text-[19px] font-bold text-[#1a1a1a] flex-1 leading-[1.2] line-clamp-2 min-h-[46px]">
+        {/* Removed line-clamp-2 and min-h to show full title */}
+        <h2 className="text-[19px] font-bold text-[#1a1a1a] flex-1 leading-[1.2]">
           {course.title}
         </h2>
         
