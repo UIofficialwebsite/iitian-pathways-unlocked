@@ -2,7 +2,6 @@
 import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 import PartnershipsSection from "@/components/PartnershipsSection";
 import { Timeline } from "@/components/ui/timeline";
 
@@ -175,7 +174,6 @@ const About = () => {
       </main>
 
       <Footer />
-      <EmailPopup />
     </>
   );
 };

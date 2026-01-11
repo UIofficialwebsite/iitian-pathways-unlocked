@@ -5,9 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
-import EmailPopup from "@/components/EmailPopup";
 import ScrollPersistence from "@/components/ScrollPersistence";
-import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle"; // Import the new toggle component
+import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
 
 // Page Imports
 import Index from "./pages/Index";
@@ -48,7 +47,6 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <EmailPopup />
           <BrowserRouter>
             <ScrollPersistence />
             

@@ -7,13 +7,11 @@ import WhyChooseUsSection from "@/components/WhyChooseUsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import Footer from "@/components/Footer";
-import EmailPopup from "@/components/EmailPopup";
 
 const Index = () => {
   return (
     <>
       <NavBar />
-      {/* AnnouncementBar removed from here to prevent it showing at the top */}
       <HeroCarousel />
       <WelcomeSection />
       <CategoriesSection />
@@ -21,7 +19,6 @@ const Index = () => {
       <ResourceHubSection />
       <TestimonialsSection />
       <Footer />
-      <EmailPopup />
     </>
   );
 };
