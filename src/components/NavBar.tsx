@@ -32,7 +32,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTrigger,
-  SheetClose,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,7 +41,6 @@ const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
   
-  // State for mobile drill-down navigation
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -86,7 +84,7 @@ const NavBar = () => {
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[150] h-16 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         
-        {/* DESKTOP VIEW - Kept for consistency */}
+        {/* DESKTOP VIEW */}
         <div className="hidden md:flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
@@ -94,78 +92,75 @@ const NavBar = () => {
             </Link>
           </div>
           <div className="flex items-center justify-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
-            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
-            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
+            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Home</Link>
+            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">About</Link>
+            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Career</Link>
           </div>
           <div className="flex items-center">
             {user ? (
-              <Button variant="ghost" onClick={handleSignOut} className="text-red-600">Log out</Button>
+              <Button variant="ghost" onClick={handleSignOut} className="text-red-600 font-sans">Log out</Button>
             ) : (
               <Link to="/auth">
-                <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6">Sign In</Button>
+                <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans">Sign In</Button>
               </Link>
             )}
           </div>
         </div>
 
-        {/* MOBILE VIEW: Logo beside hamburger */}
+        {/* MOBILE VIEW */}
         <div className="md:hidden flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="text-gray-700 p-0 hover:bg-transparent">
-                  <Menu className="h-6 w-6" />
+                  <Menu className="h-7 w-7" />
                 </Button>
               </SheetTrigger>
               
-              {/* FULL SCREEN MENU CONTAINER */}
-              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none">
-                {/* Header Section from your design */}
-                <SheetHeader className="px-5 py-4 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0">
+              {/* FULL SCREEN MENU */}
+              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none font-sans">
+                {/* Header: Logo and Default Close (The default X is inside SheetContent) */}
+                <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0">
                   <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
-                  <SheetClose asChild>
-                    <button className="text-black outline-none">
-                      <X className="h-6 w-6 stroke-[2.5]" />
-                    </button>
-                  </SheetClose>
+                  {/* The default close button provided by Shadcn is positioned absolutely. 
+                      If you see two, ensure the UI/sheet.tsx file doesn't have a redundant button. */}
                 </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto bg-white nav-list">
+                <div className="flex-1 overflow-y-auto bg-white">
                   {/* --- PANE 1: MAIN MENU --- */}
                   {activePane === "main" && (
                     <div className="flex flex-col animate-in slide-in-from-right duration-200">
                       <Link 
                         to="/" 
-                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]"
                         onClick={() => setIsSheetOpen(false)}
                       >
                         Home
                       </Link>
                       <Link 
                         to="/about" 
-                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]"
                         onClick={() => setIsSheetOpen(false)}
                       >
                         About Us
                       </Link>
                       <button 
                         onClick={() => setActivePane("courses")}
-                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
                       >
                         All Courses
-                        <ChevronRight className="h-4 w-4 text-[#444] stroke-[2.5]" />
+                        <ChevronRight className="h-5 w-5 text-[#444] stroke-[2.5]" />
                       </button>
                       <button 
                         onClick={() => setActivePane("examprep")}
-                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
                       >
                         Exam Preparation
-                        <ChevronRight className="h-4 w-4 text-[#444] stroke-[2.5]" />
+                        <ChevronRight className="h-5 w-5 text-[#444] stroke-[2.5]" />
                       </button>
                       <Link 
                         to="/career" 
-                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]"
                         onClick={() => setIsSheetOpen(false)}
                       >
                         Career
@@ -173,7 +168,7 @@ const NavBar = () => {
                     </div>
                   )}
 
-                  {/* --- PANE 2: COURSES SECTION (Drill-down) --- */}
+                  {/* --- PANE 2: COURSES SECTION --- */}
                   {activePane === "courses" && (
                     <div className="flex flex-col animate-in slide-in-from-left duration-200">
                       <button 
@@ -182,8 +177,8 @@ const NavBar = () => {
                       >
                         <ArrowLeft className="h-4 w-4" /> Back to Menu
                       </button>
-                      <div className="px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-[#f2f2f2]">
-                        Select Course Category
+                      <div className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-[1px] border-b border-[#f2f2f2]">
+                        Explore Categories
                       </div>
                       {courseCategories.map((category) => {
                         const style = getCategoryStyle(category);
@@ -191,10 +186,10 @@ const NavBar = () => {
                           <Link 
                             key={category}
                             to={`/courses/category/${style.slug}`}
-                            className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center gap-3 border-b border-[#f2f2f2]"
+                            className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center gap-4 border-b border-[#f2f2f2]"
                             onClick={() => setIsSheetOpen(false)}
                           >
-                            <style.icon className={`h-5 w-5 ${style.color}`} />
+                            <style.icon className={`h-6 w-6 ${style.color}`} />
                             {category}
                           </Link>
                         );
@@ -202,7 +197,7 @@ const NavBar = () => {
                     </div>
                   )}
 
-                  {/* --- PANE 3: EXAM PREP SECTION (Drill-down) --- */}
+                  {/* --- PANE 3: EXAM PREP SECTION --- */}
                   {activePane === "examprep" && (
                     <div className="flex flex-col animate-in slide-in-from-left duration-200">
                       <button 
@@ -211,17 +206,17 @@ const NavBar = () => {
                       >
                         <ArrowLeft className="h-4 w-4" /> Back to Menu
                       </button>
-                      <div className="px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-[#f2f2f2]">
+                      <div className="px-6 py-4 text-xs font-bold text-gray-400 uppercase tracking-[1px] border-b border-[#f2f2f2]">
                         Resources
                       </div>
                       {examPrepItems.map((item) => (
                         <Link 
                           key={item.path}
                           to={item.path}
-                          className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center gap-3 border-b border-[#f2f2f2]"
+                          className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center gap-4 border-b border-[#f2f2f2]"
                           onClick={() => setIsSheetOpen(false)}
                         >
-                          <item.icon className={`h-5 w-5 ${item.color}`} />
+                          <item.icon className={`h-6 w-6 ${item.color}`} />
                           {item.title}
                         </Link>
                       ))}
@@ -229,18 +224,18 @@ const NavBar = () => {
                   )}
                 </div>
 
-                {/* Footer Section with Deep Blue Button */}
-                <footer className="px-5 py-8 bg-white border-t border-[#f2f2f2]">
+                {/* Footer with Professional Deep Blue Button */}
+                <footer className="px-5 py-8 bg-white border-t border-[#f2f2f2] mt-auto">
                   {user ? (
                     <Button 
                       onClick={handleSignOut}
-                      className="w-full py-[26px] bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-base font-semibold shadow-none transition-none"
+                      className="w-full py-7 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-[17px] font-bold shadow-none transition-none font-sans"
                     >
                       Log out
                     </Button>
                   ) : (
                     <Link to="/auth" onClick={() => setIsSheetOpen(false)}>
-                      <Button className="w-full py-[26px] bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-base font-semibold shadow-none transition-none">
+                      <Button className="w-full py-7 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-[17px] font-bold shadow-none transition-none font-sans">
                         Login/Register
                       </Button>
                     </Link>
@@ -257,14 +252,14 @@ const NavBar = () => {
           <div>
             {user ? (
               <Link to="/dashboard">
-                <Avatar className="h-8 w-8 border border-gray-100">
+                <Avatar className="h-9 w-9 border border-gray-100">
                   <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="font-sans">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
               </Link>
             ) : (
               <Link to="/auth">
-                <Button size="sm" className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 h-8 text-sm font-medium">
+                <Button size="sm" className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 h-9 text-sm font-bold font-sans">
                   Login
                 </Button>
               </Link>
