@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AnnouncementBar from "./AnnouncementBar";
+import { AnnouncementBar } from "./AnnouncementBar";
 
 const FloatingAnnouncementToggle = () => {
   const [isOpen, setIsOpen] = useState(false);

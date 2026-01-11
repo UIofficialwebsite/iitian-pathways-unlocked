@@ -5,6 +5,7 @@ import { ArrowRight, Megaphone, X } from 'lucide-react';
 import { useAnnouncements } from '@/hooks/useAnnouncements';
 
 interface AnnouncementBarProps {
+  isFloating?: boolean;
   onClose?: () => void;
 }
 
@@ -36,7 +37,7 @@ export const AnnouncementBar = ({ onClose }: AnnouncementBarProps) => {
           <div key={announcement.id} className="group p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
             <h4 className="font-semibold text-gray-900 text-sm mb-1">{announcement.title}</h4>
             <p className="text-gray-600 text-xs leading-relaxed mb-3">
-              {announcement.content || announcement.description}
+              {announcement.description}
             </p>
             {announcement.link && (
               <Button
