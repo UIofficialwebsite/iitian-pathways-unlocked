@@ -40,7 +40,6 @@ const NavBar = () => {
     window.location.href = '/';
   };
 
-  // Dynamically extract unique categories from the database
   const courseCategories = useMemo(() => {
     const categories = new Set<string>();
     if (courses && courses.length > 0) {
@@ -53,97 +52,62 @@ const NavBar = () => {
     return Array.from(categories).sort();
   }, [courses]);
 
-  // Helper to assign icons based on category keywords
   const getCategoryStyle = (category: string) => {
     const normalize = category.toLowerCase();
-    
-    if (normalize.includes('jee')) {
-      return { 
-        icon: Atom, 
-        color: "text-[#f39c12]", 
-        slug: 'jee'
-      };
-    }
-    if (normalize.includes('neet')) {
-      return { 
-        icon: Stethoscope, 
-        color: "text-[#e74c3c]", 
-        slug: 'neet'
-      };
-    }
-    if (normalize.includes('iitm') || normalize.includes('bs')) {
-      return { 
-        icon: GraduationCap, 
-        color: "text-[#2ecc71]", 
-        slug: 'iitm-bs'
-      };
-    }
-    
-    return { 
-      icon: BookOpen, 
-      color: "text-gray-600", 
-      slug: category.toLowerCase().replace(/\s+/g, '-')
-    };
+    if (normalize.includes('jee')) return { icon: Atom, color: "text-[#f39c12]", slug: 'jee' };
+    if (normalize.includes('neet')) return { icon: Stethoscope, color: "text-[#e74c3c]", slug: 'neet' };
+    if (normalize.includes('iitm') || normalize.includes('bs')) return { icon: GraduationCap, color: "text-[#2ecc71]", slug: 'iitm-bs' };
+    return { icon: BookOpen, color: "text-gray-600", slug: category.toLowerCase().replace(/\s+/g, '-') };
   };
 
   return (
-    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-50 h-16">
+    <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[100] h-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
-        <div className="flex justify-center items-center h-full relative">
-          {/* Logo Section */}
-          <div className="flex items-center absolute left-0">
+        <div className="flex justify-between items-center h-full relative">
+          
+          {/* Logo */}
+          <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img
                 src="/lovable-uploads/UI_logo.png" 
-                alt="Unknown IITians Logo" 
+                alt="Logo" 
                 className="h-10 w-auto"
               />
             </Link>
           </div>
 
-          {/* Center Navigation Group */}
-          <div className="hidden md:flex items-center justify-center space-x-6">
-            <Link to="/" className="text-gray-700 hover:text-royal transition-colors">
-              Home
-            </Link>
-            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors">
-              About
-            </Link>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center justify-center space-x-8">
+            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
+            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
-            {/* Professional Grid Design Courses Menu */}
             <NavigationMenu className="static">
-              <NavigationMenuList className="static">
-                <NavigationMenuItem className="static">
-                  <NavigationMenuTrigger 
-                    className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent data-[active]:bg-transparent data-[state=open]:bg-transparent text-base font-normal h-auto p-0"
-                  >
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  {/* Alignment logic: fixed positioning below the 64px (h-16) nav bar */}
-                  <NavigationMenuContent className="fixed top-16 left-0 right-0 flex justify-center bg-transparent border-none shadow-none mt-0">
-                    <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_4px_12px_rgba(0,0,0,0.06)] p-[28px] mx-auto">
+                  
+                  {/* Dropdown Container: High Z-index, perfectly centered below navbar */}
+                  <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
+                    <div className="w-[850px] bg-white border border-gray-200 rounded-md shadow-2xl p-8 transform transition-all">
                        {courseCategories.length === 0 ? (
-                         <div className="text-center p-4 text-gray-500">
-                           No active batches currently available.
-                         </div>
+                         <div className="text-center p-4 text-gray-500">No active batches available.</div>
                        ) : (
-                         <div className="grid grid-cols-2 gap-[16px]">
+                         <div className="grid grid-cols-2 gap-4">
                             {courseCategories.map((category) => {
                               const style = getCategoryStyle(category);
                               const IconComponent = style.icon;
-                              
                               return (
                                 <NavigationMenuLink key={category} asChild>
                                   <Link 
                                     to={`/courses/category/${style.slug}`}
-                                    className="flex items-center gap-[16px] p-[16px_20px] bg-white border border-[#e2e2e2] rounded-[4px] cursor-pointer transition-all duration-200 hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] outline-none group"
+                                    className="flex items-center gap-4 p-4 bg-white border border-gray-100 rounded-sm hover:border-black hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
                                   >
                                     <div className="w-12 h-12 flex items-center justify-center shrink-0">
-                                      <IconComponent className={`w-full h-full ${style.color}`} />
+                                      <IconComponent className={`w-8 h-8 ${style.color}`} />
                                     </div>
-                                    <span className="text-[17px] font-semibold text-[#1a1a1a]">
-                                      {category}
-                                    </span>
+                                    <span className="text-[17px] font-semibold text-[#1a1a1a]">{category}</span>
                                   </Link>
                                 </NavigationMenuLink>
                               );
@@ -156,140 +120,84 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-normal text-base focus-visible:ring-0 focus-visible:ring-offset-0">
-                  Exam Prep
-                  <ChevronDown className="ml-1 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation">All Exams</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/jee">JEE Preparation</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/neet">NEET Preparation</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/exam-preparation/iitm-bs">IITM BS Preparation</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors">
-              Career
-            </Link>
+            <Link to="/exam-preparation" className="text-gray-700 hover:text-royal transition-colors font-medium">Exam Prep</Link>
+            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
-          {/* User Authentication Section */}
-          <div className="hidden md:flex items-center absolute right-0">
+          {/* User Section */}
+          <div className="hidden md:flex items-center">
             {user ? (
-              <div className="flex items-center space-x-4">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={user.user_metadata?.avatar_url} alt={user.email} />
-                        <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.user_metadata?.full_name || 'User'}</p>
-                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/dashboard">Dashboard</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-gray-100 p-0">
+                    <Avatar className="h-full w-full">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56 mt-2" align="end">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-semibold">{user.user_metadata?.full_name || 'User'}</span>
+                      <span className="text-xs text-muted-foreground">{user.email}</span>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild><Link to="/dashboard">Dashboard</Link></DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600">Log out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Link to="/auth">
-                <Button variant="default" className="bg-royal hover:bg-royal-dark text-white">
-                  Sign In
-                </Button>
+                <Button className="bg-royal hover:bg-royal-dark text-white px-6">Sign In</Button>
               </Link>
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center absolute right-0">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-royal focus:outline-none focus:text-royal"
-            >
+          {/* Mobile Menu Toggle */}
+          <div className="md:hidden flex items-center">
+            <button onClick={() => setIsOpen(!isOpen)} className="text-gray-700 p-2 focus:outline-none">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Sidebar-style */}
         {isOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t">
-              <Link to="/" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                Home
-              </Link>
-              <Link to="/about" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                About
-              </Link>
-              <div className="block px-3 py-2 text-gray-700 font-medium">Courses</div>
-              <div className="pl-6 space-y-2 mb-2">
-                 {courseCategories.length > 0 ? (
-                    courseCategories.map((category) => {
-                      const style = getCategoryStyle(category);
-                      const IconComponent = style.icon;
-                       return (
-                        <Link 
-                          key={category}
-                          to={`/courses/category/${style.slug}`}
-                          className="flex items-center text-gray-600 hover:text-royal py-1"
-                        >
-                           <IconComponent className={`w-5 h-5 mr-2 ${style.color}`} />
-                           {category}
-                        </Link>
-                      );
-                    })
-                 ) : (
-                   <span className="text-sm text-gray-500 italic px-2">No active batches</span>
-                 )}
+          <div className="md:hidden fixed inset-0 top-16 bg-white z-[90] overflow-y-auto">
+            <div className="px-4 py-6 space-y-4">
+              <Link to="/" onClick={() => setIsOpen(false)} className="block text-lg font-medium border-b pb-2">Home</Link>
+              <Link to="/about" onClick={() => setIsOpen(false)} className="block text-lg font-medium border-b pb-2">About</Link>
+              
+              <div className="space-y-3">
+                <span className="text-gray-400 text-sm font-bold uppercase tracking-wider">Courses</span>
+                <div className="grid grid-cols-1 gap-2 pl-2">
+                  {courseCategories.map((category) => {
+                    const style = getCategoryStyle(category);
+                    const IconComponent = style.icon;
+                    return (
+                      <Link 
+                        key={category}
+                        to={`/courses/category/${style.slug}`}
+                        onClick={() => setIsOpen(false)}
+                        className="flex items-center p-3 rounded-lg bg-gray-50 active:bg-gray-100"
+                      >
+                        <IconComponent className={`w-6 h-6 mr-3 ${style.color}`} />
+                        <span className="font-medium">{category}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-              <Link to="/exam-preparation" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                Exam Preparation
-              </Link>
-              <Link to="/career" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                Career
-              </Link>
-              {user ? (
-                <>
-                  <Link to="/dashboard" className="block px-3 py-2 text-gray-700 hover:text-royal">
-                    Dashboard
-                  </Link>
-                  <button
-                    onClick={handleSignOut}
-                    className="block w-full text-left px-3 py-2 text-gray-700 hover:text-royal"
-                  >
-                    Sign Out
-                  </button>
-                </>
-              ) : (
-                <Link to="/auth" className="block px-3 py-2">
-                  <Button variant="default" className="w-full bg-royal hover:bg-royal-dark text-white">
-                    Sign In
-                  </Button>
+
+              <Link to="/exam-preparation" onClick={() => setIsOpen(false)} className="block text-lg font-medium border-b pb-2">Exam Preparation</Link>
+              <Link to="/career" onClick={() => setIsOpen(false)} className="block text-lg font-medium border-b pb-2">Career</Link>
+              
+              {!user && (
+                <Link to="/auth" onClick={() => setIsOpen(false)} className="block pt-4">
+                  <Button className="w-full bg-royal text-white py-6 text-lg">Sign In</Button>
                 </Link>
               )}
             </div>
