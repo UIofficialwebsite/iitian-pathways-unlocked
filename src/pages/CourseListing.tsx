@@ -11,8 +11,7 @@ import {
   ChevronRight,
   Home,
   ChevronDown,
-  X,
-  Filter
+  X
 } from "lucide-react";
 
 const CourseListing = () => {
@@ -35,18 +34,15 @@ const CourseListing = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
 
-  // Synchronize internal selectedBranch with URL search param
   const branchFromUrl = searchParams.get('branch');
 
   useEffect(() => {
-    if (filterRef.current) {
-      setFilterOffset(filterRef.current.offsetTop);
-    }
+    if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
   }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const navbarHeight = 64; // Height of the NavBar
+      const navbarHeight = 64; 
       if (filterRef.current && filterOffset > 0) {
         setIsSticky(window.scrollY > filterOffset - navbarHeight);
       }
@@ -55,6 +51,7 @@ const CourseListing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [filterOffset]);
 
+  // BANNER FETCHING - Ported exactly from Courses.tsx logic
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
@@ -76,9 +73,7 @@ const CourseListing = () => {
     fetchBanner();
   }, [location.pathname, examCategory]);
 
-  // 4. DATA FILTERING LOGIC
-  
-  // For consistent naming and capitalization of categories
+  // 4. DATA LOGIC
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
@@ -99,35 +94,18 @@ const CourseListing = () => {
 
   const filteredCourses = useMemo(() => {
     let result = [...categoryFilteredCourses];
-
-    if (branchFromUrl) {
-      result = result.filter(course => course.branch === branchFromUrl);
-    }
-
-    if (selectedMode) {
-      result = result.filter(course => 
-        course.course_type?.toLowerCase() === selectedMode.toLowerCase()
-      );
-    }
-
+    if (branchFromUrl) result = result.filter(course => course.branch === branchFromUrl);
+    if (selectedMode) result = result.filter(course => course.course_type?.toLowerCase() === selectedMode.toLowerCase());
     if (priceRange) {
       const price = (course: any) => course.discounted_price || course.price;
-      switch (priceRange) {
-        case 'free':
-          result = result.filter(course => price(course) === 0);
-          break;
-        case 'under-1000':
-          result = result.filter(course => price(course) > 0 && price(course) < 1000);
-          break;
-        case '1000-5000':
-          result = result.filter(course => price(course) >= 1000 && price(course) <= 5000);
-          break;
-        case 'above-5000':
-          result = result.filter(course => price(course) > 5000);
-          break;
-      }
+      const ranges: Record<string, (p: number) => boolean> = {
+        'free': (p) => p === 0,
+        'under-1000': (p) => p > 0 && p < 1000,
+        '1000-5000': (p) => p >= 1000 && p <= 5000,
+        'above-5000': (p) => p > 5000
+      };
+      if (ranges[priceRange]) result = result.filter(course => ranges[priceRange](price(course)));
     }
-
     return result;
   }, [categoryFilteredCourses, branchFromUrl, selectedMode, priceRange]);
 
@@ -147,46 +125,31 @@ const CourseListing = () => {
     setSearchParams({}); 
   };
 
-  const hasActiveFilters = selectedMode || priceRange || branchFromUrl;
-
   return (
     <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfdff] relative">
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION - Matches Courses.tsx scale */}
+        {/* BANNER SECTION - Matched Height and Styling */}
         <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
-          ) : bannerImage ? (
-            <img 
-              src={bannerImage} 
-              alt="Banner"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-             <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-background flex items-center justify-center">
-              <h2 className="text-2xl font-black text-foreground/20 uppercase tracking-tighter">
-                {currentCategoryData.name}
-              </h2>
-            </div>
+          ) : bannerImage && (
+            <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />
           )}
         </section>
 
-        {/* HERO AREA - Matches Courses.tsx Background & Fonts */}
+        {/* HERO AREA - Matched Background Gradients, Clip-Paths, and Typography */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
-          {/* Background shapes logic ported from course page */}
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
 
-          <div className="relative z-10 w-full max-w-6xl">
-            {/* Breadcrumb - Matches font-family and spacing of Courses.tsx */}
-            <nav className="flex items-center gap-2 text-[#666] text-xs mb-3 font-normal font-['Inter',sans-serif]">
+          <div className="relative z-10 w-full max-w-6xl font-['Inter',sans-serif]">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-2 text-[#666] text-xs mb-3 font-normal">
               <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3 h-3" /></Link>
               <ChevronRight className="w-3 h-3 opacity-50" />
-              <Link to="/courses" className="hover:text-primary transition-colors uppercase tracking-tight">
-                {currentCategoryData.name}
-              </Link>
+              <Link to="/courses" className="hover:text-primary transition-colors uppercase tracking-tight">{currentCategoryData.name}</Link>
               {branchFromUrl && (
                 <>
                   <ChevronRight className="w-3 h-3 opacity-50" />
@@ -197,17 +160,12 @@ const CourseListing = () => {
               <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
 
-            {/* Title - Ported size and font-weight from Courses.tsx */}
-            <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight font-['Inter',sans-serif]">
-              {currentCategoryData.name} Online Coaching 
-              {branchFromUrl && ` For ${branchFromUrl}`} Targeting 2026-27 Exams
+            {/* Title & Description Typography */}
+            <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight">
+              {currentCategoryData.name} Online Coaching {branchFromUrl && ` For ${branchFromUrl}`}
             </h1>
-
-            {/* Description - Ported text color and size */}
-            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal font-['Inter',sans-serif]">
-              UI offers {branchFromUrl || currentCategoryData.name} coaching, including online classes in multiple languages. 
-              Live and recorded sessions, doubt-solving support, and useful study materials. UI ensures a well-rounded preparation for {currentCategoryData.name} aspirants. 
-              Check {branchFromUrl || currentCategoryData.name} lectures and mock test series for best preparation.
+            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal">
+              Access curated coaching and live sessions for {currentCategoryData.name} preparation. Explore lectures, study materials, and mock test series to ensure academic success.
             </p>
           </div>
         </div>
@@ -220,7 +178,6 @@ const CourseListing = () => {
           }`}
         >
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-            {/* Primary Branch Filter Tabs */}
             <div className="flex items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar pb-3 mb-3 border-b border-border/50">
               <button 
                 onClick={() => setSearchParams({})}
@@ -243,60 +200,25 @@ const CourseListing = () => {
               ))}
             </div>
 
-            {/* Secondary Filters Row */}
             <div className="flex items-center gap-2 md:gap-3 flex-wrap font-['Inter',sans-serif]">
-              <button
-                onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')}
-                className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  selectedMode === 'online' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
-                }`}
-              >
-                Online
-              </button>
-              <button
-                onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')}
-                className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                  selectedMode === 'offline' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
-                }`}
-              >
-                Offline
-              </button>
+              <button onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border ${selectedMode === 'online' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border'}`}>Online</button>
+              <button onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border ${selectedMode === 'offline' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border'}`}>Offline</button>
 
-              {/* Pricing Dropdown */}
               <div className="relative">
-                <button
-                  onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)}
-                  className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
-                    priceRange ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border hover:border-[#1E3A8A]/50'
-                  }`}
-                >
+                <button onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${priceRange ? 'bg-[#1E3A8A] text-white' : 'bg-background'}`}>
                   Pricing <ChevronDown className={`w-3 h-3 transition-transform ${pricingDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {pricingDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-card border border-border rounded-xl shadow-xl z-50 min-w-[160px] p-1 animate-in fade-in slide-in-from-top-2">
-                    {[
-                      { val: 'free', label: 'Free Batches' },
-                      { val: 'under-1000', label: 'Under ₹1,000' },
-                      { val: '1000-5000', label: '₹1,000 - ₹5,000' },
-                      { val: 'above-5000', label: 'Above ₹5,000' }
-                    ].map((opt) => (
-                      <button
-                        key={opt.val}
-                        onClick={() => { setPriceRange(opt.val); setPricingDropdownOpen(false); }}
-                        className={`w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-muted transition-colors ${priceRange === opt.val ? 'text-[#1E3A8A] bg-[#1E3A8A]/5' : ''}`}
-                      >
-                        {opt.label}
-                      </button>
+                  <div className="absolute top-full left-0 mt-2 bg-card border rounded-xl shadow-xl z-50 min-w-[160px] p-1">
+                    {['free', 'under-1000', '1000-5000', 'above-5000'].map((val) => (
+                      <button key={val} onClick={() => { setPriceRange(val); setPricingDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-muted capitalize font-['Inter',sans-serif]">{val.replace('-', ' ')}</button>
                     ))}
                   </div>
                 )}
               </div>
 
-              {hasActiveFilters && (
-                <button
-                  onClick={clearAllFilters}
-                  className="px-3 md:px-4 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full transition-all flex items-center gap-1"
-                >
+              {(selectedMode || priceRange || branchFromUrl) && (
+                <button onClick={clearAllFilters} className="px-3 md:px-4 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full flex items-center gap-1">
                   <X className="w-3 h-3" /> Clear All
                 </button>
               )}
@@ -304,55 +226,25 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* Spacer when sticky */}
         {isSticky && <div className="h-[140px]" />}
 
-        {/* RESULTS SUMMARY */}
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-6">
-          <p className="text-sm text-muted-foreground font-medium font-['Inter',sans-serif]">
-            Found <span className="text-foreground font-bold">{filteredCourses.length}</span> batches matching your criteria.
-          </p>
-        </div>
-
-        {/* MAIN LISTING AREA */}
         <div className="pb-32 bg-white">
-          <section className="max-w-6xl mx-auto px-4 md:px-8">
+          <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8">
             {contentLoading ? (
-              <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 -mx-4 px-4 lg:mx-0 lg:px-0">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0">
-                    <CourseCardSkeleton />
-                  </div>
-                ))}
-              </div>
-            ) : filteredCourses.length === 0 ? (
-              <div className="text-center py-24 bg-muted/20 rounded-3xl border-2 border-dashed border-border">
-                <p className="text-xl text-muted-foreground font-bold mb-4 font-['Inter',sans-serif]">No batches found.</p>
-                <Button variant="default" onClick={clearAllFilters} className="font-bold bg-[#1E3A8A] hover:bg-[#1E3A8A]/90">
-                  Try Resetting Filters
-                </Button>
-              </div>
-            ) : (
-              Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
-                <div key={groupName} className="mb-20">
-                  <div className="flex items-center justify-between mb-8">
-                    <div>
-                      <h3 className="text-xl font-bold text-[#1a1a1a] font-['Inter',sans-serif] uppercase tracking-tight">{groupName}</h3>
-                      <div className="h-1 w-12 bg-[#1E3A8A] mt-2 rounded-full" />
-                    </div>
-                    <span className="text-sm font-bold text-[#1E3A8A] bg-blue-50 px-3 py-1 rounded-full">{groupCourses.length}</span>
-                  </div>
-                  
-                  <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-5 lg:gap-6 no-scrollbar pb-4 lg:pb-0 snap-x snap-mandatory -mx-4 px-4 lg:mx-0 lg:px-0">
-                    {groupCourses.map((course, index) => (
-                      <div key={course.id} className="w-[85vw] max-w-[320px] sm:w-[45vw] sm:max-w-[340px] lg:w-auto lg:max-w-none flex-shrink-0 snap-start">
-                        <CourseCard course={course} index={index} />
-                      </div>
-                    ))}
-                  </div>
+              <div className="grid lg:grid-cols-3 gap-6">{Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}</div>
+            ) : Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
+              <div key={groupName} className="mb-20">
+                <div className="mb-8">
+                  <h3 className="text-xl font-bold text-[#1a1a1a] font-['Inter',sans-serif] uppercase tracking-tight">{groupName}</h3>
+                  <div className="h-1 w-12 bg-[#1E3A8A] mt-2 rounded-full" />
                 </div>
-              ))
-            )}
+                <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-6 no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
+                  {groupCourses.map((course, index) => (
+                    <div key={course.id} className="w-[85vw] max-w-[320px] lg:w-auto flex-shrink-0"><CourseCard course={course} index={index} /></div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </section>
         </div>
       </main>
