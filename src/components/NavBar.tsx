@@ -42,6 +42,7 @@ const NavBar = () => {
     window.location.href = '/';
   };
 
+  // Dynamically extract unique categories from the database
   const courseCategories = useMemo(() => {
     const categories = new Set<string>();
     if (courses && courses.length > 0) {
@@ -54,6 +55,7 @@ const NavBar = () => {
     return Array.from(categories).sort();
   }, [courses]);
 
+  // Helper to assign icons based on category keywords
   const getCategoryStyle = (category: string) => {
     const normalize = category.toLowerCase();
     if (normalize.includes('jee')) return { icon: Atom, color: "text-[#f39c12]", slug: 'jee' };
@@ -67,22 +69,23 @@ const NavBar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         <div className="flex justify-between items-center h-full relative">
           
-          {/* Logo */}
+          {/* Logo Section */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img
                 src="/lovable-uploads/UI_logo.png" 
-                alt="Logo" 
+                alt="Unknown IITians Logo" 
                 className="h-10 w-auto"
               />
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Navigation Group */}
           <div className="hidden md:flex items-center justify-center space-x-8">
             <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
             <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
+            {/* Dynamic Courses Menu */}
             <NavigationMenu className="static">
               <NavigationMenuList className="static">
                 <NavigationMenuItem className="static">
@@ -90,8 +93,8 @@ const NavBar = () => {
                     Courses
                   </NavigationMenuTrigger>
                   
-                  {/* Dropdown Box: Centered below navbar, High Z-Index */}
-                  <NavigationMenuContent className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] bg-transparent border-none shadow-none mt-0">
+                  {/* Dropdown Container: High Z-index, centered below navbar */}
+                  <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
                     <div className="w-[850px] bg-white border border-[#e2e2e2] rounded-[4px] shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-[28px]">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
@@ -122,7 +125,31 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            <Link to="/exam-preparation" className="text-gray-700 hover:text-royal transition-colors font-medium">Exam Prep</Link>
+            {/* Exam Prep Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="text-gray-700 hover:text-royal transition-colors flex items-center bg-transparent hover:bg-transparent p-0 h-auto font-medium text-base focus-visible:ring-0">
+                  Exam Prep
+                  <ChevronDown className="ml-1 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="mt-2">
+                <DropdownMenuItem asChild>
+                  <Link to="/exam-preparation">All Exams</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/exam-preparation/jee">JEE Preparation</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/exam-preparation/neet">NEET Preparation</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/exam-preparation/iitm-bs">IITM BS Preparation</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
@@ -166,14 +193,14 @@ const NavBar = () => {
           </div>
         </div>
 
-        {/* Mobile Sidebar Navigation */}
+        {/* Mobile Navigation Sidebar */}
         {isOpen && (
           <div className="md:hidden fixed inset-0 top-16 bg-white z-[90] overflow-y-auto border-t">
             <div className="px-6 py-8 space-y-6">
-              <Link to="/" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800">Home</Link>
-              <Link to="/about" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800">About</Link>
+              <Link to="/" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Home</Link>
+              <Link to="/about" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">About</Link>
               
-              {/* Mobile Courses with Click-to-Expand Arrow */}
+              {/* Mobile Courses Section */}
               <div className="space-y-4">
                 <button 
                   onClick={() => setMobileCoursesOpen(!mobileCoursesOpen)}
@@ -204,8 +231,8 @@ const NavBar = () => {
                 )}
               </div>
 
-              <Link to="/exam-preparation" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800">Exam Preparation</Link>
-              <Link to="/career" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800">Career</Link>
+              <Link to="/exam-preparation" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Exam Preparation</Link>
+              <Link to="/career" onClick={() => setIsOpen(false)} className="block text-xl font-semibold text-gray-800 border-b pb-2">Career</Link>
               
               {!user && (
                 <Link to="/auth" onClick={() => setIsOpen(false)} className="block pt-6">
