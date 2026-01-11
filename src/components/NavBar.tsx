@@ -178,7 +178,7 @@ const NavBar = () => {
               
               <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none font-['Inter',sans-serif] bg-white">
                 {/* Mobile Header: Logo or Title Replacement */}
-                <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
+                <SheetHeader className="px-5 py-5 flex flex-row items-center border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
                   <div className="flex items-center gap-4">
                     {activePane === "main" ? (
                       <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
@@ -193,9 +193,6 @@ const NavBar = () => {
                       </div>
                     )}
                   </div>
-                  <SheetClose asChild>
-                    <button className="text-black p-1"><X className="h-8 w-8 stroke-[2.5]" /></button>
-                  </SheetClose>
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto bg-white flex flex-col">
