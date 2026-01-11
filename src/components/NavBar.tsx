@@ -16,6 +16,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTrigger,
+  SheetClose,
 } from "@/components/ui/sheet";
 import {
   Drawer,
@@ -32,6 +33,7 @@ const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
   
+  // State for mobile drill-down navigation
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -66,6 +68,11 @@ const NavBar = () => {
     { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
   ];
 
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsSheetOpen(open);
+    if (!open) setActivePane("main");
+  };
+
   return (
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[150] h-16 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
@@ -82,9 +89,11 @@ const NavBar = () => {
           </div>
           <div className="flex items-center">
             {!user ? (
-              <Link to="/auth"><Button className="bg-[#1d4ed8] text-white px-6">Sign In</Button></Link>
+              <Link to="/auth">
+                <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
+              </Link>
             ) : (
-              <Button variant="ghost" onClick={handleSignOut} className="text-red-600">Log out</Button>
+              <Button variant="ghost" onClick={handleSignOut} className="text-red-600 font-sans">Log out</Button>
             )}
           </div>
         </div>
@@ -92,64 +101,81 @@ const NavBar = () => {
         {/* MOBILE VIEW */}
         <div className="md:hidden flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
-            <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if(!open) setActivePane("main"); }}>
+            <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent"><Menu className="h-7 w-7" /></Button>
+                <Button variant="ghost" size="icon" className="text-gray-700 p-0 hover:bg-transparent">
+                  <Menu className="h-7 w-7" />
+                </Button>
               </SheetTrigger>
               
               <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none font-sans">
-                {/* DYNAMIC HEADER */}
-                <SheetHeader className="px-5 py-5 flex flex-row items-center border-b border-[#eeeeee] space-y-0 min-h-[73px]">
-                  {activePane === "main" ? (
-                    <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => setActivePane("main")} className="text-black">
-                        <ArrowLeft className="h-6 w-6 stroke-[2.5]" />
-                      </button>
-                      <span className="text-[19px] font-bold text-black">
-                        {activePane === "courses" ? "Courses" : "Exam Prep"}
-                      </span>
-                    </div>
-                  )}
-                  {/* Shadcn default close 'X' is automatically in the top-right and properly sized */}
+                {/* DYNAMIC HEADER: Replaces Logo with Section Name */}
+                <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px]">
+                  <div className="flex items-center gap-4">
+                    {activePane === "main" ? (
+                      <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
+                    ) : (
+                      <>
+                        <button onClick={() => setActivePane("main")} className="text-black">
+                          <ArrowLeft className="h-7 w-7 stroke-[2.5]" />
+                        </button>
+                        <span className="text-[20px] font-bold text-black">
+                          {activePane === "courses" ? "Courses" : "Exam Prep"}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Big, properly aligned Close Mark */}
+                  <SheetClose asChild>
+                    <button className="text-black outline-none">
+                      <X className="h-8 w-8 stroke-[2.5]" />
+                    </button>
+                  </SheetClose>
                 </SheetHeader>
 
                 <div className="flex-1 overflow-y-auto bg-white">
-                  {/* MAIN MENU PANE */}
+                  {/* --- PANE 1: MAIN MENU --- */}
                   {activePane === "main" && (
                     <div className="flex flex-col animate-in slide-in-from-right duration-200">
-                      <Link to="/" className="px-6 py-6 text-[17px] font-semibold border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>Home</Link>
-                      <Link to="/about" className="px-6 py-6 text-[17px] font-semibold border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>About Us</Link>
+                      <Link to="/" className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>Home</Link>
+                      <Link to="/about" className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>About Us</Link>
                       
-                      <button onClick={() => setActivePane("courses")} className="px-6 py-6 text-[17px] font-semibold flex items-center justify-between border-b border-[#f2f2f2]">
+                      <button 
+                        onClick={() => setActivePane("courses")}
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
+                      >
                         Courses <ChevronRight className="h-5 w-5 text-[#444] stroke-[2.5]" />
                       </button>
 
-                      <button onClick={() => setActivePane("examprep")} className="px-6 py-6 text-[17px] font-semibold flex items-center justify-between border-b border-[#f2f2f2]">
+                      <button 
+                        onClick={() => setActivePane("examprep")}
+                        className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
+                      >
                         Exam Preparation <ChevronRight className="h-5 w-5 text-[#444] stroke-[2.5]" />
                       </button>
 
-                      <Link to="/career" className="px-6 py-6 text-[17px] font-semibold border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>Career</Link>
+                      <Link to="/career" className="px-6 py-6 text-[17px] font-semibold text-[#1a1a1a] border-b border-[#f2f2f2]" onClick={() => setIsSheetOpen(false)}>Career</Link>
                       
-                      {/* LOGIN/REGISTER BUTTON INSIDE SCROLLABLE LIST */}
+                      {/* LOGIN/REGISTER BUTTON: Moved inside the scrollable list */}
                       {!user && (
                         <div className="p-6">
                           <Drawer>
                             <DrawerTrigger asChild>
-                              <Button className="w-[200px] h-12 bg-[#1d4ed8] text-white rounded-xl text-base font-bold shadow-none">
+                              <Button className="w-[180px] h-11 bg-[#1d4ed8] text-white rounded-xl text-base font-bold shadow-none">
                                 Login/Register
                               </Button>
                             </DrawerTrigger>
-                            <DrawerContent className="rounded-t-[32px] border-t-0 p-0 overflow-hidden">
-                              <div className="bg-white p-6 pb-12">
-                                <DrawerHeader className="p-0 mb-6">
+                            <DrawerContent className="rounded-t-[32px] border-t-0 p-0 overflow-hidden bg-white">
+                              <div className="p-6 pb-12">
+                                <DrawerHeader className="p-0 mb-8">
                                   <DrawerTitle className="text-2xl font-bold">Welcome Back</DrawerTitle>
                                 </DrawerHeader>
-                                {/* Login Form / Options would go here */}
                                 <div className="space-y-4">
                                    <Link to="/auth" onClick={() => setIsSheetOpen(false)}>
-                                      <Button className="w-full h-14 bg-[#1d4ed8] text-white rounded-2xl text-lg font-bold">Continue to Sign In</Button>
+                                      <Button className="w-full h-14 bg-[#1d4ed8] text-white rounded-2xl text-lg font-bold">
+                                        Continue to Sign In
+                                      </Button>
                                    </Link>
                                 </div>
                               </div>
@@ -160,7 +186,7 @@ const NavBar = () => {
                     </div>
                   )}
 
-                  {/* COURSES GRID PANE (2-column layout) */}
+                  {/* --- PANE 2: COURSES GRID (PC Style Tabs) --- */}
                   {activePane === "courses" && (
                     <div className="p-4 grid grid-cols-2 gap-3 animate-in slide-in-from-left duration-200">
                       {courseCategories.map((category) => {
@@ -169,29 +195,29 @@ const NavBar = () => {
                           <Link 
                             key={category}
                             to={`/courses/category/${style.slug}`}
-                            className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#e2e2e2] rounded-xl text-center"
+                            className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#e2e2e2] rounded-2xl text-center hover:border-black transition-all"
                             onClick={() => setIsSheetOpen(false)}
                           >
                             <style.icon className={`h-8 w-8 ${style.color}`} />
-                            <span className="text-sm font-bold text-[#1a1a1a]">{category}</span>
+                            <span className="text-sm font-bold text-[#1a1a1a] leading-tight">{category}</span>
                           </Link>
                         );
                       })}
                     </div>
                   )}
 
-                  {/* EXAM PREP GRID PANE */}
+                  {/* --- PANE 3: EXAM PREP GRID --- */}
                   {activePane === "examprep" && (
                     <div className="p-4 grid grid-cols-2 gap-3 animate-in slide-in-from-left duration-200">
                       {examPrepItems.map((item) => (
                         <Link 
                           key={item.path}
                           to={item.path}
-                          className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#e2e2e2] rounded-xl text-center"
+                          className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#e2e2e2] rounded-2xl text-center hover:border-black transition-all"
                           onClick={() => setIsSheetOpen(false)}
                         >
                           <item.icon className={`h-8 w-8 ${item.color}`} />
-                          <span className="text-sm font-bold text-[#1a1a1a]">{item.title}</span>
+                          <span className="text-sm font-bold text-[#1a1a1a] leading-tight">{item.title}</span>
                         </Link>
                       ))}
                     </div>
@@ -200,7 +226,9 @@ const NavBar = () => {
               </SheetContent>
             </Sheet>
 
-            <Link to="/"><img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" /></Link>
+            <Link to="/">
+              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
+            </Link>
           </div>
           
           <div>
@@ -212,7 +240,11 @@ const NavBar = () => {
                 </Avatar>
               </Link>
             ) : (
-              <Link to="/auth"><Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login</Button></Link>
+              <Link to="/auth">
+                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold font-sans">
+                  Login
+                </Button>
+              </Link>
             )}
           </div>
         </div>
