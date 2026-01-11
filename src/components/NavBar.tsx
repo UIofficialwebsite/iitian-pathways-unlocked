@@ -22,11 +22,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
+  NavigationMenuContent,
 } from "@/components/ui/navigation-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,7 +34,6 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [mobileCoursesOpen, setMobileCoursesOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
 
@@ -90,8 +89,8 @@ const NavBar = () => {
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Courses
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                  <NavigationMenuContent className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded-b-xl border-t-0 shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        {courseCategories.length === 0 ? (
                          <div className="text-center p-4 text-gray-500 font-medium">No active batches available.</div>
                        ) : (
@@ -121,15 +120,14 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            {/* Updated Exam Prep Dropdown to match Courses style */}
             <NavigationMenu className="static">
               <NavigationMenuList className="static">
                 <NavigationMenuItem className="static">
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors">
                     Exam Prep
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="fixed top-16 left-1/2 -translate-x-1/2 z-[110] mt-0 bg-transparent border-none shadow-none">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                  <NavigationMenuContent className="fixed top-[64px] left-1/2 -translate-x-1/2 z-[110] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] rounded-b-xl border-t-0 shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
                             <NavigationMenuLink key={item.path} asChild>
