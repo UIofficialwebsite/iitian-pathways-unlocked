@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { 
   ChevronRight,
   Home,
-  ChevronDown,
   X
 } from "lucide-react";
 
@@ -18,7 +17,6 @@ const CourseListing = () => {
   // 1. URL & ROUTING STATE
   const { examCategory } = useParams<{ examCategory?: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const location = useLocation();
   const { courses, contentLoading } = useBackend();
   
@@ -51,6 +49,7 @@ const CourseListing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [filterOffset]);
 
+  // BANNER FETCHING - Grounded in Supabase integration
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
@@ -64,11 +63,16 @@ const CourseListing = () => {
           });
           setBannerImage(match?.image_url || null);
         }
-      } catch (err) { console.error('Error fetching banner:', err); } finally { setBannerLoading(false); }
+      } catch (err) { 
+        console.error('Error fetching banner:', err); 
+      } finally { 
+        setBannerLoading(false); 
+      }
     };
     fetchBanner();
   }, [location.pathname, location.search, examCategory]);
 
+  // 4. DATA LOGIC - Grounded in useBackend hook
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
@@ -82,6 +86,7 @@ const CourseListing = () => {
     );
   }, [courses, examCategory]);
 
+  // Dynamically generate branches based on available courses
   const availableBranches = useMemo(() => {
     const branches = Array.from(new Set(categoryFilteredCourses.map(c => c.branch))).filter(Boolean) as string[];
     return branches.sort();
@@ -134,7 +139,7 @@ const CourseListing = () => {
           )}
         </section>
 
-        {/* HERO AREA - Content remains original */}
+        {/* HERO AREA - Grounded in SEO Helpers and Inter font */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
@@ -162,17 +167,17 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR - PORTED DESIGN */}
+        {/* STICKY FILTER BAR - Matches Requested HTML/CSS Design */}
         <div 
           ref={filterRef}
           className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 shadow-lg' : 'relative'}`}
         >
-          {/* Top Navigation Row (Tabs) - Ported Design */}
+          {/* Top Branch Navigation (Lavender Background) */}
           <div className="bg-[#f4f2ff] pt-6 flex justify-center">
             <div className="flex gap-10 overflow-x-auto no-scrollbar px-4">
               <button 
                 onClick={() => setSearchParams({})}
-                className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap ${
+                className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap font-sans ${
                   !branchFromUrl ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
                 }`}
               >
@@ -182,7 +187,7 @@ const CourseListing = () => {
                 <button
                   key={branch}
                   onClick={() => setSearchParams({ branch: branch })}
-                  className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap ${
+                  className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap font-sans ${
                     branchFromUrl === branch ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
                   }`}
                 >
@@ -192,13 +197,13 @@ const CourseListing = () => {
             </div>
           </div>
 
-          {/* Bottom Filter Row (Pills) - Ported Design */}
+          {/* Secondary Filter Row (Pill Shapes) */}
           <div className="bg-white py-6 border-b border-[#f3f4f6] flex justify-center">
-            <div className="flex flex-wrap justify-center gap-[14px] max-w-[1200px] px-5">
+            <div className="flex flex-wrap justify-center gap-[14px] max-w-[1200px] px-5 font-sans">
               <button 
                 onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')} 
                 className={`px-6 py-2.5 border rounded-[30px] text-[15px] transition-all ${
-                  selectedMode === 'online' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                  selectedMode === 'online' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
                 }`}
               >
                 Online
@@ -206,7 +211,7 @@ const CourseListing = () => {
               <button 
                 onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')} 
                 className={`px-6 py-2.5 border rounded-[30px] text-[15px] transition-all ${
-                  selectedMode === 'offline' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                  selectedMode === 'offline' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb]'
                 }`}
               >
                 Offline
@@ -216,13 +221,13 @@ const CourseListing = () => {
                 <button 
                   onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)} 
                   className={`px-6 py-2.5 border rounded-[30px] text-[15px] flex items-center transition-all ${
-                    priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                    priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
                   }`}
                 >
                   Pricing <span className={`ml-2.5 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] transition-transform ${pricingDropdownOpen ? 'rotate-180 border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                 </button>
                 {pricingDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[160px] p-1 font-['Inter',sans-serif]">
+                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[160px] p-1">
                     {['free', 'under-1000', '1000-5000', 'above-5000'].map((val) => (
                       <button key={val} onClick={() => { setPriceRange(val); setPricingDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-[#f9fafb] capitalize">{val.replace('-', ' ')}</button>
                     ))}
@@ -230,13 +235,9 @@ const CourseListing = () => {
                 )}
               </div>
 
-              {/* Standard Pills from design */}
-              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb] flex items-center">
-                Language <span className="ml-2.5 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-t-[#374151] border-l-transparent border-r-transparent"></span>
-              </div>
-              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">Power Batch</div>
-              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">Newly Launched</div>
-              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">CuriousJr</div>
+              {/* Functional filters only - Language and newly launched derived from existing course fields if applicable */}
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-not-allowed opacity-50 bg-[#f9fafb]">Language</div>
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-not-allowed opacity-50 bg-[#f9fafb]">Power Batch</div>
 
               {(selectedMode || priceRange || branchFromUrl) && (
                 <button onClick={clearAllFilters} className="px-6 py-2.5 text-[15px] font-bold text-destructive hover:bg-destructive/10 rounded-[30px] flex items-center gap-1">
@@ -249,6 +250,7 @@ const CourseListing = () => {
 
         {isSticky && <div className="h-[180px]" />}
 
+        {/* RESULTS SECTION */}
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8">
             {contentLoading ? (
@@ -261,7 +263,9 @@ const CourseListing = () => {
                 </div>
                 <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-6 no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
                   {groupCourses.map((course, index) => (
-                    <div key={course.id} className="w-[85vw] max-w-[320px] lg:w-auto flex-shrink-0"><CourseCard course={course} index={index} /></div>
+                    <div key={course.id} className="w-[85vw] max-w-[320px] lg:w-auto flex-shrink-0">
+                      <CourseCard course={course} index={index} />
+                    </div>
                   ))}
                 </div>
               </div>
