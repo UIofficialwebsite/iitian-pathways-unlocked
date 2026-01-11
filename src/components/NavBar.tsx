@@ -31,7 +31,6 @@ import {
   Sheet,
   SheetContent,
   SheetHeader,
-  SheetTitle,
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
@@ -43,7 +42,7 @@ const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
   
-  // State for mobile multi-pane navigation
+  // State for mobile drill-down navigation
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
@@ -80,120 +79,31 @@ const NavBar = () => {
 
   const handleSheetOpenChange = (open: boolean) => {
     setIsSheetOpen(open);
-    if (!open) setActivePane("main"); // Reset to main pane when closed
+    if (!open) setActivePane("main");
   };
 
   return (
     <nav className="bg-white shadow-lg fixed top-0 left-0 right-0 z-[150] h-16 font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         
-        {/* DESKTOP VIEW */}
+        {/* DESKTOP VIEW - Kept for consistency */}
         <div className="hidden md:flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-10 w-auto" />
             </Link>
           </div>
-
           <div className="flex items-center justify-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Home</Link>
-            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">About</Link>
-            
-            <NavigationMenu className="static">
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
-                    Courses
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
-                       {courseCategories.length === 0 ? (
-                         <div className="text-center p-4 text-gray-500 font-medium font-sans">No active batches available.</div>
-                       ) : (
-                         <div className="grid grid-cols-2 gap-3">
-                            {courseCategories.map((category) => {
-                              const style = getCategoryStyle(category);
-                              return (
-                                <NavigationMenuLink key={category} asChild>
-                                  <Link 
-                                    to={`/courses/category/${style.slug}`}
-                                    className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
-                                  >
-                                    <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                                      <style.icon className={`w-full h-full ${style.color}`} />
-                                    </div>
-                                    <span className="text-base font-semibold text-[#1a1a1a] font-sans">{category}</span>
-                                  </Link>
-                                </NavigationMenuLink>
-                              );
-                            })}
-                         </div>
-                       )}
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            
-            <NavigationMenu className="static">
-              <NavigationMenuList>
-                <NavigationMenuItem>
-                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
-                    Exam Prep
-                  </NavigationMenuTrigger>
-                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
-                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
-                       <div className="grid grid-cols-2 gap-3">
-                          {examPrepItems.map((item) => (
-                            <NavigationMenuLink key={item.path} asChild>
-                              <Link 
-                                to={item.path}
-                                className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] hover:-translate-y-[1px] transition-all duration-200"
-                              >
-                                <div className="w-10 h-10 flex items-center justify-center shrink-0">
-                                  <item.icon className={`w-full h-full ${item.color}`} />
-                                </div>
-                                <span className="text-base font-semibold text-[#1a1a1a] font-sans">{item.title}</span>
-                              </Link>
-                            </NavigationMenuLink>
-                          ))}
-                       </div>
-                    </div>
-                  </NavigationMenuContent>
-                </NavigationMenuItem>
-              </NavigationMenuList>
-            </NavigationMenu>
-            
-            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Career</Link>
+            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
+            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
+            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
-
           <div className="flex items-center">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-gray-100 p-0 focus-visible:ring-0">
-                    <Avatar className="h-full w-full">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="font-sans">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56 mt-2 z-[200] bg-white" align="end">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold font-sans">{user.user_metadata?.full_name || 'User'}</span>
-                      <span className="text-xs text-muted-foreground font-sans">{user.email}</span>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="font-sans"><Link to="/dashboard">Dashboard</Link></DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 font-sans">Log out</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button variant="ghost" onClick={handleSignOut} className="text-red-600">Log out</Button>
             ) : (
               <Link to="/auth">
-                <Button className="bg-royal hover:bg-royal-dark text-white px-6 font-sans font-medium">Sign In</Button>
+                <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6">Sign In</Button>
               </Link>
             )}
           </div>
@@ -204,70 +114,84 @@ const NavBar = () => {
           <div className="flex items-center gap-3">
             <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-gray-700">
+                <Button variant="ghost" size="icon" className="text-gray-700 p-0 hover:bg-transparent">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
               
-              <SheetContent side="left" className="w-[300px] p-0 flex flex-col z-[250]">
-                {/* Side Nav Header: Logo and Close option */}
-                <SheetHeader className="p-4 border-b flex flex-row items-center justify-between space-y-0">
-                  <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-8 w-auto" />
+              {/* FULL SCREEN MENU CONTAINER */}
+              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none">
+                {/* Header Section from your design */}
+                <SheetHeader className="px-5 py-4 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0">
+                  <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
                   <SheetClose asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <X className="h-5 w-5" />
-                    </Button>
+                    <button className="text-black outline-none">
+                      <X className="h-6 w-6 stroke-[2.5]" />
+                    </button>
                   </SheetClose>
                 </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto bg-white">
+                <div className="flex-1 overflow-y-auto bg-white nav-list">
                   {/* --- PANE 1: MAIN MENU --- */}
                   {activePane === "main" && (
-                    <div className="flex flex-col py-2 animate-in slide-in-from-right duration-200">
-                      <Link to="/" className="px-6 py-4 text-base font-medium border-b border-gray-50" onClick={() => setIsSheetOpen(false)}>Home</Link>
-                      <Link to="/about" className="px-6 py-4 text-base font-medium border-b border-gray-50" onClick={() => setIsSheetOpen(false)}>About Us</Link>
-                      
-                      {/* Section Trigger for Courses */}
+                    <div className="flex flex-col animate-in slide-in-from-right duration-200">
+                      <Link 
+                        to="/" 
+                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        Home
+                      </Link>
+                      <Link 
+                        to="/about" 
+                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        About Us
+                      </Link>
                       <button 
                         onClick={() => setActivePane("courses")}
-                        className="px-6 py-4 text-base font-medium flex items-center justify-between border-b border-gray-50 text-left"
+                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
                       >
-                        Courses <ChevronRight className="h-4 w-4 text-gray-400" />
+                        All Courses
+                        <ChevronRight className="h-4 w-4 text-[#444] stroke-[2.5]" />
                       </button>
-
-                      {/* Section Trigger for Exam Prep */}
                       <button 
                         onClick={() => setActivePane("examprep")}
-                        className="px-6 py-4 text-base font-medium flex items-center justify-between border-b border-gray-50 text-left"
+                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f2f2f2] text-left"
                       >
-                        Exam Preparation <ChevronRight className="h-4 w-4 text-gray-400" />
+                        Exam Preparation
+                        <ChevronRight className="h-4 w-4 text-[#444] stroke-[2.5]" />
                       </button>
-
-                      <Link to="/career" className="px-6 py-4 text-base font-medium border-b border-gray-50" onClick={() => setIsSheetOpen(false)}>Career</Link>
-                      
-                      {user && (
-                        <Link to="/dashboard" className="px-6 py-4 text-base font-medium border-b border-gray-50" onClick={() => setIsSheetOpen(false)}>Dashboard</Link>
-                      )}
+                      <Link 
+                        to="/career" 
+                        className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] border-b border-[#f2f2f2]"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        Career
+                      </Link>
                     </div>
                   )}
 
-                  {/* --- PANE 2: COURSES SECTION --- */}
+                  {/* --- PANE 2: COURSES SECTION (Drill-down) --- */}
                   {activePane === "courses" && (
                     <div className="flex flex-col animate-in slide-in-from-left duration-200">
                       <button 
                         onClick={() => setActivePane("main")}
-                        className="px-4 py-3 text-royal font-bold flex items-center gap-2 bg-gray-50"
+                        className="px-5 py-4 text-[#1d4ed8] font-bold flex items-center gap-2 bg-[#f9fafb] border-b border-[#f2f2f2]"
                       >
                         <ArrowLeft className="h-4 w-4" /> Back to Menu
                       </button>
-                      <div className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Select Category</div>
+                      <div className="px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-[#f2f2f2]">
+                        Select Course Category
+                      </div>
                       {courseCategories.map((category) => {
                         const style = getCategoryStyle(category);
                         return (
                           <Link 
                             key={category}
                             to={`/courses/category/${style.slug}`}
-                            className="px-6 py-4 text-base font-medium flex items-center gap-3 border-b border-gray-50"
+                            className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center gap-3 border-b border-[#f2f2f2]"
                             onClick={() => setIsSheetOpen(false)}
                           >
                             <style.icon className={`h-5 w-5 ${style.color}`} />
@@ -278,21 +202,23 @@ const NavBar = () => {
                     </div>
                   )}
 
-                  {/* --- PANE 3: EXAM PREP SECTION --- */}
+                  {/* --- PANE 3: EXAM PREP SECTION (Drill-down) --- */}
                   {activePane === "examprep" && (
                     <div className="flex flex-col animate-in slide-in-from-left duration-200">
                       <button 
                         onClick={() => setActivePane("main")}
-                        className="px-4 py-3 text-royal font-bold flex items-center gap-2 bg-gray-50"
+                        className="px-5 py-4 text-[#1d4ed8] font-bold flex items-center gap-2 bg-[#f9fafb] border-b border-[#f2f2f2]"
                       >
                         <ArrowLeft className="h-4 w-4" /> Back to Menu
                       </button>
-                      <div className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Exam Resources</div>
+                      <div className="px-5 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider border-b border-[#f2f2f2]">
+                        Resources
+                      </div>
                       {examPrepItems.map((item) => (
                         <Link 
                           key={item.path}
                           to={item.path}
-                          className="px-6 py-4 text-base font-medium flex items-center gap-3 border-b border-gray-50"
+                          className="px-5 py-[22px] text-base font-medium text-[#1a1a1a] flex items-center gap-3 border-b border-[#f2f2f2]"
                           onClick={() => setIsSheetOpen(false)}
                         >
                           <item.icon className={`h-5 w-5 ${item.color}`} />
@@ -303,36 +229,42 @@ const NavBar = () => {
                   )}
                 </div>
 
-                {user && (
-                  <div className="p-4 border-t bg-gray-50">
-                    <button 
+                {/* Footer Section with Deep Blue Button */}
+                <footer className="px-5 py-8 bg-white border-t border-[#f2f2f2]">
+                  {user ? (
+                    <Button 
                       onClick={handleSignOut}
-                      className="w-full px-4 py-2 text-red-600 font-medium text-left flex items-center gap-2"
+                      className="w-full py-[26px] bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-base font-semibold shadow-none transition-none"
                     >
                       Log out
-                    </button>
-                  </div>
-                )}
+                    </Button>
+                  ) : (
+                    <Link to="/auth" onClick={() => setIsSheetOpen(false)}>
+                      <Button className="w-full py-[26px] bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-xl text-base font-semibold shadow-none transition-none">
+                        Login/Register
+                      </Button>
+                    </Link>
+                  )}
+                </footer>
               </SheetContent>
             </Sheet>
 
-            {/* Logo is now positioned beside the hamburger button */}
             <Link to="/">
-              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-8 w-auto" />
+              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
             </Link>
           </div>
           
           <div>
             {user ? (
               <Link to="/dashboard">
-                <Avatar className="h-8 w-8 border-2 border-gray-100">
+                <Avatar className="h-8 w-8 border border-gray-100">
                   <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback className="text-xs font-sans">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback>{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
               </Link>
             ) : (
               <Link to="/auth">
-                <Button size="sm" className="bg-royal hover:bg-royal-dark text-white px-4 py-1 h-8 text-sm font-sans font-medium">
+                <Button size="sm" className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-4 h-8 text-sm font-medium">
                   Login
                 </Button>
               </Link>
