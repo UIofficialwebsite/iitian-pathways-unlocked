@@ -9,7 +9,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { 
   ChevronRight,
   Home,
-  ChevronDown,
   X
 } from "lucide-react";
 
@@ -28,6 +27,7 @@ const CourseListing = () => {
   const [priceRange, setPriceRange] = useState<string | null>(null);
   const [newlyLaunched, setNewlyLaunched] = useState(false);
   const [fastrackOnly, setFastrackOnly] = useState(false);
+  const [bestSellerOnly, setBestSellerOnly] = useState(false);
 
   // Temporary states for Apply/Cancel logic
   const [tempLevels, setTempLevels] = useState<string[]>([]);
@@ -92,7 +92,6 @@ const CourseListing = () => {
   const availableLevels = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.level))).filter(Boolean).sort(), [branchFilteredCourses]);
   const availableSubjects = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort(), [branchFilteredCourses]);
 
-  // Main Filter Logic - Instant Batch Loading
   const filteredCourses = useMemo(() => {
     let result = [...branchFilteredCourses];
     if (selectedLevels.length > 0) result = result.filter(c => selectedLevels.includes(c.level || ''));
@@ -107,11 +106,10 @@ const CourseListing = () => {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       result = result.filter(c => c.created_at && new Date(c.created_at) > thirtyDaysAgo);
     }
-    if (fastrackOnly) {
-      result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
-    }
+    if (fastrackOnly) result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
+    if (bestSellerOnly) result = result.filter(c => c.is_popular === true);
     return result;
-  }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly]);
+  }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly, bestSellerOnly]);
 
   const groupedCourses = useMemo(() => {
     const groups: Record<string, typeof filteredCourses> = {};
@@ -167,7 +165,7 @@ const CourseListing = () => {
               <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
             <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight uppercase tracking-tight">{currentCategoryName} Online Coaching</h1>
-            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal">Access curated coaching and live sessions for {currentCategoryName} preparation.</p>
+            <p className="text-[#555] text-xs md:text-sm leading-relaxed max-w-4xl mb-2 font-normal">Access curated coaching and live sessions for {currentCategoryName} preparation. Explore lectures, study materials, and mock test series to ensure academic success.</p>
           </div>
         </div>
 
@@ -246,8 +244,9 @@ const CourseListing = () => {
                   )}
                 </div>
 
+                <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${bestSellerOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Best Seller</button>
                 <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${newlyLaunched ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Newly Launched</button>
-                <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batches</button>
+                <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batch</button>
               </div>
             </div>
           </div>
