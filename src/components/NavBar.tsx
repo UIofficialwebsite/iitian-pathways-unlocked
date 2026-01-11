@@ -18,13 +18,6 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
@@ -62,10 +55,18 @@ const NavBar = () => {
   };
 
   const examPrepItems = [
-    { title: "JEE Prep", path: "/exam-preparation/jee", icon: Atom, color: "text-[#f39c12]" },
-    { title: "NEET Prep", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#e74c3c]" },
-    { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
+    { title: "IIT JEE", path: "/exam-preparation/jee", icon: Atom, color: "text-[#3B82F6]" },
+    { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
+    { title: "ESE", path: "/exam-preparation/ese", icon: GraduationCap, color: "text-[#F59E0B]" },
+    { title: "GATE", path: "/exam-preparation/gate", icon: Atom, color: "text-[#FCD34D]" },
+    { title: "AE/JE", path: "/exam-preparation/ae-je", icon: BookOpen, color: "text-[#3B82F6]" },
+    { title: "Olympiad", path: "/exam-preparation/olympiad", icon: GraduationCap, color: "text-[#FBBF24]" }
   ];
+
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsSheetOpen(open);
+    if (!open) setActivePane("main");
+  };
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[150] h-16 font-['Inter',sans-serif]">
@@ -95,7 +96,7 @@ const NavBar = () => {
         {/* MOBILE VIEW */}
         <div className="md:hidden flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
-            <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if(!open) setActivePane("main"); }}>
+            <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent">
                   <Menu className="h-7 w-7 text-black" />
@@ -103,8 +104,8 @@ const NavBar = () => {
               </SheetTrigger>
               
               <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none font-['Inter',sans-serif]">
-                {/* HEADER: DYNAMIC TITLE / LOGO */}
-                <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px]">
+                {/* HEADER: Dynamic Logo or Section Title */}
+                <SheetHeader className="px-5 py-5 flex flex-row items-center border-b border-[#eeeeee] space-y-0 min-h-[73px]">
                   <div className="flex items-center gap-4">
                     {activePane === "main" ? (
                       <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
@@ -113,110 +114,77 @@ const NavBar = () => {
                         <button onClick={() => setActivePane("main")} className="text-black">
                           <ArrowLeft className="h-7 w-7 stroke-[2.5]" />
                         </button>
-                        <span className="text-[20px] font-bold text-[#1a1a1a]">
+                        <span className="text-[19px] font-bold text-[#1a1a1a]">
                           {activePane === "courses" ? "Courses" : "Exam Preparation"}
                         </span>
                       </>
                     )}
                   </div>
-                  
-                  {/* BIG PROPERLY ALIGNED CLOSE MARK */}
-                  <SheetClose asChild>
-                    <button className="text-black outline-none p-1">
-                      <X className="h-8 w-8 stroke-[2.5]" />
-                    </button>
-                  </SheetClose>
+                  {/* Note: Small redundant close button removed. Shadcn default 'X' is in the top-right corner. */}
                 </SheetHeader>
 
-                <div className="flex-1 overflow-y-auto bg-white">
-                  {/* PANE 1: MAIN NAVIGATION */}
+                <div className="flex-1 overflow-y-auto bg-[#f8f9fb]">
+                  {/* MAIN NAVIGATION LIST */}
                   {activePane === "main" && (
                     <div className="flex flex-col animate-in slide-in-from-right duration-200">
-                      <Link to="/" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Home</Link>
-                      <Link to="/about" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>About Us</Link>
+                      <Link to="/" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0] bg-white" onClick={() => setIsSheetOpen(false)}>Home</Link>
+                      <Link to="/about" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0] bg-white" onClick={() => setIsSheetOpen(false)}>About Us</Link>
                       
                       <button 
                         onClick={() => setActivePane("courses")} 
-                        className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0]"
+                        className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] bg-white"
                       >
                         All Courses <ChevronRight className="h-4 w-4 text-[#333] stroke-[2.5]" />
                       </button>
 
                       <button 
                         onClick={() => setActivePane("examprep")} 
-                        className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0]"
+                        className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] bg-white"
                       >
                         Exam Preparation <ChevronRight className="h-4 w-4 text-[#333] stroke-[2.5]" />
                       </button>
 
-                      <Link to="/career" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Career</Link>
-                      
-                      {/* LOGIN/REGISTER DRAWER TRIGGER (INSIDE LIST) */}
-                      {!user && (
-                        <div className="p-5 mt-2">
-                          <Drawer>
-                            <DrawerTrigger asChild>
-                              <Button className="w-[180px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-semibold shadow-none border-none outline-none">
-                                Login/Register
-                              </Button>
-                            </DrawerTrigger>
-                            <DrawerContent className="rounded-t-[40px] border-t-0 p-0 overflow-hidden bg-white">
-                              <div className="px-6 py-10 pb-16">
-                                <DrawerHeader className="p-0 mb-8">
-                                  <DrawerTitle className="text-2xl font-bold font-['Inter',sans-serif] text-center">Join Our Community</DrawerTitle>
-                                </DrawerHeader>
-                                <div className="space-y-4 max-w-sm mx-auto">
-                                   <Link to="/auth" onClick={() => setIsSheetOpen(false)}>
-                                      <Button className="w-full h-14 bg-[#1d4ed8] text-white rounded-2xl text-lg font-bold">
-                                        Sign In / Sign Up
-                                      </Button>
-                                   </Link>
-                                </div>
-                              </div>
-                            </DrawerContent>
-                          </Drawer>
-                        </div>
-                      )}
+                      <Link to="/career" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0] bg-white" onClick={() => setIsSheetOpen(false)}>Career</Link>
                     </div>
                   )}
 
-                  {/* PANE 2: COURSES GRID (2 columns like PC dropdown) */}
-                  {activePane === "courses" && (
-                    <div className="p-4 grid grid-cols-2 gap-3 animate-in slide-in-from-left duration-200">
-                      {courseCategories.map((category) => {
-                        const style = getCategoryStyle(category);
+                  {/* SUB-MENU: RECTANGULAR GRID (1 ROW 2 TABS) */}
+                  {(activePane === "courses" || activePane === "examprep") && (
+                    <div className="p-5 grid grid-cols-2 gap-4 animate-in slide-in-from-left duration-200">
+                      {(activePane === "courses" ? courseCategories : examPrepItems).map((item: any) => {
+                        const style = activePane === "courses" ? getCategoryStyle(item) : item;
+                        const label = activePane === "courses" ? item : item.title;
+                        const path = activePane === "courses" ? `/courses/category/${style.slug}` : style.path;
+                        const IconComponent = style.icon;
+
                         return (
                           <Link 
-                            key={category}
-                            to={`/courses/category/${style.slug}`}
-                            className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#f0f0f0] rounded-xl text-center"
+                            key={label}
+                            to={path}
+                            className="flex items-center gap-4 px-4 py-4 bg-white border border-[#e2e2e2] rounded-[4px] hover:border-black transition-all active:scale-[0.98]"
                             onClick={() => setIsSheetOpen(false)}
                           >
-                            <style.icon className="h-8 w-8 text-[#5a4bda]" />
-                            <span className="text-[14px] font-semibold text-[#1a1a1a]">{category}</span>
+                            <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                              <IconComponent className={`w-full h-full ${style.color || 'text-black'}`} />
+                            </div>
+                            <span className="text-[15px] font-semibold text-[#1a1a1a] leading-tight">{label}</span>
                           </Link>
                         );
                       })}
                     </div>
                   )}
-
-                  {/* PANE 3: EXAM PREP GRID */}
-                  {activePane === "examprep" && (
-                    <div className="p-4 grid grid-cols-2 gap-3 animate-in slide-in-from-left duration-200">
-                      {examPrepItems.map((item) => (
-                        <Link 
-                          key={item.path}
-                          to={item.path}
-                          className="flex flex-col items-center justify-center gap-3 p-6 bg-white border border-[#f0f0f0] rounded-xl text-center"
-                          onClick={() => setIsSheetOpen(false)}
-                        >
-                          <item.icon className="h-8 w-8 text-[#5a4bda]" />
-                          <span className="text-[14px] font-semibold text-[#1a1a1a]">{item.title}</span>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
                 </div>
+
+                {/* MOBILE FOOTER: Login/Register Button - Middle Bottom Aligned */}
+                {!user && (
+                  <div className="p-6 bg-white border-t border-[#eeeeee] flex justify-center">
+                    <Link to="/auth" className="w-full max-w-[280px]" onClick={() => setIsSheetOpen(false)}>
+                      <Button className="w-full h-12 bg-[#5a4bda] text-white rounded-lg text-[16px] font-bold shadow-none">
+                        Login/Register
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </SheetContent>
             </Sheet>
 
