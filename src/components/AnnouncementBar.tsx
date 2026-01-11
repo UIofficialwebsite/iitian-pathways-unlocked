@@ -1,97 +1,65 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Banner } from '@/components/ui/banner';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, Briefcase } from 'lucide-react';
-import { useAnnouncements } from '@/hooks/useAnnouncements';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { X, Megaphone, ArrowRight } from "lucide-react";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
-export const AnnouncementBar = () => {
+interface AnnouncementBarProps {
+  isFloating?: boolean;
+  onClose?: () => void;
+}
+
+export const AnnouncementBar = ({ isFloating, onClose }: AnnouncementBarProps) => {
   const navigate = useNavigate();
   const { announcements, loading } = useAnnouncements();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [show, setShow] = useState(true);
 
-  // Rotate announcements every 8 seconds
-  useEffect(() => {
-    if (announcements.length <= 1) return;
+  if (loading || !announcements || announcements.length === 0) return null;
 
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % announcements.length);
-    }, 8000);
-
-    return () => clearInterval(interval);
-  }, [announcements.length]);
-
-  if (loading || announcements.length === 0 || !show) {
-    return null;
-  }
-
-  const currentAnnouncement = announcements[currentIndex];
-  const isCourse = currentAnnouncement.type === 'course';
-
-  const handleAction = () => {
-    navigate(currentAnnouncement.link);
+  const handleAction = (link: string) => {
+    navigate(link);
+    if (onClose) onClose();
   };
 
-  const handleClose = () => {
-    setShow(false);
-  };
-
+  // The code is now optimized for the floating pop-up view
   return (
-    // 1. Floating wrapper: 
-    //    - 'fixed top-24' floats it over the carousel.
-    //    - 'left-0 right-0' makes it full-width on mobile.
-    //    - 'pointer-events-none' lets clicks pass through empty space.
-    <div className="fixed top-24 left-0 right-0 z-40 pointer-events-none">
+    <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl p-5 relative overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2 text-royal font-bold">
+          <Megaphone className="h-5 w-5" />
+          <span>Latest Updates</span>
+        </div>
+        <button 
+          onClick={onClose} 
+          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+        >
+          <X className="h-4 w-4 text-gray-500" />
+        </button>
+      </div>
       
-      {/* 2. Centering & Width container: 
-           - 'container' adds responsive padding on mobile.
-           - 'max-w-4xl' constrains width on desktop.
-           - 'pointer-events-auto' makes only the block clickable.
-      */}
-      <div className="container mx-auto max-w-4xl pointer-events-auto">
-        
-        <Banner
-          show={show}
-          onHide={handleClose}
-          // 3. Use 'default' variant, which we will override
-          variant={'default'}
-          title={currentAnnouncement.title}
-          description={
-            announcements.length > 1
-              ? `${currentIndex + 1} of ${announcements.length} announcements`
-              : undefined
-          }
-          showShade={false} // No shade needed on a black bg
-          closable={true}
-          // 4. Icons MUST be 'text-white' to be visible
-          icon={
-            isCourse ? (
-              <Sparkles className="h-5 w-5 text-white" />
-            ) : (
-              <Briefcase className="h-5 w-5 text-white" />
-            )
-          }
-          action={
-            <Button
-              onClick={handleAction}
-              size="sm"
-              // 5. Button styled as requested: white bg, dark text
-              className="inline-flex items-center gap-1 bg-white text-black hover:bg-gray-200"
-              //    (Note: 'variant="ghost"' is removed)
-            >
-              {isCourse ? 'Join Now' : 'Apply Now'}
-              <ArrowRight className="h-3 w-3" />
-            </Button>
-          }
-          // 6. Style override for the dark theme:
-          //    - 'bg-black text-white': The dark block with white text.
-          //    - 'p-4 md:p-6': Mobile-responsive padding.
-          //    - 'rounded-lg': Creates the rectangular block.
-          className="bg-black text-white p-4 md:p-6 rounded-lg shadow-lg"
-        />
+      <div className="space-y-4 max-h-[350px] overflow-y-auto custom-scrollbar pr-1">
+        {announcements.map((announcement) => (
+          <div key={announcement.id} className="group p-3 rounded-xl hover:bg-gray-50 border border-transparent hover:border-gray-100 transition-all">
+            <h4 className="font-semibold text-gray-900 text-sm mb-1">{announcement.title}</h4>
+            <p className="text-gray-600 text-xs leading-relaxed mb-3">
+              {announcement.content}
+            </p>
+            {announcement.link && (
+              <Button
+                onClick={() => handleAction(announcement.link)}
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1 border-royal text-royal hover:bg-royal hover:text-white"
+              >
+                {announcement.type === 'course' ? 'Join Now' : 'Details'}
+                <ArrowRight className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
 };
+
+export default AnnouncementBar;
