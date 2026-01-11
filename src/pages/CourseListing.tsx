@@ -76,6 +76,7 @@ const CourseListing = () => {
     fetchBanner();
   }, [location.pathname, location.search, examCategory]);
 
+  // CATEGORY FILTERING - Strictly for the current category path
   const categoryFilteredCourses = useMemo(() => {
     if (!examCategory || examCategory === 'all') return courses;
     return courses.filter(course => 
@@ -92,6 +93,7 @@ const CourseListing = () => {
   const availableLevels = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.level))).filter(Boolean).sort(), [branchFilteredCourses]);
   const availableSubjects = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort(), [branchFilteredCourses]);
 
+  // MAIN FILTER LOGIC
   const filteredCourses = useMemo(() => {
     let result = [...branchFilteredCourses];
     if (selectedLevels.length > 0) result = result.filter(c => selectedLevels.includes(c.level || ''));
@@ -101,13 +103,14 @@ const CourseListing = () => {
       if (priceRange === 'free') result = result.filter(c => getPrice(c) === 0);
       if (priceRange === 'paid') result = result.filter(c => getPrice(c) > 0);
     }
+    // Check updated_at for Newly Launched logic
     if (newlyLaunched) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      result = result.filter(c => c.created_at && new Date(c.created_at) > thirtyDaysAgo);
+      result = result.filter(c => c.updated_at && new Date(c.updated_at) > thirtyDaysAgo);
     }
     if (fastrackOnly) result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
-    if (bestSellerOnly) result = result.filter(c => c.is_popular === true);
+    if (bestSellerOnly) result = result.filter(c => c.bestseller === true);
     return result;
   }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly, bestSellerOnly]);
 
@@ -169,6 +172,7 @@ const CourseListing = () => {
           </div>
         </div>
 
+        {/* STICKY FILTER BAR - Left Aligned Container */}
         <div ref={filterRef} className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
           <div className="bg-[#f4f2ff]">
             <div className="max-w-6xl mx-auto px-4 md:px-8">
@@ -244,6 +248,7 @@ const CourseListing = () => {
                   )}
                 </div>
 
+                {/* Status Toggle Filters */}
                 <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${bestSellerOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Best Seller</button>
                 <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${newlyLaunched ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Newly Launched</button>
                 <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batch</button>
@@ -254,6 +259,7 @@ const CourseListing = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
+        {/* RESULTS SECTION - Clean Styling */}
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 font-['Inter',sans-serif]">
             {contentLoading ? <div className="grid lg:grid-cols-3 gap-6">{Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}</div> : (
