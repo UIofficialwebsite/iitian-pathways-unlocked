@@ -51,39 +51,24 @@ const CourseListing = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [filterOffset]);
 
-  // BANNER FETCHING - Updated to support full URLs and Query Parameters
   useEffect(() => {
     const fetchBanner = async () => {
       setBannerLoading(true);
       try {
         const { data } = await supabase.from('page_banners').select('image_url, page_path');
         if (data) {
-          // Construct current relative full path (e.g., /courses/listing/iitm-bs?branch=Data%20Science)
           const currentFullPath = location.pathname + location.search;
-          
           const match = data.find(b => {
-            // Normalize path: If DB contains "https://domain.com/path", convert to "/path"
             const dbPath = b.page_path.replace(/^(?:\/\/|[^\/]+)*\//, '/');
-            
-            return (
-              dbPath === currentFullPath || 
-              dbPath === location.pathname || 
-              dbPath === (examCategory || 'courses')
-            );
+            return dbPath === currentFullPath || dbPath === location.pathname || dbPath === (examCategory || 'courses');
           });
-          
           setBannerImage(match?.image_url || null);
         }
-      } catch (err) { 
-        console.error('Error fetching banner:', err); 
-      } finally { 
-        setBannerLoading(false); 
-      }
+      } catch (err) { console.error('Error fetching banner:', err); } finally { setBannerLoading(false); }
     };
     fetchBanner();
   }, [location.pathname, location.search, examCategory]);
 
-  // 4. DATA LOGIC
   const currentCategoryData = useMemo(() => {
     if (!examCategory) return { name: "All Courses" };
     const match = courses.find(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
@@ -136,11 +121,11 @@ const CourseListing = () => {
   };
 
   return (
-    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfdff] relative">
+    <div className="min-h-screen font-sans text-foreground w-full overflow-x-hidden bg-[#fcfcfc] relative">
       <NavBar />
       
       <main className="pt-16">
-        {/* BANNER SECTION - Fixed height constraints */}
+        {/* BANNER SECTION */}
         <section className="w-full h-[clamp(120px,20vw,200px)] bg-muted overflow-hidden relative z-10 border-b border-border/50">
           {bannerLoading ? (
             <div className="w-full h-full animate-pulse bg-muted" />
@@ -149,13 +134,12 @@ const CourseListing = () => {
           )}
         </section>
 
-        {/* HERO AREA - Matches Courses.tsx Gradients and Typography */}
+        {/* HERO AREA - Content remains original */}
         <div className="relative overflow-hidden flex flex-col items-center px-4 py-6 md:py-8 border-b border-border/50">
           <div className="absolute top-0 left-0 w-[45%] h-full bg-gradient-to-br from-[#e6f0ff]/70 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(0 0, 100% 0, 0 100%)' }} />
           <div className="absolute bottom-0 right-0 w-[50%] h-full bg-gradient-to-tl from-[#ebf2ff]/80 to-transparent z-0 pointer-events-none" style={{ clipPath: 'polygon(100% 100%, 0 100%, 100% 0)' }} />
 
           <div className="relative z-10 w-full max-w-6xl font-['Inter',sans-serif]">
-            {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-[#666] text-xs mb-3 font-normal">
               <Link to="/" className="hover:text-primary transition-colors"><Home className="w-3 h-3" /></Link>
               <ChevronRight className="w-3 h-3 opacity-50" />
@@ -169,8 +153,6 @@ const CourseListing = () => {
               <ChevronRight className="w-3 h-3 opacity-50" />
               <span className="font-bold text-[#1E3A8A] uppercase tracking-tight">BATCHES</span>
             </nav>
-
-            {/* Title & Description */}
             <h1 className="text-xl md:text-3xl font-bold text-[#1a1a1a] mb-2 leading-tight">
               {currentCategoryData.name} Online Coaching {branchFromUrl && ` For ${branchFromUrl}`}
             </h1>
@@ -180,19 +162,18 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR */}
+        {/* STICKY FILTER BAR - PORTED DESIGN */}
         <div 
           ref={filterRef}
-          className={`w-full z-40 bg-white border-b border-border transition-shadow duration-300 ${
-            isSticky ? 'fixed top-16 shadow-lg' : 'relative'
-          }`}
+          className={`w-full z-40 transition-shadow duration-300 ${isSticky ? 'fixed top-16 shadow-lg' : 'relative'}`}
         >
-          <div className="max-w-6xl mx-auto px-4 md:px-8 py-4">
-            <div className="flex items-center gap-2 md:gap-6 overflow-x-auto no-scrollbar pb-3 mb-3 border-b border-border/50">
+          {/* Top Navigation Row (Tabs) - Ported Design */}
+          <div className="bg-[#f4f2ff] pt-6 flex justify-center">
+            <div className="flex gap-10 overflow-x-auto no-scrollbar px-4">
               <button 
                 onClick={() => setSearchParams({})}
-                className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 font-['Inter',sans-serif] ${
-                  !branchFromUrl ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-muted-foreground hover:text-foreground'
+                className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap ${
+                  !branchFromUrl ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
                 }`}
               >
                 All Batches
@@ -201,34 +182,64 @@ const CourseListing = () => {
                 <button
                   key={branch}
                   onClick={() => setSearchParams({ branch: branch })}
-                  className={`px-3 md:px-4 py-2 text-sm font-bold transition-all whitespace-nowrap border-b-2 font-['Inter',sans-serif] ${
-                    branchFromUrl === branch ? 'border-[#1E3A8A] text-[#1E3A8A]' : 'border-transparent text-muted-foreground hover:text-foreground'
+                  className={`pb-3 text-[18px] cursor-pointer transition-all whitespace-nowrap ${
+                    branchFromUrl === branch ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium hover:text-[#4b5563]'
                   }`}
                 >
                   {branch}
                 </button>
               ))}
             </div>
+          </div>
 
-            <div className="flex items-center gap-2 md:gap-3 flex-wrap font-['Inter',sans-serif]">
-              <button onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border ${selectedMode === 'online' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border'}`}>Online</button>
-              <button onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border ${selectedMode === 'offline' ? 'bg-[#1E3A8A] text-white border-[#1E3A8A]' : 'bg-background border-border'}`}>Offline</button>
+          {/* Bottom Filter Row (Pills) - Ported Design */}
+          <div className="bg-white py-6 border-b border-[#f3f4f6] flex justify-center">
+            <div className="flex flex-wrap justify-center gap-[14px] max-w-[1200px] px-5">
+              <button 
+                onClick={() => setSelectedMode(selectedMode === 'online' ? null : 'online')} 
+                className={`px-6 py-2.5 border rounded-[30px] text-[15px] transition-all ${
+                  selectedMode === 'online' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                }`}
+              >
+                Online
+              </button>
+              <button 
+                onClick={() => setSelectedMode(selectedMode === 'offline' ? null : 'offline')} 
+                className={`px-6 py-2.5 border rounded-[30px] text-[15px] transition-all ${
+                  selectedMode === 'offline' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                }`}
+              >
+                Offline
+              </button>
 
               <div className="relative">
-                <button onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)} className={`px-3 md:px-4 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${priceRange ? 'bg-[#1E3A8A] text-white' : 'bg-background'}`}>
-                  Pricing <ChevronDown className={`w-3 h-3 transition-transform ${pricingDropdownOpen ? 'rotate-180' : ''}`} />
+                <button 
+                  onClick={() => setPricingDropdownOpen(!pricingDropdownOpen)} 
+                  className={`px-6 py-2.5 border rounded-[30px] text-[15px] flex items-center transition-all ${
+                    priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] hover:border-[#d1d5db]'
+                  }`}
+                >
+                  Pricing <span className={`ml-2.5 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] transition-transform ${pricingDropdownOpen ? 'rotate-180 border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                 </button>
                 {pricingDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-2 bg-card border rounded-xl shadow-xl z-50 min-w-[160px] p-1">
+                  <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[160px] p-1 font-['Inter',sans-serif]">
                     {['free', 'under-1000', '1000-5000', 'above-5000'].map((val) => (
-                      <button key={val} onClick={() => { setPriceRange(val); setPricingDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-muted capitalize font-['Inter',sans-serif]">{val.replace('-', ' ')}</button>
+                      <button key={val} onClick={() => { setPriceRange(val); setPricingDropdownOpen(false); }} className="w-full text-left px-4 py-2 text-xs font-medium rounded-lg hover:bg-[#f9fafb] capitalize">{val.replace('-', ' ')}</button>
                     ))}
                   </div>
                 )}
               </div>
 
+              {/* Standard Pills from design */}
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb] flex items-center">
+                Language <span className="ml-2.5 w-0 h-0 border-l-[5px] border-r-[5px] border-t-[5px] border-t-[#374151] border-l-transparent border-r-transparent"></span>
+              </div>
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">Power Batch</div>
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">Newly Launched</div>
+              <div className="px-6 py-2.5 border border-[#e5e7eb] rounded-[30px] text-[15px] text-[#374151] cursor-pointer bg-white hover:bg-[#f9fafb]">CuriousJr</div>
+
               {(selectedMode || priceRange || branchFromUrl) && (
-                <button onClick={clearAllFilters} className="px-3 md:px-4 py-1.5 text-xs font-bold text-destructive hover:bg-destructive/10 rounded-full flex items-center gap-1">
+                <button onClick={clearAllFilters} className="px-6 py-2.5 text-[15px] font-bold text-destructive hover:bg-destructive/10 rounded-[30px] flex items-center gap-1">
                   <X className="w-3 h-3" /> Clear All
                 </button>
               )}
@@ -236,7 +247,7 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {isSticky && <div className="h-[140px]" />}
+        {isSticky && <div className="h-[180px]" />}
 
         <div className="pb-32 bg-white">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8">
@@ -246,7 +257,7 @@ const CourseListing = () => {
               <div key={groupName} className="mb-20">
                 <div className="mb-8">
                   <h3 className="text-xl font-bold text-[#1a1a1a] font-['Inter',sans-serif] uppercase tracking-tight">{groupName}</h3>
-                  <div className="h-1 w-12 bg-[#1E3A8A] mt-2 rounded-full" />
+                  <div className="h-1 w-12 bg-[#6366f1] mt-2 rounded-full" />
                 </div>
                 <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-6 no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
                   {groupCourses.map((course, index) => (
