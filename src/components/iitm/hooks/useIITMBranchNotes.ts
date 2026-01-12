@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Type for a single note from your iitm_branch_notes table
 export interface Note {
   id: string;
   title: string;
@@ -10,35 +9,22 @@ export interface Note {
   file_link: string;
   download_count: number;
   subject: string;
+  subject_id: number; // Added field
   week_number: number;
   diploma_specialization?: string;
 }
 
-// Type for a subject from your iitm_bs_subjects table
-export interface Subject {
-  id: number;
-  branch: string;
-  level: string;
-  subject_name: string;
-  specialization: string | null;
-}
-
-// The final data structure: an array of Subjects, each containing its notes
 export interface GroupedData {
   subjectName: string;
+  subjectId: number; // Added field
   specialization: string | null;
-  notes: Note[]; // A simple array of notes, ordered by week
+  notes: Note[];
 }
 
-// Helper to convert 'data-science' to 'Data Science'
 const formatBranchName = (branch: string) => {
-  return branch
-    .split('-')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+  return branch.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 
-// Helper to convert 'foundation' to 'Foundation'
 const formatLevelName = (level: string) => {
   return level.charAt(0).toUpperCase() + level.slice(1);
 };
@@ -53,16 +39,13 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
     if (!branch || !level) return;
 
     setLoading(true);
-    setGroupedData([]);
-    setAvailableSpecializations([]);
-
     const dbBranchName = formatBranchName(branch);
     const dbLevelName = formatLevelName(level);
 
     try {
-      // 1. Fetch the Subject Structure (The "Scaffolding")
+      // 1. Fetch Subjects (The Scaffolding)
       const { data: subjectsData, error: subjectsError } = await supabase
-        .from('iitm_bs_subjects' as any)
+        .from('iitm_bs_subjects')
         .select('*')
         .eq('branch', dbBranchName)
         .eq('level', dbLevelName)
@@ -70,58 +53,39 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
 
       if (subjectsError) throw subjectsError;
       if (!subjectsData || subjectsData.length === 0) {
+        setGroupedData([]);
         setLoading(false);
-        return; // No subjects defined for this course
+        return;
       }
 
-      // 2. Fetch all available Notes (The "Content")
+      // 2. Fetch Notes using the Subject IDs
+      const subjectIds = subjectsData.map(s => s.id);
       const { data: notesData, error: notesError } = await supabase
         .from('iitm_branch_notes')
         .select('*')
-        .eq('branch', dbBranchName)
-        .eq('level', dbLevelName)
-        .order('week_number', { ascending: true }) // Order notes by week
-        .order('title', { ascending: true });
+        .in('subject_id', subjectIds) // Filter by IDs for 100% accuracy
+        .eq('is_active', true)
+        .order('week_number', { ascending: true });
 
       if (notesError) throw notesError;
 
-      // 3. Create a fast lookup map for the notes
-      // Map<SubjectName, Note[]>
-      const notesMap = new Map<string, Note[]>();
-      if (notesData) {
-        for (const note of notesData as Note[]) {
-          if (!notesMap.has(note.subject)) {
-            notesMap.set(note.subject, []);
-          }
-          notesMap.get(note.subject)!.push(note);
-        }
-      }
-      
-      // 4. Collect all unique specializations
-      const specializationsSet = new Set<string>();
-      (subjectsData as any[]).forEach((s: any) => {
-        if(s.specialization) specializationsSet.add(s.specialization);
-      });
+      // 3. Group Notes into Subjects
+      const finalGroupedData: GroupedData[] = subjectsData.map((subject) => ({
+        subjectName: subject.subject_name,
+        subjectId: subject.id,
+        specialization: subject.specialization || null,
+        notes: (notesData as Note[] || []).filter(n => n.subject_id === subject.id),
+      }));
 
-      // 5. Build the final structure (Subject > Notes)
-      const finalGroupedData: GroupedData[] = (subjectsData as any[]).map((subject: any) => {
-        // Find all notes for this subject, or use an empty array
-        const notesForSubject = notesMap.get(subject.subject_name) || [];
-
-        return {
-          subjectName: subject.subject_name,
-          specialization: subject.specialization || null,
-          notes: notesForSubject,
-        };
-      });
-
+      // 4. Update state
+      const specializations = Array.from(new Set(subjectsData.map(s => s.specialization).filter(Boolean)));
       setGroupedData(finalGroupedData);
-      setAvailableSpecializations(Array.from(specializationsSet));
+      setAvailableSpecializations(specializations as string[]);
       
     } catch (error: any) {
       toast({
         title: "Error fetching notes",
-        description: error.message || "Could not load data from the database.",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
@@ -133,10 +97,5 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
     reloadNotes();
   }, [reloadNotes]);
 
-  return {
-    loading,
-    groupedData,
-    availableSpecializations,
-    reloadNotes,
-  };
+  return { loading, groupedData, availableSpecializations, reloadNotes };
 };
