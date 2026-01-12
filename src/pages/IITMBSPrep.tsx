@@ -149,19 +149,19 @@ const IITMBSPrep = () => {
             </div>
           </div>
 
-          {/* ROW 2: SUB-FILTERS (White) - Always present, internal content changes */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center relative z-[100]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="flex flex-nowrap items-center gap-3 py-3 min-w-max overflow-x-auto no-scrollbar">
-                {activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus' ? (
+          {/* ROW 2: SUB-FILTERS (White) - Always present */}
+          <div className="bg-white border-b border-[#f3f4f6] relative z-[100]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
+                {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus') && (
                   <>
                     <div className="relative">
                       <button 
                         onClick={() => toggleDropdown('branch')}
                         className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                       >
-                        Branch: {selectedBranch}
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        Branch {selectedBranch ? `: ${selectedBranch}` : ''}
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     </div>
                     {levels.map((lvl) => (
@@ -183,13 +183,14 @@ const IITMBSPrep = () => {
                           className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                         >
                           Year {pyqYear ? `: ${pyqYear}` : ''} 
-                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                         </button>
                       </div>
                     )}
                   </>
-                ) : (
-                  <span className="text-[12px] text-gray-400 font-medium">No sub-filters for this section</span>
+                )}
+                {(activeTab !== 'notes' && activeTab !== 'pyqs' && activeTab !== 'syllabus') && (
+                  <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
             </div>

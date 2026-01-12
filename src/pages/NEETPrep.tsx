@@ -147,11 +147,11 @@ const NEETPrep = () => {
             </div>
           </div>
 
-          {/* ROW 2: SUB-FILTERS (White) - Always present, internal content changes */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center relative z-[100]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="flex flex-nowrap items-center gap-3 py-3 min-w-max overflow-x-auto no-scrollbar">
-                {activeTab === 'notes' ? (
+          {/* ROW 2: SUB-FILTERS (White) - Always present */}
+          <div className="bg-white border-b border-[#f3f4f6] relative z-[100]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
+                {activeTab === 'notes' && (
                   <>
                     <div className="relative">
                       <button 
@@ -159,51 +159,37 @@ const NEETPrep = () => {
                         className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                       >
                         Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     </div>
-                    {["class11", "class12"].map((c) => (
-                      <button
-                        key={c}
-                        onClick={() => setActiveClass(c)}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${activeClass === c ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
-                      >
-                        {c === "class11" ? "Class 11" : "Class 12"}
-                      </button>
-                    ))}
+                    <button onClick={() => setActiveClass("class11")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class11" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 11</button>
+                    <button onClick={() => setActiveClass("class12")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class12" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 12</button>
                   </>
-                ) : activeTab === 'pyqs' ? (
+                )}
+                {activeTab === 'pyqs' && (
                   <>
                     <div className="relative">
-                      <button 
-                        onClick={() => toggleDropdown('subject')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
-                      >
+                      <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Subject {pyqSubject ? `: ${pyqSubject}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     </div>
                     <div className="relative">
-                      <button 
-                        onClick={() => toggleDropdown('year')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
-                      >
+                      <button onClick={() => toggleDropdown('year')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Year {pyqYear ? `: ${pyqYear}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     </div>
                     <div className="relative">
-                      <button 
-                        onClick={() => toggleDropdown('session')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
-                      >
+                      <button onClick={() => toggleDropdown('session')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Session {pyqSession ? `: ${pyqSession}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     </div>
                   </>
-                ) : (
-                  <span className="text-[12px] text-gray-400 font-medium">No sub-filters for this section</span>
+                )}
+                {(activeTab !== 'notes' && activeTab !== 'pyqs') && (
+                  <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
             </div>
