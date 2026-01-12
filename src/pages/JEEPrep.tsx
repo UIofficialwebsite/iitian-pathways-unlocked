@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
@@ -21,7 +21,6 @@ const JEEPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
 
-  // Initialize state from URL
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   const [urlParams, setUrlParams] = useState(() => getParamsFromUrl(location.pathname));
 
@@ -115,7 +114,6 @@ const JEEPrep = () => {
     { value: "class12", label: "Class 12" }
   ];
 
-  // SEO Meta Tags logic remains the same
   const currentParams = [activeSubject, activeClass === 'class11' ? 'Class 11' : 'Class 12'];
   const pageTitle = generateSEOTitle('jee', activeTab, currentParams);
   const pageDescription = generateSEODescription('jee', activeTab, currentParams);
@@ -144,9 +142,7 @@ const JEEPrep = () => {
           pageTitle="JEE Preparation"
         />
 
-        {/* DUAL ROW STICKY FILTERS - Matches CourseListing Style */}
         <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
-          {/* Row 1: Sections Navigation */}
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
@@ -171,11 +167,11 @@ const JEEPrep = () => {
             </div>
           </div>
 
-          {/* Row 2: Content Filters (Only for Notes and PYQs) */}
           {(activeTab === 'notes' || activeTab === 'pyqs') && (
             <div className="bg-white border-b border-[#f3f4f6]">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
+                  {/* Category Filter (Subjects) */}
                   {subjects.map((subject) => (
                     <button
                       key={subject}
@@ -188,8 +184,7 @@ const JEEPrep = () => {
                     </button>
                   ))}
                   
-                  <div className="h-6 w-[1px] bg-gray-200 mx-1 hidden md:block" />
-
+                  {/* Sub-category Filter (Classes) - Separator removed */}
                   {classes.map((cls) => (
                     <button
                       key={cls.value}
