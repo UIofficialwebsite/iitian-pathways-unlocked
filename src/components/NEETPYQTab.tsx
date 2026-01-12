@@ -9,7 +9,7 @@ import { ShimmerButton } from "./ui/shimmer-button";
 interface NEETPYQTabProps {
   subject: string | null;
   year: string | null;
-  session: string | null;
+  session?: string | null;
 }
 
 const NEETPYQTab = ({ subject, year, session }: NEETPYQTabProps) => {

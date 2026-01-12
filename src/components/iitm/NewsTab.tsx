@@ -7,14 +7,24 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 
-const NewsTab = () => {
+interface NewsTabProps {
+  sortOrder?: 'recent' | 'oldest';
+}
+
+const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
   const { newsUpdates, contentLoading } = useBackend();
   const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
 
-  // Filter news for IITM BS
-  const iitmNews = newsUpdates.filter(news => 
-    news.exam_type === 'IITM_BS' || news.exam_type === 'IITM BS' || !news.exam_type
-  );
+  // Filter news for IITM BS and sort
+  const iitmNews = newsUpdates
+    .filter(news => 
+      news.exam_type === 'IITM_BS' || news.exam_type === 'IITM BS' || !news.exam_type
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.date_time || a.created_at).getTime();
+      const dateB = new Date(b.date_time || b.created_at).getTime();
+      return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
+    });
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems);

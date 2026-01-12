@@ -18,9 +18,10 @@ interface StudyGroup {
 
 interface StudyGroupsTabProps {
   examType: 'JEE' | 'NEET' | 'IITM_BS';
+  sortOrder?: 'recent' | 'oldest';
 }
 
-const StudyGroupsTab = ({ examType }: StudyGroupsTabProps) => {
+const StudyGroupsTab = ({ examType, sortOrder = 'recent' }: StudyGroupsTabProps) => {
   const [studyGroups, setStudyGroups] = useState<StudyGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +35,7 @@ const StudyGroupsTab = ({ examType }: StudyGroupsTabProps) => {
           .from('study_groups')
           .select('*')
           .eq('exam_type', examType)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: sortOrder === 'oldest' });
 
         if (error) throw error;
         setStudyGroups(data || []);
@@ -47,7 +48,7 @@ const StudyGroupsTab = ({ examType }: StudyGroupsTabProps) => {
     };
 
     fetchStudyGroups();
-  }, [examType]);
+  }, [examType, sortOrder]);
 
   if (isLoading) {
     return (

@@ -34,6 +34,9 @@ const IITMBSPrep = () => {
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
   const [tempExamType, setTempExamType] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState("cgpa-calculator");
+  
+  // Sort order for tabs without filters
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
   const branches = ["Data Science", "Electronic Systems"];
   const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
@@ -249,6 +252,25 @@ const IITMBSPrep = () => {
                     )}
                   </>
                 )}
+                {/* Sort options for tabs without specific filters */}
+                {(activeTab === 'news' || activeTab === 'dates' || activeTab === 'courses') && (
+                  <>
+                    <button 
+                      onClick={() => setSortOrder('recent')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'recent' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Recent First
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button 
+                      onClick={() => setSortOrder('oldest')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'oldest' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Oldest First
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5" />}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             
@@ -367,8 +389,8 @@ const IITMBSPrep = () => {
             )}
             {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={selectedBranch} level={selectedLevel} />}
             {activeTab === "courses" && <PaidCoursesTab />}
-            {activeTab === "news" && <NewsTab />}
-            {activeTab === "dates" && <ImportantDatesTab />}
+            {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
+            {activeTab === "dates" && <ImportantDatesTab sortOrder={sortOrder} />}
           </div>
         </section>
       </main>

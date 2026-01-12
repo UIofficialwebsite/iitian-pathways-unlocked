@@ -17,9 +17,10 @@ interface ImportantDate {
 
 interface ImportantDatesTabProps {
   examType: 'JEE' | 'NEET' | 'IITM_BS' | 'all';
+  sortOrder?: 'recent' | 'oldest';
 }
 
-const ImportantDatesTab = ({ examType }: ImportantDatesTabProps) => {
+const ImportantDatesTab = ({ examType, sortOrder = 'recent' }: ImportantDatesTabProps) => {
   const [dates, setDates] = useState<ImportantDate[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +33,7 @@ const ImportantDatesTab = ({ examType }: ImportantDatesTabProps) => {
         let query = supabase
           .from('important_dates')
           .select('*')
-          .order('date_value', { ascending: true });
+          .order('date_value', { ascending: sortOrder === 'oldest' });
         
         if (examType !== 'all') {
             query = query.or(`exam_type.eq.${examType},exam_type.is.null`);
@@ -51,7 +52,7 @@ const ImportantDatesTab = ({ examType }: ImportantDatesTabProps) => {
     };
 
     fetchDates();
-  }, [examType]);
+  }, [examType, sortOrder]);
 
   if (isLoading) {
     return (

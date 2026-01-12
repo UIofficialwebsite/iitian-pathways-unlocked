@@ -35,6 +35,9 @@ const JEEPrep = () => {
   const [tempPyqSubject, setTempPyqSubject] = useState<string | null>(null);
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
   const [tempPyqSession, setTempPyqSession] = useState<string | null>(null);
+  
+  // Sort order for tabs without filters
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
@@ -220,8 +223,24 @@ const JEEPrep = () => {
                     )}
                   </>
                 )}
-                {(activeTab !== 'notes' && activeTab !== 'pyqs') && (
-                  <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
+                {/* Sort options for tabs without specific filters */}
+                {(activeTab === 'study-groups' || activeTab === 'news-updates' || activeTab === 'important-dates') && (
+                  <>
+                    <button 
+                      onClick={() => setSortOrder('recent')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'recent' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Recent First
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button 
+                      onClick={() => setSortOrder('oldest')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'oldest' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Oldest First
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5" />}
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -303,9 +322,9 @@ const JEEPrep = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="JEE" />}
             {activeTab === "pyqs" && <JEEPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} />}
-            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="JEE" /></OptimizedAuthWrapper>}
-            {activeTab === "news-updates" && <NewsUpdatesTab examType="JEE" />}
-            {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" />}
+            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="JEE" sortOrder={sortOrder} /></OptimizedAuthWrapper>}
+            {activeTab === "news-updates" && <NewsUpdatesTab examType="JEE" sortOrder={sortOrder} />}
+            {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" sortOrder={sortOrder} />}
           </div>
         </section>
       </main>
