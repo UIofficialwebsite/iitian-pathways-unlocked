@@ -21,7 +21,7 @@ const NEETPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'session' | 'class' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'class' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -32,10 +32,11 @@ const NEETPrep = () => {
   // PYQ filters
   const [pyqSubject, setPyqSubject] = useState<string | null>(null);
   const [pyqYear, setPyqYear] = useState<string | null>(null);
-  const [pyqSession, setPyqSession] = useState<string | null>(null);
   const [tempPyqSubject, setTempPyqSubject] = useState<string | null>(null);
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
-  const [tempPyqSession, setTempPyqSession] = useState<string | null>(null);
+  
+  // Sort order for tabs without filters
+  const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
   const classOptions = ["Class 11", "Class 12"];
 
@@ -73,11 +74,6 @@ const NEETPrep = () => {
     return Array.from(new Set(neetPyqs.map(p => p.year).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0)).map(String);
   }, [pyqs]);
 
-  const availableSessions = useMemo(() => {
-    const neetPyqs = pyqs.filter(p => p.exam_type === 'NEET');
-    return Array.from(new Set(neetPyqs.map(p => p.session).filter(Boolean) as string[])).sort();
-  }, [pyqs]);
-
   useEffect(() => {
     if (!contentLoading && availableSubjects.length > 0 && selectedSubjects.length === 0) {
       setSelectedSubjects([availableSubjects[0]]);
@@ -104,7 +100,7 @@ const NEETPrep = () => {
     navigate(buildExamUrl('neet', newTab, { subject: firstSub, class: classParam }), { replace: true });
   };
 
-  const toggleDropdown = (type: 'subject' | 'year' | 'session' | 'class') => {
+  const toggleDropdown = (type: 'subject' | 'year' | 'class') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
@@ -112,7 +108,6 @@ const NEETPrep = () => {
       setTempClass(selectedClass);
       setTempPyqSubject(pyqSubject);
       setTempPyqYear(pyqYear);
-      setTempPyqSession(pyqSession);
       setOpenDropdown(type);
     }
   };
@@ -128,8 +123,6 @@ const NEETPrep = () => {
       setSelectedClass(tempClass);
     } else if (openDropdown === 'year') {
       setPyqYear(tempPyqYear);
-    } else if (openDropdown === 'session') {
-      setPyqSession(tempPyqSession);
     }
     setOpenDropdown(null);
   };
@@ -215,20 +208,34 @@ const NEETPrep = () => {
                       Year
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => toggleDropdown('session')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
-                      {pyqSession && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
-                      Session
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
                     
-                    {(pyqSubject || pyqYear || pyqSession) && (
+                    {(pyqSubject || pyqYear) && (
                       <button 
-                        onClick={() => { setPyqSubject(null); setPyqYear(null); setPyqSession(null); }}
+                        onClick={() => { setPyqSubject(null); setPyqYear(null); }}
                         className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
                       >
                         Reset Filters
                       </button>
                     )}
+                  </>
+                )}
+                {/* Sort options for tabs without specific filters */}
+                {(activeTab === 'study-groups' || activeTab === 'news-updates' || activeTab === 'important-dates') && (
+                  <>
+                    <button 
+                      onClick={() => setSortOrder('recent')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'recent' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Recent First
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button 
+                      onClick={() => setSortOrder('oldest')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 ${sortOrder === 'oldest' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Oldest First
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5" />}
+                    </button>
                   </>
                 )}
               </div>
@@ -307,21 +314,6 @@ const NEETPrep = () => {
                   </div>
                 </div>
               )}
-              {activeTab === 'pyqs' && openDropdown === 'session' && (
-                <div className="absolute top-0 left-[180px] sm:left-[210px] lg:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {availableSessions.map(session => (
-                      <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input type="radio" name="pyqSession" checked={tempPyqSession === session} onChange={() => setTempPyqSession(session)} className="accent-[#6366f1]" /> {session}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -331,10 +323,10 @@ const NEETPrep = () => {
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={selectedClass === "Class 11" ? "class11" : selectedClass === "Class 12" ? "class12" : ""} examType="NEET" />}
-            {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} /></OptimizedAuthWrapper>}
-            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="NEET" /></OptimizedAuthWrapper>}
-            {activeTab === "news-updates" && <NewsUpdatesTab examType="NEET" />}
-            {activeTab === "important-dates" && <ImportantDatesTab examType="NEET" />}
+            {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab subject={pyqSubject} year={pyqYear} /></OptimizedAuthWrapper>}
+            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="NEET" sortOrder={sortOrder} /></OptimizedAuthWrapper>}
+            {activeTab === "news-updates" && <NewsUpdatesTab examType="NEET" sortOrder={sortOrder} />}
+            {activeTab === "important-dates" && <ImportantDatesTab examType="NEET" sortOrder={sortOrder} />}
           </div>
         </section>
       </main>

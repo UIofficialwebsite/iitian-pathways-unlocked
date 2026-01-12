@@ -5,13 +5,23 @@ import { Badge } from "@/components/ui/badge";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { ShareButton } from "../ShareButton";
 
-const ImportantDatesTab = () => {
+interface ImportantDatesTabProps {
+  sortOrder?: 'recent' | 'oldest';
+}
+
+const ImportantDatesTab = ({ sortOrder = 'recent' }: ImportantDatesTabProps) => {
   const { importantDates, contentLoading } = useBackend();
 
-  // Filter dates for IITM BS
-  const iitmDates = importantDates.filter(date => 
-    date.exam_type === 'IITM_BS' || date.exam_type === 'IITM BS' || !date.exam_type
-  );
+  // Filter dates for IITM BS and sort
+  const iitmDates = importantDates
+    .filter(date => 
+      date.exam_type === 'IITM_BS' || date.exam_type === 'IITM BS' || !date.exam_type
+    )
+    .sort((a, b) => {
+      const dateA = new Date(a.date_value).getTime();
+      const dateB = new Date(b.date_value).getTime();
+      return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
+    });
 
   if (contentLoading) {
     return (

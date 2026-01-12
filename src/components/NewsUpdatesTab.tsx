@@ -23,9 +23,10 @@ interface News {
 
 interface NewsUpdatesTabProps {
   examType: 'JEE' | 'NEET' | 'IITM_BS' | 'all';
+  sortOrder?: 'recent' | 'oldest';
 }
 
-const NewsUpdatesTab = ({ examType }: NewsUpdatesTabProps) => {
+const NewsUpdatesTab = ({ examType, sortOrder = 'recent' }: NewsUpdatesTabProps) => {
   const [news, setNews] = useState<News[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,7 @@ const NewsUpdatesTab = ({ examType }: NewsUpdatesTabProps) => {
           .from('news_updates')
           .select('*')
           .eq('is_active', true)
-          .order('date_time', { ascending: false });
+          .order('date_time', { ascending: sortOrder === 'oldest' });
 
         if (examType !== 'all') {
             query = query.or(`exam_type.eq.${examType},exam_type.is.null`);
@@ -59,7 +60,7 @@ const NewsUpdatesTab = ({ examType }: NewsUpdatesTabProps) => {
     };
 
     fetchNews();
-  }, [examType]);
+  }, [examType, sortOrder]);
 
   const toggleExpanded = (id: string) => {
     const newExpanded = new Set(expandedItems);
