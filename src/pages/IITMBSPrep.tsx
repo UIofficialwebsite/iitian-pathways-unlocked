@@ -131,7 +131,7 @@ const IITMBSPrep = () => {
     { id: "pyqs", label: "PYQs" },
     { id: "syllabus", label: "Syllabus" },
     { id: "tools", label: "Tools" },
-    { id: "courses", label: "✨ Courses", highlight: true },
+    { id: "courses", label: "Related Courses"},
     { id: "news", label: "News" },
     { id: "dates", label: "Important Dates" }
   ];
