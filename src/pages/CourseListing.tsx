@@ -182,70 +182,74 @@ const CourseListing = () => {
             </div>
           </div>
 
-          <div className="bg-white border-b border-[#f3f4f6] relative">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 overflow-visible">
+          <div className="bg-white border-b border-[#f3f4f6] relative z-[100]">
+            <div className="max-w-6xl mx-auto px-4 md:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
-                <div className="relative z-[999]">
+                <div className="relative">
                   <button onClick={() => toggleDropdown('level')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedLevels.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Level {selectedLevels.length > 0 ? `(${selectedLevels.length})` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
-                  {openDropdown === 'level' && (
-                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
-                      <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                        {availableLevels.map(lvl => (
-                          <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
-                            <input type="checkbox" checked={tempLevels.includes(lvl)} onChange={() => toggleTempItem(lvl, tempLevels, setTempLevels)} className="accent-[#6366f1]" /> {lvl}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
-                    </div>
-                  )}
                 </div>
 
-                <div className="relative z-[999]">
+                <div className="relative">
                   <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Subject {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
-                  {openDropdown === 'subject' && (
-                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
-                      <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                        {availableSubjects.map(sub => (
-                          <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
-                            <input type="checkbox" checked={tempSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempSubjects, setTempSubjects)} className="accent-[#6366f1]" /> {sub}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
-                    </div>
-                  )}
                 </div>
 
-                <div className="relative z-[999]">
+                <div className="relative">
                   <button onClick={() => toggleDropdown('pricing')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Pricing {priceRange ? `: ${priceRange}` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
-                  {openDropdown === 'pricing' && (
-                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
-                      <div className="space-y-1.5 mb-3">
-                        {['free', 'paid'].map((opt) => (
-                          <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
-                            <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1]" /> {opt}
-                          </label>
-                        ))}
-                      </div>
-                      <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
-                    </div>
-                  )}
                 </div>
 
                 <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${bestSellerOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Best Seller</button>
                 <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${newlyLaunched ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Newly Launched</button>
                 <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${fastrackOnly ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Fastrack Batch</button>
               </div>
+            </div>
+            
+            {/* Dropdowns rendered outside scrollable area */}
+            <div className="max-w-6xl mx-auto px-4 md:px-8 relative">
+              {openDropdown === 'level' && (
+                <div className="absolute top-0 left-4 md:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableLevels.map(lvl => (
+                      <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
+                        <input type="checkbox" checked={tempLevels.includes(lvl)} onChange={() => toggleTempItem(lvl, tempLevels, setTempLevels)} className="accent-[#6366f1]" /> {lvl}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
+                </div>
+              )}
+              {openDropdown === 'subject' && (
+                <div className="absolute top-0 left-[100px] md:left-[120px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableSubjects.map(sub => (
+                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
+                        <input type="checkbox" checked={tempSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempSubjects, setTempSubjects)} className="accent-[#6366f1]" /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
+                </div>
+              )}
+              {openDropdown === 'pricing' && (
+                <div className="absolute top-0 left-[200px] md:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="space-y-1.5 mb-3">
+                    {['free', 'paid'].map((opt) => (
+                      <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
+                        <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1]" /> {opt}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
+                </div>
+              )}
             </div>
           </div>
         </div>
