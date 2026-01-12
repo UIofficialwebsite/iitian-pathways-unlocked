@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Trash2, Plus } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Download, Trash2 } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import AuthWrapper from "@/components/AuthWrapper";
 import { ShimmerButton } from "./ui/shimmer-button";
 
 interface NEETPYQTabProps {
-  onFilterChange?: (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => void;
+  subject: string | null;
+  year: string | null;
+  session: string | null;
 }
 
-const NEETPYQTab = ({ onFilterChange }: NEETPYQTabProps) => {
-  const [year, setYear] = useState("2024");
+const NEETPYQTab = ({ subject, year, session }: NEETPYQTabProps) => {
   const { 
     isAdmin, 
     handleDownload, 
@@ -20,22 +20,15 @@ const NEETPYQTab = ({ onFilterChange }: NEETPYQTabProps) => {
     updateDownloadCount,
     pyqs,
     contentLoading,
-    deletePyq,
-    refreshPyqs
+    deletePyq
   } = useBackend();
   
-  const years = ["2024", "2023", "2022", "2021", "2020"];
-  
-  // Handle year changes
-  const handleYearChange = (newYear: string) => {
-    setYear(newYear);
-    onFilterChange?.('pyqs', undefined, undefined, newYear);
-  };
-  
-  // Filter pyqs by year and exam type
+  // Filter pyqs by filters and exam type
   const filteredPyqs = pyqs.filter(pyq => 
-    pyq.year?.toString() === year && 
-    pyq.exam_type?.toLowerCase().includes('neet')
+    pyq.exam_type?.toLowerCase().includes('neet') &&
+    (!subject || pyq.subject === subject) &&
+    (!year || pyq.year?.toString() === year) &&
+    (!session || pyq.session === session)
   );
 
   // Update download counts from database
@@ -62,30 +55,12 @@ const NEETPYQTab = ({ onFilterChange }: NEETPYQTabProps) => {
   return (
     <AuthWrapper>
       <div className="space-y-6">
-        <div className="grid grid-cols-1 gap-4 max-w-xs">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Year</label>
-            <Select value={year} onValueChange={handleYearChange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Year" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((y) => (
-                  <SelectItem key={y} value={y}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        
         {contentLoading ? (
           <div className="flex justify-center items-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredPyqs.map((pyq) => (
               <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg transition-all">
                 <CardHeader>
@@ -138,7 +113,7 @@ const NEETPYQTab = ({ onFilterChange }: NEETPYQTabProps) => {
             
             {filteredPyqs.length === 0 && (
               <div className="col-span-3 text-center py-8 text-gray-500">
-                No previous year papers available for this year. Please try another year.
+                No previous year papers available. Try adjusting your filters.
               </div>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -10,7 +10,7 @@ import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
 import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
-import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
+import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 
 const IITMBSPrep = () => {
   const navigate = useNavigate();
@@ -19,23 +19,19 @@ const IITMBSPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'subject' | 'year' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'branch' | 'year' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
-  const [initialParams, setInitialParams] = useState(() => getParamsFromUrl(location.pathname));
   
-  // Notes/General filters
+  // Filters state
   const [selectedBranch, setSelectedBranch] = useState("Data Science");
   const [selectedLevel, setSelectedLevel] = useState("Foundation");
-  const [tempBranch, setTempBranch] = useState("Data Science");
-  const [tempLevel, setTempLevel] = useState("Foundation");
-
-  // PYQ filters
   const [pyqYear, setPyqYear] = useState<string | null>(null);
+  const [tempBranch, setTempBranch] = useState("Data Science");
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
 
-  const branches = ["Data Science", "Electronic Systems", "Programming"];
-  const levels = ["Foundation", "Diploma", "Degree"];
+  const branches = ["Data Science", "Electronic Systems"];
+  const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
   const years = ["2024", "2023", "2022", "2021", "2020"];
 
   useEffect(() => {
@@ -55,28 +51,11 @@ const IITMBSPrep = () => {
 
   useEffect(() => {
     const tabFromUrl = getTabFromUrl(location.pathname);
-    const paramsFromUrl = getParamsFromUrl(location.pathname);
     setActiveTab(tabFromUrl);
-    setInitialParams(paramsFromUrl);
   }, [location.pathname]);
 
-  const updateUrl = (tab: string, branch?: string, level?: string, examType?: string, year?: string, subject?: string) => {
-    const params: Record<string, string | undefined> = {};
-    
-    if (tab === 'notes' || tab === 'tools' || tab === 'courses' || tab === 'news' || tab === 'dates') {
-      if (branch) params.branch = branch;
-      if (level) params.level = level;
-      if (subject) params.subject = subject;
-    } else if (tab === 'pyqs') {
-      if (branch) params.branch = branch;
-      if (level) params.level = level;
-      if (examType) params.examType = examType;
-      if (year) params.year = year;
-    } else if (tab === 'syllabus') {
-      if (branch) params.branch = branch;
-    }
-    
-    const newUrl = buildExamUrl('iitm-bs', tab, params);
+  const updateUrl = (tab: string) => {
+    const newUrl = buildExamUrl('iitm-bs', tab, {});
     navigate(newUrl, { replace: true });
   };
 
@@ -86,26 +65,36 @@ const IITMBSPrep = () => {
     updateUrl(newTab);
   };
 
-  const toggleDropdown = (type: 'branch' | 'level' | 'subject' | 'year') => {
+  const toggleDropdown = (type: 'branch' | 'year') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
       setTempBranch(selectedBranch);
-      setTempLevel(selectedLevel);
       setTempPyqYear(pyqYear);
       setOpenDropdown(type);
     }
   };
 
-  const handleApply = () => {
+  const handleApplyBranch = () => {
     setSelectedBranch(tempBranch);
-    setSelectedLevel(tempLevel);
-    if (activeTab === 'pyqs') {
-      setPyqYear(tempPyqYear);
-    }
     setOpenDropdown(null);
-    updateUrl(activeTab, tempBranch, tempLevel, undefined, tempPyqYear || undefined);
   };
+
+  const handleApplyYear = () => {
+    setPyqYear(tempPyqYear);
+    setOpenDropdown(null);
+  };
+
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (openDropdown && !(e.target as Element).closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
 
   const tabs = [
     { id: "notes", label: "Notes" },
@@ -116,6 +105,9 @@ const IITMBSPrep = () => {
     { id: "news", label: "News" },
     { id: "dates", label: "Important Dates" }
   ];
+
+  // Check if current tab needs sub-filters
+  const hasSubFilters = activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus';
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
@@ -149,96 +141,101 @@ const IITMBSPrep = () => {
             </div>
           </div>
 
-          {/* ROW 2: SUB-FILTERS (White) - Always present */}
-          <div className="bg-white border-b border-[#f3f4f6] relative z-[100]">
+          {/* ROW 2: SUB-FILTERS (White) - Always present with min height */}
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
-                {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus') && (
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
+                {hasSubFilters ? (
                   <>
-                    <div className="relative">
+                    {/* Branch Dropdown */}
+                    <div className="relative dropdown-container">
                       <button 
                         onClick={() => toggleDropdown('branch')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${
+                          selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                        }`}
                       >
-                        Branch {selectedBranch ? `: ${selectedBranch}` : ''}
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        {selectedBranch}
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {openDropdown === 'branch' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                            {branches.map(branch => (
+                              <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                <input 
+                                  type="radio" 
+                                  name="branch"
+                                  checked={tempBranch === branch} 
+                                  onChange={() => setTempBranch(branch)} 
+                                  className="accent-[#6366f1]" 
+                                /> {branch}
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                            <button onClick={handleApplyBranch} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {levels.map((lvl) => (
+
+                    {/* Level Pills (only for notes & pyqs) */}
+                    {(activeTab === 'notes' || activeTab === 'pyqs') && levels.map((lvl) => (
                       <button
                         key={lvl}
-                        onClick={() => {
-                          setSelectedLevel(lvl);
-                          updateUrl(activeTab, selectedBranch, lvl);
-                        }}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${selectedLevel === lvl ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                        onClick={() => setSelectedLevel(lvl)}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
+                          selectedLevel === lvl 
+                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
+                            : 'bg-white border-[#e5e7eb] text-[#374151]'
+                        }`}
                       >
                         {lvl}
                       </button>
                     ))}
+
+                    {/* Year Dropdown (only for pyqs) */}
                     {activeTab === 'pyqs' && (
-                      <div className="relative">
+                      <div className="relative dropdown-container">
                         <button 
                           onClick={() => toggleDropdown('year')}
-                          className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                          className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${
+                            pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                          }`}
                         >
-                          Year {pyqYear ? `: ${pyqYear}` : ''} 
-                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                          {pyqYear || 'Year'}
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                         </button>
+                        {openDropdown === 'year' && (
+                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                              {years.map(year => (
+                                <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                  <input 
+                                    type="radio" 
+                                    name="pyqYear"
+                                    checked={tempPyqYear === year} 
+                                    onChange={() => setTempPyqYear(year)} 
+                                    className="accent-[#6366f1]" 
+                                  /> {year}
+                                </label>
+                              ))}
+                            </div>
+                            <div className="flex gap-2 pt-2 border-t">
+                              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                              <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
-                )}
-                {(activeTab !== 'notes' && activeTab !== 'pyqs' && activeTab !== 'syllabus') && (
+                ) : (
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
-            </div>
-            
-            {/* Dropdowns rendered outside scrollable area */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute top-full left-0 right-0">
-              {openDropdown === 'branch' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {branches.map(branch => (
-                      <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="radio" 
-                          name="branch"
-                          checked={tempBranch === branch} 
-                          onChange={() => setTempBranch(branch)} 
-                          className="accent-[#6366f1]" 
-                        /> {branch}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
-              {openDropdown === 'year' && (
-                <div className="absolute top-0 left-[300px] sm:left-[350px] lg:left-[400px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {years.map(year => (
-                      <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="radio" 
-                          name="pyqYear"
-                          checked={tempPyqYear === year} 
-                          onChange={() => setTempPyqYear(year)} 
-                          className="accent-[#6366f1]" 
-                        /> {year}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -249,20 +246,20 @@ const IITMBSPrep = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && (
               <BranchNotesTab 
-                initialParams={initialParams} 
-                onFilterChange={updateUrl}
+                branch={selectedBranch}
+                level={selectedLevel}
               />
             )}
             {activeTab === "pyqs" && (
               <PYQsTab 
-                initialParams={initialParams} 
-                onFilterChange={updateUrl}
+                branch={selectedBranch}
+                level={selectedLevel}
+                year={pyqYear}
               />
             )}
             {activeTab === "syllabus" && (
               <SyllabusTab 
-                initialParams={initialParams} 
-                onFilterChange={updateUrl}
+                branch={selectedBranch}
               />
             )}
             {activeTab === "tools" && <IITMToolsTab />}
