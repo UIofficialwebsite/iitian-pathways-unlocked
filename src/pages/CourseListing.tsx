@@ -24,6 +24,7 @@ const CourseListing = () => {
   // Applied Filter States
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<string | null>(null); // Restored pricing state
   const [newlyLaunched, setNewlyLaunched] = useState(false);
   const [fastrackOnly, setFastrackOnly] = useState(false);
   const [bestSellerOnly, setBestSellerOnly] = useState(false);
@@ -31,9 +32,10 @@ const CourseListing = () => {
   // Temporary states for Apply/Cancel logic
   const [tempLevels, setTempLevels] = useState<string[]>([]);
   const [tempSubjects, setTempSubjects] = useState<string[]>([]);
+  const [tempPrice, setTempPrice] = useState<string | null>(null); // Restored temporary pricing state
 
   // Dropdown State
-  const [openDropdown, setOpenDropdown] = useState<'level' | 'subject' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'level' | 'subject' | 'pricing' | null>(null);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -86,40 +88,39 @@ const CourseListing = () => {
     return categoryFilteredCourses.filter(c => c.branch === branchFromUrl);
   }, [categoryFilteredCourses, branchFromUrl]);
 
-  // BASE FILTER: Only include batches with price > 0
-  const paidBaseCourses = useMemo(() => {
-    return branchFilteredCourses.filter(c => {
-      // Logic for effective price based on your backend columns
-      const effectivePrice = (c.discounted_price !== null && c.discounted_price !== undefined) 
-        ? c.discounted_price 
-        : c.price;
-      return effectivePrice > 0;
-    });
-  }, [branchFilteredCourses]);
-
   const availableBranches = useMemo(() => Array.from(new Set(categoryFilteredCourses.map(c => c.branch))).filter(Boolean).sort(), [categoryFilteredCourses]);
-  const availableLevels = useMemo(() => Array.from(new Set(paidBaseCourses.map(c => c.level))).filter(Boolean).sort(), [paidBaseCourses]);
-  const availableSubjects = useMemo(() => Array.from(new Set(paidBaseCourses.map(c => c.subject))).filter(Boolean).sort(), [paidBaseCourses]);
+  const availableLevels = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.level))).filter(Boolean).sort(), [branchFilteredCourses]);
+  const availableSubjects = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort(), [branchFilteredCourses]);
 
   const filteredCourses = useMemo(() => {
-    let result = [...paidBaseCourses];
+    let result = [...branchFilteredCourses];
     if (selectedLevels.length > 0) result = result.filter(c => selectedLevels.includes(c.level || ''));
     if (selectedSubjects.length > 0) result = result.filter(c => selectedSubjects.includes(c.subject || ''));
     
+    // Updated Pricing Filter: Logic handles both original price and discounted price
+    if (priceRange) {
+      result = result.filter(c => {
+        const effectivePrice = (c.discounted_price !== null && c.discounted_price !== undefined) 
+          ? c.discounted_price 
+          : c.price;
+        return priceRange === 'free' ? effectivePrice === 0 : effectivePrice > 0;
+      });
+    }
+
     if (newlyLaunched) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       result = result.filter(c => c.updated_at && new Date(c.updated_at) > thirtyDaysAgo);
     }
 
-    // SYNCED: Checks batch_type column from backend courses table
+    // Fastrack Filter: Synced with the batch_type column in backend
     if (fastrackOnly) {
       result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
     }
 
     if (bestSellerOnly) result = result.filter(c => c.bestseller === true);
     return result;
-  }, [paidBaseCourses, selectedLevels, selectedSubjects, newlyLaunched, fastrackOnly, bestSellerOnly]);
+  }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly, bestSellerOnly]);
 
   const groupedCourses = useMemo(() => {
     const groups: Record<string, typeof filteredCourses> = {};
@@ -131,12 +132,13 @@ const CourseListing = () => {
     return groups;
   }, [filteredCourses]);
 
-  const toggleDropdown = (type: 'level' | 'subject') => {
+  const toggleDropdown = (type: 'level' | 'subject' | 'pricing') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
       setTempLevels(selectedLevels);
       setTempSubjects(selectedSubjects);
+      setTempPrice(priceRange);
       setOpenDropdown(type);
     }
   };
@@ -144,6 +146,7 @@ const CourseListing = () => {
   const handleApply = () => {
     setSelectedLevels(tempLevels);
     setSelectedSubjects(tempSubjects);
+    setPriceRange(tempPrice);
     setOpenDropdown(null);
   };
 
@@ -211,7 +214,16 @@ const CourseListing = () => {
                   </button>
                 </div>
 
-                {/* Toggle Filters - Pricing dropdown removed as requested */}
+                {/* Pricing Dropdown Filter - Restored */}
+                <div className="relative">
+                  <button onClick={() => toggleDropdown('pricing')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${priceRange ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
+                    {priceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                    Pricing
+                    <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                  </button>
+                </div>
+
+                {/* Toggle Filters */}
                 <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 ${bestSellerOnly ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                   Best Seller
                   {bestSellerOnly && <X className="w-3.5 h-3.5" />}
@@ -226,11 +238,12 @@ const CourseListing = () => {
                 </button>
 
                 {/* Reset Filters */}
-                {(selectedLevels.length > 0 || selectedSubjects.length > 0 || bestSellerOnly || newlyLaunched || fastrackOnly) && (
+                {(selectedLevels.length > 0 || selectedSubjects.length > 0 || priceRange || bestSellerOnly || newlyLaunched || fastrackOnly) && (
                   <button 
                     onClick={() => {
                       setSelectedLevels([]);
                       setSelectedSubjects([]);
+                      setPriceRange(null);
                       setBestSellerOnly(false);
                       setNewlyLaunched(false);
                       setFastrackOnly(false);
@@ -263,6 +276,19 @@ const CourseListing = () => {
                     {availableSubjects.map(sub => (
                       <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
                         <input type="checkbox" checked={tempSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempSubjects, setTempSubjects)} className="accent-[#6366f1]" /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
+                </div>
+              )}
+              {/* Pricing Dropdown Content - Restored */}
+              {openDropdown === 'pricing' && (
+                <div className="absolute top-0 left-[200px] md:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="space-y-1.5 mb-3">
+                    {['free', 'paid'].map((opt) => (
+                      <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
+                        <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1]" /> {opt}
                       </label>
                     ))}
                   </div>
