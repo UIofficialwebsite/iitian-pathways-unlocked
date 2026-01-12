@@ -176,13 +176,13 @@ const JEEPrep = () => {
                       Subjects
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => setActiveClass(activeClass === "class11" ? "" : "class11")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
+                    <button onClick={() => setActiveClass(activeClass === "class11" ? "" : "class11")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${activeClass === "class11" ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
                       Class 11
-                      {activeClass === "class11" && <X className="w-3.5 h-3.5" />}
+                      {activeClass === "class11" && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
-                    <button onClick={() => setActiveClass(activeClass === "class12" ? "" : "class12")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
+                    <button onClick={() => setActiveClass(activeClass === "class12" ? "" : "class12")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${activeClass === "class12" ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
                       Class 12
-                      {activeClass === "class12" && <X className="w-3.5 h-3.5" />}
+                      {activeClass === "class12" && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
                     
                     {(selectedSubjects.length > 0 || activeClass) && (
@@ -228,17 +228,17 @@ const JEEPrep = () => {
                   <>
                     <button 
                       onClick={() => setSortOrder('recent')}
-                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Recent First
-                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5" />}
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
                     <button 
                       onClick={() => setSortOrder('oldest')}
-                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Oldest First
-                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5" />}
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
                   </>
                 )}
@@ -248,7 +248,7 @@ const JEEPrep = () => {
             {/* Dropdowns rendered OUTSIDE scrollable area for proper z-index */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               {activeTab === 'notes' && openDropdown === 'subject' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[200px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availableSubjects.map(sub => (
                       <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -268,7 +268,7 @@ const JEEPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'subject' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[180px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availablePyqSubjects.map(sub => (
                       <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -283,7 +283,7 @@ const JEEPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'year' && (
-                <div className="absolute top-0 left-[120px] sm:left-[140px] lg:left-[150px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[140px] lg:left-[150px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[140px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availableYears.map(year => (
                       <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -298,7 +298,7 @@ const JEEPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'session' && (
-                <div className="absolute top-0 left-[230px] sm:left-[260px] lg:left-[280px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[260px] lg:left-[280px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[140px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availableSessions.map(session => (
                       <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
