@@ -180,7 +180,7 @@ const IITMBSPrep = () => {
                     {/* Branch Dropdown */}
                     <button 
                       onClick={() => toggleDropdown('branch')}
-                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
+                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap"
                     >
                       {selectedBranch && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Branch
@@ -191,7 +191,7 @@ const IITMBSPrep = () => {
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
                       <button 
                         onClick={() => toggleDropdown('level')}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap"
                       >
                         {selectedLevel && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                         Level
@@ -203,7 +203,7 @@ const IITMBSPrep = () => {
                     {activeTab === 'pyqs' && (
                       <button 
                         onClick={() => toggleDropdown('year')}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap"
                       >
                         {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                         Year
@@ -215,10 +215,11 @@ const IITMBSPrep = () => {
                     {activeTab === 'pyqs' && selectedLevel !== 'Qualifier' && (
                       <button 
                         onClick={() => toggleDropdown('examType')}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap"
                       >
                         {examType && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
-                        Exam Category
+                        <span className="hidden md:inline">Exam Category</span>
+                        <span className="md:inline md:hidden">Exam</span>
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'examType' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     )}
