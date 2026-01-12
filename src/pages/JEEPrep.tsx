@@ -10,7 +10,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 
 const JEEPrep = () => {
@@ -167,29 +167,57 @@ const JEEPrep = () => {
                   <>
                     <button 
                       onClick={() => toggleDropdown('subject')}
-                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
                     >
-                      Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      {selectedSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedSubjects.length}</span>}
+                      Subjects
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => setActiveClass("class11")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class11" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 11</button>
-                    <button onClick={() => setActiveClass("class12")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class12" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 12</button>
+                    <button onClick={() => setActiveClass(activeClass === "class11" ? "" : "class11")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
+                      Class 11
+                      {activeClass === "class11" && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={() => setActiveClass(activeClass === "class12" ? "" : "class12")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
+                      Class 12
+                      {activeClass === "class12" && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    
+                    {(selectedSubjects.length > 0 || activeClass) && (
+                      <button 
+                        onClick={() => { setSelectedSubjects([]); setActiveClass(""); }}
+                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </>
                 )}
                 {activeTab === 'pyqs' && (
                   <>
-                    <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                      Subject {pyqSubject ? `: ${pyqSubject}` : ''} 
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    <button onClick={() => toggleDropdown('subject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {pyqSubject && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Subject
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => toggleDropdown('year')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                      Year {pyqYear ? `: ${pyqYear}` : ''} 
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Year
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => toggleDropdown('session')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                      Session {pyqSession ? `: ${pyqSession}` : ''} 
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    <button onClick={() => toggleDropdown('session')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {pyqSession && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Session
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
+                    
+                    {(pyqSubject || pyqYear || pyqSession) && (
+                      <button 
+                        onClick={() => { setPyqSubject(null); setPyqYear(null); setPyqSession(null); }}
+                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </>
                 )}
                 {(activeTab !== 'notes' && activeTab !== 'pyqs') && (
