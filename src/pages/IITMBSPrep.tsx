@@ -124,7 +124,7 @@ const IITMBSPrep = () => {
         <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle="IITM BS Degree Preparation" />
 
         {/* CONSTANT TWO-ROW STICKY FILTER SYSTEM */}
-        <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
+        <div ref={filterRef} className={`w-full transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none z-[9999]' : 'relative z-[9999]'}`}>
           
           {/* ROW 1: MAIN SECTIONS (Indigo) */}
           <div className="bg-[#f4f2ff]">
@@ -150,7 +150,7 @@ const IITMBSPrep = () => {
           </div>
 
         {/* ROW 2: SUB-FILTERS (White) - Always present with min height */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[9999]">
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {hasSubFilters ? (
