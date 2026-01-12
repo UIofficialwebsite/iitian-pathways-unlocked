@@ -288,7 +288,7 @@ const NEETPrep = () => {
         <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="NEET" />}
-            {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab /></OptimizedAuthWrapper>}
+            {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} /></OptimizedAuthWrapper>}
             {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="NEET" /></OptimizedAuthWrapper>}
             {activeTab === "news-updates" && <NewsUpdatesTab examType="NEET" />}
             {activeTab === "important-dates" && <ImportantDatesTab examType="NEET" />}

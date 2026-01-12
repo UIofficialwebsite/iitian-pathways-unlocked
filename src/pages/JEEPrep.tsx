@@ -289,7 +289,7 @@ const JEEPrep = () => {
         <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="JEE" />}
-            {activeTab === "pyqs" && <JEEPYQTab />}
+            {activeTab === "pyqs" && <JEEPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} />}
             {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="JEE" /></OptimizedAuthWrapper>}
             {activeTab === "news-updates" && <NewsUpdatesTab examType="JEE" />}
             {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" />}

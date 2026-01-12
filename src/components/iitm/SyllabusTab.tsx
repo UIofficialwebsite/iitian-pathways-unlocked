@@ -1,6 +1,4 @@
-
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, BookOpen, GraduationCap, Book } from "lucide-react";
@@ -113,25 +111,19 @@ const SyllabusCard: React.FC<{ branchKey: 'data-science' | 'electronic-systems',
   );
 };
 
-const SyllabusTab = ({ initialParams, onFilterChange }: { initialParams?: string[]; onFilterChange?: (tab: string, branch?: string) => void }) => {
-  const [branch, setBranch] = useState<keyof typeof syllabusData>(() => {
-    if (initialParams && initialParams[0]) {
-      const branchParam = initialParams[0].toLowerCase().replace(/\s+/g, '-');
-      if (branchParam === 'data-science' || branchParam === 'electronic-systems') {
-        return branchParam;
-      }
-    }
-    return "data-science";
-  });
+interface SyllabusTabProps {
+  branch: string;
+}
+
+const SyllabusTab = ({ branch }: SyllabusTabProps) => {
   const [downloads, setDownloads] = useState({
     "data-science-syllabus": 482,
     "electronic-systems-syllabus": 315,
   });
   
-  const handleBranchChange = (value: keyof typeof syllabusData) => {
-    setBranch(value);
-    onFilterChange?.('syllabus', value);
-  };
+  // Convert display name to slug
+  const branchSlug = branch.toLowerCase().replace(/\s+/g, '-') as 'data-science' | 'electronic-systems';
+  const validBranch = branchSlug === 'data-science' || branchSlug === 'electronic-systems' ? branchSlug : 'data-science';
   
   const handleDownload = (id: string) => {
     setDownloads(prev => ({
@@ -143,20 +135,7 @@ const SyllabusTab = ({ initialParams, onFilterChange }: { initialParams?: string
   
   return (
     <div className="space-y-6">
-      <Tabs value={branch} onValueChange={handleBranchChange} className="w-full">
-        <TabsList className="mb-6 w-full grid grid-cols-2">
-          <TabsTrigger value="data-science">Data Science</TabsTrigger>
-          <TabsTrigger value="electronic-systems">Electronic Systems</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="data-science">
-          <SyllabusCard branchKey="data-science" handleDownload={handleDownload} downloads={downloads} />
-        </TabsContent>
-        
-        <TabsContent value="electronic-systems">
-          <SyllabusCard branchKey="electronic-systems" handleDownload={handleDownload} downloads={downloads} />
-        </TabsContent>
-      </Tabs>
+      <SyllabusCard branchKey={validBranch} handleDownload={handleDownload} downloads={downloads} />
     </div>
   );
 };
