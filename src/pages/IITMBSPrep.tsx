@@ -228,10 +228,10 @@ const IITMBSPrep = () => {
                       <button
                         key={tool.id}
                         onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                       >
                         {tool.label}
-                        {selectedTool === tool.id && <X className="w-3.5 h-3.5" />}
+                        {selectedTool === tool.id && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                       </button>
                     ))}
 
@@ -257,17 +257,17 @@ const IITMBSPrep = () => {
                   <>
                     <button 
                       onClick={() => setSortOrder('recent')}
-                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Recent First
-                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5" />}
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
                     <button 
                       onClick={() => setSortOrder('oldest')}
-                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Oldest First
-                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5" />}
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                     </button>
                   </>
                 )}
@@ -277,7 +277,7 @@ const IITMBSPrep = () => {
             {/* Dropdowns rendered OUTSIDE scrollable area for proper z-index */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               {openDropdown === 'branch' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[180px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {branches.map(branch => (
                       <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -298,7 +298,7 @@ const IITMBSPrep = () => {
                 </div>
               )}
               {openDropdown === 'level' && (
-                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[160px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[160px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {levels.map(lvl => (
                       <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -319,7 +319,7 @@ const IITMBSPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'year' && (
-                <div className="absolute top-0 left-[180px] sm:left-[220px] lg:left-[240px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[220px] lg:left-[240px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[140px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {years.map(year => (
                       <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -340,7 +340,7 @@ const IITMBSPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'examType' && (
-                <div className="absolute top-0 left-[260px] sm:left-[300px] lg:left-[330px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[150px] p-3 dropdown-container">
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[300px] lg:left-[330px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[150px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {examTypes.map(type => (
                       <label key={type.id} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
