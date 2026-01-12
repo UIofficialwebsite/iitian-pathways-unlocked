@@ -160,7 +160,7 @@ const JEEPrep = () => {
           </div>
 
           {/* ROW 2: SUB-FILTERS (White) - Always present */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[9999]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {activeTab === 'notes' && (
@@ -174,7 +174,7 @@ const JEEPrep = () => {
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
                       {openDropdown === 'subject' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[200px] p-3">
                           <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                             {availableSubjects.map(sub => (
                               <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -206,7 +206,7 @@ const JEEPrep = () => {
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
                       {openDropdown === 'subject' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[180px] p-3">
                           <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                             {availablePyqSubjects.map(sub => (
                               <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -233,7 +233,7 @@ const JEEPrep = () => {
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
                       {openDropdown === 'year' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[140px] p-3">
                           <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                             {availableYears.map(year => (
                               <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -260,7 +260,7 @@ const JEEPrep = () => {
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
                       {openDropdown === 'session' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[140px] p-3">
                           <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                             {availableSessions.map(session => (
                               <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -293,7 +293,7 @@ const JEEPrep = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
-        <section className="py-8 bg-white min-h-[600px]">
+        <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="JEE" />}
             {activeTab === "pyqs" && <JEEPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} />}

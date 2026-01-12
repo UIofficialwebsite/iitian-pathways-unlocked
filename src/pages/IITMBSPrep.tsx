@@ -30,11 +30,17 @@ const IITMBSPrep = () => {
   const [examType, setExamType] = useState("quiz1");
   const [tempBranch, setTempBranch] = useState("Data Science");
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
+  const [selectedTool, setSelectedTool] = useState("cgpa-calculator");
 
   const branches = ["Data Science", "Electronic Systems"];
   const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
   const years = ["2024", "2023", "2022", "2021", "2020"];
   const examTypes = ["quiz1", "quiz2", "endterm"];
+  const tools = [
+    { id: "cgpa-calculator", label: "CGPA Calculator" },
+    { id: "grade-calculator", label: "Grade Calculator" },
+    { id: "marks-predictor", label: "Marks Predictor" }
+  ];
 
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
@@ -109,7 +115,7 @@ const IITMBSPrep = () => {
   ];
 
   // Check if current tab needs sub-filters
-  const hasSubFilters = activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus';
+  const hasSubFilters = activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus' || activeTab === 'tools';
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
@@ -183,8 +189,8 @@ const IITMBSPrep = () => {
                       )}
                     </div>
 
-                    {/* Level Pills (only for notes & pyqs) */}
-                    {(activeTab === 'notes' || activeTab === 'pyqs') && levels.map((lvl) => (
+                    {/* Level Pills (for notes, pyqs, and tools) */}
+                    {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && levels.map((lvl) => (
                       <button
                         key={lvl}
                         onClick={() => setSelectedLevel(lvl)}
@@ -248,6 +254,21 @@ const IITMBSPrep = () => {
                         {type === 'quiz1' ? 'Quiz 1' : type === 'quiz2' ? 'Quiz 2' : 'End Term'}
                       </button>
                     ))}
+
+                    {/* Tools Selection Pills */}
+                    {activeTab === 'tools' && tools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        onClick={() => setSelectedTool(tool.id)}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
+                          selectedTool === tool.id 
+                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
+                            : 'bg-white border-[#e5e7eb] text-[#374151]'
+                        }`}
+                      >
+                        {tool.label}
+                      </button>
+                    ))}
                   </>
                 ) : (
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
@@ -280,7 +301,7 @@ const IITMBSPrep = () => {
                 branch={selectedBranch}
               />
             )}
-            {activeTab === "tools" && <IITMToolsTab />}
+            {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={selectedBranch} level={selectedLevel} />}
             {activeTab === "courses" && <PaidCoursesTab />}
             {activeTab === "news" && <NewsTab />}
             {activeTab === "dates" && <ImportantDatesTab />}
