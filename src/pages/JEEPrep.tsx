@@ -11,7 +11,7 @@ import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
 import { ChevronDown } from "lucide-react";
-import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
+import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 
 const JEEPrep = () => {
   const { notes, contentLoading } = useBackend();
@@ -23,7 +23,9 @@ const JEEPrep = () => {
   const [openDropdown, setOpenDropdown] = useState<'subject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
-  const [urlParams, setUrlParams] = useState(() => getParamsFromUrl(location.pathname));
+  const [activeClass, setActiveClass] = useState("class11");
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [tempSubjects, setTempSubjects] = useState<string[]>([]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -43,10 +45,6 @@ const JEEPrep = () => {
     return sorted;
   }, [notes]);
 
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [tempSubjects, setTempSubjects] = useState<string[]>([]);
-  const [activeClass, setActiveClass] = useState("class11");
-
   useEffect(() => {
     if (!contentLoading && availableSubjects.length > 0 && selectedSubjects.length === 0) {
       setSelectedSubjects([availableSubjects[0]]);
@@ -58,27 +56,19 @@ const JEEPrep = () => {
     setActiveTab(newTab);
     setOpenDropdown(null);
     const firstSub = selectedSubjects[0] || availableSubjects[0];
-    const newUrl = buildExamUrl('jee', newTab, { subject: firstSub, class: activeClass });
-    navigate(newUrl, { replace: true });
-  };
-
-  const applySubjectFilter = () => {
-    setSelectedSubjects(tempSubjects);
-    setOpenDropdown(null);
+    navigate(buildExamUrl('jee', newTab, { subject: firstSub, class: activeClass }), { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
       <NavBar />
       <main className="pt-16">
-        <ExamPrepHeader 
-          examName="JEE" 
-          examPath="/exam-preparation/jee" 
-          currentTab={activeTab} 
-        />
+        <ExamPrepHeader examName="JEE" examPath="/exam-preparation/jee" currentTab={activeTab} />
 
+        {/* CONSTANT TWO-ROW STICKY FILTER SYSTEM */}
         <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
-          {/* Row 1: Main Section Tabs */}
+          
+          {/* ROW 1: MAIN SECTIONS (Indigo) */}
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
@@ -103,20 +93,19 @@ const JEEPrep = () => {
             </div>
           </div>
 
-          {/* Row 2: Consolidated Sub-Filters */}
-          <div className="bg-white border-b border-[#f3f4f6]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-nowrap items-center gap-3 py-3 overflow-visible no-scrollbar font-sans">
-                {activeTab === 'notes' && (
+          {/* ROW 2: SUB-FILTERS (White) - Always present, internal content changes */}
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div className="flex flex-nowrap items-center gap-3 py-3 overflow-visible no-scrollbar">
+                {activeTab === 'notes' ? (
                   <>
-                    {/* Multi-select Subject Dropdown */}
                     <div className="relative" onClick={(e) => e.stopPropagation()}>
                       <button 
                         onClick={() => setOpenDropdown(openDropdown === 'subject' ? null : 'subject')}
                         className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                       >
                         Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
-                        <ChevronDown className={`ml-2 h-3 w-3 transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`ml-2 h-3 w-3 ${openDropdown === 'subject' ? 'rotate-180' : ''}`} />
                       </button>
                       {openDropdown === 'subject' && (
                         <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[70] min-w-[200px] p-3">
@@ -134,12 +123,11 @@ const JEEPrep = () => {
                           </div>
                           <div className="flex gap-2 pt-2 border-t">
                             <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500">Cancel</button>
-                            <button onClick={applySubjectFilter} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded">Apply</button>
+                            <button onClick={() => { setSelectedSubjects(tempSubjects); setOpenDropdown(null); }} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded">Apply</button>
                           </div>
                         </div>
                       )}
                     </div>
-                    {/* Class Selection Buttons */}
                     {["class11", "class12"].map((c) => (
                       <button
                         key={c}
@@ -150,11 +138,11 @@ const JEEPrep = () => {
                       </button>
                     ))}
                   </>
-                )}
-                
-                {/* For PYQs, relevant filters are managed through props in JEEPYQTab for Row 2 placement */}
-                {activeTab === 'pyqs' && (
-                   <span className="text-[12px] text-gray-400 italic">Filters available below</span>
+                ) : activeTab === 'pyqs' ? (
+                  /* Trigger internal filters of JEEPYQTab but rendered in this exact Row 2 position */
+                  <div id="pyq-filter-portal" className="flex items-center gap-3"></div>
+                ) : (
+                  <span className="text-[12px] text-gray-400 font-medium">No sub-filters for this section</span>
                 )}
               </div>
             </div>
@@ -165,23 +153,9 @@ const JEEPrep = () => {
 
         <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {activeTab === "notes" && (
-              <SubjectBlock 
-                subjects={selectedSubjects} 
-                selectedClass={activeClass} 
-                examType="JEE" 
-              />
-            )}
-            {activeTab === "pyqs" && (
-              <OptimizedAuthWrapper>
-                <JEEPYQTab downloads={{}} onDownload={() => {}} />
-              </OptimizedAuthWrapper>
-            )}
-            {activeTab === "study-groups" && (
-              <OptimizedAuthWrapper>
-                <StudyGroupsTab examType="JEE" />
-              </OptimizedAuthWrapper>
-            )}
+            {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="JEE" />}
+            {activeTab === "pyqs" && <JEEPYQTab renderInRow2={true} />}
+            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="JEE" /></OptimizedAuthWrapper>}
             {activeTab === "news-updates" && <NewsUpdatesTab examType="JEE" />}
             {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" />}
           </div>
