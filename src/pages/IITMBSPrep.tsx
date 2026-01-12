@@ -11,6 +11,7 @@ import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
+import { X } from "lucide-react";
 
 const IITMBSPrep = () => {
   const navigate = useNavigate();
@@ -155,42 +156,37 @@ const IITMBSPrep = () => {
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {hasSubFilters ? (
                   <>
-                    {/* Branch Button */}
+                    {/* Branch Dropdown */}
                     <button 
                       onClick={() => toggleDropdown('branch')}
-                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${
-                        selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
-                      }`}
+                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
                     >
-                      {selectedBranch}
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      {selectedBranch && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Branch
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
 
                     {/* Level Pills (for notes, pyqs, and tools) */}
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && levels.map((lvl) => (
                       <button
                         key={lvl}
-                        onClick={() => setSelectedLevel(lvl)}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
-                          selectedLevel === lvl 
-                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
-                            : 'bg-white border-[#e5e7eb] text-[#374151]'
-                        }`}
+                        onClick={() => setSelectedLevel(selectedLevel === lvl ? "" : lvl)}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
                       >
                         {lvl}
+                        {selectedLevel === lvl && <X className="w-3.5 h-3.5" />}
                       </button>
                     ))}
 
-                    {/* Year Button (only for pyqs) */}
+                    {/* Year Dropdown (only for pyqs) */}
                     {activeTab === 'pyqs' && (
                       <button 
                         onClick={() => toggleDropdown('year')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${
-                          pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
-                        }`}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
                       >
-                        {pyqYear || 'Year'}
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                        {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                        Year
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     )}
 
@@ -198,14 +194,11 @@ const IITMBSPrep = () => {
                     {activeTab === 'pyqs' && selectedLevel !== 'Qualifier' && examTypes.map((type) => (
                       <button
                         key={type}
-                        onClick={() => setExamType(type)}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
-                          examType === type 
-                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
-                            : 'bg-white border-[#e5e7eb] text-[#374151]'
-                        }`}
+                        onClick={() => setExamType(examType === type ? "" : type)}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
                       >
                         {type === 'quiz1' ? 'Quiz 1' : type === 'quiz2' ? 'Quiz 2' : 'End Term'}
+                        {examType === type && <X className="w-3.5 h-3.5" />}
                       </button>
                     ))}
 
@@ -213,16 +206,29 @@ const IITMBSPrep = () => {
                     {activeTab === 'tools' && tools.map((tool) => (
                       <button
                         key={tool.id}
-                        onClick={() => setSelectedTool(tool.id)}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
-                          selectedTool === tool.id 
-                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
-                            : 'bg-white border-[#e5e7eb] text-[#374151]'
-                        }`}
+                        onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
                       >
                         {tool.label}
+                        {selectedTool === tool.id && <X className="w-3.5 h-3.5" />}
                       </button>
                     ))}
+
+                    {/* Reset Filters */}
+                    {(selectedBranch || selectedLevel || pyqYear || examType || selectedTool) && (
+                      <button 
+                        onClick={() => { 
+                          setSelectedBranch(""); 
+                          setSelectedLevel(""); 
+                          setPyqYear(null); 
+                          setExamType(""); 
+                          setSelectedTool(""); 
+                        }}
+                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </>
                 ) : (
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
