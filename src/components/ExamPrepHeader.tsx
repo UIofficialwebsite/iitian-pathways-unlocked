@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Home } from "lucide-react";
+import { Home, ChevronRight } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
 import {
   Breadcrumb,
@@ -44,39 +44,58 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
   };
 
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-gray-100 border-b">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Breadcrumb */}
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList>
+    <div className="relative overflow-hidden bg-gradient-to-br from-[#f0f4ff] to-[#faf5ff] border-b min-h-[280px] flex items-center">
+      {/* Background Decorative Elements (Blobs) */}
+      <div className="absolute -top-[100px] -left-[50px] w-[300px] h-[300px] bg-slate-300/30 rounded-full blur-[60px] pointer-events-none" />
+      <div className="absolute -bottom-[50px] right-[10%] w-[250px] h-[250px] bg-purple-200/40 rounded-[40%_60%_70%_30%] blur-[60px] pointer-events-none" />
+      <div className="absolute top-10 right-[15%] w-[150px] h-[100px] bg-white/20 border border-white/30 rounded-xl -rotate-12 pointer-events-none hidden md:block" />
+
+      {/* Glassy Overlay Effect */}
+      <div className="absolute inset-0 backdrop-blur-[8px] bg-white/5 pointer-events-none" />
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+        {/* Breadcrumb with refined styling */}
+        <Breadcrumb className="mb-6">
+          <BreadcrumbList className="flex-wrap">
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/" className="flex items-center gap-1 text-gray-500 hover:text-gray-700">
+                <Link to="/" className="text-gray-600 hover:text-black transition-colors">
                   <Home className="h-4 w-4" />
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-3 w-3 text-gray-400" />
+            </BreadcrumbSeparator>
+
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/exam-preparation" className="text-gray-500 hover:text-gray-700 uppercase text-xs font-medium tracking-wide">
+                <Link to="/exam-preparation" className="text-gray-500 hover:text-black uppercase text-[11px] font-semibold tracking-wider transition-colors">
                   Exam Prep
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+
+            <BreadcrumbSeparator>
+              <ChevronRight className="h-3 w-3 text-gray-400" />
+            </BreadcrumbSeparator>
+
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to={examPath} className="text-gray-500 hover:text-gray-700 uppercase text-xs font-medium tracking-wide">
+                <Link to={examPath} className="text-gray-500 hover:text-black uppercase text-[11px] font-semibold tracking-wider transition-colors">
                   {examName}
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
+
             {currentTab && currentTab !== "notes" && (
               <>
-                <BreadcrumbSeparator />
+                <BreadcrumbSeparator>
+                  <ChevronRight className="h-3 w-3 text-gray-400" />
+                </BreadcrumbSeparator>
                 <BreadcrumbItem>
-                  <BreadcrumbPage className="uppercase text-xs font-medium tracking-wide">
+                  <BreadcrumbPage className="uppercase text-[11px] font-semibold tracking-wider text-gray-800">
                     {getTabDisplayName(currentTab)}
                   </BreadcrumbPage>
                 </BreadcrumbItem>
@@ -85,12 +104,12 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
+        {/* Heading - Styled to match "Main Title" */}
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6 tracking-tight">
           {displayTitle}
         </h1>
 
-        {/* Share Button */}
+        {/* Share Button - Styled as Modern White Glass */}
         <ShareButton
           url={shareUrl}
           title={displayTitle}
@@ -98,7 +117,7 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
           variant="outline"
           size="sm"
           showText={true}
-          className="border-gray-300 text-gray-600 hover:bg-gray-100"
+          className="bg-white/80 hover:bg-white border-white/50 text-gray-700 font-semibold px-6 py-5 h-auto shadow-sm backdrop-blur-sm transition-all hover:translate-y-[-1px] hover:shadow-md"
         />
       </div>
     </div>
