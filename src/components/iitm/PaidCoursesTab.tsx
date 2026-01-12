@@ -1,7 +1,7 @@
 import React from "react";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import CourseList from "./CourseList";
+import CourseCard from "@/components/courses/CourseCard";
 
 interface PaidCoursesTabProps {
   branch: string;
@@ -9,7 +9,7 @@ interface PaidCoursesTabProps {
   subjects: string[];
   priceRange: string | null;
   newlyLaunched: boolean;
-  fastrackOnly: boolean;
+  fasttrackOnly: boolean;
   bestSellerOnly: boolean;
 }
 
@@ -19,7 +19,7 @@ const PaidCoursesTab: React.FC<PaidCoursesTabProps> = ({
   subjects, 
   priceRange, 
   newlyLaunched, 
-  fastrackOnly, 
+  fasttrackOnly, 
   bestSellerOnly 
 }) => {
   const { courses, contentLoading } = useBackend();
@@ -71,15 +71,36 @@ const PaidCoursesTab: React.FC<PaidCoursesTabProps> = ({
 
   if (contentLoading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Array.from({ length: 4 }).map((_, index) => <CourseCardSkeleton key={index} />)}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, index) => <CourseCardSkeleton key={index} />)}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <CourseList courses={filteredCourses} />
+      <div className="mb-6">
+        <p className="text-[14px] md:text-[15px] font-normal text-[#1a1a1a] tracking-tight">
+          Showing {filteredCourses.length} Batches
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredCourses.map((course, index) => (
+          <CourseCard key={course.id} course={course} index={index} />
+        ))}
+      </div>
+      
+      {filteredCourses.length === 0 && (
+        <div className="text-center py-20 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200">
+          <p className="text-slate-500 font-medium">No batches found matching your filters.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 text-[#6366f1] text-sm font-semibold hover:underline"
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
     </div>
   );
 };
