@@ -11,7 +11,7 @@ import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
-import { X, ChevronRight } from "lucide-react";
+import { X } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -54,23 +54,18 @@ const IITMBSPrep = () => {
   
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
-  const branches = ["Data Science", "Electronic Systems"];
-  const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
-  const years = ["2024", "2023", "2022", "2021", "2020"];
-  const examTypes = [
-    { id: "quiz1", label: "Quiz 1" },
-    { id: "quiz2", label: "Quiz 2" },
-    { id: "endterm", label: "End Term" }
-  ];
-  const tools = [
-    { id: "cgpa-calculator", label: "CGPA Calculator" },
-    { id: "grade-calculator", label: "Grade Calculator" },
-    { id: "marks-predictor", label: "Marks Predictor" }
-  ];
-
+  // Dynamic Data Extraction from Backend
   const iitmCourses = useMemo(() => 
     courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
   , [courses]);
+
+  const branches = useMemo(() => 
+    Array.from(new Set(iitmCourses.map(c => c.branch))).filter(Boolean).sort() as string[]
+  , [iitmCourses]);
+
+  const levels = useMemo(() => 
+    Array.from(new Set(iitmCourses.map(c => c.level))).filter(Boolean).sort() as string[]
+  , [iitmCourses]);
 
   const branchFilteredCourses = useMemo(() => {
     if (selectedBranch === "all" || selectedBranch === "All Branches") return iitmCourses;
@@ -84,6 +79,19 @@ const IITMBSPrep = () => {
   const availableCourseSubjects = useMemo(() => 
     Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort() as string[]
   , [branchFilteredCourses]);
+
+  // Static Metadata for logic-based filters
+  const years = ["2024", "2023", "2022", "2021", "2020"];
+  const examTypes = [
+    { id: "quiz1", label: "Quiz 1" },
+    { id: "quiz2", label: "Quiz 2" },
+    { id: "endterm", label: "End Term" }
+  ];
+  const tools = [
+    { id: "cgpa-calculator", label: "CGPA Calculator" },
+    { id: "grade-calculator", label: "Grade Calculator" },
+    { id: "marks-predictor", label: "Marks Predictor" }
+  ];
 
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
@@ -486,7 +494,7 @@ const IITMBSPrep = () => {
                 )}
               </div>
 
-              {/* MOBILE ONLY: Dropdown Container (Centered below the filter row) */}
+              {/* MOBILE ONLY: Shared Dropdown Container (Centered below row) */}
               {isMobile && openDropdown && (
                 <div className="absolute top-full left-0 right-0 flex justify-center z-[9999] px-4 pointer-events-none">
                   <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-xl min-w-[180px] p-3 dropdown-container pointer-events-auto mt-2">
