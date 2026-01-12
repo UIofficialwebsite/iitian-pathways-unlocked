@@ -21,12 +21,13 @@ const NEETPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'session' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'session' | 'class' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
-  const [activeClass, setActiveClass] = useState("class11");
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [tempSubjects, setTempSubjects] = useState<string[]>([]);
+  const [tempClass, setTempClass] = useState<string | null>(null);
   
   // PYQ filters
   const [pyqSubject, setPyqSubject] = useState<string | null>(null);
@@ -35,6 +36,8 @@ const NEETPrep = () => {
   const [tempPyqSubject, setTempPyqSubject] = useState<string | null>(null);
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
   const [tempPyqSession, setTempPyqSession] = useState<string | null>(null);
+
+  const classOptions = ["Class 11", "Class 12"];
 
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
@@ -97,14 +100,16 @@ const NEETPrep = () => {
     setActiveTab(newTab);
     setOpenDropdown(null);
     const firstSub = selectedSubjects[0] || availableSubjects[0];
-    navigate(buildExamUrl('neet', newTab, { subject: firstSub, class: activeClass }), { replace: true });
+    const classParam = selectedClass === "Class 11" ? "class11" : selectedClass === "Class 12" ? "class12" : "";
+    navigate(buildExamUrl('neet', newTab, { subject: firstSub, class: classParam }), { replace: true });
   };
 
-  const toggleDropdown = (type: 'subject' | 'year' | 'session') => {
+  const toggleDropdown = (type: 'subject' | 'year' | 'session' | 'class') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
       setTempSubjects(selectedSubjects);
+      setTempClass(selectedClass);
       setTempPyqSubject(pyqSubject);
       setTempPyqYear(pyqYear);
       setTempPyqSession(pyqSession);
@@ -113,11 +118,17 @@ const NEETPrep = () => {
   };
 
   const handleApply = () => {
-    if (activeTab === 'notes') {
-      setSelectedSubjects(tempSubjects);
-    } else if (activeTab === 'pyqs') {
-      setPyqSubject(tempPyqSubject);
+    if (openDropdown === 'subject') {
+      if (activeTab === 'notes') {
+        setSelectedSubjects(tempSubjects);
+      } else if (activeTab === 'pyqs') {
+        setPyqSubject(tempPyqSubject);
+      }
+    } else if (openDropdown === 'class') {
+      setSelectedClass(tempClass);
+    } else if (openDropdown === 'year') {
       setPyqYear(tempPyqYear);
+    } else if (openDropdown === 'session') {
       setPyqSession(tempPyqSession);
     }
     setOpenDropdown(null);
@@ -173,18 +184,18 @@ const NEETPrep = () => {
                       Subjects
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    <button onClick={() => setActiveClass(activeClass === "class11" ? "" : "class11")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
-                      Class 11
-                      {activeClass === "class11" && <X className="w-3.5 h-3.5" />}
-                    </button>
-                    <button onClick={() => setActiveClass(activeClass === "class12" ? "" : "class12")} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]">
-                      Class 12
-                      {activeClass === "class12" && <X className="w-3.5 h-3.5" />}
+                    <button 
+                      onClick={() => toggleDropdown('class')}
+                      className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
+                    >
+                      {selectedClass && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Class
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'class' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
                     
-                    {(selectedSubjects.length > 0 || activeClass) && (
+                    {(selectedSubjects.length > 0 || selectedClass) && (
                       <button 
-                        onClick={() => { setSelectedSubjects([]); setActiveClass(""); }}
+                        onClick={() => { setSelectedSubjects([]); setSelectedClass(null); }}
                         className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
                       >
                         Reset Filters
@@ -220,9 +231,6 @@ const NEETPrep = () => {
                     )}
                   </>
                 )}
-                {(activeTab !== 'notes' && activeTab !== 'pyqs') && (
-                  <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
-                )}
               </div>
             </div>
             
@@ -248,6 +256,27 @@ const NEETPrep = () => {
                   </div>
                 </div>
               )}
+              {activeTab === 'notes' && openDropdown === 'class' && (
+                <div className="absolute top-0 left-[110px] sm:left-[130px] lg:left-[140px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {classOptions.map(cls => (
+                      <label key={cls} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="classFilter"
+                          checked={tempClass === cls} 
+                          onChange={() => setTempClass(cls)} 
+                          className="accent-[#6366f1]" 
+                        /> {cls}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
               {activeTab === 'pyqs' && openDropdown === 'subject' && (
                 <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
@@ -264,7 +293,7 @@ const NEETPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'year' && (
-                <div className="absolute top-0 left-[120px] sm:left-[140px] lg:left-[150px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availableYears.map(year => (
                       <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -279,7 +308,7 @@ const NEETPrep = () => {
                 </div>
               )}
               {activeTab === 'pyqs' && openDropdown === 'session' && (
-                <div className="absolute top-0 left-[230px] sm:left-[260px] lg:left-[280px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-[180px] sm:left-[210px] lg:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {availableSessions.map(session => (
                       <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -301,7 +330,7 @@ const NEETPrep = () => {
 
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="NEET" />}
+            {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={selectedClass === "Class 11" ? "class11" : selectedClass === "Class 12" ? "class12" : ""} examType="NEET" />}
             {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab subject={pyqSubject} year={pyqYear} session={pyqSession} /></OptimizedAuthWrapper>}
             {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="NEET" /></OptimizedAuthWrapper>}
             {activeTab === "news-updates" && <NewsUpdatesTab examType="NEET" />}

@@ -20,7 +20,7 @@ const IITMBSPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  const [openDropdown, setOpenDropdown] = useState<'branch' | 'year' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   
@@ -28,15 +28,21 @@ const IITMBSPrep = () => {
   const [selectedBranch, setSelectedBranch] = useState("Data Science");
   const [selectedLevel, setSelectedLevel] = useState("Foundation");
   const [pyqYear, setPyqYear] = useState<string | null>(null);
-  const [examType, setExamType] = useState("quiz1");
+  const [examType, setExamType] = useState<string | null>(null);
   const [tempBranch, setTempBranch] = useState("Data Science");
+  const [tempLevel, setTempLevel] = useState("Foundation");
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
+  const [tempExamType, setTempExamType] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState("cgpa-calculator");
 
   const branches = ["Data Science", "Electronic Systems"];
   const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
   const years = ["2024", "2023", "2022", "2021", "2020"];
-  const examTypes = ["quiz1", "quiz2", "endterm"];
+  const examTypes = [
+    { id: "quiz1", label: "Quiz 1" },
+    { id: "quiz2", label: "Quiz 2" },
+    { id: "endterm", label: "End Term" }
+  ];
   const tools = [
     { id: "cgpa-calculator", label: "CGPA Calculator" },
     { id: "grade-calculator", label: "Grade Calculator" },
@@ -74,12 +80,14 @@ const IITMBSPrep = () => {
     updateUrl(newTab);
   };
 
-  const toggleDropdown = (type: 'branch' | 'year') => {
+  const toggleDropdown = (type: 'branch' | 'level' | 'examType' | 'year') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
       setTempBranch(selectedBranch);
+      setTempLevel(selectedLevel);
       setTempPyqYear(pyqYear);
+      setTempExamType(examType);
       setOpenDropdown(type);
     }
   };
@@ -89,8 +97,18 @@ const IITMBSPrep = () => {
     setOpenDropdown(null);
   };
 
+  const handleApplyLevel = () => {
+    setSelectedLevel(tempLevel);
+    setOpenDropdown(null);
+  };
+
   const handleApplyYear = () => {
     setPyqYear(tempPyqYear);
+    setOpenDropdown(null);
+  };
+
+  const handleApplyExamType = () => {
+    setExamType(tempExamType);
     setOpenDropdown(null);
   };
 
@@ -154,7 +172,7 @@ const IITMBSPrep = () => {
           <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[100]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
-                {hasSubFilters ? (
+                {hasSubFilters && (
                   <>
                     {/* Branch Dropdown */}
                     <button 
@@ -166,17 +184,17 @@ const IITMBSPrep = () => {
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
 
-                    {/* Level Pills (for notes, pyqs, and tools) */}
-                    {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && levels.map((lvl) => (
-                      <button
-                        key={lvl}
-                        onClick={() => setSelectedLevel(selectedLevel === lvl ? "" : lvl)}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                    {/* Level Dropdown (for notes, pyqs, and tools) */}
+                    {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
+                      <button 
+                        onClick={() => toggleDropdown('level')}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
                       >
-                        {lvl}
-                        {selectedLevel === lvl && <X className="w-3.5 h-3.5" />}
+                        {selectedLevel && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                        Level
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
-                    ))}
+                    )}
 
                     {/* Year Dropdown (only for pyqs) */}
                     {activeTab === 'pyqs' && (
@@ -190,17 +208,17 @@ const IITMBSPrep = () => {
                       </button>
                     )}
 
-                    {/* Exam Type Pills (only for pyqs and not qualifier level) */}
-                    {activeTab === 'pyqs' && selectedLevel !== 'Qualifier' && examTypes.map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setExamType(examType === type ? "" : type)}
-                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white border-[#e5e7eb] text-[#374151]"
+                    {/* Exam Category Dropdown (only for pyqs and not qualifier level) */}
+                    {activeTab === 'pyqs' && selectedLevel !== 'Qualifier' && (
+                      <button 
+                        onClick={() => toggleDropdown('examType')}
+                        className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]"
                       >
-                        {type === 'quiz1' ? 'Quiz 1' : type === 'quiz2' ? 'Quiz 2' : 'End Term'}
-                        {examType === type && <X className="w-3.5 h-3.5" />}
+                        {examType && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                        Exam Category
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'examType' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
-                    ))}
+                    )}
 
                     {/* Tools Selection Pills */}
                     {activeTab === 'tools' && tools.map((tool) => (
@@ -221,7 +239,7 @@ const IITMBSPrep = () => {
                           setSelectedBranch(""); 
                           setSelectedLevel(""); 
                           setPyqYear(null); 
-                          setExamType(""); 
+                          setExamType(null); 
                           setSelectedTool(""); 
                         }}
                         className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
@@ -230,8 +248,6 @@ const IITMBSPrep = () => {
                       </button>
                     )}
                   </>
-                ) : (
-                  <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
             </div>
@@ -259,8 +275,29 @@ const IITMBSPrep = () => {
                   </div>
                 </div>
               )}
+              {openDropdown === 'level' && (
+                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[160px] p-3 dropdown-container">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {levels.map(lvl => (
+                      <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="level"
+                          checked={tempLevel === lvl} 
+                          onChange={() => setTempLevel(lvl)} 
+                          className="accent-[#6366f1]" 
+                        /> {lvl}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApplyLevel} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
               {activeTab === 'pyqs' && openDropdown === 'year' && (
-                <div className="absolute top-0 left-[200px] sm:left-[240px] lg:left-[260px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                <div className="absolute top-0 left-[180px] sm:left-[220px] lg:left-[240px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
                   <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                     {years.map(year => (
                       <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -277,6 +314,27 @@ const IITMBSPrep = () => {
                   <div className="flex gap-2 pt-2 border-t">
                     <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
                     <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'pyqs' && openDropdown === 'examType' && (
+                <div className="absolute top-0 left-[260px] sm:left-[300px] lg:left-[330px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[150px] p-3 dropdown-container">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {examTypes.map(type => (
+                      <label key={type.id} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="examType"
+                          checked={tempExamType === type.id} 
+                          onChange={() => setTempExamType(type.id)} 
+                          className="accent-[#6366f1]" 
+                        /> {type.label}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApplyExamType} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
                   </div>
                 </div>
               )}
