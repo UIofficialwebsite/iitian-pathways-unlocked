@@ -13,11 +13,13 @@ import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 import { X, ChevronRight } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { courses } = useBackend();
+  const isMobile = useIsMobile();
   
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -120,8 +122,8 @@ const IITMBSPrep = () => {
     } else {
       setTempBranch(selectedBranch);
       setTempLevel(selectedLevel);
-      setPyqYear(pyqYear);
-      setExamType(examType);
+      setTempPyqYear(pyqYear);
+      setTempExamType(examType);
       setTempCourseLevels(selectedCourseLevels);
       setTempCourseSubjects(selectedCourseSubjects);
       setTempCoursePrice(coursePriceRange);
@@ -180,6 +182,127 @@ const IITMBSPrep = () => {
     { id: "dates", label: "Important Dates" }
   ];
 
+  const renderDropdownContent = (type: typeof openDropdown) => {
+    if (!type) return null;
+    
+    switch (type) {
+      case 'branch':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {(activeTab === 'courses' ? ["All Branches", ...branches] : branches).map(branch => (
+                <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="radio" name="branch" checked={tempBranch === branch} onChange={() => setTempBranch(branch)} className="accent-[#6366f1]" /> {branch}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyBranch} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'level':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {levels.map(lvl => (
+                <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="radio" name="level" checked={tempLevel === lvl} onChange={() => setTempLevel(lvl)} className="accent-[#6366f1]" /> {lvl}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyLevel} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'courseLevel':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {availableCourseLevels.map(lvl => (
+                <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="checkbox" checked={tempCourseLevels.includes(lvl)} onChange={() => toggleTempItem(lvl, tempCourseLevels, setTempCourseLevels)} className="accent-[#6366f1]" /> {lvl}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'courseSubject':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {availableCourseSubjects.map(sub => (
+                <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="checkbox" checked={tempCourseSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempCourseSubjects, setTempCourseSubjects)} className="accent-[#6366f1]" /> {sub}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'coursePricing':
+        return (
+          <>
+            <div className="space-y-1.5 mb-3">
+              {['free', 'paid'].map((opt) => (
+                <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize text-gray-700">
+                  <input type="radio" name="price" checked={tempCoursePrice === opt} onChange={() => setTempCoursePrice(opt)} className="accent-[#6366f1]" /> {opt}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'year':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {years.map(y => (
+                <label key={y} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="radio" name="year" checked={tempPyqYear === y} onChange={() => setTempPyqYear(y)} className="accent-[#6366f1]" /> {y}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'examType':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {examTypes.map(type => (
+                <label key={type.id} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="radio" name="exam" checked={tempExamType === type.id} onChange={() => setTempExamType(type.id)} className="accent-[#6366f1]" /> {type.label}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyExamType} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   const hasSubFilters = activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'syllabus' || activeTab === 'tools';
 
   return (
@@ -214,43 +337,71 @@ const IITMBSPrep = () => {
 
           <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[100]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar dropdown-container">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto md:overflow-visible no-scrollbar dropdown-container">
                 
                 {activeTab === 'courses' ? (
                   <>
-                    <button onClick={() => toggleDropdown('branch')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                      {selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
-                      Branch
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
+                    <div className="relative shrink-0">
+                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        {selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                        Branch
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
+                      {!isMobile && openDropdown === 'branch' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          {renderDropdownContent('branch')}
+                        </div>
+                      )}
+                    </div>
 
-                    <button onClick={() => toggleDropdown('courseLevel')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                      {selectedCourseLevels.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseLevels.length}</span>}
-                      Level
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseLevel' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
+                    <div className="relative shrink-0">
+                      <button onClick={() => toggleDropdown('courseLevel')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        {selectedCourseLevels.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseLevels.length}</span>}
+                        Level
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseLevel' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
+                      {!isMobile && openDropdown === 'courseLevel' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          {renderDropdownContent('courseLevel')}
+                        </div>
+                      )}
+                    </div>
 
-                    <button onClick={() => toggleDropdown('courseSubject')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                      {selectedCourseSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseSubjects.length}</span>}
-                      Subject
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
+                    <div className="relative shrink-0">
+                      <button onClick={() => toggleDropdown('courseSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        {selectedCourseSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseSubjects.length}</span>}
+                        Subject
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
+                      {!isMobile && openDropdown === 'courseSubject' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          {renderDropdownContent('courseSubject')}
+                        </div>
+                      )}
+                    </div>
 
-                    <button onClick={() => toggleDropdown('coursePricing')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                      {coursePriceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
-                      Pricing
-                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'coursePricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
+                    <div className="relative shrink-0">
+                      <button onClick={() => toggleDropdown('coursePricing')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        {coursePriceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                        Pricing
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'coursePricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
+                      {!isMobile && openDropdown === 'coursePricing' && (
+                        <div className="absolute top-full left-0 md:right-0 md:left-auto mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[150px] p-3">
+                          {renderDropdownContent('coursePricing')}
+                        </div>
+                      )}
+                    </div>
 
-                    <button onClick={() => setCourseBestSellerOnly(!courseBestSellerOnly)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseBestSellerOnly ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
+                    <button onClick={() => setCourseBestSellerOnly(!courseBestSellerOnly)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseBestSellerOnly ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>
                       Best Seller {courseBestSellerOnly && <X className="w-3.5 h-3.5" />}
                     </button>
 
-                    <button onClick={() => setCourseNewlyLaunched(!courseNewlyLaunched)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseNewlyLaunched ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
+                    <button onClick={() => setCourseNewlyLaunched(!courseNewlyLaunched)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseNewlyLaunched ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>
                       Newly Launched {courseNewlyLaunched && <X className="w-3.5 h-3.5" />}
                     </button>
 
-                    <button onClick={() => setCourseFastrackOnly(!courseFastrackOnly)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseFastrackOnly ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
+                    <button onClick={() => setCourseFastrackOnly(!courseFastrackOnly)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 bg-white ${courseFastrackOnly ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>
                       Fastrack Batch {courseFastrackOnly && <X className="w-3.5 h-3.5" />}
                     </button>
 
@@ -264,7 +415,7 @@ const IITMBSPrep = () => {
                           setCourseNewlyLaunched(false);
                           setCourseFastrackOnly(false);
                         }}
-                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                        className="shrink-0 text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline px-2"
                       >
                         Reset Filters
                       </button>
@@ -272,156 +423,74 @@ const IITMBSPrep = () => {
                   </>
                 ) : hasSubFilters ? (
                   <>
-                    <button onClick={() => toggleDropdown('branch')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                      Branch <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                    </button>
-                    {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
-                      <button onClick={() => toggleDropdown('level')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                        Level <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    <div className="relative shrink-0">
+                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        Branch <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {!isMobile && openDropdown === 'branch' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          {renderDropdownContent('branch')}
+                        </div>
+                      )}
+                    </div>
+
+                    {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
+                      <div className="relative shrink-0">
+                        <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                          Level <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        </button>
+                        {!isMobile && openDropdown === 'level' && (
+                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[160px] p-3">
+                            {renderDropdownContent('level')}
+                          </div>
+                        )}
+                      </div>
                     )}
                     {activeTab === 'pyqs' && (
                       <>
-                        <button onClick={() => toggleDropdown('year')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                          Year <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                        </button>
-                        {selectedLevel !== 'Qualifier' && (
-                          <button onClick={() => toggleDropdown('examType')} className="shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                            Exam <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'examType' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        <div className="relative shrink-0">
+                          <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                            Year <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                           </button>
+                          {!isMobile && openDropdown === 'year' && (
+                            <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[150px] p-3">
+                              {renderDropdownContent('year')}
+                            </div>
+                          )}
+                        </div>
+                        {selectedLevel !== 'Qualifier' && (
+                          <div className="relative shrink-0">
+                            <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                              Exam <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'examType' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                            </button>
+                            {!isMobile && openDropdown === 'examType' && (
+                              <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[150px] p-3">
+                                {renderDropdownContent('examType')}
+                              </div>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
                     {activeTab === 'tools' && tools.map((tool) => (
-                      <button key={tool.id} onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>
+                      <button key={tool.id} onClick={() => setSelectedTool(selectedTool === tool.id ? "" : tool.id)} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>
                         {tool.label} {selectedTool === tool.id && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                       </button>
                     ))}
                   </>
                 ) : (activeTab === 'news' || activeTab === 'dates') && (
                   <>
-                    <button onClick={() => setSortOrder('recent')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>Recent First</button>
-                    <button onClick={() => setSortOrder('oldest')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}>Oldest First</button>
+                    <button onClick={() => setSortOrder('recent')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>Recent First</button>
+                    <button onClick={() => setSortOrder('oldest')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>Oldest First</button>
                   </>
                 )}
               </div>
 
-              {/* DROPDOWN CONTAINER: Center aligned below the row */}
-              {openDropdown && (
+              {/* MOBILE ONLY: Dropdown Container (Centered below the filter row) */}
+              {isMobile && openDropdown && (
                 <div className="absolute top-full left-0 right-0 flex justify-center z-[9999] px-4 pointer-events-none">
                   <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-xl min-w-[180px] p-3 dropdown-container pointer-events-auto mt-2">
-                    {/* Branch Dropdown Content */}
-                    {openDropdown === 'branch' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {(activeTab === 'courses' ? ["All Branches", ...branches] : branches).map(branch => (
-                            <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="radio" name="branch" checked={tempBranch === branch} onChange={() => setTempBranch(branch)} className="accent-[#6366f1]" /> {branch}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyBranch} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* Level Dropdown Content */}
-                    {openDropdown === 'level' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {levels.map(lvl => (
-                            <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="radio" name="level" checked={tempLevel === lvl} onChange={() => setTempLevel(lvl)} className="accent-[#6366f1]" /> {lvl}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyLevel} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* Related Courses Level Dropdown */}
-                    {openDropdown === 'courseLevel' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {availableCourseLevels.map(lvl => (
-                            <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="checkbox" checked={tempCourseLevels.includes(lvl)} onChange={() => toggleTempItem(lvl, tempCourseLevels, setTempCourseLevels)} className="accent-[#6366f1]" /> {lvl}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* Related Courses Subject Dropdown */}
-                    {openDropdown === 'courseSubject' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {availableCourseSubjects.map(sub => (
-                            <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="checkbox" checked={tempCourseSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempCourseSubjects, setTempCourseSubjects)} className="accent-[#6366f1]" /> {sub}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* Related Courses Pricing Dropdown */}
-                    {openDropdown === 'coursePricing' && (
-                      <>
-                        <div className="space-y-1.5 mb-3">
-                          {['free', 'paid'].map((opt) => (
-                            <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize text-gray-700">
-                              <input type="radio" name="price" checked={tempCoursePrice === opt} onChange={() => setTempCoursePrice(opt)} className="accent-[#6366f1]" /> {opt}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* PYQ Year Dropdown */}
-                    {openDropdown === 'year' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {years.map(y => (
-                            <label key={y} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="radio" name="year" checked={tempPyqYear === y} onChange={() => setTempPyqYear(y)} className="accent-[#6366f1]" /> {y}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
-                    {/* PYQ Exam Type Dropdown */}
-                    {openDropdown === 'examType' && (
-                      <>
-                        <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                          {examTypes.map(type => (
-                            <label key={type.id} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                              <input type="radio" name="exam" checked={tempExamType === type.id} onChange={() => setTempExamType(type.id)} className="accent-[#6366f1]" /> {type.label}
-                            </label>
-                          ))}
-                        </div>
-                        <div className="flex gap-2 pt-2 border-t">
-                          <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded">Cancel</button>
-                          <button onClick={handleApplyExamType} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded">Apply</button>
-                        </div>
-                      </>
-                    )}
+                    {renderDropdownContent(openDropdown)}
                   </div>
                 </div>
               )}
