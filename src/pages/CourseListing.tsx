@@ -24,7 +24,6 @@ const CourseListing = () => {
   // Applied Filter States
   const [selectedLevels, setSelectedLevels] = useState<string[]>([]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
-  const [priceRange, setPriceRange] = useState<string | null>(null);
   const [newlyLaunched, setNewlyLaunched] = useState(false);
   const [fastrackOnly, setFastrackOnly] = useState(false);
   const [bestSellerOnly, setBestSellerOnly] = useState(false);
@@ -32,10 +31,9 @@ const CourseListing = () => {
   // Temporary states for Apply/Cancel logic
   const [tempLevels, setTempLevels] = useState<string[]>([]);
   const [tempSubjects, setTempSubjects] = useState<string[]>([]);
-  const [tempPrice, setTempPrice] = useState<string | null>(null);
 
   // Dropdown State
-  const [openDropdown, setOpenDropdown] = useState<'level' | 'subject' | 'pricing' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'level' | 'subject' | null>(null);
 
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -88,28 +86,40 @@ const CourseListing = () => {
     return categoryFilteredCourses.filter(c => c.branch === branchFromUrl);
   }, [categoryFilteredCourses, branchFromUrl]);
 
+  // BASE FILTER: Only include batches with price > 0
+  const paidBaseCourses = useMemo(() => {
+    return branchFilteredCourses.filter(c => {
+      // Logic for effective price based on your backend columns
+      const effectivePrice = (c.discounted_price !== null && c.discounted_price !== undefined) 
+        ? c.discounted_price 
+        : c.price;
+      return effectivePrice > 0;
+    });
+  }, [branchFilteredCourses]);
+
   const availableBranches = useMemo(() => Array.from(new Set(categoryFilteredCourses.map(c => c.branch))).filter(Boolean).sort(), [categoryFilteredCourses]);
-  const availableLevels = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.level))).filter(Boolean).sort(), [branchFilteredCourses]);
-  const availableSubjects = useMemo(() => Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort(), [branchFilteredCourses]);
+  const availableLevels = useMemo(() => Array.from(new Set(paidBaseCourses.map(c => c.level))).filter(Boolean).sort(), [paidBaseCourses]);
+  const availableSubjects = useMemo(() => Array.from(new Set(paidBaseCourses.map(c => c.subject))).filter(Boolean).sort(), [paidBaseCourses]);
 
   const filteredCourses = useMemo(() => {
-    let result = [...branchFilteredCourses];
+    let result = [...paidBaseCourses];
     if (selectedLevels.length > 0) result = result.filter(c => selectedLevels.includes(c.level || ''));
     if (selectedSubjects.length > 0) result = result.filter(c => selectedSubjects.includes(c.subject || ''));
-    if (priceRange) {
-      const getPrice = (c: any) => c.discounted_price ?? c.price;
-      if (priceRange === 'free') result = result.filter(c => getPrice(c) === 0);
-      if (priceRange === 'paid') result = result.filter(c => getPrice(c) > 0);
-    }
+    
     if (newlyLaunched) {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       result = result.filter(c => c.updated_at && new Date(c.updated_at) > thirtyDaysAgo);
     }
-    if (fastrackOnly) result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
+
+    // SYNCED: Checks batch_type column from backend courses table
+    if (fastrackOnly) {
+      result = result.filter(c => c.batch_type?.toLowerCase().includes('fastrack'));
+    }
+
     if (bestSellerOnly) result = result.filter(c => c.bestseller === true);
     return result;
-  }, [branchFilteredCourses, selectedLevels, selectedSubjects, priceRange, newlyLaunched, fastrackOnly, bestSellerOnly]);
+  }, [paidBaseCourses, selectedLevels, selectedSubjects, newlyLaunched, fastrackOnly, bestSellerOnly]);
 
   const groupedCourses = useMemo(() => {
     const groups: Record<string, typeof filteredCourses> = {};
@@ -121,13 +131,12 @@ const CourseListing = () => {
     return groups;
   }, [filteredCourses]);
 
-  const toggleDropdown = (type: 'level' | 'subject' | 'pricing') => {
+  const toggleDropdown = (type: 'level' | 'subject') => {
     if (openDropdown === type) {
       setOpenDropdown(null);
     } else {
       setTempLevels(selectedLevels);
       setTempSubjects(selectedSubjects);
-      setTempPrice(priceRange);
       setOpenDropdown(type);
     }
   };
@@ -135,7 +144,6 @@ const CourseListing = () => {
   const handleApply = () => {
     setSelectedLevels(tempLevels);
     setSelectedSubjects(tempSubjects);
-    setPriceRange(tempPrice);
     setOpenDropdown(null);
   };
 
@@ -169,7 +177,7 @@ const CourseListing = () => {
           </div>
         </div>
 
-        {/* STICKY FILTER BAR - z-index updated to [60] */}
+        {/* STICKY FILTER BAR */}
         <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
           <div className="bg-[#f4f2ff]">
             <div className="max-w-6xl mx-auto px-4 md:px-8">
@@ -203,16 +211,7 @@ const CourseListing = () => {
                   </button>
                 </div>
 
-                {/* Pricing Dropdown Filter */}
-                <div className="relative">
-                  <button onClick={() => toggleDropdown('pricing')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${priceRange ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
-                    {priceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
-                    Pricing
-                    <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                  </button>
-                </div>
-
-                {/* Toggle Filters - show with X when selected */}
+                {/* Toggle Filters - Pricing dropdown removed as requested */}
                 <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap flex items-center gap-2 ${bestSellerOnly ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                   Best Seller
                   {bestSellerOnly && <X className="w-3.5 h-3.5" />}
@@ -226,13 +225,12 @@ const CourseListing = () => {
                   {fastrackOnly && <X className="w-3.5 h-3.5" />}
                 </button>
 
-                {/* Reset Filters - only show when any filter is active */}
-                {(selectedLevels.length > 0 || selectedSubjects.length > 0 || priceRange || bestSellerOnly || newlyLaunched || fastrackOnly) && (
+                {/* Reset Filters */}
+                {(selectedLevels.length > 0 || selectedSubjects.length > 0 || bestSellerOnly || newlyLaunched || fastrackOnly) && (
                   <button 
                     onClick={() => {
                       setSelectedLevels([]);
                       setSelectedSubjects([]);
-                      setPriceRange(null);
                       setBestSellerOnly(false);
                       setNewlyLaunched(false);
                       setFastrackOnly(false);
@@ -245,7 +243,7 @@ const CourseListing = () => {
               </div>
             </div>
             
-            {/* Dropdowns rendered outside scrollable area */}
+            {/* Dropdowns */}
             <div className="max-w-6xl mx-auto px-4 md:px-8 relative">
               {openDropdown === 'level' && (
                 <div className="absolute top-0 left-4 md:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
@@ -265,18 +263,6 @@ const CourseListing = () => {
                     {availableSubjects.map(sub => (
                       <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
                         <input type="checkbox" checked={tempSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempSubjects, setTempSubjects)} className="accent-[#6366f1]" /> {sub}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t"><button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button><button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button></div>
-                </div>
-              )}
-              {openDropdown === 'pricing' && (
-                <div className="absolute top-0 left-[200px] md:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                  <div className="space-y-1.5 mb-3">
-                    {['free', 'paid'].map((opt) => (
-                      <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
-                        <input type="radio" name="price" checked={tempPrice === opt} onChange={() => setTempPrice(opt)} className="accent-[#6366f1]" /> {opt}
                       </label>
                     ))}
                   </div>
