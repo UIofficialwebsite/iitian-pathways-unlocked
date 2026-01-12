@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,6 +7,7 @@ export interface IITMNoteData {
   title: string;
   description?: string;
   subject: string;
+  subject_id: number; // Linked to iitm_bs_subjects table
   branch: string;
   level: string;
   week_number: number;
@@ -38,6 +38,7 @@ export const useIITMBranchNotesManager = () => {
           title: noteData.title,
           description: noteData.description,
           subject: noteData.subject,
+          subject_id: noteData.subject_id, // New required field
           branch: noteData.branch,
           level: noteData.level,
           week_number: noteData.week_number,
@@ -47,26 +48,18 @@ export const useIITMBranchNotesManager = () => {
           download_count: 0
         }]);
 
-      if (error) {
-        console.error('Error adding IITM note:', error);
-        toast({
-          title: "Error",
-          description: "Failed to add note. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "IITM note added successfully!",
       });
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding IITM note:', error);
       toast({
         title: "Error",
-        description: "Failed to add note. Please try again.",
+        description: error.message || "Failed to add note.",
         variant: "destructive",
       });
       return false;
@@ -76,54 +69,22 @@ export const useIITMBranchNotesManager = () => {
   }, [toast, isAdmin]);
 
   const updateIITMNote = useCallback(async (noteId: string, updateData: Partial<IITMNoteData>): Promise<boolean> => {
-    if (!isAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can update IITM notes.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
+    if (!isAdmin) return false;
     setLoading(true);
     try {
       const { error } = await supabase
         .from('iitm_branch_notes')
         .update({
-          title: updateData.title,
-          description: updateData.description,
-          subject: updateData.subject,
-          branch: updateData.branch,
-          level: updateData.level,
-          week_number: updateData.week_number,
-          diploma_specialization: updateData.diploma_specialization,
-          file_link: updateData.file_link,
+          ...updateData,
           updated_at: new Date().toISOString()
         })
         .eq('id', noteId);
 
-      if (error) {
-        console.error('Error updating IITM note:', error);
-        toast({
-          title: "Error",
-          description: "Failed to update note. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      toast({
-        title: "Success",
-        description: "IITM note updated successfully!",
-      });
+      if (error) throw error;
+      toast({ title: "Success", description: "Note updated successfully!" });
       return true;
-    } catch (error) {
-      console.error('Error updating IITM note:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update note. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast({ title: "Update Error", description: error.message, variant: "destructive" });
       return false;
     } finally {
       setLoading(false);
@@ -131,44 +92,20 @@ export const useIITMBranchNotesManager = () => {
   }, [toast, isAdmin]);
 
   const deleteIITMNote = useCallback(async (noteId: string): Promise<boolean> => {
-    if (!isAdmin) {
-      toast({
-        title: "Access Denied",
-        description: "Only administrators can delete IITM notes.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
+    if (!isAdmin) return false;
     setLoading(true);
     try {
+      // Perform a soft delete by setting is_active to false
       const { error } = await supabase
         .from('iitm_branch_notes')
         .update({ is_active: false })
         .eq('id', noteId);
 
-      if (error) {
-        console.error('Error deleting IITM note:', error);
-        toast({
-          title: "Error",
-          description: "Failed to delete note. Please try again.",
-          variant: "destructive",
-        });
-        return false;
-      }
-
-      toast({
-        title: "Success",
-        description: "IITM note deleted successfully!",
-      });
+      if (error) throw error;
+      toast({ title: "Success", description: "Note deleted successfully!" });
       return true;
-    } catch (error) {
-      console.error('Error deleting IITM note:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete note. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      toast({ title: "Delete Error", description: error.message, variant: "destructive" });
       return false;
     } finally {
       setLoading(false);
