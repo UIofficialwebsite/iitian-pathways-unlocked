@@ -27,12 +27,14 @@ const IITMBSPrep = () => {
   const [selectedBranch, setSelectedBranch] = useState("Data Science");
   const [selectedLevel, setSelectedLevel] = useState("Foundation");
   const [pyqYear, setPyqYear] = useState<string | null>(null);
+  const [examType, setExamType] = useState("quiz1");
   const [tempBranch, setTempBranch] = useState("Data Science");
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
 
   const branches = ["Data Science", "Electronic Systems"];
   const levels = ["Foundation", "Diploma", "Degree", "Qualifier"];
   const years = ["2024", "2023", "2022", "2021", "2020"];
+  const examTypes = ["quiz1", "quiz2", "endterm"];
 
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
@@ -141,8 +143,8 @@ const IITMBSPrep = () => {
             </div>
           </div>
 
-          {/* ROW 2: SUB-FILTERS (White) - Always present with min height */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
+        {/* ROW 2: SUB-FILTERS (White) - Always present with min height */}
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[9999]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {hasSubFilters ? (
@@ -159,7 +161,7 @@ const IITMBSPrep = () => {
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
                       {openDropdown === 'branch' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[180px] p-3">
                           <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                             {branches.map(branch => (
                               <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -209,7 +211,7 @@ const IITMBSPrep = () => {
                           <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                         </button>
                         {openDropdown === 'year' && (
-                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[140px] p-3">
                             <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                               {years.map(year => (
                                 <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
@@ -231,6 +233,21 @@ const IITMBSPrep = () => {
                         )}
                       </div>
                     )}
+
+                    {/* Exam Type Pills (only for pyqs and not qualifier level) */}
+                    {activeTab === 'pyqs' && selectedLevel !== 'Qualifier' && examTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setExamType(type)}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${
+                          examType === type 
+                            ? 'bg-[#6366f1] text-white border-[#6366f1]' 
+                            : 'bg-white border-[#e5e7eb] text-[#374151]'
+                        }`}
+                      >
+                        {type === 'quiz1' ? 'Quiz 1' : type === 'quiz2' ? 'Quiz 2' : 'End Term'}
+                      </button>
+                    ))}
                   </>
                 ) : (
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
@@ -242,7 +259,7 @@ const IITMBSPrep = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
-        <section className="py-8 bg-white min-h-[600px]">
+        <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && (
               <BranchNotesTab 
@@ -255,6 +272,7 @@ const IITMBSPrep = () => {
                 branch={selectedBranch}
                 level={selectedLevel}
                 year={pyqYear}
+                examType={examType}
               />
             )}
             {activeTab === "syllabus" && (

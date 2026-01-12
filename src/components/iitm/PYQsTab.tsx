@@ -10,10 +10,10 @@ interface PYQsTabProps {
   branch: string;
   level: string;
   year: string | null;
+  examType?: string;
 }
 
-const PYQsTab = ({ branch, level, year }: PYQsTabProps) => {
-  const [examType, setExamType] = useState("quiz1");
+const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
   
   // Convert display name to slug for API
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
@@ -50,49 +50,17 @@ const PYQsTab = ({ branch, level, year }: PYQsTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Exam Type (only shown if not qualifier level) */}
-      {levelSlug !== "qualifier" && (
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">Exam Type:</span>
-          {["quiz1", "quiz2", "endterm"].map((type) => (
-            <button
-              key={type}
-              onClick={() => setExamType(type)}
-              className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all ${
-                examType === type 
-                  ? 'bg-[#6366f1] text-white border-[#6366f1]' 
-                  : 'bg-white border-[#e5e7eb] text-[#374151]'
-              }`}
-            >
-              {type === 'quiz1' ? 'Quiz 1' : type === 'quiz2' ? 'Quiz 2' : 'End Term'}
-            </button>
-          ))}
-          
-          <div className="ml-auto">
-            <AdminAddButton 
-              contentType="pyqs"
-              examType="IITM_BS"
-              branch={branchSlug}
-              level={levelSlug}
-            >
-              Add PYQs
-            </AdminAddButton>
-          </div>
-        </div>
-      )}
-
-      {levelSlug === "qualifier" && (
-        <div className="flex justify-end">
-          <AdminAddButton 
-            contentType="pyqs"
-            examType="IITM_BS"
-            branch={branchSlug}
-            level={levelSlug}
-          >
-            Add PYQs
-          </AdminAddButton>
-        </div>
-      )}
+      {/* Admin Add Button */}
+      <div className="flex justify-end">
+        <AdminAddButton 
+          contentType="pyqs"
+          examType="IITM_BS"
+          branch={branchSlug}
+          level={levelSlug}
+        >
+          Add PYQs
+        </AdminAddButton>
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {contentLoading ? (
