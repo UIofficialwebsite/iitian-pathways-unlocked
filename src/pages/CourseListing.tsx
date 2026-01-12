@@ -182,16 +182,16 @@ const CourseListing = () => {
             </div>
           </div>
 
-          <div className="bg-white border-b border-[#f3f4f6]">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 overflow-x-auto no-scrollbar">
-              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max">
-                <div className="relative">
+          <div className="bg-white border-b border-[#f3f4f6] relative">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 overflow-visible">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
+                <div className="relative z-[999]">
                   <button onClick={() => toggleDropdown('level')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedLevels.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Level {selectedLevels.length > 0 ? `(${selectedLevels.length})` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'level' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
+                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
                       <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                         {availableLevels.map(lvl => (
                           <label key={lvl} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
@@ -204,13 +204,13 @@ const CourseListing = () => {
                   )}
                 </div>
 
-                <div className="relative">
+                <div className="relative z-[999]">
                   <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Subject {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'subject' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
+                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
                       <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
                         {availableSubjects.map(sub => (
                           <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs font-normal">
@@ -223,13 +223,13 @@ const CourseListing = () => {
                   )}
                 </div>
 
-                <div className="relative">
+                <div className="relative z-[999]">
                   <button onClick={() => toggleDropdown('pricing')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${priceRange ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                     Pricing {priceRange ? `: ${priceRange}` : ''} 
                     <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'pricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                   </button>
                   {openDropdown === 'pricing' && (
-                    <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 min-w-[180px] p-3">
+                    <div className="fixed mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3" style={{ top: 'auto' }}>
                       <div className="space-y-1.5 mb-3">
                         {['free', 'paid'].map((opt) => (
                           <label key={opt} className="flex items-center gap-2 cursor-pointer p-1.5 hover:bg-slate-50 rounded text-xs capitalize font-normal">
