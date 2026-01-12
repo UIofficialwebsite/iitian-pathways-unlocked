@@ -9,7 +9,7 @@ interface PaidCoursesTabProps {
   subjects: string[];
   priceRange: string | null;
   newlyLaunched: boolean;
-  fasttrackOnly: boolean;
+  fasttrackOnly: boolean; // This prop must be passed from the parent
   bestSellerOnly: boolean;
 }
 
@@ -46,7 +46,7 @@ const PaidCoursesTab: React.FC<PaidCoursesTabProps> = ({
       priceMatch = priceRange === 'free' ? effectivePrice === 0 : (effectivePrice ?? 0) > 0;
     }
 
-    // 5. Time-based "Newly Launched"
+    // 5. Newly Launched (Last 30 days)
     let newMatch = true;
     if (newlyLaunched) {
       const thirtyDaysAgo = new Date();
@@ -54,9 +54,10 @@ const PaidCoursesTab: React.FC<PaidCoursesTabProps> = ({
       newMatch = !!course.updated_at && new Date(course.updated_at) > thirtyDaysAgo;
     }
 
-    // 6. Fastrack Batch Match
+    // 6. Fastrack Batch Match - Fixed to handle potential undefined batch_type
     let fastMatch = true;
-    if (fastrackOnly) {
+    if (fasttrackOnly) {
+      // Checks if batch_type explicitly contains 'fastrack'
       fastMatch = !!course.batch_type?.toLowerCase().includes('fastrack');
     }
 
