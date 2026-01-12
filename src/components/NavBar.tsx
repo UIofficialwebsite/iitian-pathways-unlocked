@@ -78,7 +78,7 @@ const NavBar = () => {
   ];
 
   return (
-    <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[150] h-16 font-['Inter',sans-serif]">
+    <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[10000] h-16 font-['Inter',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         
         {/* --- DESKTOP LAYOUT (STAYS EXACTLY AS BEFORE) --- */}
@@ -99,7 +99,7 @@ const NavBar = () => {
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
                     Courses
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {courseCategories.map((category) => {
@@ -129,7 +129,7 @@ const NavBar = () => {
                   <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
                     Exam Prep
                   </NavigationMenuTrigger>
-                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[160] !mt-0 bg-transparent border-none shadow-none p-0">
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
                     <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
                        <div className="grid grid-cols-2 gap-3">
                           {examPrepItems.map((item) => (
@@ -163,7 +163,7 @@ const NavBar = () => {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white z-[200]">
+                <DropdownMenuContent align="end" className="w-48 bg-white z-[10002]">
                   <DropdownMenuLabel className="font-normal text-sm text-gray-500 truncate">{user.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
