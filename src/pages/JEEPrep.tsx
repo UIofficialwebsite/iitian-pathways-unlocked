@@ -14,27 +14,42 @@ import { ChevronDown } from "lucide-react";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 
 const JEEPrep = () => {
-  const { notes, contentLoading } = useBackend();
+  const { notes, pyqs, contentLoading } = useBackend();
   const navigate = useNavigate();
   const location = useLocation();
   
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<'subject' | null>(null);
+  const [filterOffset, setFilterOffset] = useState(0);
+  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'session' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   const [activeClass, setActiveClass] = useState("class11");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [tempSubjects, setTempSubjects] = useState<string[]>([]);
+  
+  // PYQ filters
+  const [pyqSubject, setPyqSubject] = useState<string | null>(null);
+  const [pyqYear, setPyqYear] = useState<string | null>(null);
+  const [pyqSession, setPyqSession] = useState<string | null>(null);
+  const [tempPyqSubject, setTempPyqSubject] = useState<string | null>(null);
+  const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
+  const [tempPyqSession, setTempPyqSession] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
-      const offset = filterRef.current?.offsetTop || 0;
-      setIsSticky(window.scrollY > offset - 64);
+      const navbarHeight = 64;
+      if (filterRef.current && filterOffset > 0) {
+        setIsSticky(window.scrollY > filterOffset - navbarHeight);
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [filterOffset]);
 
   const availableSubjects = useMemo(() => {
     const jeeNotes = notes.filter(note => note.exam_type === 'JEE');
@@ -44,6 +59,21 @@ const JEEPrep = () => {
     Array.from(subjectSet).forEach(s => { if (!sorted.includes(s)) sorted.push(s); });
     return sorted;
   }, [notes]);
+
+  const availablePyqSubjects = useMemo(() => {
+    const jeePyqs = pyqs.filter(p => p.exam_type === 'JEE');
+    return Array.from(new Set(jeePyqs.map(p => p.subject).filter(Boolean) as string[])).sort();
+  }, [pyqs]);
+
+  const availableYears = useMemo(() => {
+    const jeePyqs = pyqs.filter(p => p.exam_type === 'JEE');
+    return Array.from(new Set(jeePyqs.map(p => p.year).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0)).map(String);
+  }, [pyqs]);
+
+  const availableSessions = useMemo(() => {
+    const jeePyqs = pyqs.filter(p => p.exam_type === 'JEE');
+    return Array.from(new Set(jeePyqs.map(p => p.session).filter(Boolean) as string[])).sort();
+  }, [pyqs]);
 
   useEffect(() => {
     if (!contentLoading && availableSubjects.length > 0 && selectedSubjects.length === 0) {
@@ -59,6 +89,37 @@ const JEEPrep = () => {
     navigate(buildExamUrl('jee', newTab, { subject: firstSub, class: activeClass }), { replace: true });
   };
 
+  const toggleDropdown = (type: 'subject' | 'year' | 'session') => {
+    if (openDropdown === type) {
+      setOpenDropdown(null);
+    } else {
+      setTempSubjects(selectedSubjects);
+      setTempPyqSubject(pyqSubject);
+      setTempPyqYear(pyqYear);
+      setTempPyqSession(pyqSession);
+      setOpenDropdown(type);
+    }
+  };
+
+  const handleApply = () => {
+    if (activeTab === 'notes') {
+      setSelectedSubjects(tempSubjects);
+    } else if (activeTab === 'pyqs') {
+      setPyqSubject(tempPyqSubject);
+      setPyqYear(tempPyqYear);
+      setPyqSession(tempPyqSession);
+    }
+    setOpenDropdown(null);
+  };
+
+  const tabs = [
+    { id: "notes", label: "Notes" },
+    { id: "pyqs", label: "Previous Year Papers" },
+    { id: "study-groups", label: "Study Groups" },
+    { id: "news-updates", label: "News & Updates" },
+    { id: "important-dates", label: "Important Dates" }
+  ];
+
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
       <NavBar />
@@ -72,13 +133,7 @@ const JEEPrep = () => {
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
-                {[
-                  { id: "notes", label: "Notes" },
-                  { id: "pyqs", label: "Previous Year Papers" },
-                  { id: "study-groups", label: "Study Groups" },
-                  { id: "news-updates", label: "News & Updates" },
-                  { id: "important-dates", label: "Important Dates" }
-                ].map((tab) => (
+                {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id)}
@@ -94,39 +149,19 @@ const JEEPrep = () => {
           </div>
 
           {/* ROW 2: SUB-FILTERS (White) - Always present, internal content changes */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center">
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center relative z-[100]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-              <div className="flex flex-nowrap items-center gap-3 py-3 overflow-visible no-scrollbar">
+              <div className="flex flex-nowrap items-center gap-3 py-3 min-w-max overflow-x-auto no-scrollbar">
                 {activeTab === 'notes' ? (
                   <>
-                    <div className="relative" onClick={(e) => e.stopPropagation()}>
+                    <div className="relative">
                       <button 
-                        onClick={() => setOpenDropdown(openDropdown === 'subject' ? null : 'subject')}
+                        onClick={() => toggleDropdown('subject')}
                         className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                       >
                         Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
-                        <ChevronDown className={`ml-2 h-3 w-3 ${openDropdown === 'subject' ? 'rotate-180' : ''}`} />
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
-                      {openDropdown === 'subject' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[70] min-w-[200px] p-3">
-                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                            {availableSubjects.map(sub => (
-                              <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                                <input 
-                                  type="checkbox" 
-                                  checked={tempSubjects.includes(sub)} 
-                                  onChange={(e) => setTempSubjects(prev => e.target.checked ? [...prev, sub] : prev.filter(i => i !== sub))} 
-                                  className="accent-[#6366f1]" 
-                                /> {sub}
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 pt-2 border-t">
-                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500">Cancel</button>
-                            <button onClick={() => { setSelectedSubjects(tempSubjects); setOpenDropdown(null); }} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded">Apply</button>
-                          </div>
-                        </div>
-                      )}
                     </div>
                     {["class11", "class12"].map((c) => (
                       <button
@@ -139,12 +174,126 @@ const JEEPrep = () => {
                     ))}
                   </>
                 ) : activeTab === 'pyqs' ? (
-                  /* Trigger internal filters of JEEPYQTab but rendered in this exact Row 2 position */
-                  <div id="pyq-filter-portal" className="flex items-center gap-3"></div>
+                  <>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('subject')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Subject {pyqSubject ? `: ${pyqSubject}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('year')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Year {pyqYear ? `: ${pyqYear}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('session')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Session {pyqSession ? `: ${pyqSession}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                  </>
                 ) : (
                   <span className="text-[12px] text-gray-400 font-medium">No sub-filters for this section</span>
                 )}
               </div>
+            </div>
+            
+            {/* Dropdowns rendered outside scrollable area */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute top-full left-0 right-0">
+              {openDropdown === 'subject' && activeTab === 'notes' && (
+                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableSubjects.map(sub => (
+                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="checkbox" 
+                          checked={tempSubjects.includes(sub)} 
+                          onChange={(e) => setTempSubjects(prev => e.target.checked ? [...prev, sub] : prev.filter(i => i !== sub))} 
+                          className="accent-[#6366f1]" 
+                        /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'subject' && activeTab === 'pyqs' && (
+                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availablePyqSubjects.map(sub => (
+                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqSubject"
+                          checked={tempPyqSubject === sub} 
+                          onChange={() => setTempPyqSubject(sub)} 
+                          className="accent-[#6366f1]" 
+                        /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'year' && (
+                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[140px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableYears.map(year => (
+                      <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqYear"
+                          checked={tempPyqYear === year} 
+                          onChange={() => setTempPyqYear(year)} 
+                          className="accent-[#6366f1]" 
+                        /> {year}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'session' && (
+                <div className="absolute top-0 left-[200px] sm:left-[230px] lg:left-[260px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableSessions.map(session => (
+                      <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqSession"
+                          checked={tempPyqSession === session} 
+                          onChange={() => setTempPyqSession(session)} 
+                          className="accent-[#6366f1]" 
+                        /> {session}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -154,7 +303,7 @@ const JEEPrep = () => {
         <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="JEE" />}
-            {activeTab === "pyqs" && <JEEPYQTab renderInRow2={true} />}
+            {activeTab === "pyqs" && <JEEPYQTab />}
             {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="JEE" /></OptimizedAuthWrapper>}
             {activeTab === "news-updates" && <NewsUpdatesTab examType="JEE" />}
             {activeTab === "important-dates" && <ImportantDatesTab examType="JEE" />}

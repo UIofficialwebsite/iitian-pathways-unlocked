@@ -1,128 +1,316 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SubjectBlock from "@/components/SubjectBlock";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
-import NEETNotesTab from "@/components/neet/NEETNotesTab";
-import NEETPYQTab from "@/components/NEETPYQTab";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
 import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
-import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
+import NEETPYQTab from "@/components/NEETPYQTab";
+import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 
 const NEETPrep = () => {
+  const { notes, pyqs, contentLoading } = useBackend();
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Initialize state from URL
+  const filterRef = useRef<HTMLDivElement>(null);
+  const [isSticky, setIsSticky] = useState(false);
+  const [filterOffset, setFilterOffset] = useState(0);
+  const [openDropdown, setOpenDropdown] = useState<'subject' | 'year' | 'session' | null>(null);
+
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
-  const [initialParams, setInitialParams] = useState(() => getParamsFromUrl(location.pathname));
+  const [activeClass, setActiveClass] = useState("class11");
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [tempSubjects, setTempSubjects] = useState<string[]>([]);
+  
+  // PYQ filters
+  const [pyqSubject, setPyqSubject] = useState<string | null>(null);
+  const [pyqYear, setPyqYear] = useState<string | null>(null);
+  const [pyqSession, setPyqSession] = useState<string | null>(null);
+  const [tempPyqSubject, setTempPyqSubject] = useState<string | null>(null);
+  const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
+  const [tempPyqSession, setTempPyqSession] = useState<string | null>(null);
 
-  // Sync tab state with URL when location changes
   useEffect(() => {
-    const tabFromUrl = getTabFromUrl(location.pathname);
-    const paramsFromUrl = getParamsFromUrl(location.pathname);
-    setActiveTab(tabFromUrl);
-    setInitialParams(paramsFromUrl);
-  }, [location.pathname]);
+    if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
+  }, []);
 
-  // Update URL when filters change
-  const updateUrl = (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => {
-    const params: Record<string, string | undefined> = {};
-    
-    if (tab === 'notes' || tab === 'syllabus') {
-      if (subject) params.subject = subject;
-      if (classLevel) params.class = classLevel;
-    } else if (tab === 'pyqs') {
-      if (subject) params.subject = subject;
-      if (classLevel) params.class = classLevel;
-      if (year) params.year = year;
-      if (session) params.session = session;
+  useEffect(() => {
+    const handleScroll = () => {
+      const navbarHeight = 64;
+      if (filterRef.current && filterOffset > 0) {
+        setIsSticky(window.scrollY > filterOffset - navbarHeight);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [filterOffset]);
+
+  const availableSubjects = useMemo(() => {
+    const neetNotes = notes.filter(note => note.exam_type === 'NEET');
+    const preferredOrder = ["Physics", "Botany", "Zoology", "Physical Chemistry", "Inorganic Chemistry", "Organic Chemistry"];
+    const subjectSet = new Set(neetNotes.map(note => note.subject).filter(Boolean) as string[]);
+    const sorted = preferredOrder.filter(s => subjectSet.has(s));
+    Array.from(subjectSet).forEach(s => { if (!sorted.includes(s)) sorted.push(s); });
+    return sorted;
+  }, [notes]);
+
+  const availablePyqSubjects = useMemo(() => {
+    const neetPyqs = pyqs.filter(p => p.exam_type === 'NEET');
+    return Array.from(new Set(neetPyqs.map(p => p.subject).filter(Boolean) as string[])).sort();
+  }, [pyqs]);
+
+  const availableYears = useMemo(() => {
+    const neetPyqs = pyqs.filter(p => p.exam_type === 'NEET');
+    return Array.from(new Set(neetPyqs.map(p => p.year).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0)).map(String);
+  }, [pyqs]);
+
+  const availableSessions = useMemo(() => {
+    const neetPyqs = pyqs.filter(p => p.exam_type === 'NEET');
+    return Array.from(new Set(neetPyqs.map(p => p.session).filter(Boolean) as string[])).sort();
+  }, [pyqs]);
+
+  useEffect(() => {
+    if (!contentLoading && availableSubjects.length > 0 && selectedSubjects.length === 0) {
+      setSelectedSubjects([availableSubjects[0]]);
+      setTempSubjects([availableSubjects[0]]);
     }
-    
-    const newUrl = buildExamUrl('neet', tab, params);
-    navigate(newUrl, { replace: true });
-  };
+  }, [contentLoading, availableSubjects]);
 
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    updateUrl(newTab);
+    setOpenDropdown(null);
+    const firstSub = selectedSubjects[0] || availableSubjects[0];
+    navigate(buildExamUrl('neet', newTab, { subject: firstSub, class: activeClass }), { replace: true });
   };
 
+  const toggleDropdown = (type: 'subject' | 'year' | 'session') => {
+    if (openDropdown === type) {
+      setOpenDropdown(null);
+    } else {
+      setTempSubjects(selectedSubjects);
+      setTempPyqSubject(pyqSubject);
+      setTempPyqYear(pyqYear);
+      setTempPyqSession(pyqSession);
+      setOpenDropdown(type);
+    }
+  };
+
+  const handleApply = () => {
+    if (activeTab === 'notes') {
+      setSelectedSubjects(tempSubjects);
+    } else if (activeTab === 'pyqs') {
+      setPyqSubject(tempPyqSubject);
+      setPyqYear(tempPyqYear);
+      setPyqSession(tempPyqSession);
+    }
+    setOpenDropdown(null);
+  };
+
+  const tabs = [
+    { id: "notes", label: "Notes" },
+    { id: "pyqs", label: "Previous Year Papers" },
+    { id: "study-groups", label: "Study Groups" },
+    { id: "news-updates", label: "News & Updates" },
+    { id: "important-dates", label: "Important Dates" }
+  ];
+
   return (
-    <>
+    <div className="min-h-screen bg-[#fcfcfc] font-sans">
       <NavBar />
       <main className="pt-16">
-        {/* Header with Breadcrumb, Title, Share Button */}
-        <ExamPrepHeader
-          examName="NEET"
-          examPath="/exam-preparation/neet"
-          currentTab={activeTab}
-          pageTitle="NEET Preparation"
-        />
+        <ExamPrepHeader examName="NEET" examPath="/exam-preparation/neet" currentTab={activeTab} pageTitle="NEET Preparation" />
 
-        {/* Filters Row */}
-        <div className="bg-white border-b sticky top-16 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <Tabs defaultValue="notes" value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <div className="overflow-x-auto pb-1">
-                <TabsList className="w-full min-w-fit">
-                  <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
-                    Notes
-                  </TabsTrigger>
-                  <TabsTrigger value="pyqs" className="rounded-md flex-shrink-0">
-                    Previous Year Papers
-                  </TabsTrigger>
-                  <TabsTrigger value="study-groups" className="rounded-md flex-shrink-0">
-                    Study Groups
-                  </TabsTrigger>
-                  <TabsTrigger value="news-updates" className="rounded-md flex-shrink-0">
-                    News & Updates
-                  </TabsTrigger>
-                  <TabsTrigger value="important-dates" className="rounded-md flex-shrink-0">
-                    Important Dates
-                  </TabsTrigger>
-                </TabsList>
+        {/* CONSTANT TWO-ROW STICKY FILTER SYSTEM */}
+        <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
+          
+          {/* ROW 1: MAIN SECTIONS (Indigo) */}
+          <div className="bg-[#f4f2ff]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`pb-2 text-[14px] md:text-[15px] cursor-pointer whitespace-nowrap transition-all font-sans ${
+                      activeTab === tab.id ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
-            </Tabs>
+            </div>
+          </div>
+
+          {/* ROW 2: SUB-FILTERS (White) - Always present, internal content changes */}
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] flex items-center relative z-[100]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+              <div className="flex flex-nowrap items-center gap-3 py-3 min-w-max overflow-x-auto no-scrollbar">
+                {activeTab === 'notes' ? (
+                  <>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('subject')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                    {["class11", "class12"].map((c) => (
+                      <button
+                        key={c}
+                        onClick={() => setActiveClass(c)}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all ${activeClass === c ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        {c === "class11" ? "Class 11" : "Class 12"}
+                      </button>
+                    ))}
+                  </>
+                ) : activeTab === 'pyqs' ? (
+                  <>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('subject')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Subject {pyqSubject ? `: ${pyqSubject}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('year')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Year {pyqYear ? `: ${pyqYear}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <button 
+                        onClick={() => toggleDropdown('session')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        Session {pyqSession ? `: ${pyqSession}` : ''} 
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-[12px] text-gray-400 font-medium">No sub-filters for this section</span>
+                )}
+              </div>
+            </div>
+            
+            {/* Dropdowns rendered outside scrollable area */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute top-full left-0 right-0">
+              {openDropdown === 'subject' && activeTab === 'notes' && (
+                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableSubjects.map(sub => (
+                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="checkbox" 
+                          checked={tempSubjects.includes(sub)} 
+                          onChange={(e) => setTempSubjects(prev => e.target.checked ? [...prev, sub] : prev.filter(i => i !== sub))} 
+                          className="accent-[#6366f1]" 
+                        /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'subject' && activeTab === 'pyqs' && (
+                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availablePyqSubjects.map(sub => (
+                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqSubject"
+                          checked={tempPyqSubject === sub} 
+                          onChange={() => setTempPyqSubject(sub)} 
+                          className="accent-[#6366f1]" 
+                        /> {sub}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'year' && (
+                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[140px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableYears.map(year => (
+                      <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqYear"
+                          checked={tempPyqYear === year} 
+                          onChange={() => setTempPyqYear(year)} 
+                          className="accent-[#6366f1]" 
+                        /> {year}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {openDropdown === 'session' && (
+                <div className="absolute top-0 left-[200px] sm:left-[230px] lg:left-[260px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {availableSessions.map(session => (
+                      <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqSession"
+                          checked={tempPyqSession === session} 
+                          onChange={() => setTempPyqSession(session)} 
+                          className="accent-[#6366f1]" 
+                        /> {session}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <section className="py-8 bg-white">
+        {isSticky && <div className="h-[120px]" />}
+
+        <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsContent value="notes">
-                <NEETNotesTab initialParams={initialParams} onFilterChange={updateUrl} />
-              </TabsContent>
-
-              <TabsContent value="pyqs">
-                <OptimizedAuthWrapper>
-                  <NEETPYQTab onFilterChange={updateUrl} />
-                </OptimizedAuthWrapper>
-              </TabsContent>
-
-              <TabsContent value="study-groups">
-                <OptimizedAuthWrapper>
-                  <StudyGroupsTab examType="NEET" />
-                </OptimizedAuthWrapper>
-              </TabsContent>
-              
-              <TabsContent value="news-updates">
-                <NewsUpdatesTab examType="NEET" />
-              </TabsContent>
-
-              <TabsContent value="important-dates">
-                <ImportantDatesTab examType="NEET" />
-              </TabsContent>
-            </Tabs>
+            {activeTab === "notes" && <SubjectBlock subjects={selectedSubjects} selectedClass={activeClass} examType="NEET" />}
+            {activeTab === "pyqs" && <OptimizedAuthWrapper><NEETPYQTab /></OptimizedAuthWrapper>}
+            {activeTab === "study-groups" && <OptimizedAuthWrapper><StudyGroupsTab examType="NEET" /></OptimizedAuthWrapper>}
+            {activeTab === "news-updates" && <NewsUpdatesTab examType="NEET" />}
+            {activeTab === "important-dates" && <ImportantDatesTab examType="NEET" />}
           </div>
         </section>
       </main>
       <Footer />
-    </>
+    </div>
   );
 };
 
