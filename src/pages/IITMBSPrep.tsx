@@ -149,45 +149,22 @@ const IITMBSPrep = () => {
             </div>
           </div>
 
-        {/* ROW 2: SUB-FILTERS (White) - Always present with min height */}
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
+        {/* ROW 2: SUB-FILTERS (White) - Separate container for dropdowns */}
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[100]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {hasSubFilters ? (
                   <>
-                    {/* Branch Dropdown */}
-                    <div className="relative dropdown-container">
-                      <button 
-                        onClick={() => toggleDropdown('branch')}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${
-                          selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
-                        }`}
-                      >
-                        {selectedBranch}
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
-                      </button>
-                      {openDropdown === 'branch' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[180px] p-3">
-                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                            {branches.map(branch => (
-                              <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                                <input 
-                                  type="radio" 
-                                  name="branch"
-                                  checked={tempBranch === branch} 
-                                  onChange={() => setTempBranch(branch)} 
-                                  className="accent-[#6366f1]" 
-                                /> {branch}
-                              </label>
-                            ))}
-                          </div>
-                          <div className="flex gap-2 pt-2 border-t">
-                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                            <button onClick={handleApplyBranch} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    {/* Branch Button */}
+                    <button 
+                      onClick={() => toggleDropdown('branch')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${
+                        selectedBranch ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                      }`}
+                    >
+                      {selectedBranch}
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} ${selectedBranch ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                    </button>
 
                     {/* Level Pills (for notes, pyqs, and tools) */}
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && levels.map((lvl) => (
@@ -204,40 +181,17 @@ const IITMBSPrep = () => {
                       </button>
                     ))}
 
-                    {/* Year Dropdown (only for pyqs) */}
+                    {/* Year Button (only for pyqs) */}
                     {activeTab === 'pyqs' && (
-                      <div className="relative dropdown-container">
-                        <button 
-                          onClick={() => toggleDropdown('year')}
-                          className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${
-                            pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
-                          }`}
-                        >
-                          {pyqYear || 'Year'}
-                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
-                        </button>
-                        {openDropdown === 'year' && (
-                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] min-w-[140px] p-3">
-                            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                              {years.map(year => (
-                                <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                                  <input 
-                                    type="radio" 
-                                    name="pyqYear"
-                                    checked={tempPyqYear === year} 
-                                    onChange={() => setTempPyqYear(year)} 
-                                    className="accent-[#6366f1]" 
-                                  /> {year}
-                                </label>
-                              ))}
-                            </div>
-                            <div className="flex gap-2 pt-2 border-t">
-                              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                              <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      <button 
+                        onClick={() => toggleDropdown('year')}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container ${
+                          pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                        }`}
+                      >
+                        {pyqYear || 'Year'}
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
+                      </button>
                     )}
 
                     {/* Exam Type Pills (only for pyqs and not qualifier level) */}
@@ -274,6 +228,52 @@ const IITMBSPrep = () => {
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
+            </div>
+            
+            {/* Dropdowns rendered OUTSIDE scrollable area for proper z-index */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+              {openDropdown === 'branch' && (
+                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3 dropdown-container">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {branches.map(branch => (
+                      <label key={branch} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="branch"
+                          checked={tempBranch === branch} 
+                          onChange={() => setTempBranch(branch)} 
+                          className="accent-[#6366f1]" 
+                        /> {branch}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApplyBranch} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
+              {activeTab === 'pyqs' && openDropdown === 'year' && (
+                <div className="absolute top-0 left-[200px] sm:left-[240px] lg:left-[260px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3 dropdown-container">
+                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                    {years.map(year => (
+                      <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                        <input 
+                          type="radio" 
+                          name="pyqYear"
+                          checked={tempPyqYear === year} 
+                          onChange={() => setTempPyqYear(year)} 
+                          className="accent-[#6366f1]" 
+                        /> {year}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t">
+                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                    <button onClick={handleApplyYear} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
