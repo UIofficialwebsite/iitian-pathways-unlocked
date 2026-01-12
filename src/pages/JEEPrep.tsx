@@ -1,9 +1,8 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SubjectBlock from "@/components/SubjectBlock";
 import JEEPYQTab from "@/components/JEEPYQTab";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
@@ -11,7 +10,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import StudyGroupsTab from "@/components/StudyGroupsTab";
 import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
-import { buildExamUrl, getTabFromUrl, getParamsFromUrl, slugify } from "@/utils/urlHelpers";
+import { buildExamUrl, getTabFromUrl, getParamsFromUrl } from "@/utils/urlHelpers";
 import { generateSEOTitle, generateSEODescription, generateCanonicalUrl } from "@/utils/seoHelpers";
 
 const JEEPrep = () => {
@@ -19,11 +18,22 @@ const JEEPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  const filterRef = useRef<HTMLDivElement>(null);
+  const [isSticky, setIsSticky] = useState(false);
+
   // Initialize state from URL
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   const [urlParams, setUrlParams] = useState(() => getParamsFromUrl(location.pathname));
 
-  // Sync tab state with URL when location changes
+  useEffect(() => {
+    const handleScroll = () => {
+      const offset = filterRef.current?.offsetTop || 0;
+      setIsSticky(window.scrollY > offset - 64);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   useEffect(() => {
     const tabFromUrl = getTabFromUrl(location.pathname);
     const paramsFromUrl = getParamsFromUrl(location.pathname);
@@ -37,24 +47,13 @@ const JEEPrep = () => {
     const preferredOrder = ["Physics", "Mathematics", "Physical Chemistry", "Inorganic Chemistry", "Organic Chemistry"];
     const subjectSet = new Set(jeeNotes.map(note => note.subject).filter(Boolean) as string[]);
     const sortedSubjects = preferredOrder.filter(s => subjectSet.has(s));
-    
-    Array.from(subjectSet).forEach(s => {
-        if (!sortedSubjects.includes(s)) {
-            sortedSubjects.push(s);
-        }
-    });
-
+    Array.from(subjectSet).forEach(s => { if (!sortedSubjects.includes(s)) sortedSubjects.push(s); });
     return sortedSubjects;
   }, [jeeNotes]);
 
-  // Initialize filters from URL params - subject first, then class
   const urlSubject = urlParams[0];
   const urlClass = urlParams[1]?.toLowerCase();
-  
-  // Find matching subject from available subjects (case-insensitive)
-  const matchedSubject = urlSubject 
-    ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase()) 
-    : null;
+  const matchedSubject = urlSubject ? subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase()) : null;
   const initialSubject = matchedSubject || (subjects.length > 0 ? subjects[0] : "Physics");
   const initialClass = urlClass || "class11";
   
@@ -62,10 +61,8 @@ const JEEPrep = () => {
   const [activeClass, setActiveClass] = useState(initialClass);
   const [downloads, setDownloads] = useState<Record<string, number>>({});
 
-  // Update URL when filters change
   const updateUrl = (tab: string, subject?: string, classLevel?: string, year?: string, session?: string) => {
     const params: Record<string, string | undefined> = {};
-    
     if (tab === 'notes' || tab === 'syllabus') {
       if (subject) params.subject = subject;
       if (classLevel) params.class = classLevel;
@@ -75,30 +72,16 @@ const JEEPrep = () => {
       if (year) params.year = year;
       if (session) params.session = session;
     }
-    
     const newUrl = buildExamUrl('jee', tab, params);
     navigate(newUrl, { replace: true });
   };
 
   useEffect(() => {
     if (!contentLoading && subjects.length > 0) {
-      let newSubject = activeSubject;
-      
-      if (urlSubject) {
-        const matched = subjects.find(s => s.toLowerCase() === urlSubject.toLowerCase());
-        if (matched && matched !== activeSubject) {
-          newSubject = matched;
-          setActiveSubject(matched);
-          updateUrl(activeTab, matched, activeClass);
-          return;
-        }
-      }
-      
       const isSubjectAvailable = subjects.some(s => s.toLowerCase() === activeSubject.toLowerCase());
       if (!isSubjectAvailable) {
-        newSubject = subjects[0];
-        setActiveSubject(newSubject);
-        updateUrl(activeTab, newSubject, activeClass);
+        setActiveSubject(subjects[0]);
+        updateUrl(activeTab, subjects[0], activeClass);
       }
     }
   }, [contentLoading, subjects]);
@@ -119,21 +102,12 @@ const JEEPrep = () => {
   };
 
   const handleDownload = (id: string) => {
-    setDownloads(prev => ({
-      ...prev,
-      [id]: (prev[id] || 0) + 1
-    }));
-    console.log(`Downloading: ${id}`);
+    setDownloads(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   };
 
   const renderTabContent = (tab: string, content: React.ReactNode) => {
     const protectedTabs = ["study-groups", "pyqs"];
-    
-    if (protectedTabs.includes(tab)) {
-      return <OptimizedAuthWrapper>{content}</OptimizedAuthWrapper>;
-    }
-    
-    return content;
+    return protectedTabs.includes(tab) ? <OptimizedAuthWrapper>{content}</OptimizedAuthWrapper> : content;
   };
 
   const classes = [
@@ -141,7 +115,7 @@ const JEEPrep = () => {
     { value: "class12", label: "Class 12" }
   ];
 
-  // SEO Meta Tags
+  // SEO Meta Tags logic remains the same
   const currentParams = [activeSubject, activeClass === 'class11' ? 'Class 11' : 'Class 12'];
   const pageTitle = generateSEOTitle('jee', activeTab, currentParams);
   const pageDescription = generateSEODescription('jee', activeTab, currentParams);
@@ -149,7 +123,6 @@ const JEEPrep = () => {
 
   useEffect(() => {
     document.title = pageTitle;
-    
     let metaDescription = document.querySelector('meta[name="description"]');
     if (!metaDescription) {
       metaDescription = document.createElement('meta');
@@ -157,22 +130,13 @@ const JEEPrep = () => {
       document.head.appendChild(metaDescription);
     }
     metaDescription.setAttribute('content', pageDescription);
-
-    let canonicalLink = document.querySelector('link[rel="canonical"]');
-    if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalLink);
-    }
-    canonicalLink.setAttribute('href', canonicalUrl);
-  }, [pageTitle, pageDescription, canonicalUrl]);
+  }, [pageTitle, pageDescription]);
 
   return (
-    <>
+    <div className="min-h-screen bg-[#fcfcfc] font-sans">
       <NavBar />
       
       <main className="pt-16">
-        {/* Header with Breadcrumb, Title, Share Button */}
         <ExamPrepHeader
           examName="JEE"
           examPath="/exam-preparation/jee"
@@ -180,105 +144,87 @@ const JEEPrep = () => {
           pageTitle="JEE Preparation"
         />
 
-        {/* Filters Row */}
-        <div className="bg-white border-b sticky top-16 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-            <Tabs defaultValue="notes" value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <div className="overflow-x-auto pb-1">
-                <TabsList className="w-full min-w-fit">
-                  <TabsTrigger value="notes" className="rounded-md flex-shrink-0">
-                    Notes
-                  </TabsTrigger>
-                  <TabsTrigger value="pyqs" className="rounded-md flex-shrink-0">
-                    Previous Year Papers
-                  </TabsTrigger>
-                  <TabsTrigger value="study-groups" className="rounded-md flex-shrink-0">
-                    Study Groups
-                  </TabsTrigger>
-                  <TabsTrigger value="news-updates" className="rounded-md flex-shrink-0">
-                    News & Updates
-                  </TabsTrigger>
-                  <TabsTrigger value="important-dates" className="rounded-md flex-shrink-0">
-                    Important Dates
-                  </TabsTrigger>
-                </TabsList>
+        {/* DUAL ROW STICKY FILTERS - Matches CourseListing Style */}
+        <div ref={filterRef} className={`w-full z-[60] transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
+          {/* Row 1: Sections Navigation */}
+          <div className="bg-[#f4f2ff]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex gap-8 pt-4 overflow-x-auto no-scrollbar">
+                {[
+                  { id: "notes", label: "Notes" },
+                  { id: "pyqs", label: "Previous Year Papers" },
+                  { id: "study-groups", label: "Study Groups" },
+                  { id: "news-updates", label: "News & Updates" },
+                  { id: "important-dates", label: "Important Dates" }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`pb-2 text-[14px] md:text-[15px] cursor-pointer transition-all whitespace-nowrap font-sans ${
+                      activeTab === tab.id ? 'text-[#6366f1] border-b-[3px] border-[#6366f1] font-semibold' : 'text-[#6b7280] font-medium'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
-            </Tabs>
+            </div>
           </div>
+
+          {/* Row 2: Content Filters (Only for Notes and PYQs) */}
+          {(activeTab === 'notes' || activeTab === 'pyqs') && (
+            <div className="bg-white border-b border-[#f3f4f6]">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
+                  {subjects.map((subject) => (
+                    <button
+                      key={subject}
+                      onClick={() => handleSubjectChange(subject)}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${
+                        activeSubject === subject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                      }`}
+                    >
+                      {subject}
+                    </button>
+                  ))}
+                  
+                  <div className="h-6 w-[1px] bg-gray-200 mx-1 hidden md:block" />
+
+                  {classes.map((cls) => (
+                    <button
+                      key={cls.value}
+                      onClick={() => handleClassChange(cls.value)}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${
+                        activeClass === cls.value ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'
+                      }`}
+                    >
+                      {cls.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Main Content */}
-        <section className="py-8 bg-white">
+        {isSticky && <div className="h-[120px]" />}
+
+        <section className="py-8 bg-white min-h-[600px]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-              <TabsContent value="notes">
-                {/* Subject Filter Tabs */}
-                <div className="mb-6">
-                  {contentLoading && subjects.length === 0 ? (
-                     <div className="flex justify-center items-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
-                     </div>
-                  ) : (
-                    <Tabs value={activeSubject} onValueChange={handleSubjectChange}>
-                      <div className="overflow-x-auto pb-2">
-                        <TabsList className="w-full min-w-fit">
-                          {subjects.map((subject) => (
-                            <TabsTrigger key={subject} value={subject} className="rounded-md flex-shrink-0">
-                              {subject}
-                            </TabsTrigger>
-                          ))}
-                        </TabsList>
-                      </div>
-                    </Tabs>
-                  )}
-                </div>
-
-                {/* Class Filter */}
-                <div className="mb-6">
-                  <Tabs value={activeClass} onValueChange={handleClassChange}>
-                    <div className="overflow-x-auto pb-2">
-                      <TabsList className="w-full min-w-fit">
-                        {classes.map((classItem) => (
-                          <TabsTrigger key={classItem.value} value={classItem.value} className="rounded-md flex-shrink-0">
-                            {classItem.label}
-                          </TabsTrigger>
-                        ))}
-                      </TabsList>
-                    </div>
-                  </Tabs>
-                </div>
-
-                {renderTabContent("notes", 
-                  <SubjectBlock 
-                    subject={activeSubject} 
-                    selectedClass={activeClass}
-                    examType="JEE"
-                  />
-                )}
-              </TabsContent>
-
-              <TabsContent value="pyqs">
-                {renderTabContent("pyqs", <JEEPYQTab downloads={downloads} onDownload={handleDownload} onFilterChange={updateUrl} />)}
-              </TabsContent>
-
-              <TabsContent value="study-groups">
-                {renderTabContent("study-groups", <StudyGroupsTab examType="JEE" />)}
-              </TabsContent>
-
-              <TabsContent value="news-updates">
-                {renderTabContent("news-updates", <NewsUpdatesTab examType="JEE" />)}
-              </TabsContent>
-
-              <TabsContent value="important-dates">
-                {renderTabContent("important-dates", <ImportantDatesTab examType="JEE" />)}
-              </TabsContent>
-            </Tabs>
+            {activeTab === "notes" && renderTabContent("notes", 
+              <SubjectBlock subject={activeSubject} selectedClass={activeClass} examType="JEE" />
+            )}
+            {activeTab === "pyqs" && renderTabContent("pyqs", 
+              <JEEPYQTab downloads={downloads} onDownload={handleDownload} onFilterChange={updateUrl} />
+            )}
+            {activeTab === "study-groups" && renderTabContent("study-groups", <StudyGroupsTab examType="JEE" />)}
+            {activeTab === "news-updates" && renderTabContent("news-updates", <NewsUpdatesTab examType="JEE" />)}
+            {activeTab === "important-dates" && renderTabContent("important-dates", <ImportantDatesTab examType="JEE" />)}
           </div>
         </section>
       </main>
-
       <Footer />
-    </>
+    </div>
   );
 };
 
