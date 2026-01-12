@@ -4,17 +4,20 @@ import ChapterList from "./ChapterList";
 import AdminAddButton from "./admin/AdminAddButton";
 
 interface SubjectBlockProps {
-  subject: string;
+  subjects: string[]; // Changed from single subject to array
   selectedClass: string;
   examType: 'JEE' | 'NEET';
 }
 
-const SubjectBlock = ({ subject, selectedClass, examType }: SubjectBlockProps) => {
+const SubjectBlock = ({ subjects, selectedClass, examType }: SubjectBlockProps) => {
   const { notes, handleDownload, downloadCounts, contentLoading, isAdmin, deleteNote } = useBackend();
   
-  // UPDATED: Added .sort() to order chapters by display_order_no
+  // Filter notes that match any of the selected subjects
   const chapters = notes.filter(
-    note => note.exam_type === examType && note.subject === subject && note.class_level === selectedClass
+    note => 
+      note.exam_type === examType && 
+      subjects.includes(note.subject || '') && 
+      note.class_level === selectedClass
   ).sort((a, b) => (a.display_order_no || 0) - (b.display_order_no || 0));
 
   const handleDownloadClick = async (noteId: string, fileUrl?: string) => {
@@ -41,7 +44,8 @@ const SubjectBlock = ({ subject, selectedClass, examType }: SubjectBlockProps) =
         <AdminAddButton
           contentType="notes"
           examType={examType}
-          prefilledSubject={subject}
+          // Prefill with first subject for admin convenience
+          prefilledSubject={subjects[0] || ""}
           classLevel={selectedClass}
         >
           Add Note
