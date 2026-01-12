@@ -81,6 +81,17 @@ const NEETPrep = () => {
     }
   }, [contentLoading, availableSubjects]);
 
+  // Click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (openDropdown && !(e.target as Element).closest('.dropdown-container')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdown]);
+
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
     setOpenDropdown(null);
@@ -148,19 +159,39 @@ const NEETPrep = () => {
           </div>
 
           {/* ROW 2: SUB-FILTERS (White) - Always present */}
-          <div className="bg-white border-b border-[#f3f4f6] relative z-[100]">
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans min-w-max overflow-x-auto no-scrollbar">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 {activeTab === 'notes' && (
                   <>
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button 
                         onClick={() => toggleDropdown('subject')}
                         className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${selectedSubjects.length > 0 ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                       >
                         Subjects {selectedSubjects.length > 0 ? `(${selectedSubjects.length})` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${selectedSubjects.length > 0 ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {openDropdown === 'subject' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3">
+                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                            {availableSubjects.map(sub => (
+                              <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                <input 
+                                  type="checkbox" 
+                                  checked={tempSubjects.includes(sub)} 
+                                  onChange={(e) => setTempSubjects(prev => e.target.checked ? [...prev, sub] : prev.filter(i => i !== sub))} 
+                                  className="accent-[#6366f1]" 
+                                /> {sub}
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                            <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     <button onClick={() => setActiveClass("class11")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class11" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 11</button>
                     <button onClick={() => setActiveClass("class12")} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all whitespace-nowrap ${activeClass === "class12" ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>Class 12</button>
@@ -168,23 +199,86 @@ const NEETPrep = () => {
                 )}
                 {activeTab === 'pyqs' && (
                   <>
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('subject')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSubject ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Subject {pyqSubject ? `: ${pyqSubject}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'subject' ? 'rotate-180' : ''} ${pyqSubject ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {openDropdown === 'subject' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                            {availablePyqSubjects.map(sub => (
+                              <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                <input 
+                                  type="radio" 
+                                  name="pyqSubject"
+                                  checked={tempPyqSubject === sub} 
+                                  onChange={() => setTempPyqSubject(sub)} 
+                                  className="accent-[#6366f1]" 
+                                /> {sub}
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                            <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('year')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqYear ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Year {pyqYear ? `: ${pyqYear}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} ${pyqYear ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {openDropdown === 'year' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                            {availableYears.map(year => (
+                              <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                <input 
+                                  type="radio" 
+                                  name="pyqYear"
+                                  checked={tempPyqYear === year} 
+                                  onChange={() => setTempPyqYear(year)} 
+                                  className="accent-[#6366f1]" 
+                                /> {year}
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                            <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    <div className="relative">
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('session')} className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all ${pyqSession ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
                         Session {pyqSession ? `: ${pyqSession}` : ''} 
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'session' ? 'rotate-180' : ''} ${pyqSession ? 'border-t-white' : 'border-t-[#374151]'} border-l-transparent border-r-transparent`}></span>
                       </button>
+                      {openDropdown === 'session' && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
+                          <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                            {availableSessions.map(session => (
+                              <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                                <input 
+                                  type="radio" 
+                                  name="pyqSession"
+                                  checked={tempPyqSession === session} 
+                                  onChange={() => setTempPyqSession(session)} 
+                                  className="accent-[#6366f1]" 
+                                /> {session}
+                              </label>
+                            ))}
+                          </div>
+                          <div className="flex gap-2 pt-2 border-t">
+                            <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                            <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -192,93 +286,6 @@ const NEETPrep = () => {
                   <span className="text-[12px] text-gray-400 font-medium py-1.5">No sub-filters for this section</span>
                 )}
               </div>
-            </div>
-            
-            {/* Dropdowns rendered outside scrollable area */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute top-full left-0 right-0">
-              {openDropdown === 'subject' && activeTab === 'notes' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[200px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {availableSubjects.map(sub => (
-                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="checkbox" 
-                          checked={tempSubjects.includes(sub)} 
-                          onChange={(e) => setTempSubjects(prev => e.target.checked ? [...prev, sub] : prev.filter(i => i !== sub))} 
-                          className="accent-[#6366f1]" 
-                        /> {sub}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
-              {openDropdown === 'subject' && activeTab === 'pyqs' && (
-                <div className="absolute top-0 left-4 sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {availablePyqSubjects.map(sub => (
-                      <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="radio" 
-                          name="pyqSubject"
-                          checked={tempPyqSubject === sub} 
-                          onChange={() => setTempPyqSubject(sub)} 
-                          className="accent-[#6366f1]" 
-                        /> {sub}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
-              {openDropdown === 'year' && (
-                <div className="absolute top-0 left-[100px] sm:left-[120px] lg:left-[140px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {availableYears.map(year => (
-                      <label key={year} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="radio" 
-                          name="pyqYear"
-                          checked={tempPyqYear === year} 
-                          onChange={() => setTempPyqYear(year)} 
-                          className="accent-[#6366f1]" 
-                        /> {year}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
-              {openDropdown === 'session' && (
-                <div className="absolute top-0 left-[200px] sm:left-[230px] lg:left-[260px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[140px] p-3">
-                  <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-                    {availableSessions.map(session => (
-                      <label key={session} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                        <input 
-                          type="radio" 
-                          name="pyqSession"
-                          checked={tempPyqSession === session} 
-                          onChange={() => setTempPyqSession(session)} 
-                          className="accent-[#6366f1]" 
-                        /> {session}
-                      </label>
-                    ))}
-                  </div>
-                  <div className="flex gap-2 pt-2 border-t">
-                    <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
-                    <button onClick={handleApply} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
