@@ -252,7 +252,7 @@ const CourseListing = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
-        <div className="pb-32 bg-white">
+        <div className="pb-32 bg-white relative z-0">
           <section className="max-w-6xl mx-auto px-4 md:px-8 pt-8 font-sans">
             {contentLoading ? <div className="grid lg:grid-cols-3 gap-6">{Array.from({ length: 3 }).map((_, i) => <CourseCardSkeleton key={i} />)}</div> : (
               Object.entries(groupedCourses).map(([groupName, groupCourses]) => (
