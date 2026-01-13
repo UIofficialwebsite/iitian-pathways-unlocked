@@ -38,7 +38,7 @@ const BranchNotesAccordion = ({
             {/* Custom Logo Icon Area */}
             <div className="shrink-0">
               <img 
-                src="https://i.ibb.co/11Y5DjM/image.png" 
+                src="https://i.ibb.co/mr3z2pF7/image.png" 
                 alt="Notes logo" 
                 className="w-10 h-10 object-contain"
               />
