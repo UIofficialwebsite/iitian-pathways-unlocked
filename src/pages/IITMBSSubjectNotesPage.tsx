@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronDown, ArrowLeft, Info, Filter } from "lucide-react";
+import { FileText, ArrowLeft, Info } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -78,50 +78,64 @@ const IITMBSSubjectNotesPage = () => {
       <main className="pt-16">
         <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab="notes" />
         
-        {/* Sticky Detailed Filter Bar */}
+        {/* Sticky Filter Bar - Matching JEE/NEET design */}
         <div 
           ref={filterBarRef}
-          className={`w-full bg-white border-b border-slate-200 transition-all ${
-            isSticky ? "fixed top-16 z-[50] shadow-sm" : "relative"
+          className={`w-full bg-white border-b border-[#f3f4f6] transition-all ${
+            isSticky ? "fixed top-16 z-[9999] shadow-sm" : "relative z-[9999]"
           }`}
         >
-          <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 px-2 text-slate-500">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
+              {/* Back button */}
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-8 px-2 text-slate-500 flex-shrink-0">
                 <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
-              <div className="h-4 w-[1px] bg-slate-200 mx-1" />
               
-              <div className="relative">
+              <div className="h-4 w-[1px] bg-slate-200 mx-1 flex-shrink-0" />
+              
+              {/* Subject dropdown with count badge - matching JEE/NEET design */}
+              <div className="relative dropdown-container">
                 <button 
                   onClick={() => setOpenSubjectSelect(!openSubjectSelect)}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded text-[12px] font-bold text-slate-900 transition-colors"
+                  className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151]"
                 >
-                  <Filter className="w-3 h-3 text-slate-500" />
-                  {selectedSubject || "Select Subject"}
-                  <ChevronDown className={`w-3 h-3 transition-transform ${openSubjectSelect ? 'rotate-180' : ''}`} />
+                  {selectedSubject && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                  Subjects
+                  <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openSubjectSelect ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                 </button>
-
-                {openSubjectSelect && (
-                  <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-slate-200 rounded-md shadow-lg z-[100] p-1">
-                    <div className="max-h-60 overflow-y-auto scrollbar-thin">
-                      {groupedData.map((s) => (
-                        <button
-                          key={s.subjectId}
-                          onClick={() => handleSubjectChange(s.subjectName)}
-                          className={`w-full text-left px-3 py-2 rounded text-[11px] transition-colors ${
-                            selectedSubject === s.subjectName ? 'bg-blue-50 text-blue-600 font-bold' : 'hover:bg-slate-50 text-slate-600'
-                          }`}
-                        >
-                          {s.subjectName}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </div>
+              
+              <div className="flex-1" />
+              
+              <ShareButton url={window.location.href} title={`${selectedSubject} Notes`} variant="outline" size="sm" className="h-8 flex-shrink-0" />
             </div>
-            <ShareButton url={window.location.href} title={`${selectedSubject} Notes`} variant="outline" size="sm" className="h-8" />
+          </div>
+          
+          {/* Dropdown rendered OUTSIDE scrollable area for proper z-index */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            {openSubjectSelect && (
+              <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[140px] lg:left-[150px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[200px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+                  {groupedData.map((s) => (
+                    <label key={s.subjectId} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                      <input 
+                        type="radio" 
+                        name="subject" 
+                        checked={selectedSubject === s.subjectName} 
+                        onChange={() => handleSubjectChange(s.subjectName)} 
+                        className="accent-[#6366f1]" 
+                      /> 
+                      {s.subjectName}
+                    </label>
+                  ))}
+                </div>
+                <div className="flex gap-2 pt-2 border-t">
+                  <button onClick={() => setOpenSubjectSelect(false)} className="flex-1 py-1 text-[11px] font-semibold text-slate-500 hover:bg-slate-50 rounded">Cancel</button>
+                  <button onClick={() => setOpenSubjectSelect(false)} className="flex-1 py-1 text-[11px] font-semibold bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
