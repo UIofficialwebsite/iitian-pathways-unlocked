@@ -4,13 +4,13 @@ import { useIITMBranchNotes } from "@/components/iitm/hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft, Info, Search, Download } from "lucide-react";
+import { FileText, ArrowLeft, Info, Search, Download, Home, ChevronRight } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Link } from "react-router-dom";
 
 const IITMBSSubjectNotesPage = () => {
   const { branch, level, subjectSlug } = useParams<{ branch: string; level: string; subjectSlug: string }>();
@@ -21,7 +21,6 @@ const IITMBSSubjectNotesPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Sync current subject name from URL slug
   useEffect(() => {
     if (groupedData.length > 0 && subjectSlug) {
       const current = groupedData.find(s => slugify(s.subjectName) === subjectSlug);
@@ -33,7 +32,6 @@ const IITMBSSubjectNotesPage = () => {
     groupedData.find(s => s.subjectName === selectedSubject), 
   [groupedData, selectedSubject]);
 
-  // Search logic for notes
   const filteredNotes = useMemo(() => {
     if (!currentData) return [];
     if (!searchQuery.trim()) return currentData.notes;
@@ -72,7 +70,6 @@ const IITMBSSubjectNotesPage = () => {
           </p>
         </div>
 
-        {/* Action Buttons: Royal Blue Premium Design */}
         <div className="flex space-x-3 mt-auto font-sans">
           <button 
             className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
@@ -95,35 +92,50 @@ const IITMBSSubjectNotesPage = () => {
     <div className="min-h-screen bg-[#fcfcfc]">
       <NavBar />
       
-      {/* 1. MAIN CONTENT WRAPPER */}
-      <main className="pt-16"> {/* Offset for the Fixed NavBar */}
+      <main className="pt-16">
+        {/* 1. PAGE BANNER (Course Listing Style) */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-[#f0f4ff] to-[#faf5ff] border-b min-h-[220px] flex items-center font-sans">
+            <div className="absolute -top-[120px] -left-[60px] w-[250px] h-[250px] bg-slate-300/25 rounded-full blur-[50px] pointer-events-none" />
+            <div className="absolute -bottom-[40px] right-[12%] w-[200px] h-[200px] bg-purple-200/30 rounded-[40%_60%_70%_30%] blur-[50px] pointer-events-none" />
+            
+            <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full">
+                {/* Breadcrumbs */}
+                <div className="flex items-center gap-2 text-gray-500 text-[11px] uppercase tracking-wider mb-6">
+                    <Link to="/" className="hover:text-black transition-colors"><Home className="h-3.5 w-3.5" /></Link>
+                    <ChevronRight className="h-3 w-3" />
+                    <Link to="/exam-preparation/iitm-bs" className="hover:text-black transition-colors">IITM BS Prep</Link>
+                    <ChevronRight className="h-3 w-3" />
+                    <span className="text-gray-400">Subject Resources</span>
+                </div>
+
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#383838] mb-4 tracking-tight leading-tight uppercase">
+                    {selectedSubject || "Subject Resources"}
+                </h1>
+                <p className="text-slate-500 max-w-2xl text-sm md:text-base font-medium">
+                    Access premium study notes, curated modules, and chapter-wise resources for {branch} {level}.
+                </p>
+            </div>
+        </div>
         
-        {/* 2. PAGE BANNER (Visible immediately under NavBar) */}
-        <ExamPrepHeader 
-          examName="IITM BS" 
-          examPath="/exam-preparation/iitm-bs" 
-          currentTab="notes"
-          pageTitle={selectedSubject ? `${selectedSubject} Resources` : undefined}
-        />
-        
-        {/* 3. THE HEADER BAR (Sticky to NavBar on scroll, Search inside) */}
-        <div className="sticky top-16 z-40 bg-white border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        {/* 2. THE HEADER BAR (Sticky below NavBar) */}
+        <div className="sticky top-16 z-40 bg-white border-b border-slate-200 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-9 px-2 text-slate-500 shrink-0">
-                <ArrowLeft className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Back</span>
+              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-10 px-3 text-slate-500 hover:text-black font-bold uppercase text-[11px] shrink-0 border border-transparent hover:border-slate-200 rounded-lg transition-all">
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back
               </Button>
-              <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
               
-              {/* Search Bar Implementation */}
+              <div className="h-6 w-[1px] bg-slate-200 mx-1 shrink-0" />
+              
+              {/* Central Search Bar */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder={`Search in ${selectedSubject || 'materials'}...`}
+                  placeholder={`Search for materials...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 bg-slate-50 border-slate-200 text-xs focus-visible:ring-1 focus-visible:ring-[#1E3A8A]"
+                  className="pl-10 h-10 bg-slate-50 border-slate-200 text-xs focus-visible:ring-1 focus-visible:ring-[#1E3A8A] rounded-full"
                 />
               </div>
             </div>
@@ -133,26 +145,25 @@ const IITMBSSubjectNotesPage = () => {
               title={`${selectedSubject} Notes`} 
               variant="outline" 
               size="sm" 
-              className="h-9" 
+              showText={true}
+              className="h-10 px-5 rounded-full border-slate-200 font-bold text-[#475569] bg-white shadow-sm" 
             />
           </div>
         </div>
 
-        {/* 4. CONTENT (Notes Grid) */}
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        {/* 3. CONTENT (Notes Grid) */}
+        <section className="max-w-7xl mx-auto px-4 py-10">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-56 w-full rounded-lg" />)}
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-64 w-full rounded-xl shadow-sm" />)}
             </div>
           ) : currentData ? (
-            <div>
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
-                  {currentData.subjectName}
+            <div className="space-y-8">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                   <div className="w-2 h-2 bg-[#1E3A8A] rounded-full" />
+                   Available Materials ({filteredNotes.length})
                 </h2>
-                <p className="text-[12px] text-slate-500 mt-1">
-                  Viewing {filteredNotes.length} curated study modules.
-                </p>
               </div>
 
               {filteredNotes.length > 0 ? (
@@ -160,16 +171,19 @@ const IITMBSSubjectNotesPage = () => {
                   {filteredNotes.map(renderNoteCard)}
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center py-24 bg-slate-50 border border-dashed rounded-xl">
-                  <Search className="w-10 h-10 text-slate-300 mb-3" />
-                  <p className="text-slate-500 font-medium">No materials match your search.</p>
+                <div className="flex flex-col items-center justify-center py-24 bg-slate-50/50 border border-dashed border-slate-200 rounded-2xl">
+                  <div className="p-4 bg-white rounded-full shadow-sm mb-4">
+                    <Search className="w-8 h-8 text-slate-300" />
+                  </div>
+                  <p className="text-slate-500 font-bold uppercase text-xs tracking-wider">No matching materials found</p>
+                  <Button variant="link" onClick={() => setSearchQuery("")} className="mt-2 text-[#1E3A8A] font-bold h-auto p-0 text-xs">Clear search</Button>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed rounded-xl">
+            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed border-slate-200 rounded-2xl">
               <Info className="w-10 h-10 text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">Subject content not found.</p>
+              <p className="text-slate-500 font-bold uppercase text-xs tracking-wider">Subject content not found</p>
             </div>
           )}
         </section>
