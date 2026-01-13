@@ -101,7 +101,6 @@ const IITMBSSubjectNotesPage = () => {
     return (
       <article 
         key={note.id} 
-        // Background set to white
         className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-black/[0.08] hover:border-black/20 transition-all shadow-sm"
         style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}
       >
@@ -143,13 +142,13 @@ const IITMBSSubjectNotesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc] font-sans">
+    <div className="min-h-screen bg-white font-sans">
       <NavBar />
 
       <main className="pt-16">
         {/* PAGE BANNER */}
         {bannerImage && (
-          <div className="w-full h-32 md:h-48 lg:h-60 relative overflow-hidden bg-slate-200">
+          <div className="w-full h-32 md:h-48 lg:h-60 relative overflow-hidden bg-white">
             <img 
               src={bannerImage} 
               alt="Subject Banner" 
@@ -167,7 +166,7 @@ const IITMBSSubjectNotesPage = () => {
           pageTitle={selectedSubject ? `${selectedSubject} Resources` : undefined}
         />
 
-        {/* FILTER AND SEARCH (STICKY) - Share Button Removed */}
+        {/* FILTER AND SEARCH (STICKY) */}
         <div 
           ref={searchBarRef}
           className={`w-full bg-white border-b border-slate-200 transition-all z-[50] ${
@@ -193,7 +192,8 @@ const IITMBSSubjectNotesPage = () => {
                   placeholder={`Search in ${selectedSubject || 'notes'}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-10 bg-slate-50 border-slate-200 text-sm focus-visible:ring-2 focus-visible:ring-[#1E3A8A] focus-visible:bg-white transition-all"
+                  // Changed bg-slate-50 to bg-white
+                  className="pl-9 h-10 bg-white border-slate-200 text-sm focus-visible:ring-2 focus-visible:ring-[#1E3A8A] transition-all"
                 />
               </div>
             </div>
@@ -203,7 +203,7 @@ const IITMBSSubjectNotesPage = () => {
         {isSticky && <div className="h-16" />}
 
         {/* CONTENT (NOTES GRID) */}
-        <section className="max-w-7xl mx-auto px-4 py-10">
+        <section className="max-w-7xl mx-auto px-4 py-10 bg-white">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-56 w-full rounded-lg" />)}
@@ -213,14 +213,14 @@ const IITMBSSubjectNotesPage = () => {
               {filteredNotes.length > 0 ? (
                 filteredNotes.map(renderNoteCard)
               ) : (
-                <div className="col-span-full flex flex-col items-center justify-center py-24 bg-slate-50 border border-dashed rounded-xl">
+                <div className="col-span-full flex flex-col items-center justify-center py-24 bg-white border border-dashed rounded-xl">
                   <Search className="w-10 h-10 text-slate-300 mb-3" />
                   <p className="text-slate-500 font-medium">No materials match your search.</p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed rounded-xl">
+            <div className="flex flex-col items-center justify-center py-20 bg-white border border-dashed rounded-xl">
               <p className="text-slate-500 font-medium">Subject content not found.</p>
             </div>
           )}
