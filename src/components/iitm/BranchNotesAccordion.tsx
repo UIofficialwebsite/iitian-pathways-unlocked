@@ -1,7 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, ChevronRight } from "lucide-react";
+import { FileText, Info, ChevronRight, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
@@ -34,37 +34,46 @@ const BranchNotesAccordion = ({
     return (
       <div 
         key={note.id} 
-        className="flex-shrink-0 w-[85vw] max-w-[280px] sm:w-[45vw] sm:max-w-[320px] lg:w-auto flex flex-col items-center text-center p-5 bg-white border border-slate-200 rounded-xl transition-all duration-200 hover:border-black hover:shadow-lg snap-start aspect-square justify-between"
+        className="pdf-card group relative flex flex-col gap-5 p-5 bg-white border border-[#e2e8f0] rounded-[10px] transition-all duration-100 hover:border-black hover:outline hover:outline-1 hover:outline-black snap-start"
       >
-        <div className="flex flex-col items-center gap-4 w-full">
-          {/* Square Type PDF Icon Area */}
-          <div className="w-16 h-16 bg-red-50 rounded-2xl flex items-center justify-center border border-red-100">
-            <FileText className="h-8 w-8 text-red-500" />
+        <div className="flex gap-3 items-start">
+          {/* MacBook-style PDF Icon */}
+          <div className="macbook-pdf-icon relative flex flex-col items-center justify-center w-[44px] h-[52px] bg-[#fef2f2] border border-[#fee2e2] rounded-[6px] flex-shrink-0 shadow-[inset_0_-4px_0_rgba(239,68,68,0.1)]">
+            <FileText className="h-[22px] w-[22px] text-[#ef4444] -mt-[10px]" />
+            <span className="absolute bottom-[4px] text-[8px] font-[900] text-[#ef4444] tracking-[0.5px] uppercase">PDF</span>
           </div>
 
-          <div className="w-full">
-            <h4 className="font-bold text-[14px] text-slate-900 line-clamp-2 min-h-[40px] leading-tight">
-              {note.title}
-            </h4>
-            <div className="mt-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              {displayDownloads} DOWNLOADS
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-start justify-between gap-2">
+              <h4 className="font-semibold text-[0.9rem] text-[#0f172a] truncate">
+                {note.title}
+              </h4>
+              <span className="download-tag bg-[#f1f5f9] text-[#64748b] text-[0.65rem] font-bold px-2 py-[2px] rounded-[4px] border border-[#e2e8f0] uppercase flex-shrink-0">
+                {displayDownloads} Downloads
+              </span>
             </div>
+            {note.description && (
+              <p className="text-[0.8rem] text-[#64748b] mt-1 line-clamp-2 leading-normal">
+                {note.description}
+              </p>
+            )}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 w-full mt-4">
+        {/* Action Buttons (Non-Bold/Regular Weight) */}
+        <div className="action-group grid grid-cols-2 gap-[10px]">
           <Button
             variant="outline"
-            className="h-8 text-[10px] font-bold border-slate-200 hover:bg-slate-50"
+            className="h-9 text-[0.75rem] font-normal bg-white border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] rounded-[6px] uppercase tracking-[0.05em]"
             onClick={() => note.file_link && window.open(note.file_link, '_blank')}
           >
-            PREVIEW
+            View
           </Button>
           <Button
-            className="h-8 text-[10px] font-bold bg-[#1E3A8A] hover:bg-[#1e40af] text-white"
+            className="h-9 text-[0.75rem] font-normal bg-[#2563eb] hover:bg-[#1d4ed8] text-white border-[#2563eb] rounded-[6px] uppercase tracking-[0.05em]"
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
-            GET PDF
+            Get PDF
           </Button>
         </div>
       </div>
@@ -77,8 +86,8 @@ const BranchNotesAccordion = ({
         {[1, 2].map((i) => (
           <div key={i} className="space-y-6">
             <Skeleton className="h-8 w-64 rounded-full" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[1, 2, 3].map((j) => <Skeleton key={j} className="aspect-square rounded-xl" />)}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((j) => <Skeleton key={j} className="aspect-square rounded-[10px]" />)}
             </div>
           </div>
         ))}
@@ -90,62 +99,53 @@ const BranchNotesAccordion = ({
     ? groupedData
     : groupedData.filter(s => !s.specialization || s.specialization === specialization);
 
-  if (filteredSubjects.length === 0) {
-    return (
-      <div className="py-20 text-center">
-        <Alert className="max-w-md mx-auto bg-white border-slate-200 rounded-xl">
-          <Info className="h-4 w-4 text-slate-400" />
-          <AlertDescription className="text-sm text-slate-600">No subjects found for this selection.</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-20 pb-20">
+    <div className="space-y-16 pb-20">
       {filteredSubjects.map((subjectData) => (
-        <div key={subjectData.subjectName} className="group">
-          {/* Subject Heading - Courses Style */}
-          <div className="mb-8 flex items-center justify-between">
+        <div key={subjectData.subjectName} className="subject-section bg-white border border-[#e2e8f0] rounded-[10px] shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden">
+          {/* Section Header with Pill Share Button */}
+          <div className="flex items-center justify-between px-7 py-4">
             <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <h3 className="text-xl md:text-2xl font-bold text-[#1a1a1a] font-['Inter',sans-serif]">
-                  {subjectData.subjectName}
-                </h3>
-                <ShareButton
-                  url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
-                  title={`${subjectData.subjectName} Study Notes`}
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 text-slate-300 hover:text-blue-600"
-                />
-              </div>
-              <div className="h-0.5 w-10 bg-[#1E3A8A] mt-2 rounded-full transition-all group-hover:w-20" />
+              <h3 className="text-[1.1rem] font-bold text-[#0f172a] tracking-[-0.01em]">
+                {subjectData.subjectName}
+              </h3>
+              <div className="h-[2px] w-10 bg-[#1E3A8A] mt-1.5 rounded-full" />
+            </div>
+            
+            <div className="header-controls flex items-center gap-3">
+              <ShareButton
+                url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
+                title={`${subjectData.subjectName} Study Notes`}
+                className="btn-share flex items-center gap-2 px-4 py-[7px] bg-white border border-[#e2e8f0] rounded-full text-[0.8rem] font-semibold text-[#0f172a] hover:border-black hover:bg-[#f8fafc] transition-all"
+                showText={true}
+              />
             </div>
           </div>
 
-          {/* Grid Layout - 3 per row on PC, scroll on Mobile */}
-          <div className="flex overflow-x-auto lg:overflow-x-visible lg:grid lg:grid-cols-3 gap-6 lg:gap-8 no-scrollbar pb-4 lg:pb-0 snap-x -mx-4 px-4 lg:mx-0 lg:px-0">
-            {subjectData.notes.length > 0 ? (
-              subjectData.notes.slice(0, 3).map(renderNoteCard)
-            ) : (
-              <div className="w-full text-center py-12 bg-slate-50 border border-dashed border-slate-200 rounded-xl col-span-3">
-                <p className="text-sm text-slate-500 font-medium">Coming soon: Study materials are being prepared.</p>
+          <div className="px-6 py-6 border-t border-[#e2e8f0]">
+            {/* Asset Grid: 2 columns mobile, 3 columns PC */}
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+              {subjectData.notes.length > 0 ? (
+                subjectData.notes.slice(0, 3).map(renderNoteCard)
+              ) : (
+                <div className="col-span-full py-10 text-center text-slate-400 text-sm italic">
+                  No materials currently available for this subject.
+                </div>
+              )}
+            </div>
+
+            {/* View All Materials Button */}
+            {subjectData.notes.length > 3 && (
+              <div className="flex justify-center mt-8">
+                <button 
+                  className="bg-[#EFF6FF] text-[#1E3A8A] font-bold py-2.5 px-8 rounded-[10px] transition-all hover:bg-[#DBEAFE] flex items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
+                  onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
+                >
+                  View all materials <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
             )}
           </div>
-
-          {/* View All Materials Button */}
-          {subjectData.notes.length > 3 && (
-            <div className="flex justify-center mt-10">
-              <button 
-                className="bg-[#EFF6FF] text-[#1E3A8A] font-bold font-['Inter',sans-serif] py-3 px-10 rounded-xl transition-all hover:bg-[#DBEAFE] hover:scale-105 flex items-center gap-2 text-sm border border-blue-100 shadow-sm"
-                onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
-              >
-                View all materials <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
         </div>
       ))}
     </div>
