@@ -10,17 +10,19 @@ interface PYQsTabProps {
   branch: string;
   level: string;
   year: string | null;
-  examType?: string; // This corresponds to 'quiz1', 'quiz2', 'endterm'
+  examType?: string | null; // Allow null to match parent state
 }
 
 const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
+  // Use "quiz1" if examType is null or undefined
+  const activeExamType = examType || "quiz1";
   
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
   
-  // 1. Filter by Program (Branch & Level)
+  // 1. Filter by Program (IITM BS papers are identified by branch and level)
   const iitmPyqs = pyqs.filter(pyq => {
     return pyq.branch === branchSlug && pyq.level === levelSlug;
   });
@@ -28,12 +30,11 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
   const availableYears = [...new Set(iitmPyqs.map(pyq => pyq.year?.toString() || '2024'))].sort().reverse();
   const effectiveYear = year || availableYears[0] || '2024';
 
-  // 2. Filter by selected Year and the specific Exam Type (Quiz 1, Quiz 2, etc.)
+  // 2. Filter by Year and the specific Assessment Type (quiz1, quiz2, endterm)
   const filteredPYQs = iitmPyqs.filter(pyq => {
     const yearMatch = pyq.year?.toString() === effectiveYear;
-    // For Qualifier, usually there is only one type of exam, otherwise match the examType filter
-    const typeMatch = levelSlug === "qualifier" ? true : pyq.exam_type === examType;
-    
+    // Qualifier usually has one type, otherwise match the filter (e.g. 'quiz1')
+    const typeMatch = levelSlug === "qualifier" ? true : pyq.exam_type === activeExamType;
     return yearMatch && typeMatch;
   });
 
@@ -46,11 +47,12 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
       <div className="flex justify-end">
         <AdminAddButton 
           contentType="pyqs"
-          examType={examType} // Pass 'quiz1', etc. to the admin form
+          examType={activeExamType} // Pass 'quiz1' etc. to the form
           branch={branchSlug}
           level={levelSlug}
         >
-          Add {examType.toUpperCase()} Paper
+          {/* SAFE: Fallback prevents .toUpperCase() null error */}
+          Add {(activeExamType || 'PYQ').toUpperCase()} Paper
         </AdminAddButton>
       </div>
       
@@ -61,16 +63,16 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
           </div>
         ) : (
           filteredPYQs.map((pyq) => (
-            <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg transition-all flex flex-col">
+            <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg transition-all flex flex-col h-full">
               <CardHeader className="flex-grow">
                 <div className="flex justify-between items-start mb-2">
                   <span className="px-2 py-1 bg-blue-50 text-[#1E3A8A] text-[10px] font-bold uppercase rounded">
-                    {pyq.exam_type}
+                    {pyq.exam_type || activeExamType}
                   </span>
                   <span className="text-[11px] font-medium text-gray-400">{pyq.year}</span>
                 </div>
                 <CardTitle className="text-lg leading-tight">{pyq.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{pyq.description}</CardDescription>
+                <CardDescription className="line-clamp-2 mt-1">{pyq.description}</CardDescription>
                 {pyq.subject && (
                   <div className="mt-3 inline-flex items-center text-[12px] font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
                     {pyq.subject}
@@ -108,7 +110,7 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
         
         {!contentLoading && filteredPYQs.length === 0 && (
           <div className="col-span-3 flex flex-col items-center justify-center py-20 bg-white border border-dashed rounded-xl">
-             <p className="text-gray-400 text-sm">No {examType} papers found for this selection.</p>
+             <p className="text-gray-400 text-sm">No {activeExamType} papers found for this selection.</p>
           </div>
         )}
       </div>
