@@ -123,10 +123,10 @@ const BranchNotesAccordion = ({
             )}
           </div>
 
-          {/* View All Button: Rectangular, Light Blue Theme */}
+          {/* View All Button: Updated to be Non-Bold and Inter Font */}
           {subjectData.notes.length > 3 && (
             <button 
-              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-bold py-3.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[12px] border border-blue-100 shadow-sm"
+              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-normal font-['Inter',sans-serif] py-3.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[12px] border border-blue-100 shadow-sm"
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
               View all materials <ChevronRight className="w-4 h-4 ml-1" />
