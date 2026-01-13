@@ -1,7 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, Download, Share } from "lucide-react"; // Changed Share2 to Share for MacBook style
+import { FileText, Info, Download, Share, ChevronRight } from "lucide-react";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -25,10 +25,6 @@ const BranchNotesAccordion = ({
 }: BranchNotesAccordionProps) => {
   const { handleDownload, downloadCounts } = useDownloadHandler();
   const navigate = useNavigate();
-
-  // Deep purplish color theme
-  const deepPurple = "bg-[#4c1d95]"; // Deep Purple 900
-  const deepPurpleHover = "hover:bg-[#3b0764]"; 
 
   const renderNoteCard = (note: Note) => {
     const dCount = downloadCounts[note.id] || note.download_count || 0;
@@ -61,17 +57,18 @@ const BranchNotesAccordion = ({
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex space-x-3 mt-auto">
+        {/* Action Buttons: Synced with CourseCard.tsx */}
+        <div className="flex space-x-3 mt-auto font-sans">
           <button 
-            className="flex-1 py-2 px-4 rounded-[4px] border border-gray-300 bg-white text-gray-500 text-xs font-semibold hover:bg-gray-50 transition-colors uppercase"
+            className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[40px] text-[12px] font-normal uppercase transition-colors hover:bg-blue-50"
+            style={{ borderRadius: '8px' }}
             onClick={() => note.file_link && window.open(note.file_link, '_blank')}
           >
             View
           </button>
-          {/* Deep Purplish "Get PDF" Button */}
           <button 
-            className={`flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold ${deepPurple} ${deepPurpleHover} transition-colors uppercase`}
+            className="flex-1 bg-[#1E3A8A] text-white h-[40px] text-[12px] font-normal uppercase transition-opacity hover:opacity-90"
+            style={{ borderRadius: '8px' }}
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
@@ -108,11 +105,10 @@ const BranchNotesAccordion = ({
           <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-2">
             <h2 className="text-2xl font-bold text-gray-900">{subjectData.subjectName}</h2>
             <div className="flex items-center space-x-2">
-              {/* MacBook style professional share button */}
               <ShareButton
                 url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
                 title={`${subjectData.subjectName} Study Materials`}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-semibold text-sm hover:border-black hover:bg-gray-50 transition-all`}
+                className="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-semibold text-sm hover:border-black hover:bg-gray-50 transition-all"
                 variant="ghost"
                 showText={true}
               />
@@ -130,13 +126,13 @@ const BranchNotesAccordion = ({
             )}
           </div>
 
-          {/* View All Button - Deep Purplish and Rectangular with slight rounding */}
+          {/* View All Button: Synced with Courses.tsx "View all batches" */}
           {subjectData.notes.length > 3 && (
             <button 
-              className={`w-full ${deepPurple} ${deepPurpleHover} text-white font-medium rounded-md text-sm transition-colors flex justify-center items-center py-4`}
+              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-normal font-['Inter',sans-serif] py-3 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
-              View all materials <span className="ml-1 text-lg">›</span>
+              View all materials <ChevronRight className="w-4 h-4" />
             </button>
           )}
         </section>
