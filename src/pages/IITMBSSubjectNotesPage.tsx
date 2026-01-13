@@ -23,6 +23,7 @@ const IITMBSSubjectNotesPage = () => {
   const [isSticky, setIsSticky] = useState(false);
   const filterBarRef = useRef<HTMLDivElement>(null);
 
+  // Sync current subject name from URL slug
   useEffect(() => {
     if (groupedData.length > 0 && subjectSlug) {
       const current = groupedData.find(s => slugify(s.subjectName) === subjectSlug);
@@ -30,6 +31,7 @@ const IITMBSSubjectNotesPage = () => {
     }
   }, [groupedData, subjectSlug]);
 
+  // Handle sticky header scroll behavior
   useEffect(() => {
     const handleScroll = () => {
       if (window.scrollY > 140) setIsSticky(true);
@@ -43,7 +45,7 @@ const IITMBSSubjectNotesPage = () => {
     groupedData.find(s => s.subjectName === selectedSubject), 
   [groupedData, selectedSubject]);
 
-  // Filter notes based on search query
+  // Search logic for notes
   const filteredNotes = useMemo(() => {
     if (!currentData) return [];
     if (!searchQuery.trim()) return currentData.notes;
@@ -65,9 +67,11 @@ const IITMBSSubjectNotesPage = () => {
       >
         <div>
           <div className="flex justify-between items-start mb-4">
+            {/* Premium Icon Styling */}
             <div className="text-[#b93a3a]">
               <FileText className="w-8 h-8" strokeWidth={1.5} />
             </div>
+            {/* Download Count Badge */}
             <div className="flex items-center text-gray-400 text-[11px] font-medium">
               <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
               <span>{displayDownloads}</span>
@@ -82,6 +86,7 @@ const IITMBSSubjectNotesPage = () => {
           </p>
         </div>
 
+        {/* Action Buttons: Royal Blue Premium Design */}
         <div className="flex space-x-3 mt-auto font-sans">
           <button 
             className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
@@ -104,10 +109,14 @@ const IITMBSSubjectNotesPage = () => {
     <div className="min-h-screen bg-[#fcfcfc]">
       <NavBar />
       <main className="pt-16">
-        {/* Keep Banner */}
-        <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab="notes" />
+        {/* 1. KEEP BANNER */}
+        <ExamPrepHeader 
+          examName="IITM BS" 
+          examPath="/exam-preparation/iitm-bs" 
+          currentTab="notes" 
+        />
         
-        {/* Updated Filter Bar: No subject filter, now has Search Bar */}
+        {/* 2. HEADER BAR (Sticky with Search Bar, Subject Filter Removed) */}
         <div 
           ref={filterBarRef}
           className={`w-full bg-white border-b border-slate-200 transition-all ${
@@ -121,7 +130,7 @@ const IITMBSSubjectNotesPage = () => {
               </Button>
               <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
               
-              {/* Search Bar Implementation */}
+              {/* Central Search Bar */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
@@ -134,12 +143,19 @@ const IITMBSSubjectNotesPage = () => {
               </div>
             </div>
 
-            <ShareButton url={window.location.href} title={`${selectedSubject} Notes`} variant="outline" size="sm" className="h-9" />
+            <ShareButton 
+              url={window.location.href} 
+              title={`${selectedSubject} Notes`} 
+              variant="outline" 
+              size="sm" 
+              className="h-9" 
+            />
           </div>
         </div>
 
         {isSticky && <div className="h-14" />}
 
+        {/* 3. NOTES VISIBLE CARDS (Same design as iitmbs prep sections) */}
         <section className="max-w-7xl mx-auto px-4 py-8">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -147,24 +163,13 @@ const IITMBSSubjectNotesPage = () => {
             </div>
           ) : currentData ? (
             <div>
-              <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
-                    {currentData.subjectName}
-                  </h2>
-                  <p className="text-[12px] text-slate-500 mt-1">
-                    Showing {filteredNotes.length} of {currentData.notes.length} total study materials.
-                  </p>
-                </div>
-                {searchQuery && (
-                  <Button 
-                    variant="link" 
-                    onClick={() => setSearchQuery("")}
-                    className="h-auto p-0 text-xs text-[#1E3A8A] font-bold uppercase"
-                  >
-                    Clear Search
-                  </Button>
-                )}
+              <div className="mb-8">
+                <h2 className="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
+                  {currentData.subjectName}
+                </h2>
+                <p className="text-[12px] text-slate-500 mt-1">
+                  Found {filteredNotes.length} curated study modules for this subject.
+                </p>
               </div>
 
               {filteredNotes.length > 0 ? (
