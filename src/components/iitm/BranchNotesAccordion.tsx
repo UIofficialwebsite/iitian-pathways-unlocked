@@ -1,7 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, ChevronRight } from "lucide-react";
+import { FileText, Info, Download, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
@@ -32,61 +32,59 @@ const BranchNotesAccordion = ({
     const displayDownloads = dCount >= 1000 ? `${(dCount / 1000).toFixed(1)}k` : dCount;
 
     return (
-      <div 
+      <article 
         key={note.id} 
-        className="pdf-card group relative flex flex-col gap-5 p-5 bg-white border border-[#e2e8f0] rounded-[10px] transition-all duration-100 hover:border-black hover:outline hover:outline-1 hover:outline-black snap-start shadow-sm"
+        className="bg-white rounded-lg p-5 flex flex-col justify-between h-full transition-shadow duration-200 border border-transparent hover:border-gray-200"
+        style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}
       >
-        <div className="flex gap-3 items-start">
-          {/* MacBook-style PDF Icon */}
-          <div className="macbook-pdf-icon relative flex flex-col items-center justify-center w-[44px] h-[52px] bg-[#fef2f2] border border-[#fee2e2] rounded-[6px] flex-shrink-0 shadow-[inset_0_-4px_0_rgba(239,68,68,0.1)]">
-            <FileText className="h-[22px] w-[22px] text-[#ef4444] -mt-[10px]" />
-            <span className="absolute bottom-[4px] text-[8px] font-[900] text-[#ef4444] tracking-[0.5px] uppercase">PDF</span>
-          </div>
-
-          <div className="flex-1 min-w-0 text-left">
-            <div className="flex items-start justify-between gap-2">
-              <h4 className="font-semibold text-[0.9rem] text-[#0f172a] truncate">
-                {note.title}
-              </h4>
-              <span className="download-tag bg-[#f1f5f9] text-[#64748b] text-[0.65rem] font-bold px-2 py-[2px] rounded-[4px] border border-[#e2e8f0] uppercase flex-shrink-0">
-                {displayDownloads}
-              </span>
+        <div>
+          <div className="flex justify-between items-start mb-4">
+            {/* PDF Icon */}
+            <div className="text-[#b93a3a]">
+              <FileText className="w-8 h-8" strokeWidth={1.5} />
             </div>
-            {note.description && (
-              <p className="text-[0.8rem] text-[#64748b] mt-1 line-clamp-2 leading-normal">
-                {note.description}
-              </p>
-            )}
+            {/* Download Count */}
+            <div className="flex items-center text-gray-400 text-sm">
+              <Download className="w-4 h-4 mr-1" strokeWidth={1.5} />
+              <span>{displayDownloads}</span>
+            </div>
           </div>
+          
+          <h3 className="font-bold text-gray-900 mb-2 text-sm leading-tight line-clamp-2">
+            {note.title}
+          </h3>
+          <p className="text-xs text-gray-600 mb-6 line-clamp-2">
+            {note.description || `Notes and practice for ${note.title}`}
+          </p>
         </div>
 
-        <div className="action-group grid grid-cols-2 gap-[10px]">
-          <Button
-            variant="outline"
-            className="h-9 text-[0.75rem] font-normal bg-white border-[#e2e8f0] text-[#0f172a] hover:bg-[#f8fafc] hover:border-[#cbd5e1] rounded-[6px] uppercase tracking-[0.05em]"
+        {/* Action Buttons */}
+        <div className="flex space-x-3 mt-auto">
+          <button 
+            className="flex-1 py-2 px-4 rounded-[4px] border border-gray-300 bg-white text-gray-500 text-xs font-semibold hover:bg-gray-50 transition-colors uppercase"
             onClick={() => note.file_link && window.open(note.file_link, '_blank')}
           >
             View
-          </Button>
-          <Button
-            className="h-9 text-[0.75rem] font-normal bg-[#2563eb] hover:bg-[#1d4ed8] text-white border-[#2563eb] rounded-[6px] uppercase tracking-[0.05em]"
+          </button>
+          <button 
+            className="flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold hover:bg-[#777777] transition-colors uppercase bg-[#808080]"
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
-          </Button>
+          </button>
         </div>
-      </div>
+      </article>
     );
   };
 
   if (loading) {
     return (
-      <div className="space-y-16">
+      <div className="space-y-12">
         {[1, 2].map((i) => (
           <div key={i} className="space-y-6">
-            <Skeleton className="h-8 w-64 rounded-full" />
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-6">
-              {[1, 2, 3].map((j) => <Skeleton key={j} className="aspect-square rounded-[10px]" />)}
+            <Skeleton className="h-8 w-64 rounded-md" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((j) => <Skeleton key={j} className="h-48 rounded-lg" />)}
             </div>
           </div>
         ))}
@@ -98,54 +96,56 @@ const BranchNotesAccordion = ({
     ? groupedData
     : groupedData.filter(s => !s.specialization || s.specialization === specialization);
 
+  if (filteredSubjects.length === 0) {
+    return (
+      <div className="py-20 text-center">
+        <Alert className="max-w-md mx-auto bg-white border-gray-200">
+          <Info className="h-4 w-4 text-gray-400" />
+          <AlertDescription className="text-sm text-gray-600">No materials found for this selection.</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-16 pb-20">
+    <div className="space-y-20 pb-20">
       {filteredSubjects.map((subjectData) => (
-        <div key={subjectData.subjectName} className="subject-section-transparent">
-          {/* Section Header with Pill Share Button - Background Removed */}
-          <div className="flex items-center justify-between py-4 mb-4">
-            <div className="flex-1">
-              <h3 className="text-[1.1rem] font-bold text-[#0f172a] tracking-[-0.01em]">
-                {subjectData.subjectName}
-              </h3>
-              <div className="h-[2px] w-10 bg-[#1E3A8A] mt-1.5 rounded-full" />
-            </div>
-            
-            <div className="header-controls flex items-center gap-3">
+        <section key={subjectData.subjectName} className="w-full">
+          {/* Section Header */}
+          <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-2">
+            <h2 className="text-2xl font-bold text-gray-900">{subjectData.subjectName}</h2>
+            <div className="flex items-center space-x-2">
               <ShareButton
                 url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
-                title={`${subjectData.subjectName} Study Notes`}
-                className="btn-share flex items-center gap-2 px-4 py-[7px] bg-white border border-[#e2e8f0] rounded-full text-[0.8rem] font-semibold text-[#0f172a] hover:border-black hover:bg-[#f8fafc] transition-all shadow-sm"
-                showText={true}
+                title={`${subjectData.subjectName} Study Materials`}
+                className="p-2 rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                variant="ghost"
+                size="icon"
               />
             </div>
           </div>
 
-          <div className="py-2">
-            {/* Asset Grid: 2 columns mobile, 3 columns PC */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-              {subjectData.notes.length > 0 ? (
-                subjectData.notes.slice(0, 3).map(renderNoteCard)
-              ) : (
-                <div className="col-span-full py-10 text-center text-slate-400 text-sm italic bg-white border border-dashed rounded-[10px]">
-                  No materials currently available for this subject.
-                </div>
-              )}
-            </div>
-
-            {/* View All Materials Button */}
-            {subjectData.notes.length > 3 && (
-              <div className="flex justify-center mt-10">
-                <button 
-                  className="bg-[#EFF6FF] text-[#1E3A8A] font-bold py-2.5 px-8 rounded-[10px] transition-all hover:bg-[#DBEAFE] flex items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
-                  onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
-                >
-                  View all materials <ChevronRight className="w-4 h-4" />
-                </button>
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+            {subjectData.notes.length > 0 ? (
+              subjectData.notes.slice(0, 3).map(renderNoteCard)
+            ) : (
+              <div className="col-span-full py-10 text-center text-gray-400 text-sm italic">
+                No materials currently available for this subject.
               </div>
             )}
           </div>
-        </div>
+
+          {/* View All Button */}
+          {subjectData.notes.length > 3 && (
+            <button 
+              className="w-full bg-[#e5e7eb] text-gray-700 font-medium rounded-full text-sm hover:bg-gray-300 transition-colors flex justify-center items-center py-4"
+              onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
+            >
+              View all materials <span className="ml-1 text-lg">›</span>
+            </button>
+          )}
+        </section>
       ))}
     </div>
   );
