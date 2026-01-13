@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share, Check } from 'lucide-react'; // Changed Share2 to Share for professional style
+import { Share, Check } from 'lucide-react'; // MacBook style Share icon
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -12,6 +12,7 @@ interface ShareButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   showText?: boolean;
+  textClassName?: string; // New prop to control text visibility responsive logic
 }
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
@@ -21,7 +22,8 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   variant = 'outline',
   size = 'sm',
   className,
-  showText = false
+  showText = false,
+  textClassName
 }) => {
   const [copied, setCopied] = useState(false);
 
@@ -52,14 +54,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       variant={variant}
       size={size}
       onClick={handleShare}
-      // Removed rounded-full, used rounded-md for rectangular corners
-      className={cn("rounded-md border-gray-200 hover:border-black transition-all", className)}
+      // Rectangular with rounded corners
+      className={cn("rounded-md border-gray-200 hover:border-black transition-all h-9", className)}
       title="Share"
     >
       {copied ? <Check className="h-4 w-4" /> : <Share className="h-4 w-4" />}
       {showText && (
-        // Text is hidden on mobile, shown on small screens and up
-        <span className="hidden sm:inline-block ml-2">{copied ? 'Copied' : 'Share'}</span>
+        <span className={cn("ml-2 font-semibold", textClassName)}>
+          {copied ? 'Copied' : 'Share'}
+        </span>
       )}
     </Button>
   );
