@@ -1,124 +1,65 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Home, ChevronRight } from "lucide-react";
-import { ShareButton } from "@/components/ShareButton";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+import { ChevronRight, Home } from "lucide-react";
 
 interface ExamPrepHeaderProps {
   examName: string;
   examPath: string;
-  currentTab: string;
+  currentTab?: string;
   pageTitle?: string;
 }
 
-const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
-  examName,
-  examPath,
-  currentTab,
-  pageTitle,
-}) => {
-  const displayTitle = pageTitle || `${examName} Preparation`;
-  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
-
-  const getTabDisplayName = (tab: string) => {
-    const tabNames: Record<string, string> = {
-      notes: "Notes",
-      pyqs: "Previous Year Papers",
-      "study-groups": "Study Groups",
-      "news-updates": "News & Updates",
-      "important-dates": "Important Dates",
-      syllabus: "Syllabus",
-      tools: "Tools",
-      courses: "Courses",
-      news: "News",
-      dates: "Important Dates",
-    };
-    return tabNames[tab] || tab;
-  };
-
+const ExamPrepHeader = ({ examName, examPath, currentTab, pageTitle }: ExamPrepHeaderProps) => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-[#f0f4ff] to-[#faf5ff] border-b min-h-[180px] flex items-center font-sans">
-      {/* Background Decorative Elements */}
-      <div className="absolute -top-[120px] -left-[60px] w-[250px] h-[250px] bg-slate-300/25 rounded-full blur-[50px] pointer-events-none" />
-      <div className="absolute -bottom-[40px] right-[12%] w-[200px] h-[200px] bg-purple-200/30 rounded-[40%_60%_70%_30%] blur-[50px] pointer-events-none" />
-      <div className="absolute top-8 right-[18%] w-[120px] h-[80px] bg-white/20 border border-white/30 rounded-lg -rotate-12 pointer-events-none hidden md:block" />
+    <div className="relative w-full overflow-hidden border-b border-blue-100/50">
+      {/* MODERN WHITE-BLUE EFFECT:
+          1. Base color is white
+          2. Top-right blue radial glow
+          3. Very subtle grid pattern overlay 
+      */}
+      <div className="absolute inset-0 bg-white" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-50 via-white to-transparent opacity-70" />
+      <div 
+        className="absolute inset-0 opacity-[0.03]" 
+        style={{ backgroundImage: 'radial-gradient(#1E3A8A 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}
+      />
 
-      {/* Glassy Overlay Layer */}
-      <div className="absolute inset-0 backdrop-blur-[6px] bg-white/5 pointer-events-none" />
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Navigation Breadcrumb (Minimal) */}
+        <nav className="flex items-center gap-2 text-slate-400 text-[11px] font-medium uppercase tracking-wider mb-4">
+          <Link to="/" className="hover:text-[#1E3A8A] transition-colors flex items-center gap-1">
+            <Home className="w-3 h-3" />
+            <span>Home</span>
+          </Link>
+          <ChevronRight className="w-3 h-3 opacity-50" />
+          <Link to="/exam-preparation" className="hover:text-[#1E3A8A] transition-colors">
+            Prep
+          </Link>
+          <ChevronRight className="w-3 h-3 opacity-50" />
+          <span className="text-[#1E3A8A] font-semibold">{examName}</span>
+        </nav>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        {/* Breadcrumb - Set to Inter (font-sans), non-bold (font-normal) */}
-        <Breadcrumb className="mb-4">
-          <BreadcrumbList className="flex-wrap gap-1">
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/" className="text-gray-500 hover:text-black transition-colors">
-                  <Home className="h-3.5 w-3.5" />
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-3 w-3 text-gray-400" />
-            </BreadcrumbSeparator>
-
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to="/exam-preparation" className="text-gray-500 hover:text-black uppercase text-[11px] font-normal tracking-wider transition-colors">
-                  School Prep
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-
-            <BreadcrumbSeparator>
-              <ChevronRight className="h-3 w-3 text-gray-400" />
-            </BreadcrumbSeparator>
-
-            <BreadcrumbItem>
-              <BreadcrumbLink asChild>
-                <Link to={examPath} className="text-gray-500 hover:text-black uppercase text-[11px] font-normal tracking-wider transition-colors">
-                  Exams
-                </Link>
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-
-            {currentTab && (
-              <>
-                <BreadcrumbSeparator>
-                  <ChevronRight className="h-3 w-3 text-gray-400" />
-                </BreadcrumbSeparator>
-                <BreadcrumbItem>
-                  <BreadcrumbPage className="uppercase text-[11px] font-normal tracking-wider text-gray-400">
-                    {getTabDisplayName(currentTab)}
-                  </BreadcrumbPage>
-                </BreadcrumbItem>
-              </>
-            )}
-          </BreadcrumbList>
-        </Breadcrumb>
-
-        {/* Heading - Geometric Sans, reduced height & zoom */}
-        <h1 className="text-2xl md:text-3xl lg:text-[40px] font-bold text-[#383838] mb-5 tracking-tight leading-tight uppercase">
-          {displayTitle}
-        </h1>
-
-        {/* Share Button - Static (No Hover effect), White Glass style */}
-        <ShareButton
-          url={shareUrl}
-          title={displayTitle}
-          description={`${examName} preparation resources`}
-          variant="outline"
-          size="sm"
-          showText={true}
-          className="bg-white border-gray-100 text-gray-700 font-bold text-xs px-5 py-2.5 h-auto shadow-sm transition-none hover:bg-white active:bg-gray-50 pointer-events-auto"
-        />
+        {/* Dynamic Header Content */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight font-['Inter',sans-serif]">
+              {pageTitle || examName}
+            </h1>
+            <p className="text-slate-500 text-sm md:text-base font-medium max-w-2xl">
+              Access comprehensive resources, notes, and study materials curated specifically for {examName} aspirants.
+            </p>
+          </div>
+          
+          {/* Active Tab Indicator (Optional visual element) */}
+          {currentTab && (
+            <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-full border border-blue-100">
+              <div className="w-2 h-2 rounded-full bg-[#1E3A8A] animate-pulse" />
+              <span className="text-[#1E3A8A] text-xs font-bold uppercase tracking-tight">
+                Currently Viewing: {currentTab}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
