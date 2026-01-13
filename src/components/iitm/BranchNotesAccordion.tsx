@@ -1,7 +1,6 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, Download, ChevronRight } from "lucide-react";
+import { FileText, Download, ChevronRight } from "lucide-react";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -11,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 interface BranchNotesAccordionProps {
   loading: boolean;
   groupedData: GroupedData[];
-  specialization: string;
   branch: string;
   level: string;
 }
@@ -19,7 +17,6 @@ interface BranchNotesAccordionProps {
 const BranchNotesAccordion = ({
   loading,
   groupedData,
-  specialization,
   branch,
   level,
 }: BranchNotesAccordionProps) => {
@@ -33,38 +30,40 @@ const BranchNotesAccordion = ({
     return (
       <article 
         key={note.id} 
-        // Slight black outline (border-black/10) and shadow
-        className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-black/10 hover:border-black/30 transition-all snap-start shrink-0 w-[85vw] max-w-[300px] sm:w-auto sm:max-w-none"
+        className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-black/[0.08] hover:border-black/20 transition-all snap-start shrink-0 w-[80vw] max-w-[280px] sm:w-auto sm:max-w-none shadow-sm"
         style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}
       >
         <div>
           <div className="flex justify-between items-start mb-4">
+            {/* MacBook-style PDF Icon Area */}
             <div className="text-[#b93a3a]">
               <FileText className="w-8 h-8" strokeWidth={1.5} />
             </div>
-            <div className="flex items-center text-gray-400 text-sm">
-              <Download className="w-4 h-4 mr-1" strokeWidth={1.5} />
+            {/* Download Count */}
+            <div className="flex items-center text-gray-400 text-[11px] font-medium">
+              <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
               <span>{displayDownloads}</span>
             </div>
           </div>
+          
           <h3 className="font-bold text-gray-900 mb-2 text-sm leading-tight line-clamp-2">
             {note.title}
           </h3>
-          <p className="text-xs text-gray-600 mb-6 line-clamp-2">
-            {note.description || `Notes and practice for ${note.title}`}
+          <p className="text-xs text-gray-500 mb-6 line-clamp-2">
+            {note.description || `Comprehensive study material for ${note.title}.`}
           </p>
         </div>
 
+        {/* Action Buttons: Rectangular with Royal Blue Theme */}
         <div className="flex space-x-3 mt-auto font-sans">
           <button 
-            className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-normal uppercase transition-colors hover:bg-blue-50 rounded-md"
+            className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
             onClick={() => note.file_link && window.open(note.file_link, '_blank')}
           >
             View
           </button>
           <button 
-            // Deep Purplish color as per branding requirements
-            className="flex-1 bg-[#4c1d95] hover:bg-[#3b0764] text-white h-[38px] text-[11px] font-normal uppercase transition-opacity rounded-md"
+            className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
@@ -75,34 +74,38 @@ const BranchNotesAccordion = ({
   };
 
   if (loading) {
-    return <div className="space-y-12">{[1, 2].map(i => <Skeleton key={i} className="h-64 w-full rounded-md" />)}</div>;
+    return (
+      <div className="space-y-12">
+        {[1, 2].map((i) => (
+          <div key={i} className="space-y-6">
+            <Skeleton className="h-8 w-64 rounded-md" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((j) => <Skeleton key={j} className="h-56 rounded-xl" />)}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   }
-
-  const filteredSubjects = specialization === "all"
-    ? groupedData
-    : groupedData.filter(s => !s.specialization || s.specialization === specialization);
 
   return (
     <div className="space-y-12 pb-20">
-      {filteredSubjects.map((subjectData) => (
-        // Section Holder Type: White box with subtle border and shadow for the subject block
+      {groupedData.map((subjectData) => (
         <section 
           key={subjectData.subjectName} 
-          className="w-full bg-white border border-gray-100 rounded-xl p-6 md:p-8"
-          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+          className="w-full bg-white border border-gray-100 rounded-xl p-6 md:p-8 shadow-sm"
         >
-          {/* Header Area inside the holder */}
+          {/* Section Header with Responsive Share Button */}
           <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
+            <h2 className="text-lg md:text-xl font-bold text-gray-900 tracking-tight">
               {subjectData.subjectName}
             </h2>
             <ShareButton
               url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
               title={`${subjectData.subjectName} Notes`}
               showText={true}
-              // Force text to show every time in the header (no hidden class)
-              textClassName="inline-block" 
-              className="bg-white border-gray-200 px-4"
+              // forceTextOnMobile={false} will allow the component to hide text on mobile automatically
+              className="bg-white border-gray-200"
             />
           </div>
 
@@ -111,16 +114,16 @@ const BranchNotesAccordion = ({
             {subjectData.notes.length > 0 ? (
               subjectData.notes.slice(0, 3).map(renderNoteCard)
             ) : (
-              <div className="col-span-full py-10 text-center text-gray-400 text-sm italic">
-                No materials available for this subject.
+              <div className="col-span-full py-12 text-center text-gray-400 text-sm italic border border-dashed rounded-lg bg-gray-50/50">
+                No materials currently available for this subject.
               </div>
             )}
           </div>
 
-          {/* View All Button: Rectangular with light blue color theme */}
+          {/* View All Button: Rectangular, Light Blue Theme */}
           {subjectData.notes.length > 3 && (
             <button 
-              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-semibold py-3.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
+              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-bold py-3.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[12px] border border-blue-100 shadow-sm"
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
               View all materials <ChevronRight className="w-4 h-4 ml-1" />
