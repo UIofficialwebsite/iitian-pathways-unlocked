@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useIITMBranchNotes } from "@/components/iitm/hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import NavBar from "@/components/NavBar";
@@ -7,21 +7,26 @@ import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft, Info, Search, Download } from "lucide-react";
+import { FileText, ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
 const IITMBSSubjectNotesPage = () => {
   const { branch, level, subjectSlug } = useParams<{ branch: string; level: string; subjectSlug: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, groupedData } = useIITMBranchNotes(branch || "", level || "");
   const { handleDownload, downloadCounts } = useDownloadHandler();
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  
   const [isSticky, setIsSticky] = useState(false);
-  const filterBarRef = useRef<HTMLDivElement>(null);
+  const [stickyOffset, setStickyOffset] = useState(0);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   // Sync current subject name from URL slug
   useEffect(() => {
@@ -31,22 +36,58 @@ const IITMBSSubjectNotesPage = () => {
     }
   }, [groupedData, subjectSlug]);
 
-  // Handle sticky header scroll behavior - trigger after the banner scrolls out
+  // 1. Fetch Banner Image from database according to path
+  useEffect(() => {
+    const fetchBanner = async () => {
+      const { data, error } = await supabase
+        .from("page_banners")
+        .select("image_url")
+        .eq("page_path", location.pathname)
+        .maybeSingle();
+      
+      if (data && !error) {
+        setBannerImage(data.image_url);
+      }
+    };
+    fetchBanner();
+  }, [location.pathname]);
+
+  // 2. Handle sticky search bar behavior
+  useEffect(() => {
+    const updateOffset = () => {
+      if (searchBarRef.current) {
+        // We get the position relative to the document
+        const rect = searchBarRef.current.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        setStickyOffset(rect.top + scrollTop);
+      }
+    };
+
+    // Update offset after content or banner might have loaded
+    const timeout = setTimeout(updateOffset, 500);
+    window.addEventListener('resize', updateOffset);
+    
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener('resize', updateOffset);
+    };
+  }, [loading, bannerImage]);
+
   useEffect(() => {
     const handleScroll = () => {
-      // 180 (banner min-height) - Navbar height
-      if (window.scrollY > 160) setIsSticky(true);
-      else setIsSticky(false);
+      const navbarHeight = 64; // Height of NavBar (h-16)
+      if (searchBarRef.current && stickyOffset > 0) {
+        setIsSticky(window.scrollY > (stickyOffset - navbarHeight));
+      }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [stickyOffset]);
 
   const currentData = useMemo(() => 
     groupedData.find(s => s.subjectName === selectedSubject), 
   [groupedData, selectedSubject]);
 
-  // Search logic for notes
   const filteredNotes = useMemo(() => {
     if (!currentData) return [];
     if (!searchQuery.trim()) return currentData.notes;
@@ -104,40 +145,58 @@ const IITMBSSubjectNotesPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfc]">
+    <div className="min-h-screen bg-[#fcfcfc] font-sans">
+      {/* 1. NAV BAR */}
       <NavBar />
+
       <main className="pt-16">
-        {/* 1. THE BANNER (ExamPrepHeader) */}
+        {/* 2. PAGE BANNER (From database table based on path) */}
+        {bannerImage && (
+          <div className="w-full h-32 md:h-48 lg:h-60 relative overflow-hidden bg-slate-200">
+            <img 
+              src={bannerImage} 
+              alt="Subject Banner" 
+              className="w-full h-full object-cover"
+              onError={() => setBannerImage(null)} // Hide if image fails to load
+            />
+          </div>
+        )}
+
+        {/* 3. EXAM PREP HEADER (Breadcrumbs & Page Title) */}
         <ExamPrepHeader 
           examName="IITM BS" 
           examPath="/exam-preparation/iitm-bs" 
           currentTab="notes"
           pageTitle={selectedSubject ? `${selectedSubject} Resources` : undefined}
         />
-        
-        {/* 2. THE HEADER (Sticky Filter Bar with Search) */}
+
+        {/* 4. FILTER AND SEARCH (STICKY) */}
         <div 
-          ref={filterBarRef}
-          className={`w-full bg-white border-b border-slate-200 transition-all z-[100] ${
-            isSticky ? "fixed top-16 shadow-sm" : "relative"
+          ref={searchBarRef}
+          className={`w-full bg-white border-b border-slate-200 transition-all z-[50] ${
+            isSticky ? "fixed top-16 shadow-md" : "relative"
           }`}
         >
-          <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
-              <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-9 px-2 text-slate-500 shrink-0">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => navigate(-1)} 
+                className="h-10 px-2 text-slate-500 shrink-0 hover:bg-slate-50"
+              >
                 <ArrowLeft className="w-4 h-4 mr-1" /> <span className="hidden sm:inline">Back</span>
               </Button>
-              <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
+              <div className="h-6 w-[1px] bg-slate-200 mx-1 shrink-0" />
               
-              {/* Main Search Bar (Replaces Subject Filter) */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder={`Search for notes in ${selectedSubject || 'this subject'}...`}
+                  placeholder={`Search in ${selectedSubject || 'notes'}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9 bg-slate-50 border-slate-200 text-xs focus-visible:ring-1 focus-visible:ring-[#1E3A8A]"
+                  className="pl-9 h-10 bg-slate-50 border-slate-200 text-sm focus-visible:ring-2 focus-visible:ring-[#1E3A8A] focus-visible:bg-white transition-all"
                 />
               </div>
             </div>
@@ -147,37 +206,26 @@ const IITMBSSubjectNotesPage = () => {
               title={`${selectedSubject} Notes`} 
               variant="outline" 
               size="sm" 
-              className="h-9" 
+              className="h-10 px-4" 
             />
           </div>
         </div>
 
-        {/* Prevent layout jump when sticky header activates */}
-        {isSticky && <div className="h-14" />}
+        {/* Placeholder to prevent layout jump when sticky header activates */}
+        {isSticky && <div className="h-16" />}
 
-        {/* 3. NOTES CONTENT SECTION */}
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        {/* 5. CONTENT (NOTES GRID) */}
+        <section className="max-w-7xl mx-auto px-4 py-10">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4, 5, 6, 7, 8].map(i => <Skeleton key={i} className="h-56 w-full rounded-lg" />)}
             </div>
           ) : currentData ? (
-            <div>
-              <div className="mb-8">
-                <h2 className="text-2xl font-black text-slate-900 leading-tight uppercase tracking-tight">
-                  {currentData.subjectName}
-                </h2>
-                <p className="text-[12px] text-slate-500 mt-1">
-                  Viewing {filteredNotes.length} curated study modules.
-                </p>
-              </div>
-
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredNotes.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredNotes.map(renderNoteCard)}
-                </div>
+                filteredNotes.map(renderNoteCard)
               ) : (
-                <div className="flex flex-col items-center justify-center py-24 bg-slate-50 border border-dashed rounded-xl">
+                <div className="col-span-full flex flex-col items-center justify-center py-24 bg-slate-50 border border-dashed rounded-xl">
                   <Search className="w-10 h-10 text-slate-300 mb-3" />
                   <p className="text-slate-500 font-medium">No materials match your search.</p>
                 </div>
@@ -185,7 +233,6 @@ const IITMBSSubjectNotesPage = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed rounded-xl">
-              <Info className="w-10 h-10 text-slate-300 mb-3" />
               <p className="text-slate-500 font-medium">Subject content not found.</p>
             </div>
           )}
