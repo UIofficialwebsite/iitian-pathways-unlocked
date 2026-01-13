@@ -1,8 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, Download, Share2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { FileText, Info, Download } from "lucide-react";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -66,8 +65,9 @@ const BranchNotesAccordion = ({
           >
             View
           </button>
+          {/* Light Red "Get PDF" Button */}
           <button 
-            className="flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold hover:bg-[#777777] transition-colors uppercase bg-[#808080]"
+            className="flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold hover:bg-red-600 transition-colors uppercase bg-[#ef4444]"
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
@@ -95,17 +95,6 @@ const BranchNotesAccordion = ({
   const filteredSubjects = specialization === "all"
     ? groupedData
     : groupedData.filter(s => !s.specialization || s.specialization === specialization);
-
-  if (filteredSubjects.length === 0) {
-    return (
-      <div className="py-20 text-center">
-        <Alert className="max-w-md mx-auto bg-white border-gray-200">
-          <Info className="h-4 w-4 text-gray-400" />
-          <AlertDescription className="text-sm text-gray-600">No materials found for this selection.</AlertDescription>
-        </Alert>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-20 pb-20">
@@ -136,10 +125,10 @@ const BranchNotesAccordion = ({
             )}
           </div>
 
-          {/* View All Button */}
+          {/* View All Button - Rectangular with slightly rounded corners */}
           {subjectData.notes.length > 3 && (
             <button 
-              className="w-full bg-[#e5e7eb] text-gray-700 font-medium rounded-full text-sm hover:bg-gray-300 transition-colors flex justify-center items-center py-4"
+              className="w-full bg-[#e5e7eb] text-gray-700 font-medium rounded-md text-sm hover:bg-gray-300 transition-colors flex justify-center items-center py-4"
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
               View all materials <span className="ml-1 text-lg">›</span>
