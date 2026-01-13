@@ -555,55 +555,88 @@ const IITMBSPrep = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
-        {/* Dynamic Breadcrumb Section */}
+        {/* COMPREHENSIVE DYNAMIC BREADCRUMB SECTION */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 bg-[#fcfcfc]">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/" className="flex items-center gap-1">
-                    <Home className="w-3 h-3" />
-                    Home
-                  </Link>
+                  <Link to="/" className="flex items-center gap-1"><Home className="w-3 h-3" /> Home</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/exam-preparation">Exam Preparation</Link>
-                </BreadcrumbLink>
+                <BreadcrumbLink asChild><Link to="/exam-preparation">Exam Preparation</Link></BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbLink asChild>
-                  <Link to="/exam-preparation/iitm-bs">IITM BS</Link>
-                </BreadcrumbLink>
+                <BreadcrumbLink asChild><Link to="/exam-preparation/iitm-bs">IITM BS</Link></BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
+              
+              {/* Filter Level 1: Active Tab */}
               <BreadcrumbItem>
                 <BreadcrumbPage className="capitalize font-medium text-[#6366f1]">
                   {tabs.find(t => t.id === activeTab)?.label || activeTab}
                 </BreadcrumbPage>
               </BreadcrumbItem>
 
-              {/* Dynamic Filter Breadcrumbs */}
+              {/* Filter Level 2: Branch (If not default) */}
               {selectedBranch && selectedBranch !== "Data Science" && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem><BreadcrumbPage className="font-medium text-[#6366f1]">{selectedBranch}</BreadcrumbPage></BreadcrumbItem>
+                </>
+              )}
+
+              {/* Filter Level 3: Level (If not default/all) */}
+              {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && selectedLevel && selectedLevel !== "Foundation" && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem><BreadcrumbPage className="font-medium text-[#6366f1]">{selectedLevel}</BreadcrumbPage></BreadcrumbItem>
+                </>
+              )}
+              
+              {/* Tab-Specific Breadcrumbs */}
+              {activeTab === 'pyqs' && pyqYear && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem><BreadcrumbPage className="font-medium text-[#6366f1]">{pyqYear}</BreadcrumbPage></BreadcrumbItem>
+                </>
+              )}
+              
+              {activeTab === 'notes' && selectedNotesSubjects.length > 0 && (
                 <>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbPage className="font-medium text-[#6366f1]">
-                      {selectedBranch}
+                      {selectedNotesSubjects.length === 1 ? selectedNotesSubjects[0] : `${selectedNotesSubjects.length} Subjects`}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
               )}
-              
-              {activeTab === 'pyqs' && pyqYear && (
+
+              {activeTab === 'courses' && (selectedCourseLevels.length > 0 || selectedCourseSubjects.length > 0 || coursePriceRange) && (
                 <>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbPage className="font-medium text-[#6366f1]">
-                      {pyqYear}
+                      {[
+                        ...selectedCourseLevels,
+                        ...selectedCourseSubjects,
+                        coursePriceRange ? `${coursePriceRange} batches` : null
+                      ].filter(Boolean).join(", ")}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+
+              {activeTab === 'tools' && selectedTool && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-medium text-[#6366f1]">
+                      {tools.find(t => t.id === selectedTool)?.label}
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </>
