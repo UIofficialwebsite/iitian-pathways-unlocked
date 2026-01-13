@@ -5,7 +5,6 @@ import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
-import { ShareButton } from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowLeft, Search, Download } from "lucide-react";
 import { slugify } from "@/utils/urlHelpers";
@@ -36,7 +35,7 @@ const IITMBSSubjectNotesPage = () => {
     }
   }, [groupedData, subjectSlug]);
 
-  // 1. Fetch Banner Image from database according to path
+  // Fetch Banner Image from database according to path
   useEffect(() => {
     const fetchBanner = async () => {
       const { data, error } = await supabase
@@ -52,18 +51,16 @@ const IITMBSSubjectNotesPage = () => {
     fetchBanner();
   }, [location.pathname]);
 
-  // 2. Handle sticky search bar behavior
+  // Handle sticky search bar behavior
   useEffect(() => {
     const updateOffset = () => {
       if (searchBarRef.current) {
-        // We get the position relative to the document
         const rect = searchBarRef.current.getBoundingClientRect();
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         setStickyOffset(rect.top + scrollTop);
       }
     };
 
-    // Update offset after content or banner might have loaded
     const timeout = setTimeout(updateOffset, 500);
     window.addEventListener('resize', updateOffset);
     
@@ -104,6 +101,7 @@ const IITMBSSubjectNotesPage = () => {
     return (
       <article 
         key={note.id} 
+        // Background set to white
         className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-black/[0.08] hover:border-black/20 transition-all shadow-sm"
         style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}
       >
@@ -146,23 +144,22 @@ const IITMBSSubjectNotesPage = () => {
 
   return (
     <div className="min-h-screen bg-[#fcfcfc] font-sans">
-      {/* 1. NAV BAR */}
       <NavBar />
 
       <main className="pt-16">
-        {/* 2. PAGE BANNER (From database table based on path) */}
+        {/* PAGE BANNER */}
         {bannerImage && (
           <div className="w-full h-32 md:h-48 lg:h-60 relative overflow-hidden bg-slate-200">
             <img 
               src={bannerImage} 
               alt="Subject Banner" 
               className="w-full h-full object-cover"
-              onError={() => setBannerImage(null)} // Hide if image fails to load
+              onError={() => setBannerImage(null)}
             />
           </div>
         )}
 
-        {/* 3. EXAM PREP HEADER (Breadcrumbs & Page Title) */}
+        {/* EXAM PREP HEADER */}
         <ExamPrepHeader 
           examName="IITM BS" 
           examPath="/exam-preparation/iitm-bs" 
@@ -170,14 +167,14 @@ const IITMBSSubjectNotesPage = () => {
           pageTitle={selectedSubject ? `${selectedSubject} Resources` : undefined}
         />
 
-        {/* 4. FILTER AND SEARCH (STICKY) */}
+        {/* FILTER AND SEARCH (STICKY) - Share Button Removed */}
         <div 
           ref={searchBarRef}
           className={`w-full bg-white border-b border-slate-200 transition-all z-[50] ${
             isSticky ? "fixed top-16 shadow-md" : "relative"
           }`}
         >
-          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center">
             <div className="flex items-center gap-3 flex-1">
               <Button 
                 variant="ghost" 
@@ -200,21 +197,12 @@ const IITMBSSubjectNotesPage = () => {
                 />
               </div>
             </div>
-
-            <ShareButton 
-              url={window.location.href} 
-              title={`${selectedSubject} Notes`} 
-              variant="outline" 
-              size="sm" 
-              className="h-10 px-4" 
-            />
           </div>
         </div>
 
-        {/* Placeholder to prevent layout jump when sticky header activates */}
         {isSticky && <div className="h-16" />}
 
-        {/* 5. CONTENT (NOTES GRID) */}
+        {/* CONTENT (NOTES GRID) */}
         <section className="max-w-7xl mx-auto px-4 py-10">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
