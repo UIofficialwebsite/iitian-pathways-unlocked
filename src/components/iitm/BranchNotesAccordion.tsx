@@ -1,7 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, Download } from "lucide-react";
+import { FileText, Info, Download, Share } from "lucide-react"; // Changed Share2 to Share for MacBook style
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -25,6 +25,10 @@ const BranchNotesAccordion = ({
 }: BranchNotesAccordionProps) => {
   const { handleDownload, downloadCounts } = useDownloadHandler();
   const navigate = useNavigate();
+
+  // Deep purplish color theme
+  const deepPurple = "bg-[#4c1d95]"; // Deep Purple 900
+  const deepPurpleHover = "hover:bg-[#3b0764]"; 
 
   const renderNoteCard = (note: Note) => {
     const dCount = downloadCounts[note.id] || note.download_count || 0;
@@ -65,9 +69,9 @@ const BranchNotesAccordion = ({
           >
             View
           </button>
-          {/* Light Red "Get PDF" Button */}
+          {/* Deep Purplish "Get PDF" Button */}
           <button 
-            className="flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold hover:bg-red-600 transition-colors uppercase bg-[#ef4444]"
+            className={`flex-1 py-2 px-4 rounded-[4px] text-white text-xs font-semibold ${deepPurple} ${deepPurpleHover} transition-colors uppercase`}
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
@@ -104,12 +108,13 @@ const BranchNotesAccordion = ({
           <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-2">
             <h2 className="text-2xl font-bold text-gray-900">{subjectData.subjectName}</h2>
             <div className="flex items-center space-x-2">
+              {/* MacBook style professional share button */}
               <ShareButton
                 url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
                 title={`${subjectData.subjectName} Study Materials`}
-                className="p-2 rounded border border-gray-200 hover:bg-gray-50 text-gray-500"
+                className={`flex items-center gap-2 px-4 py-2 rounded-full border border-gray-200 text-gray-600 font-semibold text-sm hover:border-black hover:bg-gray-50 transition-all`}
                 variant="ghost"
-                size="icon"
+                showText={true}
               />
             </div>
           </div>
@@ -125,10 +130,10 @@ const BranchNotesAccordion = ({
             )}
           </div>
 
-          {/* View All Button - Rectangular with slightly rounded corners */}
+          {/* View All Button - Deep Purplish and Rectangular with slight rounding */}
           {subjectData.notes.length > 3 && (
             <button 
-              className="w-full bg-[#e5e7eb] text-gray-700 font-medium rounded-md text-sm hover:bg-gray-300 transition-colors flex justify-center items-center py-4"
+              className={`w-full ${deepPurple} ${deepPurpleHover} text-white font-medium rounded-md text-sm transition-colors flex justify-center items-center py-4`}
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
               View all materials <span className="ml-1 text-lg">›</span>
