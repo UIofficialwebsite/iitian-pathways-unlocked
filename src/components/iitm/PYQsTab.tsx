@@ -6,27 +6,33 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { ShareButton } from "@/components/ShareButton";
 
 interface PYQsTabProps {
-  branch: string; level: string; year: string | null; examType?: string | null; subject?: string | null;
+  branch: string;
+  level: string;
+  years: string[];
+  examTypes: string[];
+  subjects: string[];
 }
 
-const PYQsTab = ({ branch, level, year, examType, subject }: PYQsTabProps) => {
+const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) => {
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
   const filteredPYQs = pyqs.filter(pyq => {
     const matchesProgram = pyq.branch === branchSlug && pyq.level === levelSlug;
-    const matchesYear = year ? pyq.year?.toString() === year : true;
-    const matchesType = examType ? pyq.exam_type === examType : true;
-    const matchesSubject = subject ? pyq.subject === subject : true;
+    // Multi-Select Logic: If array is empty, include all. Else, check if included.
+    const matchesYear = years.length === 0 || (pyq.year && years.includes(pyq.year.toString()));
+    const matchesType = examTypes.length === 0 || (pyq.exam_type && examTypes.includes(pyq.exam_type));
+    const matchesSubject = subjects.length === 0 || (pyq.subject && subjects.includes(pyq.subject));
+    
     return matchesProgram && matchesYear && matchesType && matchesSubject;
   });
 
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <AdminAddButton contentType="pyqs" examType={examType || "IITM_BS"} branch={branchSlug} level={levelSlug}>
-          Add {examType?.toUpperCase() || 'Category'} Paper
+        <AdminAddButton contentType="pyqs" examType="IITM_BS" branch={branchSlug} level={levelSlug}>
+          Add Paper
         </AdminAddButton>
       </div>
       
@@ -62,7 +68,7 @@ const PYQsTab = ({ branch, level, year, examType, subject }: PYQsTabProps) => {
             </Card>
           ))
         ) : (
-          <div className="col-span-full py-20 text-center text-slate-400 font-medium italic">No papers found for the selection.</div>
+          <div className="col-span-full py-20 text-center text-slate-400 font-medium italic">No papers found. Try adjusting filters.</div>
         )}
       </div>
     </div>
