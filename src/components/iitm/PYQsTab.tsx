@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Share2 } from "lucide-react";
+import { Download } from "lucide-react";
 import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { ShareButton } from "@/components/ShareButton";
@@ -19,6 +19,7 @@ const PYQsTab = ({ branch, level, year, examType, subject }: PYQsTabProps) => {
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
+  // Non-mandatory filtering: If filter is null, include all
   const filteredPYQs = pyqs.filter(pyq => {
     const matchesProgram = pyq.branch === branchSlug && pyq.level === levelSlug;
     const matchesYear = year ? pyq.year?.toString() === year : true;
@@ -56,7 +57,7 @@ const PYQsTab = ({ branch, level, year, examType, subject }: PYQsTabProps) => {
                 <CardDescription className="text-[12px] text-slate-500 line-clamp-2 font-sans">
                   {pyq.description || `Official assessment paper for ${pyq.subject}.`}
                 </CardDescription>
-                {/* Subject Badge */}
+                {/* Subject Badge at bottom of content */}
                 {pyq.subject && (
                   <div className="mt-4">
                     <span className="px-3 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase rounded-md tracking-tight">
