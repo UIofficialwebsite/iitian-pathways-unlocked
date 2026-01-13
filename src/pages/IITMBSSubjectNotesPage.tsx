@@ -6,7 +6,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowLeft, Search, Download } from "lucide-react";
+import { ArrowLeft, Search, Download } from "lucide-react"; // Removed FileText
 import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -106,9 +106,15 @@ const IITMBSSubjectNotesPage = () => {
       >
         <div>
           <div className="flex justify-between items-start mb-4">
-            <div className="text-[#b93a3a]">
-              <FileText className="w-8 h-8" strokeWidth={1.5} />
+            {/* Updated Custom Logo Icon Area */}
+            <div className="shrink-0">
+              <img 
+                src="https://i.ibb.co/mr3z2pF7/image.png" 
+                alt="Notes logo" 
+                className="w-10 h-10 object-contain"
+              />
             </div>
+            {/* Download Count */}
             <div className="flex items-center text-gray-400 text-[11px] font-medium">
               <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
               <span>{displayDownloads}</span>
@@ -192,7 +198,6 @@ const IITMBSSubjectNotesPage = () => {
                   placeholder={`Search in ${selectedSubject || 'notes'}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  // Changed bg-slate-50 to bg-white
                   className="pl-9 h-10 bg-white border-slate-200 text-sm focus-visible:ring-2 focus-visible:ring-[#1E3A8A] transition-all"
                 />
               </div>
