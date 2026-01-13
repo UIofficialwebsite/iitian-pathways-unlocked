@@ -13,13 +13,11 @@ import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 import { X } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { courses } = useBackend();
-  const isMobile = useIsMobile();
   
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
@@ -385,83 +383,162 @@ const IITMBSPrep = () => {
           </div>
 
           <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[100]">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-              {/* md:overflow-visible is key here to prevent dropdown clipping */}
-              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto md:overflow-visible no-scrollbar dropdown-container">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex flex-nowrap items-center gap-3 py-3 font-sans overflow-x-auto no-scrollbar">
                 
                 {activeTab === 'courses' ? (
                   <>
-                    <div className="relative shrink-0">
-                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                        Branch
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Branch
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    </button>
+                    <button onClick={() => toggleDropdown('courseLevel')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {selectedCourseLevels.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseLevels.length}</span>}
+                      Level
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseLevel' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    </button>
+                    <button onClick={() => toggleDropdown('courseSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {selectedCourseSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseSubjects.length}</span>}
+                      Subject
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    </button>
+                    <button onClick={() => toggleDropdown('coursePricing')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {coursePriceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                      Pricing
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'coursePricing' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    </button>
+                    
+                    {(selectedCourseLevels.length > 0 || selectedCourseSubjects.length > 0 || coursePriceRange || courseNewlyLaunched || courseFastrackOnly || courseBestSellerOnly) && (
+                      <button 
+                        onClick={() => { setSelectedCourseLevels([]); setSelectedCourseSubjects([]); setCoursePriceRange(null); setCourseNewlyLaunched(false); setCourseFastrackOnly(false); setCourseBestSellerOnly(false); }}
+                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                      >
+                        Reset Filters
                       </button>
-                      {!isMobile && openDropdown === 'branch' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                          {renderDropdownContent('branch')}
-                        </div>
-                      )}
-                    </div>
-                    {/* ... other course filters ... */}
+                    )}
                   </>
                 ) : hasSubFilters ? (
                   <>
-                    <div className="relative shrink-0">
-                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                        Branch <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                      </button>
-                      {!isMobile && openDropdown === 'branch' && (
-                        <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                          {renderDropdownContent('branch')}
-                        </div>
-                      )}
-                    </div>
+                    <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      Branch
+                      <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                    </button>
 
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
-                      <div className="relative shrink-0">
-                        <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                          Level <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                        </button>
-                        {!isMobile && openDropdown === 'level' && (
-                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[160px] p-3">
-                            {renderDropdownContent('level')}
-                          </div>
-                        )}
-                      </div>
+                      <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                        Level
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
                     )}
                     
-                    {/* Updated Multi-select Subject Filter for Notes tab */}
                     {activeTab === 'notes' && (
-                      <div className="relative shrink-0">
-                        <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
-                          {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
-                          Subject
-                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                        </button>
-                        {!isMobile && openDropdown === 'notesSubject' && (
-                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                            {renderDropdownContent('notesSubject')}
-                          </div>
-                        )}
-                      </div>
+                      <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                        {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
+                        Subject
+                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                      </button>
                     )}
 
-                    {/* ... PYQ and Tools filters ... */}
+                    {activeTab === 'pyqs' && (
+                      <>
+                        <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                          {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                          Year
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        </button>
+                        <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                          {examType && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                          Exam Type
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'examType' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        </button>
+                      </>
+                    )}
+
+                    {activeTab === 'tools' && tools.map(tool => (
+                      <button 
+                        key={tool.id}
+                        onClick={() => setSelectedTool(tool.id)}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}
+                      >
+                        {tool.label}
+                        {selectedTool === tool.id && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
+                      </button>
+                    ))}
+                    
+                    {((activeTab === 'notes' && selectedNotesSubjects.length > 0) || (activeTab === 'pyqs' && (pyqYear || examType))) && (
+                      <button 
+                        onClick={() => { 
+                          if (activeTab === 'notes') setSelectedNotesSubjects([]);
+                          if (activeTab === 'pyqs') { setPyqYear(null); setExamType(null); }
+                        }}
+                        className="text-[#6366f1] text-[12px] md:text-[13px] font-medium whitespace-nowrap hover:underline"
+                      >
+                        Reset Filters
+                      </button>
+                    )}
                   </>
                 ) : (activeTab === 'news' || activeTab === 'dates') && (
                   <>
-                    <button onClick={() => setSortOrder('recent')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>Recent First</button>
-                    <button onClick={() => setSortOrder('oldest')} className={`shrink-0 px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}>Oldest First</button>
+                    <button 
+                      onClick={() => setSortOrder('recent')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'recent' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Recent First
+                      {sortOrder === 'recent' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
+                    </button>
+                    <button 
+                      onClick={() => setSortOrder('oldest')}
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${sortOrder === 'oldest' ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Oldest First
+                      {sortOrder === 'oldest' && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
+                    </button>
                   </>
                 )}
               </div>
-
-              {/* MOBILE ONLY: Shared Dropdown Container */}
-              {isMobile && openDropdown && (
-                <div className="absolute top-full left-0 right-0 flex justify-center z-[9999] px-4 pointer-events-none">
-                  <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-xl min-w-[180px] p-3 dropdown-container pointer-events-auto mt-2">
-                    {renderDropdownContent(openDropdown)}
-                  </div>
+            </div>
+            
+            {/* Dropdowns rendered OUTSIDE scrollable area for proper z-index - matches JEE/NEET pattern */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+              {openDropdown === 'branch' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[180px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('branch')}
+                </div>
+              )}
+              {openDropdown === 'level' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[160px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('level')}
+                </div>
+              )}
+              {openDropdown === 'notesSubject' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[230px] lg:left-[250px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[200px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('notesSubject')}
+                </div>
+              )}
+              {openDropdown === 'year' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[230px] lg:left-[250px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[140px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('year')}
+                </div>
+              )}
+              {openDropdown === 'examType' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[320px] lg:left-[350px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[160px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('examType')}
+                </div>
+              )}
+              {openDropdown === 'courseLevel' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[120px] lg:left-[130px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[160px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('courseLevel')}
+                </div>
+              )}
+              {openDropdown === 'courseSubject' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[210px] lg:left-[230px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[180px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('courseSubject')}
+                </div>
+              )}
+              {openDropdown === 'coursePricing' && (
+                <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-[310px] lg:left-[340px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[140px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
+                  {renderDropdownContent('coursePricing')}
                 </div>
               )}
             </div>
@@ -490,7 +567,7 @@ const IITMBSPrep = () => {
                 subjects={selectedCourseSubjects}
                 priceRange={coursePriceRange}
                 newlyLaunched={courseNewlyLaunched}
-                fastrackOnly={courseFastrackOnly}
+                fasttrackOnly={courseFastrackOnly}
                 bestSellerOnly={courseBestSellerOnly}
               />
             )}
