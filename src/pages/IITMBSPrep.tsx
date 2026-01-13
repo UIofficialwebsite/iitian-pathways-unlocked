@@ -388,21 +388,25 @@ const IITMBSPrep = () => {
                 
                 {activeTab === 'courses' ? (
                   <>
+                    {/* Branch dropdown */}
                     <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Branch
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
+                    {/* Level dropdown */}
                     <button onClick={() => toggleDropdown('courseLevel')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedCourseLevels.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseLevels.length}</span>}
                       Level
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseLevel' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
+                    {/* Subject dropdown */}
                     <button onClick={() => toggleDropdown('courseSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedCourseSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseSubjects.length}</span>}
                       Subject
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
+                    {/* Pricing dropdown */}
                     <button onClick={() => toggleDropdown('coursePricing')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {coursePriceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Pricing
@@ -420,33 +424,42 @@ const IITMBSPrep = () => {
                   </>
                 ) : hasSubFilters ? (
                   <>
+                    {/* Branch dropdown with count badge */}
                     <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                      {selectedBranch && selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Branch
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
 
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
-                      <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
-                        Level
-                        <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
-                      </button>
+                      <>
+                        {/* Level dropdown with count badge */}
+                        <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
+                          {selectedLevel && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
+                          Level
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'level' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        </button>
+                      </>
                     )}
                     
                     {activeTab === 'notes' && (
+                      /* Subject dropdown with count badge */
                       <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                         {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
-                        Subject
+                        Subjects
                         <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                       </button>
                     )}
 
                     {activeTab === 'pyqs' && (
                       <>
+                        {/* Year dropdown with count badge */}
                         <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                           {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                           Year
                           <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                         </button>
+                        {/* Exam Type dropdown with count badge */}
                         <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                           {examType && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                           Exam Type
@@ -456,16 +469,18 @@ const IITMBSPrep = () => {
                     )}
 
                     {activeTab === 'tools' && tools.map(tool => (
+                      /* Toggle pill filters with X icon when selected - matching JEE/NEET design */
                       <button 
                         key={tool.id}
                         onClick={() => setSelectedTool(tool.id)}
-                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black font-semibold' : 'border-[#e5e7eb] text-[#374151]'}`}
+                        className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] whitespace-nowrap transition-all flex items-center gap-2 bg-white ${selectedTool === tool.id ? 'border-black text-black' : 'border-[#e5e7eb] text-[#374151]'}`}
                       >
                         {tool.label}
                         {selectedTool === tool.id && <X className="w-3.5 h-3.5 stroke-[2.5]" />}
                       </button>
                     ))}
                     
+                    {/* Reset Filters link */}
                     {((activeTab === 'notes' && selectedNotesSubjects.length > 0) || (activeTab === 'pyqs' && (pyqYear || examType))) && (
                       <button 
                         onClick={() => { 
