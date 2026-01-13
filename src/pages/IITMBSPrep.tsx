@@ -24,7 +24,7 @@ const IITMBSPrep = () => {
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesCategory' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   
@@ -43,6 +43,9 @@ const IITMBSPrep = () => {
   const [courseFastrackOnly, setCourseFastrackOnly] = useState(false);
   const [courseBestSellerOnly, setCourseBestSellerOnly] = useState(false);
 
+  // Notes Advanced Filters
+  const [selectedNotesSubjects, setSelectedNotesSubjects] = useState<string[]>([]);
+
   // Temporary states for Apply/Cancel logic
   const [tempBranch, setTempBranch] = useState("Data Science");
   const [tempLevel, setTempLevel] = useState("Foundation");
@@ -51,6 +54,7 @@ const IITMBSPrep = () => {
   const [tempCourseLevels, setTempCourseLevels] = useState<string[]>([]);
   const [tempCourseSubjects, setTempCourseSubjects] = useState<string[]>([]);
   const [tempCoursePrice, setTempCoursePrice] = useState<string | null>(null);
+  const [tempNotesSubjects, setTempNotesSubjects] = useState<string[]>([]);
   
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
@@ -135,6 +139,7 @@ const IITMBSPrep = () => {
       setTempCourseLevels(selectedCourseLevels);
       setTempCourseSubjects(selectedCourseSubjects);
       setTempCoursePrice(coursePriceRange);
+      setTempNotesSubjects(selectedNotesSubjects);
       setOpenDropdown(type);
     }
   };
@@ -163,6 +168,11 @@ const IITMBSPrep = () => {
     setSelectedCourseLevels(tempCourseLevels);
     setSelectedCourseSubjects(tempCourseSubjects);
     setCoursePriceRange(tempCoursePrice);
+    setOpenDropdown(null);
+  };
+
+  const handleApplyNotesCategory = () => {
+    setSelectedNotesSubjects(tempNotesSubjects);
     setOpenDropdown(null);
   };
 
@@ -255,6 +265,22 @@ const IITMBSPrep = () => {
             <div className="flex gap-2 pt-2 border-t">
               <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
               <button onClick={handleApplyCourseFilters} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+            </div>
+          </>
+        );
+      case 'notesCategory':
+        return (
+          <>
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+              {availableCourseSubjects.map(sub => (
+                <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
+                  <input type="checkbox" checked={tempNotesSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempNotesSubjects, setTempNotesSubjects)} className="accent-[#6366f1]" /> {sub}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 pt-2 border-t">
+              <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
+              <button onClick={handleApplyNotesCategory} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
             </div>
           </>
         );
@@ -454,6 +480,22 @@ const IITMBSPrep = () => {
                         )}
                       </div>
                     )}
+                    
+                    {activeTab === 'notes' && (
+                      <div className="relative shrink-0">
+                        <button onClick={() => toggleDropdown('notesCategory')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                          {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
+                          Category
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesCategory' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                        </button>
+                        {!isMobile && openDropdown === 'notesCategory' && (
+                          <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
+                            {renderDropdownContent('notesCategory')}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {activeTab === 'pyqs' && (
                       <>
                         <div className="relative shrink-0">
@@ -510,7 +552,14 @@ const IITMBSPrep = () => {
 
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {activeTab === "notes" && <BranchNotesTab branch={selectedBranch} level={selectedLevel} />}
+            {activeTab === "notes" && (
+              <BranchNotesTab 
+                branch={selectedBranch} 
+                level={selectedLevel} 
+                selectedSubjects={selectedNotesSubjects} 
+                setSelectedSubjects={setSelectedNotesSubjects} 
+              />
+            )}
             {activeTab === "pyqs" && <PYQsTab branch={selectedBranch} level={selectedLevel} year={pyqYear} examType={examType} />}
             {activeTab === "syllabus" && <SyllabusTab branch={selectedBranch} />}
             {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={selectedBranch} level={selectedLevel} />}
