@@ -24,7 +24,7 @@ import {
 
 /**
  * Custom Filled Arrow Component
- * Matches the triangular filled design.
+ * Rotates based on dropdown state.
  */
 const FilledArrow = ({ isOpen }: { isOpen: boolean }) => (
   <svg 
@@ -48,11 +48,12 @@ const IITMBSPrep = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
+  // Track open dropdown state
   const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'pyqSubject' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesSubject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   
-  // --- CORE SELECTIONS ---
+  // --- CORE PROGRAM FILTERS ---
   const [selectedBranch, setSelectedBranch] = useState("Data Science");
   const [selectedLevel, setSelectedLevel] = useState("Foundation");
   
@@ -61,7 +62,7 @@ const IITMBSPrep = () => {
   const [examType, setExamType] = useState<string | null>(null);
   const [pyqSubject, setPyqSubject] = useState<string | null>(null);
 
-  // --- TAB-SPECIFIC STATES ---
+  // --- TAB SPECIFIC FILTERS ---
   const [selectedTool, setSelectedTool] = useState("cgpa-calculator");
   const [selectedCourseLevels, setSelectedCourseLevels] = useState<string[]>([]);
   const [selectedCourseSubjects, setSelectedCourseSubjects] = useState<string[]>([]);
@@ -74,7 +75,7 @@ const IITMBSPrep = () => {
   const [selectedNotesSubjects, setSelectedNotesSubjects] = useState<string[]>([]);
   const [availableNotesSubjects, setAvailableNotesSubjects] = useState<string[]>([]);
 
-  // --- TEMPORARY MODAL STATES (Apply/Cancel logic) ---
+  // --- TEMPORARY APPLY/CANCEL STATES ---
   const [tempBranch, setTempBranch] = useState("Data Science");
   const [tempLevel, setTempLevel] = useState("Foundation");
   const [tempPyqYear, setTempPyqYear] = useState<string | null>(null);
@@ -91,7 +92,7 @@ const IITMBSPrep = () => {
   const branchSlug = useMemo(() => selectedBranch.toLowerCase().replace(/\s+/g, '-'), [selectedBranch]);
   const levelSlug = useMemo(() => selectedLevel.toLowerCase(), [selectedLevel]);
 
-  // Derive PYQ unique options directly from backend data
+  // Derive PYQ unique options based on current selection from pyqs table
   const currentProgramPyqs = useMemo(() => 
     pyqs.filter(p => p.branch === branchSlug && p.level === levelSlug)
   , [pyqs, branchSlug, levelSlug]);
@@ -107,6 +108,13 @@ const IITMBSPrep = () => {
   const dynamicPyqSubjects = useMemo(() => 
     Array.from(new Set(currentProgramPyqs.map(p => p.subject).filter(Boolean))).sort()
   , [currentProgramPyqs]);
+
+  // Initial Sync: Ensure filters show data if available from database automatically
+  useEffect(() => {
+    if (!pyqYear && dynamicYears.length > 0) setPyqYear(dynamicYears[0]);
+    if (!examType && dynamicExamTypes.length > 0) setExamType(dynamicExamTypes[0]);
+    if (!pyqSubject && dynamicPyqSubjects.length > 0) setPyqSubject(dynamicPyqSubjects[0]);
+  }, [dynamicYears, dynamicExamTypes, dynamicPyqSubjects]);
 
   // Derive Branch/Level options from Courses table
   const iitmCourses = useMemo(() => 
@@ -129,7 +137,7 @@ const IITMBSPrep = () => {
     Array.from(new Set(iitmCourses.filter(c => c.branch === selectedBranch).map(c => c.subject))).filter(Boolean).sort() as string[]
   , [iitmCourses, selectedBranch]);
 
-  // --- EFFECTS ---
+  // --- CORE UI LOGIC ---
   useEffect(() => {
     if (filterRef.current) setFilterOffset(filterRef.current.offsetTop);
   }, []);
@@ -150,7 +158,6 @@ const IITMBSPrep = () => {
     setActiveTab(tabFromUrl);
   }, [location.pathname]);
 
-  // --- HANDLERS ---
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
     setOpenDropdown(null);
@@ -174,6 +181,7 @@ const IITMBSPrep = () => {
     }
   };
 
+  // Apply Handlers
   const handleApplyBranch = () => { setSelectedBranch(tempBranch); setOpenDropdown(null); };
   const handleApplyLevel = () => { setSelectedLevel(tempLevel); setOpenDropdown(null); };
   const handleApplyYear = () => { setPyqYear(tempPyqYear); setOpenDropdown(null); };
@@ -202,11 +210,11 @@ const IITMBSPrep = () => {
     setOpenDropdown(null);
   };
 
-  const toggleItemSelection = (item: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
+  const toggleSelection = (item: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
     setter(prev => prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]);
   };
 
-  // --- BREADCRUMB LOGIC ---
+  // --- CORRECT BREADCRUMB LOGIC ---
   const getBreadcrumbItems = () => {
     const items = [];
     const activeLabel = tabs.find(t => t.id === activeTab)?.label || activeTab;
@@ -235,7 +243,13 @@ const IITMBSPrep = () => {
     { id: "dates", label: "Important Dates" }
   ];
 
-  // --- DROP DOWN RENDERER ---
+  const tools = [
+    { id: "cgpa-calculator", label: "CGPA Calculator" },
+    { id: "grade-calculator", label: "Grade Calculator" },
+    { id: "marks-predictor", label: "Marks Predictor" }
+  ];
+
+  // --- RENDER DROPDOWN CONTENT ---
   const renderDropdownContent = (type: typeof openDropdown) => {
     if (!type) return null;
     
@@ -265,9 +279,9 @@ const IITMBSPrep = () => {
                 } 
                 onChange={() => {
                   if (isCheckbox) {
-                    if (type === 'courseLevel') toggleItemSelection(item, tempCourseLevels, setTempCourseLevels);
-                    else if (type === 'courseSubject') toggleItemSelection(item, tempCourseSubjects, setTempCourseSubjects);
-                    else toggleItemSelection(item, tempNotesSubjects, setTempNotesSubjects);
+                    if (type === 'courseLevel') toggleSelection(item, tempCourseLevels, setTempCourseLevels);
+                    else if (type === 'courseSubject') toggleSelection(item, tempCourseSubjects, setTempCourseSubjects);
+                    else toggleSelection(item, tempNotesSubjects, setTempNotesSubjects);
                   } else {
                     if (type === 'branch') setTempBranch(item);
                     else if (type === 'level') setTempLevel(item);
@@ -305,7 +319,7 @@ const IITMBSPrep = () => {
       <main className="pt-16">
         <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle="IITM BS Degree Preparation" />
 
-        {/* STICKY FILTER BAR - OVERFLOW VISIBLE IS MANDATORY FOR LAYERING */}
+        {/* STICKY FILTER BAR WITH Z-INDEX AND OVERFLOW FIX */}
         <div ref={filterRef} className={`w-full transition-shadow duration-300 z-[5000] ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8 pt-4 overflow-x-auto no-scrollbar">
@@ -319,7 +333,25 @@ const IITMBSPrep = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center overflow-visible">
               <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-visible w-full">
                 
-                {/* NOTES FILTERS (Match Image image_7f8de6.png) */}
+                {/* --- PROGRAM FILTERS (BRANCH/LEVEL) AT START --- */}
+                {activeTab !== 'pyqs' && (
+                  <>
+                    <div className="relative dropdown-container overflow-visible">
+                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
+                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                      </button>
+                      {openDropdown === 'branch' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('branch')}</div>}
+                    </div>
+                    <div className="relative dropdown-container overflow-visible">
+                      <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
+                        Level <FilledArrow isOpen={openDropdown === 'level'} />
+                      </button>
+                      {openDropdown === 'level' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('level')}</div>}
+                    </div>
+                  </>
+                )}
+
+                {/* --- NOTES TAB SELECTION UI (MATCHES IMAGE 7F8DE6) --- */}
                 {activeTab === 'notes' && (
                   <div className="flex items-center gap-3 overflow-visible">
                     <div className="relative dropdown-container overflow-visible">
@@ -336,7 +368,7 @@ const IITMBSPrep = () => {
 
                     {/* Active Selections with Black Border and Close Icon (image_80731f.png) */}
                     {selectedNotesSubjects.map(sub => (
-                      <div key={sub} className="px-3 py-1 border border-black rounded-full text-[12px] flex items-center gap-2 bg-white">
+                      <div key={sub} className="px-3 py-1 border border-black rounded-full text-[12px] flex items-center gap-2 bg-white font-medium">
                         {sub}
                         <X className="w-3.5 h-3.5 cursor-pointer" onClick={() => setSelectedNotesSubjects(prev => prev.filter(s => s !== sub))} />
                       </div>
@@ -344,45 +376,43 @@ const IITMBSPrep = () => {
                   </div>
                 )}
 
-                {/* PYQ FILTERS (Subject > Year > Exam) */}
+                {/* --- PYQ CATEGORIES DROPDOWNS AT LAST --- */}
                 {activeTab === 'pyqs' && (
-                  <>
-                    <div className="relative dropdown-container overflow-visible">
+                  <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-visible">
+                     <div className="relative dropdown-container">
+                      <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
+                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                      </button>
+                      {openDropdown === 'branch' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('branch')}</div>}
+                    </div>
+                    <div className="relative dropdown-container">
+                      <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
+                        Level <FilledArrow isOpen={openDropdown === 'level'} />
+                      </button>
+                      {openDropdown === 'level' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('level')}</div>}
+                    </div>
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('pyqSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
                         Subjects <FilledArrow isOpen={openDropdown === 'pyqSubject'} />
                       </button>
                       {openDropdown === 'pyqSubject' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('pyqSubject')}</div>}
                     </div>
-                    <div className="relative dropdown-container overflow-visible">
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
                         Year <FilledArrow isOpen={openDropdown === 'year'} />
                       </button>
                       {openDropdown === 'year' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[140px]">{renderDropdownContent('year')}</div>}
                     </div>
-                    <div className="relative dropdown-container overflow-visible">
+                    <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
                         Exam <FilledArrow isOpen={openDropdown === 'examType'} />
                       </button>
                       {openDropdown === 'examType' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('examType')}</div>}
                     </div>
-                  </>
+                  </div>
                 )}
 
-                {/* BASE FILTERS (Branch & Level) */}
-                <div className="relative dropdown-container overflow-visible">
-                  <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
-                    Branch <FilledArrow isOpen={openDropdown === 'branch'} />
-                  </button>
-                  {openDropdown === 'branch' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('branch')}</div>}
-                </div>
-                <div className="relative dropdown-container overflow-visible">
-                  <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151]">
-                    Level <FilledArrow isOpen={openDropdown === 'level'} />
-                  </button>
-                  {openDropdown === 'level' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('level')}</div>}
-                </div>
-
-                {/* RESET FILTERS LINK (Always at end) */}
+                {/* --- RESET FILTERS LINK AT END --- */}
                 {(activeTab === 'pyqs' || activeTab === 'notes') && (
                   <button onClick={resetAllFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2 transition-all ml-auto">
                     Reset Filters
@@ -395,6 +425,7 @@ const IITMBSPrep = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
+        {/* Dynamic Breadcrumb Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 bg-[#fcfcfc]">
           <Breadcrumb>
             <BreadcrumbList className="flex-wrap gap-1">
@@ -410,13 +441,36 @@ const IITMBSPrep = () => {
           </Breadcrumb>
         </div>
 
+        {/* --- MAIN CONTENT RENDERING --- */}
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {activeTab === "pyqs" && <PYQsTab branch={selectedBranch} level={selectedLevel} year={pyqYear} examType={examType} subject={pyqSubject} />}
-            {activeTab === "notes" && <BranchNotesTab branch={selectedBranch} level={selectedLevel} selectedSubjects={selectedNotesSubjects} onSubjectsLoaded={setAvailableNotesSubjects} />}
+            {activeTab === "pyqs" && (
+              <PYQsTab 
+                branch={selectedBranch} 
+                level={selectedLevel} 
+                year={pyqYear} 
+                examType={examType} 
+                subject={pyqSubject} 
+              />
+            )}
+            {activeTab === "notes" && (
+              <BranchNotesTab 
+                branch={selectedBranch} 
+                level={selectedLevel} 
+                selectedSubjects={selectedNotesSubjects} 
+                onSubjectsLoaded={setAvailableNotesSubjects} 
+              />
+            )}
             {activeTab === "syllabus" && <SyllabusTab branch={selectedBranch} />}
             {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={selectedBranch} level={selectedLevel} />}
-            {activeTab === "courses" && <PaidCoursesTab branch={selectedBranch} levels={selectedCourseLevels} subjects={selectedCourseSubjects} priceRange={coursePriceRange} />}
+            {activeTab === "courses" && (
+              <PaidCoursesTab 
+                branch={selectedBranch} 
+                levels={selectedCourseLevels} 
+                subjects={selectedCourseSubjects} 
+                priceRange={coursePriceRange} 
+              />
+            )}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
             {activeTab === "dates" && <ImportantDatesTab sortOrder={sortOrder} />}
           </div>
