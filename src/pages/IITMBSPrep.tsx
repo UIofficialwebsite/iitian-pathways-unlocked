@@ -11,7 +11,7 @@ import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
-import { X, Home, ChevronRight } from "lucide-react";
+import { X, Home, ChevronRight, RotateCcw } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import {
   Breadcrumb,
@@ -212,12 +212,6 @@ const IITMBSPrep = () => {
     { id: "dates", label: "Important Dates" }
   ];
 
-  const tools = [
-    { id: "cgpa-calculator", label: "CGPA Calculator" },
-    { id: "grade-calculator", label: "Grade Calculator" },
-    { id: "marks-predictor", label: "Marks Predictor" }
-  ];
-
   const renderDropdownContent = (type: typeof openDropdown) => {
     if (!type) return null;
     switch (type) {
@@ -363,14 +357,9 @@ const IITMBSPrep = () => {
                       {pyqYear || 'Year'}
                       <span className="ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-t-[#374151] border-l-transparent border-r-transparent"></span>
                     </button>
-                    {/* Exam button: Static label, dropdown lists categories like Quiz 1, etc. */}
                     <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151] dropdown-container">
                       Exam
                       <span className="ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-t-[#374151] border-l-transparent border-r-transparent"></span>
-                    </button>
-                    {/* Reset filter as text link */}
-                    <button onClick={resetPyqFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2">
-                      Reset Filters
                     </button>
                   </>
                 )}
@@ -384,6 +373,13 @@ const IITMBSPrep = () => {
                   <span className="ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-t-[#374151] border-l-transparent border-r-transparent"></span>
                 </button>
                 {activeTab === 'notes' && <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center bg-white font-sans text-[#374151] dropdown-container">Subjects</button>}
+                
+                {/* Reset filter as text link at the end */}
+                {activeTab === 'pyqs' && (
+                  <button onClick={resetPyqFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2">
+                    Reset Filters
+                  </button>
+                )}
               </div>
             </div>
             
@@ -392,8 +388,8 @@ const IITMBSPrep = () => {
               {openDropdown === 'pyqSubject' && <div className="absolute top-0 left-4 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[180px]">{renderDropdownContent('pyqSubject')}</div>}
               {openDropdown === 'year' && <div className="absolute top-0 left-4 sm:left-[110px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[140px]">{renderDropdownContent('year')}</div>}
               {openDropdown === 'examType' && <div className="absolute top-0 left-4 sm:left-[210px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[160px]">{renderDropdownContent('examType')}</div>}
-              {openDropdown === 'branch' && <div className="absolute top-0 left-4 sm:left-[activeTab === 'pyqs' ? 380px : 4px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[180px]">{renderDropdownContent('branch')}</div>}
-              {openDropdown === 'level' && <div className="absolute top-0 left-4 sm:left-[activeTab === 'pyqs' ? 480px : 110px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[160px]">{renderDropdownContent('level')}</div>}
+              {openDropdown === 'branch' && <div className="absolute top-0 left-4 sm:left-[activeTab === 'pyqs' ? 310 : 4]px bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[180px]">{renderDropdownContent('branch')}</div>}
+              {openDropdown === 'level' && <div className="absolute top-0 left-4 sm:left-[activeTab === 'pyqs' ? 410 : 110]px bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[160px]">{renderDropdownContent('level')}</div>}
               {openDropdown === 'notesSubject' && <div className="absolute top-0 left-4 sm:left-[210px] bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 dropdown-container min-w-[200px]">{renderDropdownContent('notesSubject')}</div>}
             </div>
           </div>
