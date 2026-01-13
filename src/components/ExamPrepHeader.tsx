@@ -45,21 +45,31 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
 
   return (
     <div className="relative overflow-hidden bg-white border-b border-blue-100 min-h-[180px] flex items-center font-sans">
-      {/* WHITE BLUE BACKGROUND EFFECT LAYER */}
+      {/* --- GLASSY WHITE-BLUE BACKGROUND DESIGN --- */}
+      
+      {/* 1. Base Gradient Glow */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-white to-transparent pointer-events-none" />
       
-      {/* Decorative Blue Glows */}
-      <div className="absolute -top-[100px] -left-[40px] w-[300px] h-[300px] bg-blue-100/30 rounded-full blur-[80px] pointer-events-none" />
-      <div className="absolute bottom-0 right-[15%] w-[250px] h-[250px] bg-blue-50/50 rounded-full blur-[60px] pointer-events-none" />
+      {/* 2. Floating Glass Orbs (Decorative) */}
+      <div className="absolute -top-[100px] -left-[40px] w-[300px] h-[300px] bg-blue-100/20 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute bottom-0 right-[10%] w-[250px] h-[250px] bg-indigo-50/40 rounded-full blur-[60px] pointer-events-none" />
       
-      {/* Subtle Grid Pattern Overlay */}
+      {/* 3. Glassy Mesh / Grid Pattern */}
       <div 
-        className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-        style={{ backgroundImage: 'radial-gradient(#1E3A8A 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' }}
+        className="absolute inset-0 opacity-[0.05] pointer-events-none" 
+        style={{ 
+          backgroundImage: `linear-gradient(#1E3A8A 0.5px, transparent 0.5px), linear-gradient(90deg, #1E3A8A 0.5px, transparent 0.5px)`,
+          backgroundSize: '40px 40px' 
+        }}
       />
 
+      {/* 4. Frosted Glass Overlay */}
+      <div className="absolute inset-0 backdrop-blur-[2px] bg-white/10 pointer-events-none" />
+
+      {/* --- END BACKGROUND DESIGN --- */}
+
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full">
-        {/* Breadcrumb - Logic preserved from your version */}
+        {/* Breadcrumb - Preserving original content/logic */}
         <Breadcrumb className="mb-4">
           <BreadcrumbList className="flex-wrap gap-1">
             <BreadcrumbItem>
@@ -109,12 +119,12 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Heading - Preserved from your version */}
+        {/* Heading - Preserving original content/logic */}
         <h1 className="text-2xl md:text-3xl lg:text-[40px] font-bold text-[#383838] mb-5 tracking-tight leading-tight uppercase">
           {displayTitle}
         </h1>
 
-        {/* Share Button - Preserved from your version */}
+        {/* Share Button - Preserving original content/logic */}
         <ShareButton
           url={shareUrl}
           title={displayTitle}
