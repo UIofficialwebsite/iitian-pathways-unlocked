@@ -1,6 +1,6 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Download, ChevronRight } from "lucide-react"; // Removed FileText
+import { Download, ChevronRight } from "lucide-react";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -38,7 +38,7 @@ const BranchNotesAccordion = ({
             {/* Custom Logo Icon Area */}
             <div className="shrink-0">
               <img 
-                src="https://i.ibb.co/99LngtJV/image.png" 
+                src="https://i.ibb.co/11Y5DjM/image.png" 
                 alt="Notes logo" 
                 className="w-10 h-10 object-contain"
               />
