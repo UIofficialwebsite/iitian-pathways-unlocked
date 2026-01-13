@@ -10,7 +10,6 @@ interface BranchNotesTabProps {
 
 const BranchNotesTab = ({ branch, level, onSubjectChange }: BranchNotesTabProps) => {
   const [specialization, setSpecialization] = useState("all");
-  const [selectedSubject, setSelectedSubject] = useState("");
 
   // Convert display name to slug for API
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
@@ -27,20 +26,15 @@ const BranchNotesTab = ({ branch, level, onSubjectChange }: BranchNotesTabProps)
     setSpecialization("all");
   }, [branch, level]);
   
-  const handleSubjectChange = (subject: string) => {
-    setSelectedSubject(subject);
-    onSubjectChange?.(subject);
-  };
-  
   // Show specialization filter ONLY if the data from the DB has specializations
   const showSpecializationFilter = 
     levelSlug === 'diploma' && 
     availableSpecializations.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       {showSpecializationFilter && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mb-8">
           <button
             onClick={() => setSpecialization("all")}
             className={`px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] transition-all ${
@@ -67,25 +61,14 @@ const BranchNotesTab = ({ branch, level, onSubjectChange }: BranchNotesTabProps)
         </div>
       )}
 
-      <div>
-        <h2 className="text-2xl font-bold mb-4 capitalize">
-          {branch} - {level} Level Notes
-          {showSpecializationFilter && specialization !== 'all' && (
-            <span className="text-sm font-normal text-gray-600 ml-2">({specialization})</span>
-          )}
-        </h2>
-
-        <BranchNotesAccordion
-          groupedData={groupedData}
-          specialization={specialization}
-          loading={loading}
-          onNotesChange={reloadNotes}
-          branch={branchSlug}
-          level={levelSlug}
-          selectedSubject={selectedSubject}
-          onSubjectChange={handleSubjectChange}
-        />
-      </div>
+      <BranchNotesAccordion
+        groupedData={groupedData}
+        specialization={specialization}
+        loading={loading}
+        onNotesChange={reloadNotes}
+        branch={branchSlug}
+        level={levelSlug}
+      />
     </div>
   );
 };
