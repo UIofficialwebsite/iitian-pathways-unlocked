@@ -1,6 +1,6 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileText, Download, ChevronRight } from "lucide-react";
+import { Download, ChevronRight } from "lucide-react"; // Removed FileText
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
@@ -35,9 +35,13 @@ const BranchNotesAccordion = ({
       >
         <div>
           <div className="flex justify-between items-start mb-4">
-            {/* MacBook-style PDF Icon Area */}
-            <div className="text-[#b93a3a]">
-              <FileText className="w-8 h-8" strokeWidth={1.5} />
+            {/* Custom Logo Icon Area */}
+            <div className="shrink-0">
+              <img 
+                src="https://i.ibb.co/99LngtJV/image.png" 
+                alt="Notes logo" 
+                className="w-10 h-10 object-contain"
+              />
             </div>
             {/* Download Count */}
             <div className="flex items-center text-gray-400 text-[11px] font-medium">
@@ -104,7 +108,6 @@ const BranchNotesAccordion = ({
               url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
               title={`${subjectData.subjectName} Notes`}
               showText={true}
-              // forceTextOnMobile={false} will allow the component to hide text on mobile automatically
               className="bg-white border-gray-200"
             />
           </div>
