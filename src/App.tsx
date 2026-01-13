@@ -17,6 +17,7 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
+import IITMBSSubjectNotesPage from "./pages/IITMBSSubjectNotesPage"; // New Page Import
 import Career from "./pages/Career";
 import CareerOpportunities from "./pages/CareerOpportunities";
 import JobDetails from "./pages/JobDetails";
@@ -60,7 +61,11 @@ const App = () => (
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
+              
+              {/* IITM BS ROUTES */}
+              <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
+              
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               
               {/* CAREER ROUTES */}
