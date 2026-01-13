@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share2, Check } from 'lucide-react';
+import { Share, Check } from 'lucide-react'; // Changed Share2 to Share for professional style
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -36,7 +36,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
           text: description || `Check out: ${title}`,
           url,
         });
-        toast.success('Shared successfully');
       } else {
         await navigator.clipboard.writeText(url);
         setCopied(true);
@@ -53,11 +52,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       variant={variant}
       size={size}
       onClick={handleShare}
-      className={cn(className)}
+      // Removed rounded-full, used rounded-md for rectangular corners
+      className={cn("rounded-md border-gray-200 hover:border-black transition-all", className)}
       title="Share"
     >
-      {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
-      {showText && <span className="ml-2">{copied ? 'Copied' : 'Share'}</span>}
+      {copied ? <Check className="h-4 w-4" /> : <Share className="h-4 w-4" />}
+      {showText && (
+        // Text is hidden on mobile, shown on small screens and up
+        <span className="hidden sm:inline-block ml-2">{copied ? 'Copied' : 'Share'}</span>
+      )}
     </Button>
   );
 };
