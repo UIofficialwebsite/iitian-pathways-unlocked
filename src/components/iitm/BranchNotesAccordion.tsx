@@ -33,8 +33,8 @@ const BranchNotesAccordion = ({
     return (
       <article 
         key={note.id} 
-        // Mobile: Fixed width for side-scroll; Desktop: flex-1
-        className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-transparent hover:border-gray-200 snap-start shrink-0 w-[85vw] max-w-[300px] sm:w-auto sm:max-w-none"
+        // Slight black outline (border-black/10) and shadow
+        className="bg-white rounded-lg p-5 flex flex-col justify-between h-full border border-black/10 hover:border-black/30 transition-all snap-start shrink-0 w-[85vw] max-w-[300px] sm:w-auto sm:max-w-none"
         style={{ boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)' }}
       >
         <div>
@@ -63,7 +63,8 @@ const BranchNotesAccordion = ({
             View
           </button>
           <button 
-            className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal uppercase transition-opacity hover:opacity-90 rounded-md"
+            // Deep Purplish color as per branding requirements
+            className="flex-1 bg-[#4c1d95] hover:bg-[#3b0764] text-white h-[38px] text-[11px] font-normal uppercase transition-opacity rounded-md"
             onClick={() => handleDownload(note.id, 'notes', note.file_link)}
           >
             Get PDF
@@ -82,24 +83,31 @@ const BranchNotesAccordion = ({
     : groupedData.filter(s => !s.specialization || s.specialization === specialization);
 
   return (
-    <div className="space-y-16 pb-20">
+    <div className="space-y-12 pb-20">
       {filteredSubjects.map((subjectData) => (
-        <section key={subjectData.subjectName} className="w-full">
-          {/* Header Area - Maintained font and alignment */}
-          <div className="flex justify-between items-center mb-6 border-b border-gray-200 pb-2">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+        // Section Holder Type: White box with subtle border and shadow for the subject block
+        <section 
+          key={subjectData.subjectName} 
+          className="w-full bg-white border border-gray-100 rounded-xl p-6 md:p-8"
+          style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}
+        >
+          {/* Header Area inside the holder */}
+          <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">
               {subjectData.subjectName}
             </h2>
             <ShareButton
               url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
               title={`${subjectData.subjectName} Notes`}
-              showText={true} // Hidden on mobile via component logic
-              className="bg-white"
+              showText={true}
+              // Force text to show every time in the header (no hidden class)
+              textClassName="inline-block" 
+              className="bg-white border-gray-200 px-4"
             />
           </div>
 
           {/* Cards Grid: Side-scroll on mobile, Grid on desktop */}
-          <div className="flex overflow-x-auto snap-x no-scrollbar gap-6 mb-6 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3">
+          <div className="flex overflow-x-auto snap-x no-scrollbar gap-6 mb-8 -mx-2 px-2 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 lg:grid-cols-3">
             {subjectData.notes.length > 0 ? (
               subjectData.notes.slice(0, 3).map(renderNoteCard)
             ) : (
@@ -109,13 +117,13 @@ const BranchNotesAccordion = ({
             )}
           </div>
 
-          {/* View All Button */}
+          {/* View All Button: Rectangular with light blue color theme */}
           {subjectData.notes.length > 3 && (
             <button 
-              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-semibold py-3 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
+              className="w-full bg-[#EFF6FF] text-[#1E3A8A] font-semibold py-3.5 px-8 rounded-md transition-all hover:bg-[#DBEAFE] flex justify-center items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
               onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
             >
-              View all materials <ChevronRight className="w-4 h-4" />
+              View all materials <ChevronRight className="w-4 h-4 ml-1" />
             </button>
           )}
         </section>
