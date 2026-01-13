@@ -31,7 +31,7 @@ const IITMBSPrep = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
-  // State to track which dropdown is currently open
+  // Track which dropdown is currently open
   const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'pyqSubject' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesSubject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
@@ -77,7 +77,7 @@ const IITMBSPrep = () => {
   const branchSlug = useMemo(() => selectedBranch.toLowerCase().replace(/\s+/g, '-'), [selectedBranch]);
   const levelSlug = useMemo(() => selectedLevel.toLowerCase(), [selectedLevel]);
 
-  // Derive unique values specifically for the current program (Branch + Level) from the pyqs table
+  // Derive unique values specifically for the current program from the backend data
   const currentProgramPyqs = useMemo(() => 
     pyqs.filter(p => p.branch === branchSlug && p.level === levelSlug)
   , [pyqs, branchSlug, levelSlug]);
@@ -94,14 +94,13 @@ const IITMBSPrep = () => {
     Array.from(new Set(currentProgramPyqs.map(p => p.subject).filter(Boolean))).sort()
   , [currentProgramPyqs]);
 
-  // Initialize filters with first available data from backend automatically
+  // Auto-initialize filters with first available data
   useEffect(() => {
     if (!pyqYear && dynamicYears.length > 0) setPyqYear(dynamicYears[0]);
     if (!examType && dynamicExamTypes.length > 0) setExamType(dynamicExamTypes[0]);
     if (!pyqSubject && dynamicPyqSubjects.length > 0) setPyqSubject(dynamicPyqSubjects[0]);
   }, [dynamicYears, dynamicExamTypes, dynamicPyqSubjects]);
 
-  // Derive Branch and Level options from the courses table
   const iitmCourses = useMemo(() => 
     courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
   , [courses]);
@@ -135,7 +134,7 @@ const IITMBSPrep = () => {
     const handleScroll = () => {
       const navbarHeight = 64;
       if (filterRef.current && filterOffset > 0) {
-        setIsSticky(window.scrollY > filterOffset - navbarHeight);
+        setIsSticky(window.scrollY > (filterOffset - navbarHeight));
       }
     };
     window.addEventListener("scroll", handleScroll);
@@ -384,7 +383,6 @@ const IITMBSPrep = () => {
       <main className="pt-16">
         <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle="IITM BS Degree Preparation" />
 
-        {/* STICKY FILTER CONTAINER - z-[100] ensures the bar stays visible */}
         <div ref={filterRef} className={`w-full transition-shadow duration-300 z-[100] ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8 pt-4 overflow-x-auto no-scrollbar">
@@ -398,7 +396,6 @@ const IITMBSPrep = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center overflow-x-auto no-scrollbar">
               <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap">
                 
-                {/* --- PYQ SECTION FILTERS (ORDER: SUBJECT > YEAR > EXAM) --- */}
                 {activeTab === 'pyqs' && (
                   <>
                     <div className="relative dropdown-container">
@@ -436,7 +433,6 @@ const IITMBSPrep = () => {
                   </>
                 )}
 
-                {/* --- PROGRAM FILTERS (BRANCH/LEVEL) --- */}
                 <div className="relative dropdown-container">
                   <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                     Branch <ChevronDown className="w-3.5 h-3.5" />
@@ -459,7 +455,6 @@ const IITMBSPrep = () => {
                   )}
                 </div>
 
-                {/* --- ADDITIONAL TAB SPECIFIC FILTERS --- */}
                 {activeTab === 'notes' && (
                   <div className="relative dropdown-container">
                     <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
@@ -473,7 +468,6 @@ const IITMBSPrep = () => {
                   </div>
                 )}
 
-                {/* --- RESET FILTERS LINK --- */}
                 {activeTab === 'pyqs' && (
                   <button onClick={resetPyqFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2">
                     Reset Filters
