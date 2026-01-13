@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Download } from "lucide-react";
@@ -10,38 +10,31 @@ interface PYQsTabProps {
   branch: string;
   level: string;
   year: string | null;
-  examType?: string;
+  examType?: string; // This corresponds to 'quiz1', 'quiz2', 'endterm'
 }
 
 const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
   
-  // Convert display name to slug for API
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
   
-  // Filter PYQs for IITM BS with real-time updates
+  // 1. Filter by Program (Branch & Level)
   const iitmPyqs = pyqs.filter(pyq => {
-    return (pyq.exam_type === 'IITM_BS' || pyq.exam_type === 'IITM BS') &&
-           pyq.branch === branchSlug &&
-           pyq.level === levelSlug;
+    return pyq.branch === branchSlug && pyq.level === levelSlug;
   });
 
-  // Get available years from the filtered PYQs
-  const availableYears = [...new Set(iitmPyqs.map(pyq => pyq.year?.toString() || '2023'))].sort().reverse();
+  const availableYears = [...new Set(iitmPyqs.map(pyq => pyq.year?.toString() || '2024'))].sort().reverse();
+  const effectiveYear = year || availableYears[0] || '2024';
 
-  // Use provided year or default to first available
-  const effectiveYear = year || availableYears[0] || '2023';
-
-  // Filter PYQs by selected year and exam type
+  // 2. Filter by selected Year and the specific Exam Type (Quiz 1, Quiz 2, etc.)
   const filteredPYQs = iitmPyqs.filter(pyq => {
     const yearMatch = pyq.year?.toString() === effectiveYear;
-    // For qualifier level, don't filter by exam type
-    if (levelSlug === "qualifier") {
-      return yearMatch;
-    }
-    return yearMatch;
+    // For Qualifier, usually there is only one type of exam, otherwise match the examType filter
+    const typeMatch = levelSlug === "qualifier" ? true : pyq.exam_type === examType;
+    
+    return yearMatch && typeMatch;
   });
 
   const handleDownloadClick = async (pyqId: string, fileUrl?: string) => {
@@ -50,15 +43,14 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* Admin Add Button */}
       <div className="flex justify-end">
         <AdminAddButton 
           contentType="pyqs"
-          examType="IITM_BS"
+          examType={examType} // Pass 'quiz1', etc. to the admin form
           branch={branchSlug}
           level={levelSlug}
         >
-          Add PYQs
+          Add {examType.toUpperCase()} Paper
         </AdminAddButton>
       </div>
       
@@ -69,48 +61,45 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
           </div>
         ) : (
           filteredPYQs.map((pyq) => (
-            <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg transition-all">
-              <CardHeader>
-                <CardTitle className="text-lg">{pyq.title}</CardTitle>
-                <CardDescription>{pyq.description}</CardDescription>
+            <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg transition-all flex flex-col">
+              <CardHeader className="flex-grow">
+                <div className="flex justify-between items-start mb-2">
+                  <span className="px-2 py-1 bg-blue-50 text-[#1E3A8A] text-[10px] font-bold uppercase rounded">
+                    {pyq.exam_type}
+                  </span>
+                  <span className="text-[11px] font-medium text-gray-400">{pyq.year}</span>
+                </div>
+                <CardTitle className="text-lg leading-tight">{pyq.title}</CardTitle>
+                <CardDescription className="line-clamp-2">{pyq.description}</CardDescription>
                 {pyq.subject && (
-                  <div className="text-sm text-gray-600">Subject: {pyq.subject}</div>
-                )}
-                {pyq.session && (
-                  <div className="text-sm text-gray-600">Session: {pyq.session}</div>
-                )}
-                {pyq.shift && (
-                  <div className="text-sm text-gray-600">Shift: {pyq.shift}</div>
+                  <div className="mt-3 inline-flex items-center text-[12px] font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                    {pyq.subject}
+                  </div>
                 )}
               </CardHeader>
-              <CardFooter className="flex justify-between items-center">
+
+              <CardFooter className="flex justify-between items-center border-t pt-4">
                 <div className="flex items-center gap-2">
                   <ShimmerButton
                     onClick={() => handleDownloadClick(pyq.id, pyq.file_link || undefined)}
                     disabled={!pyq.file_link}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                    className="flex items-center gap-2 bg-green-600 h-9 px-4"
                     shimmerColor="#22c55e"
-                    background="rgba(34, 197, 94, 1)"
                   >
-                    <Download className="h-4 w-4" />
-                    Download
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="text-xs">PDF</span>
                   </ShimmerButton>
                   <ShareButton
                     url={window.location.href}
                     title={pyq.title}
-                    description={pyq.description || `${pyq.subject} - ${effectiveYear}`}
                     variant="outline"
                     size="icon"
+                    className="h-9 w-9"
                   />
                 </div>
-                <div className="flex items-center">
-                  <span className="text-sm text-gray-500">{downloadCounts[pyq.id] || pyq.download_count || 0}</span>
-                  <div className="ml-2 bg-gray-200 h-1.5 w-16 rounded-full overflow-hidden">
-                    <div 
-                      className="bg-royal h-full rounded-full" 
-                      style={{ width: `${Math.min(100, ((downloadCounts[pyq.id] || pyq.download_count || 0) / 100) * 100)}%` }}
-                    ></div>
-                  </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-400 block uppercase font-bold">Downloads</span>
+                  <span className="text-sm font-bold text-gray-700">{downloadCounts[pyq.id] || pyq.download_count || 0}</span>
                 </div>
               </CardFooter>
             </Card>
@@ -118,8 +107,8 @@ const PYQsTab = ({ branch, level, year, examType = "quiz1" }: PYQsTabProps) => {
         )}
         
         {!contentLoading && filteredPYQs.length === 0 && (
-          <div className="col-span-3 text-center py-8 text-gray-500">
-            No papers available for this selection. Please try another filter combination.
+          <div className="col-span-3 flex flex-col items-center justify-center py-20 bg-white border border-dashed rounded-xl">
+             <p className="text-gray-400 text-sm">No {examType} papers found for this selection.</p>
           </div>
         )}
       </div>
