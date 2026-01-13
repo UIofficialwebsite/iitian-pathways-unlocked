@@ -1,7 +1,7 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { FileText, Info, ChevronRight, Share2 } from "lucide-react";
+import { FileText, Info, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GroupedData, Note } from "./hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
@@ -34,7 +34,7 @@ const BranchNotesAccordion = ({
     return (
       <div 
         key={note.id} 
-        className="pdf-card group relative flex flex-col gap-5 p-5 bg-white border border-[#e2e8f0] rounded-[10px] transition-all duration-100 hover:border-black hover:outline hover:outline-1 hover:outline-black snap-start"
+        className="pdf-card group relative flex flex-col gap-5 p-5 bg-white border border-[#e2e8f0] rounded-[10px] transition-all duration-100 hover:border-black hover:outline hover:outline-1 hover:outline-black snap-start shadow-sm"
       >
         <div className="flex gap-3 items-start">
           {/* MacBook-style PDF Icon */}
@@ -49,7 +49,7 @@ const BranchNotesAccordion = ({
                 {note.title}
               </h4>
               <span className="download-tag bg-[#f1f5f9] text-[#64748b] text-[0.65rem] font-bold px-2 py-[2px] rounded-[4px] border border-[#e2e8f0] uppercase flex-shrink-0">
-                {displayDownloads} Downloads
+                {displayDownloads}
               </span>
             </div>
             {note.description && (
@@ -60,7 +60,6 @@ const BranchNotesAccordion = ({
           </div>
         </div>
 
-        {/* Action Buttons (Non-Bold/Regular Weight) */}
         <div className="action-group grid grid-cols-2 gap-[10px]">
           <Button
             variant="outline"
@@ -102,9 +101,9 @@ const BranchNotesAccordion = ({
   return (
     <div className="space-y-16 pb-20">
       {filteredSubjects.map((subjectData) => (
-        <div key={subjectData.subjectName} className="subject-section bg-white border border-[#e2e8f0] rounded-[10px] shadow-[0_1px_3px_rgba(0,0,0,0.05)] overflow-hidden">
-          {/* Section Header with Pill Share Button */}
-          <div className="flex items-center justify-between px-7 py-4">
+        <div key={subjectData.subjectName} className="subject-section-transparent">
+          {/* Section Header with Pill Share Button - Background Removed */}
+          <div className="flex items-center justify-between py-4 mb-4">
             <div className="flex-1">
               <h3 className="text-[1.1rem] font-bold text-[#0f172a] tracking-[-0.01em]">
                 {subjectData.subjectName}
@@ -116,19 +115,19 @@ const BranchNotesAccordion = ({
               <ShareButton
                 url={`${window.location.origin}/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`}
                 title={`${subjectData.subjectName} Study Notes`}
-                className="btn-share flex items-center gap-2 px-4 py-[7px] bg-white border border-[#e2e8f0] rounded-full text-[0.8rem] font-semibold text-[#0f172a] hover:border-black hover:bg-[#f8fafc] transition-all"
+                className="btn-share flex items-center gap-2 px-4 py-[7px] bg-white border border-[#e2e8f0] rounded-full text-[0.8rem] font-semibold text-[#0f172a] hover:border-black hover:bg-[#f8fafc] transition-all shadow-sm"
                 showText={true}
               />
             </div>
           </div>
 
-          <div className="px-6 py-6 border-t border-[#e2e8f0]">
+          <div className="py-2">
             {/* Asset Grid: 2 columns mobile, 3 columns PC */}
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
               {subjectData.notes.length > 0 ? (
                 subjectData.notes.slice(0, 3).map(renderNoteCard)
               ) : (
-                <div className="col-span-full py-10 text-center text-slate-400 text-sm italic">
+                <div className="col-span-full py-10 text-center text-slate-400 text-sm italic bg-white border border-dashed rounded-[10px]">
                   No materials currently available for this subject.
                 </div>
               )}
@@ -136,7 +135,7 @@ const BranchNotesAccordion = ({
 
             {/* View All Materials Button */}
             {subjectData.notes.length > 3 && (
-              <div className="flex justify-center mt-8">
+              <div className="flex justify-center mt-10">
                 <button 
                   className="bg-[#EFF6FF] text-[#1E3A8A] font-bold py-2.5 px-8 rounded-[10px] transition-all hover:bg-[#DBEAFE] flex items-center gap-2 text-[13px] border border-blue-100 shadow-sm"
                   onClick={() => navigate(`/exam-preparation/iitm-bs/notes/${branch}/${level}/${slugify(subjectData.subjectName)}`)}
