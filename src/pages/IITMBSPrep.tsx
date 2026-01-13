@@ -31,6 +31,7 @@ const IITMBSPrep = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
+  // State to track which dropdown is currently open
   const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'pyqSubject' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesSubject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
@@ -76,6 +77,7 @@ const IITMBSPrep = () => {
   const branchSlug = useMemo(() => selectedBranch.toLowerCase().replace(/\s+/g, '-'), [selectedBranch]);
   const levelSlug = useMemo(() => selectedLevel.toLowerCase(), [selectedLevel]);
 
+  // Derive unique values specifically for the current program (Branch + Level) from the pyqs table
   const currentProgramPyqs = useMemo(() => 
     pyqs.filter(p => p.branch === branchSlug && p.level === levelSlug)
   , [pyqs, branchSlug, levelSlug]);
@@ -92,12 +94,14 @@ const IITMBSPrep = () => {
     Array.from(new Set(currentProgramPyqs.map(p => p.subject).filter(Boolean))).sort()
   , [currentProgramPyqs]);
 
+  // Initialize filters with first available data from backend automatically
   useEffect(() => {
     if (!pyqYear && dynamicYears.length > 0) setPyqYear(dynamicYears[0]);
     if (!examType && dynamicExamTypes.length > 0) setExamType(dynamicExamTypes[0]);
     if (!pyqSubject && dynamicPyqSubjects.length > 0) setPyqSubject(dynamicPyqSubjects[0]);
   }, [dynamicYears, dynamicExamTypes, dynamicPyqSubjects]);
 
+  // Derive Branch and Level options from the courses table
   const iitmCourses = useMemo(() => 
     courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
   , [courses]);
@@ -380,7 +384,8 @@ const IITMBSPrep = () => {
       <main className="pt-16">
         <ExamPrepHeader examName="IITM BS" examPath="/exam-preparation/iitm-bs" currentTab={activeTab} pageTitle="IITM BS Degree Preparation" />
 
-        <div ref={filterRef} className={`w-full transition-shadow duration-300 ${isSticky ? 'fixed top-16 bg-white border-b shadow-none z-[9999]' : 'relative z-[9999]'}`}>
+        {/* STICKY FILTER CONTAINER - z-[100] ensures the bar stays visible */}
+        <div ref={filterRef} className={`w-full transition-shadow duration-300 z-[100] ${isSticky ? 'fixed top-16 bg-white border-b shadow-none' : 'relative'}`}>
           <div className="bg-[#f4f2ff]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex gap-8 pt-4 overflow-x-auto no-scrollbar">
               {tabs.map((tab) => (
@@ -389,29 +394,44 @@ const IITMBSPrep = () => {
             </div>
           </div>
 
-          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px] relative z-[100]">
+          <div className="bg-white border-b border-[#f3f4f6] min-h-[56px]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center overflow-x-auto no-scrollbar">
               <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap">
-                {/* --- PYQ SECTION FILTERS --- */}
+                
+                {/* --- PYQ SECTION FILTERS (ORDER: SUBJECT > YEAR > EXAM) --- */}
                 {activeTab === 'pyqs' && (
                   <>
                     <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('pyqSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         {pyqSubject || 'Subject'} <ChevronDown className="w-3.5 h-3.5" />
                       </button>
-                      {openDropdown === 'pyqSubject' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('pyqSubject')}</div>}
+                      {openDropdown === 'pyqSubject' && (
+                        <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">
+                          {renderDropdownContent('pyqSubject')}
+                        </div>
+                      )}
                     </div>
+
                     <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         {pyqYear || 'Year'} <ChevronDown className="w-3.5 h-3.5" />
                       </button>
-                      {openDropdown === 'year' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[140px]">{renderDropdownContent('year')}</div>}
+                      {openDropdown === 'year' && (
+                        <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[140px]">
+                          {renderDropdownContent('year')}
+                        </div>
+                      )}
                     </div>
+
                     <div className="relative dropdown-container">
                       <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         Exam <ChevronDown className="w-3.5 h-3.5" />
                       </button>
-                      {openDropdown === 'examType' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('examType')}</div>}
+                      {openDropdown === 'examType' && (
+                        <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">
+                          {renderDropdownContent('examType')}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
@@ -421,13 +441,22 @@ const IITMBSPrep = () => {
                   <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                     Branch <ChevronDown className="w-3.5 h-3.5" />
                   </button>
-                  {openDropdown === 'branch' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('branch')}</div>}
+                  {openDropdown === 'branch' && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">
+                      {renderDropdownContent('branch')}
+                    </div>
+                  )}
                 </div>
+
                 <div className="relative dropdown-container">
                   <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                     Level <ChevronDown className="w-3.5 h-3.5" />
                   </button>
-                  {openDropdown === 'level' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('level')}</div>}
+                  {openDropdown === 'level' && (
+                    <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">
+                      {renderDropdownContent('level')}
+                    </div>
+                  )}
                 </div>
 
                 {/* --- ADDITIONAL TAB SPECIFIC FILTERS --- */}
@@ -436,34 +465,15 @@ const IITMBSPrep = () => {
                     <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                       Subjects <ChevronDown className="w-3.5 h-3.5" />
                     </button>
-                    {openDropdown === 'notesSubject' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[200px]">{renderDropdownContent('notesSubject')}</div>}
+                    {openDropdown === 'notesSubject' && (
+                      <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[200px]">
+                        {renderDropdownContent('notesSubject')}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {activeTab === 'courses' && (
-                  <>
-                    <div className="relative dropdown-container">
-                      <button onClick={() => toggleDropdown('courseLevel')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Level <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      {openDropdown === 'courseLevel' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[160px]">{renderDropdownContent('courseLevel')}</div>}
-                    </div>
-                    <div className="relative dropdown-container">
-                      <button onClick={() => toggleDropdown('courseSubject')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Subject <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      {openDropdown === 'courseSubject' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[180px]">{renderDropdownContent('courseSubject')}</div>}
-                    </div>
-                    <div className="relative dropdown-container">
-                      <button onClick={() => toggleDropdown('coursePricing')} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Pricing <ChevronDown className="w-3.5 h-3.5" />
-                      </button>
-                      {openDropdown === 'coursePricing' && <div className="absolute top-full left-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] p-3 min-w-[140px]">{renderDropdownContent('coursePricing')}</div>}
-                    </div>
-                  </>
-                )}
-
-                {/* --- RESET FILTERS TEXT LINK --- */}
+                {/* --- RESET FILTERS LINK --- */}
                 {activeTab === 'pyqs' && (
                   <button onClick={resetPyqFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2">
                     Reset Filters
