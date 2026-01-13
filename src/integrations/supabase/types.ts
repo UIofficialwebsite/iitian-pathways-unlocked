@@ -458,6 +458,7 @@ export type Database = {
           is_active: boolean
           level: string
           subject: string
+          subject_id: number | null
           title: string
           updated_at: string
           week_number: number
@@ -473,6 +474,7 @@ export type Database = {
           is_active?: boolean
           level: string
           subject: string
+          subject_id?: number | null
           title: string
           updated_at?: string
           week_number: number
@@ -488,11 +490,20 @@ export type Database = {
           is_active?: boolean
           level?: string
           subject?: string
+          subject_id?: number | null
           title?: string
           updated_at?: string
           week_number?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "iitm_branch_notes_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "iitm_bs_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       iitm_bs_subjects: {
         Row: {

@@ -1,19 +1,27 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import BranchNotesAccordion from "./BranchNotesAccordion";
 import { useIITMBranchNotes } from "./hooks/useIITMBranchNotes";
 
-interface BranchNotesTabProps {
+export interface BranchNotesTabProps {
   branch: string;
   level: string;
   selectedSubjects: string[];
-  setSelectedSubjects: (subjects: string[]) => void;
+  onSubjectsLoaded?: (subjects: string[]) => void;
 }
 
-const BranchNotesTab = ({ branch, level, selectedSubjects }: BranchNotesTabProps) => {
+const BranchNotesTab = ({ branch, level, selectedSubjects, onSubjectsLoaded }: BranchNotesTabProps) => {
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
 
   const { loading, groupedData } = useIITMBranchNotes(branchSlug, levelSlug);
+
+  // Extract available subject names and notify parent
+  useEffect(() => {
+    if (groupedData.length > 0 && onSubjectsLoaded) {
+      const subjects = groupedData.map(g => g.subjectName);
+      onSubjectsLoaded(subjects);
+    }
+  }, [groupedData, onSubjectsLoaded]);
 
   const filteredData = useMemo(() => {
     // If no filter chosen from the main header dropdown, show all

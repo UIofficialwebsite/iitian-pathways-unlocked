@@ -6,12 +6,12 @@ export interface Note {
   id: string;
   title: string;
   description?: string;
-  file_link: string;
+  file_link: string | null;
   download_count: number;
   subject: string;
-  subject_id: number; // Added field
+  subject_id: number | null;
   week_number: number;
-  diploma_specialization?: string;
+  diploma_specialization?: string | null;
 }
 
 export interface GroupedData {
@@ -74,7 +74,17 @@ export const useIITMBranchNotes = (branch: string, level: string) => {
         subjectName: subject.subject_name,
         subjectId: subject.id,
         specialization: subject.specialization || null,
-        notes: (notesData as Note[] || []).filter(n => n.subject_id === subject.id),
+        notes: (notesData || []).map(n => ({
+          id: n.id,
+          title: n.title,
+          description: n.description,
+          file_link: n.file_link,
+          download_count: n.download_count,
+          subject: n.subject,
+          subject_id: n.subject_id,
+          week_number: n.week_number,
+          diploma_specialization: n.diploma_specialization
+        } as Note)).filter(n => n.subject_id === subject.id),
       }));
 
       // 4. Update state
