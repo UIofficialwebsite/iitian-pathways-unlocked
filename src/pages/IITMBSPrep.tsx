@@ -18,12 +18,14 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { courses } = useBackend();
+  // Added iitmBranchNotes to access subjects directly from the notes table
+  const { courses, iitmBranchNotes } = useBackend();
   const isMobile = useIsMobile();
   
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
+  // Added 'notesCategory' to openDropdown type
   const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesCategory' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
@@ -54,7 +56,7 @@ const IITMBSPrep = () => {
   const [tempCourseLevels, setTempCourseLevels] = useState<string[]>([]);
   const [tempCourseSubjects, setTempCourseSubjects] = useState<string[]>([]);
   const [tempCoursePrice, setTempCoursePrice] = useState<string | null>(null);
-  const [tempNotesSubjects, setTempNotesSubjects] = useState<string[]>([]);
+  const [tempNotesSubjects, setTempNotesSubjects] = useState<string[]>([]); // Added for Category
   
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
@@ -83,6 +85,15 @@ const IITMBSPrep = () => {
   const availableCourseSubjects = useMemo(() => 
     Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort() as string[]
   , [branchFilteredCourses]);
+
+  // Derive available subjects specifically from existing IITM Branch Notes
+  const availableNotesSubjects = useMemo(() => {
+    return Array.from(new Set(
+      iitmBranchNotes
+        .filter(n => n.branch === selectedBranch && n.level === selectedLevel)
+        .map(n => n.subject)
+    )).filter(Boolean).sort() as string[];
+  }, [iitmBranchNotes, selectedBranch, selectedLevel]);
 
   // Static Metadata for logic-based filters
   const years = ["2024", "2023", "2022", "2021", "2020"];
@@ -139,7 +150,7 @@ const IITMBSPrep = () => {
       setTempCourseLevels(selectedCourseLevels);
       setTempCourseSubjects(selectedCourseSubjects);
       setTempCoursePrice(coursePriceRange);
-      setTempNotesSubjects(selectedNotesSubjects);
+      setTempNotesSubjects(selectedNotesSubjects); // Sync temp state
       setOpenDropdown(type);
     }
   };
@@ -171,6 +182,7 @@ const IITMBSPrep = () => {
     setOpenDropdown(null);
   };
 
+  // Logic to apply Category filter for notes
   const handleApplyNotesCategory = () => {
     setSelectedNotesSubjects(tempNotesSubjects);
     setOpenDropdown(null);
@@ -268,13 +280,20 @@ const IITMBSPrep = () => {
             </div>
           </>
         );
+      // New case for multi-select Category in Notes
       case 'notesCategory':
         return (
           <>
             <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
-              {availableCourseSubjects.map(sub => (
+              {availableNotesSubjects.map(sub => (
                 <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
-                  <input type="checkbox" checked={tempNotesSubjects.includes(sub)} onChange={() => toggleTempItem(sub, tempNotesSubjects, setTempNotesSubjects)} className="accent-[#6366f1]" /> {sub}
+                  <input 
+                    type="checkbox" 
+                    checked={tempNotesSubjects.includes(sub)} 
+                    onChange={() => toggleTempItem(sub, tempNotesSubjects, setTempNotesSubjects)} 
+                    className="accent-[#6366f1]" 
+                  /> 
+                  {sub}
                 </label>
               ))}
             </div>
@@ -480,7 +499,8 @@ const IITMBSPrep = () => {
                         )}
                       </div>
                     )}
-                    
+
+                    {/* Category multi-select filter for Notes tab */}
                     {activeTab === 'notes' && (
                       <div className="relative shrink-0">
                         <button onClick={() => toggleDropdown('notesCategory')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
@@ -556,8 +576,7 @@ const IITMBSPrep = () => {
               <BranchNotesTab 
                 branch={selectedBranch} 
                 level={selectedLevel} 
-                selectedSubjects={selectedNotesSubjects} 
-                setSelectedSubjects={setSelectedNotesSubjects} 
+                selectedSubjects={selectedNotesSubjects} // Pass filtered subjects
               />
             )}
             {activeTab === "pyqs" && <PYQsTab branch={selectedBranch} level={selectedLevel} year={pyqYear} examType={examType} />}
