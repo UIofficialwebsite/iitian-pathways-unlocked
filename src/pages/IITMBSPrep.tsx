@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import ExamPrepHeader from "@/components/ExamPrepHeader";
@@ -11,8 +11,16 @@ import SyllabusTab from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
-import { X } from "lucide-react";
+import { X, Home } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 const IITMBSPrep = () => {
   const navigate = useNavigate();
@@ -23,7 +31,6 @@ const IITMBSPrep = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
-  // Renamed 'notesCategory' to 'notesSubject' for consistency
   const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesSubject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
@@ -59,12 +66,10 @@ const IITMBSPrep = () => {
   
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
-  // Reset multi-select when branch/level changes for real-time consistency
   useEffect(() => {
     setSelectedNotesSubjects([]);
   }, [selectedBranch, selectedLevel]);
 
-  // Dynamic Data Extraction from Backend
   const iitmCourses = useMemo(() => 
     courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
   , [courses]);
@@ -90,7 +95,6 @@ const IITMBSPrep = () => {
     Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort() as string[]
   , [branchFilteredCourses]);
 
-  // Static Metadata
   const years = ["2024", "2023", "2022", "2021", "2020"];
   const examTypes = [
     { id: "quiz1", label: "Quiz 1" },
@@ -388,25 +392,21 @@ const IITMBSPrep = () => {
                 
                 {activeTab === 'courses' ? (
                   <>
-                    {/* Branch dropdown */}
                     <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Branch
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'branch' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    {/* Level dropdown */}
                     <button onClick={() => toggleDropdown('courseLevel')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedCourseLevels.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseLevels.length}</span>}
                       Level
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseLevel' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    {/* Subject dropdown */}
                     <button onClick={() => toggleDropdown('courseSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedCourseSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedCourseSubjects.length}</span>}
                       Subject
                       <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'courseSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                     </button>
-                    {/* Pricing dropdown */}
                     <button onClick={() => toggleDropdown('coursePricing')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {coursePriceRange && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Pricing
@@ -424,7 +424,6 @@ const IITMBSPrep = () => {
                   </>
                 ) : hasSubFilters ? (
                   <>
-                    {/* Branch dropdown with count badge */}
                     <button onClick={() => toggleDropdown('branch')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                       {selectedBranch && selectedBranch !== "Data Science" && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                       Branch
@@ -433,7 +432,6 @@ const IITMBSPrep = () => {
 
                     {(activeTab === 'notes' || activeTab === 'pyqs' || activeTab === 'tools') && (
                       <>
-                        {/* Level dropdown with count badge */}
                         <button onClick={() => toggleDropdown('level')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                           {selectedLevel && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                           Level
@@ -443,7 +441,6 @@ const IITMBSPrep = () => {
                     )}
                     
                     {activeTab === 'notes' && (
-                      /* Subject dropdown with count badge */
                       <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                         {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
                         Subjects
@@ -453,13 +450,11 @@ const IITMBSPrep = () => {
 
                     {activeTab === 'pyqs' && (
                       <>
-                        {/* Year dropdown with count badge */}
                         <button onClick={() => toggleDropdown('year')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                           {pyqYear && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                           Year
                           <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'year' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                         </button>
-                        {/* Exam Type dropdown with count badge */}
                         <button onClick={() => toggleDropdown('examType')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all dropdown-container bg-white border-[#e5e7eb] text-[#374151]">
                           {examType && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">1</span>}
                           Exam Type
@@ -469,7 +464,6 @@ const IITMBSPrep = () => {
                     )}
 
                     {activeTab === 'tools' && tools.map(tool => (
-                      /* Toggle pill filters with X icon when selected - matching JEE/NEET design */
                       <button 
                         key={tool.id}
                         onClick={() => setSelectedTool(tool.id)}
@@ -514,7 +508,6 @@ const IITMBSPrep = () => {
               </div>
             </div>
             
-            {/* Dropdowns rendered OUTSIDE scrollable area for proper z-index - matches JEE/NEET pattern */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
               {openDropdown === 'branch' && (
                 <div className="absolute top-0 left-4 right-4 sm:right-auto sm:left-6 lg:left-8 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] sm:min-w-[180px] max-w-[calc(100vw-2rem)] p-3 dropdown-container">
@@ -562,6 +555,63 @@ const IITMBSPrep = () => {
 
         {isSticky && <div className="h-[120px]" />}
 
+        {/* Dynamic Breadcrumb Section */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 bg-[#fcfcfc]">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/" className="flex items-center gap-1">
+                    <Home className="w-3 h-3" />
+                    Home
+                  </Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/exam-preparation">Exam Preparation</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <Link to="/exam-preparation/iitm-bs">IITM BS</Link>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage className="capitalize font-medium text-[#6366f1]">
+                  {tabs.find(t => t.id === activeTab)?.label || activeTab}
+                </BreadcrumbPage>
+              </BreadcrumbItem>
+
+              {/* Dynamic Filter Breadcrumbs */}
+              {selectedBranch && selectedBranch !== "Data Science" && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-medium text-[#6366f1]">
+                      {selectedBranch}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+              
+              {activeTab === 'pyqs' && pyqYear && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-medium text-[#6366f1]">
+                      {pyqYear}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </>
+              )}
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
         <section className="py-8 bg-white min-h-[600px] relative z-0">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "notes" && (
@@ -582,7 +632,7 @@ const IITMBSPrep = () => {
                 subjects={selectedCourseSubjects}
                 priceRange={coursePriceRange}
                 newlyLaunched={courseNewlyLaunched}
-                fasttrackOnly={courseFastrackOnly}
+                fasttrackOnly={courseFasttrackOnly}
                 bestSellerOnly={courseBestSellerOnly}
               />
             )}
