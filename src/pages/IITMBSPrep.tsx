@@ -18,15 +18,15 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const IITMBSPrep = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  // Added iitmBranchNotes to access subjects directly from the notes table
-  const { courses, iitmBranchNotes } = useBackend();
+  // Destructure iitmBranchNotes to use for the Subject filter
+  const { courses, iitmBranchNotes } = useBackend(); 
   const isMobile = useIsMobile();
   
   const filterRef = useRef<HTMLDivElement>(null);
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
-  // Added 'notesCategory' to openDropdown type
-  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesCategory' | null>(null);
+  // Added 'notesSubject' to the dropdown type list
+  const [openDropdown, setOpenDropdown] = useState<'branch' | 'level' | 'examType' | 'year' | 'courseLevel' | 'courseSubject' | 'coursePricing' | 'notesSubject' | null>(null);
 
   const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
   
@@ -45,7 +45,7 @@ const IITMBSPrep = () => {
   const [courseFastrackOnly, setCourseFastrackOnly] = useState(false);
   const [courseBestSellerOnly, setCourseBestSellerOnly] = useState(false);
 
-  // Notes Advanced Filters
+  // Notes Advanced Filters - State for multiple subjects
   const [selectedNotesSubjects, setSelectedNotesSubjects] = useState<string[]>([]);
 
   // Temporary states for Apply/Cancel logic
@@ -56,7 +56,7 @@ const IITMBSPrep = () => {
   const [tempCourseLevels, setTempCourseLevels] = useState<string[]>([]);
   const [tempCourseSubjects, setTempCourseSubjects] = useState<string[]>([]);
   const [tempCoursePrice, setTempCoursePrice] = useState<string | null>(null);
-  const [tempNotesSubjects, setTempNotesSubjects] = useState<string[]>([]); // Added for Category
+  const [tempNotesSubjects, setTempNotesSubjects] = useState<string[]>([]);
   
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
@@ -73,6 +73,15 @@ const IITMBSPrep = () => {
     Array.from(new Set(iitmCourses.map(c => c.level))).filter(Boolean).sort() as string[]
   , [iitmCourses]);
 
+  // Derive available subjects specifically from available Notes for current Branch/Level
+  const availableNotesSubjects = useMemo(() => {
+    return Array.from(new Set(
+      iitmBranchNotes
+        .filter(n => n.branch === selectedBranch && n.level === selectedLevel)
+        .map(n => n.subject)
+    )).filter(Boolean).sort() as string[];
+  }, [iitmBranchNotes, selectedBranch, selectedLevel]);
+
   const branchFilteredCourses = useMemo(() => {
     if (selectedBranch === "all" || selectedBranch === "All Branches") return iitmCourses;
     return iitmCourses.filter(c => c.branch === selectedBranch);
@@ -85,15 +94,6 @@ const IITMBSPrep = () => {
   const availableCourseSubjects = useMemo(() => 
     Array.from(new Set(branchFilteredCourses.map(c => c.subject))).filter(Boolean).sort() as string[]
   , [branchFilteredCourses]);
-
-  // Derive available subjects specifically from existing IITM Branch Notes
-  const availableNotesSubjects = useMemo(() => {
-    return Array.from(new Set(
-      iitmBranchNotes
-        .filter(n => n.branch === selectedBranch && n.level === selectedLevel)
-        .map(n => n.subject)
-    )).filter(Boolean).sort() as string[];
-  }, [iitmBranchNotes, selectedBranch, selectedLevel]);
 
   // Static Metadata for logic-based filters
   const years = ["2024", "2023", "2022", "2021", "2020"];
@@ -150,7 +150,7 @@ const IITMBSPrep = () => {
       setTempCourseLevels(selectedCourseLevels);
       setTempCourseSubjects(selectedCourseSubjects);
       setTempCoursePrice(coursePriceRange);
-      setTempNotesSubjects(selectedNotesSubjects); // Sync temp state
+      setTempNotesSubjects(selectedNotesSubjects);
       setOpenDropdown(type);
     }
   };
@@ -182,8 +182,8 @@ const IITMBSPrep = () => {
     setOpenDropdown(null);
   };
 
-  // Logic to apply Category filter for notes
-  const handleApplyNotesCategory = () => {
+  // Handler to apply the multi-select Subject filter for Notes
+  const handleApplyNotesSubject = () => {
     setSelectedNotesSubjects(tempNotesSubjects);
     setOpenDropdown(null);
   };
@@ -280,26 +280,29 @@ const IITMBSPrep = () => {
             </div>
           </>
         );
-      // New case for multi-select Category in Notes
-      case 'notesCategory':
+      // New Content for the Subject Dropdown to fix visibility and allow multi-select
+      case 'notesSubject':
         return (
           <>
-            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1">
+            <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1 custom-scrollbar">
               {availableNotesSubjects.map(sub => (
                 <label key={sub} className="flex items-center gap-2 p-1.5 hover:bg-[#f9fafb] rounded cursor-pointer text-xs text-gray-700">
                   <input 
                     type="checkbox" 
                     checked={tempNotesSubjects.includes(sub)} 
                     onChange={() => toggleTempItem(sub, tempNotesSubjects, setTempNotesSubjects)} 
-                    className="accent-[#6366f1]" 
+                    className="accent-[#6366f1] rounded" 
                   /> 
                   {sub}
                 </label>
               ))}
+              {availableNotesSubjects.length === 0 && (
+                <p className="text-[11px] text-gray-400 py-2">No subjects available</p>
+              )}
             </div>
             <div className="flex gap-2 pt-2 border-t">
               <button onClick={() => setOpenDropdown(null)} className="flex-1 py-1 text-[11px] text-slate-500 rounded hover:bg-slate-50">Cancel</button>
-              <button onClick={handleApplyNotesCategory} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
+              <button onClick={handleApplyNotesSubject} className="flex-1 py-1 text-[11px] bg-[#6366f1] text-white rounded hover:bg-[#5255e0]">Apply</button>
             </div>
           </>
         );
@@ -499,18 +502,18 @@ const IITMBSPrep = () => {
                         )}
                       </div>
                     )}
-
-                    {/* Category multi-select filter for Notes tab */}
+                    
+                    {/* Updated Filter for Notes Tab: Renamed to Subject and added Dropdown logic */}
                     {activeTab === 'notes' && (
                       <div className="relative shrink-0">
-                        <button onClick={() => toggleDropdown('notesCategory')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
+                        <button onClick={() => toggleDropdown('notesSubject')} className="px-4 py-1.5 border rounded-[30px] text-[12px] md:text-[13px] flex items-center transition-all bg-white border-[#e5e7eb] text-[#374151] whitespace-nowrap">
                           {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 bg-[#6366f1] text-white rounded-full text-[10px] flex items-center justify-center mr-2">{selectedNotesSubjects.length}</span>}
-                          Category
-                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesCategory' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
+                          Subject
+                          <span className={`ml-2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] transition-transform ${openDropdown === 'notesSubject' ? 'rotate-180' : ''} border-t-[#374151] border-l-transparent border-r-transparent`}></span>
                         </button>
-                        {!isMobile && openDropdown === 'notesCategory' && (
+                        {!isMobile && openDropdown === 'notesSubject' && (
                           <div className="absolute top-full left-0 mt-2 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[9999] min-w-[180px] p-3">
-                            {renderDropdownContent('notesCategory')}
+                            {renderDropdownContent('notesSubject')}
                           </div>
                         )}
                       </div>
@@ -556,7 +559,7 @@ const IITMBSPrep = () => {
                 )}
               </div>
 
-              {/* MOBILE ONLY: Shared Dropdown Container (Centered below row) */}
+              {/* MOBILE ONLY: Shared Dropdown Container */}
               {isMobile && openDropdown && (
                 <div className="absolute top-full left-0 right-0 flex justify-center z-[9999] px-4 pointer-events-none">
                   <div className="bg-white border border-[#e5e7eb] rounded-xl shadow-xl min-w-[180px] p-3 dropdown-container pointer-events-auto mt-2">
@@ -576,7 +579,7 @@ const IITMBSPrep = () => {
               <BranchNotesTab 
                 branch={selectedBranch} 
                 level={selectedLevel} 
-                selectedSubjects={selectedNotesSubjects} // Pass filtered subjects
+                selectedSubjects={selectedNotesSubjects} // Receive selections from global filter
               />
             )}
             {activeTab === "pyqs" && <PYQsTab branch={selectedBranch} level={selectedLevel} year={pyqYear} examType={examType} />}
