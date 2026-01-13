@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share, Check } from 'lucide-react'; // MacBook style share icon
+import { Share, Check } from 'lucide-react'; 
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,7 @@ interface ShareButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   showText?: boolean;
-  forceTextOnMobile?: boolean; // New prop to force text visibility in header
+  forceTextOnMobile?: boolean; 
 }
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
@@ -39,7 +39,9 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
         toast.success('Link copied to clipboard');
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch (error) { console.error('Error sharing:', error); }
+    } catch (error) { 
+      console.error('Error sharing:', error); 
+    }
   };
 
   return (
@@ -47,15 +49,11 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       variant={variant}
       size={size}
       onClick={handleShare}
-      // Rectangular rounded corners (rounded-md)
       className={cn("rounded-md border-gray-200 hover:border-black transition-all h-9 px-3", className)}
     >
       {copied ? <Check className="h-4 w-4" /> : <Share className="h-4 w-4" />}
       {showText && (
-        <span className={cn(
-          "ml-2 font-semibold",
-          !forceTextOnMobile && "hidden md:inline-block" // Responsive: hidden on mobile unless forced
-        )}>
+        <span className="ml-2 font-semibold">
           {copied ? 'Copied' : 'Share'}
         </span>
       )}
