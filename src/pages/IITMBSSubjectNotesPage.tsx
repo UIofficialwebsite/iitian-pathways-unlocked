@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useIITMBranchNotes } from "@/components/iitm/hooks/useIITMBranchNotes";
 import { useDownloadHandler } from "@/hooks/useDownloadHandler";
@@ -20,8 +20,6 @@ const IITMBSSubjectNotesPage = () => {
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSticky, setIsSticky] = useState(false);
-  const filterBarRef = useRef<HTMLDivElement>(null);
 
   // Sync current subject name from URL slug
   useEffect(() => {
@@ -30,16 +28,6 @@ const IITMBSSubjectNotesPage = () => {
       if (current) setSelectedSubject(current.subjectName);
     }
   }, [groupedData, subjectSlug]);
-
-  // Handle sticky header scroll behavior
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 140) setIsSticky(true);
-      else setIsSticky(false);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   const currentData = useMemo(() => 
     groupedData.find(s => s.subjectName === selectedSubject), 
@@ -67,11 +55,9 @@ const IITMBSSubjectNotesPage = () => {
       >
         <div>
           <div className="flex justify-between items-start mb-4">
-            {/* Premium Icon Styling */}
             <div className="text-[#b93a3a]">
               <FileText className="w-8 h-8" strokeWidth={1.5} />
             </div>
-            {/* Download Count Badge */}
             <div className="flex items-center text-gray-400 text-[11px] font-medium">
               <Download className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
               <span>{displayDownloads}</span>
@@ -108,21 +94,20 @@ const IITMBSSubjectNotesPage = () => {
   return (
     <div className="min-h-screen bg-[#fcfcfc]">
       <NavBar />
-      <main className="pt-16">
-        {/* 1. KEEP BANNER */}
+      
+      {/* 1. MAIN CONTENT WRAPPER */}
+      <main className="pt-16"> {/* Offset for the Fixed NavBar */}
+        
+        {/* 2. PAGE BANNER (Visible immediately under NavBar) */}
         <ExamPrepHeader 
           examName="IITM BS" 
           examPath="/exam-preparation/iitm-bs" 
-          currentTab="notes" 
+          currentTab="notes"
+          pageTitle={selectedSubject ? `${selectedSubject} Resources` : undefined}
         />
         
-        {/* 2. HEADER BAR (Sticky with Search Bar, Subject Filter Removed) */}
-        <div 
-          ref={filterBarRef}
-          className={`w-full bg-white border-b border-slate-200 transition-all ${
-            isSticky ? "fixed top-16 z-[50] shadow-sm" : "relative"
-          }`}
-        >
+        {/* 3. THE HEADER BAR (Sticky to NavBar on scroll, Search inside) */}
+        <div className="sticky top-16 z-40 bg-white border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
               <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="h-9 px-2 text-slate-500 shrink-0">
@@ -130,7 +115,7 @@ const IITMBSSubjectNotesPage = () => {
               </Button>
               <div className="h-5 w-[1px] bg-slate-200 mx-1 shrink-0" />
               
-              {/* Central Search Bar */}
+              {/* Search Bar Implementation */}
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input
@@ -153,9 +138,7 @@ const IITMBSSubjectNotesPage = () => {
           </div>
         </div>
 
-        {isSticky && <div className="h-14" />}
-
-        {/* 3. NOTES VISIBLE CARDS (Same design as iitmbs prep sections) */}
+        {/* 4. CONTENT (Notes Grid) */}
         <section className="max-w-7xl mx-auto px-4 py-8">
           {loading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -168,7 +151,7 @@ const IITMBSSubjectNotesPage = () => {
                   {currentData.subjectName}
                 </h2>
                 <p className="text-[12px] text-slate-500 mt-1">
-                  Found {filteredNotes.length} curated study modules for this subject.
+                  Viewing {filteredNotes.length} curated study modules.
                 </p>
               </div>
 
@@ -186,7 +169,7 @@ const IITMBSSubjectNotesPage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border border-dashed rounded-xl">
               <Info className="w-10 h-10 text-slate-300 mb-3" />
-              <p className="text-slate-500 font-medium">No materials found for this subject.</p>
+              <p className="text-slate-500 font-medium">Subject content not found.</p>
             </div>
           )}
         </section>
