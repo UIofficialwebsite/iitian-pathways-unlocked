@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Share, Check } from 'lucide-react'; // MacBook style Share icon
+import { Share, Check } from 'lucide-react'; // MacBook style share icon
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +12,7 @@ interface ShareButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   showText?: boolean;
-  textClassName?: string; // New prop to control text visibility responsive logic
+  forceTextOnMobile?: boolean; // New prop to force text visibility in header
 }
 
 export const ShareButton: React.FC<ShareButtonProps> = ({
@@ -23,30 +23,23 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
   size = 'sm',
   className,
   showText = false,
-  textClassName
+  forceTextOnMobile = false
 }) => {
   const [copied, setCopied] = useState(false);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-
     try {
       if (navigator.share) {
-        await navigator.share({
-          title,
-          text: description || `Check out: ${title}`,
-          url,
-        });
+        await navigator.share({ title, text: description || `Check out: ${title}`, url });
       } else {
         await navigator.clipboard.writeText(url);
         setCopied(true);
         toast.success('Link copied to clipboard');
         setTimeout(() => setCopied(false), 2000);
       }
-    } catch (error) {
-      console.error('Error sharing:', error);
-    }
+    } catch (error) { console.error('Error sharing:', error); }
   };
 
   return (
@@ -54,13 +47,15 @@ export const ShareButton: React.FC<ShareButtonProps> = ({
       variant={variant}
       size={size}
       onClick={handleShare}
-      // Rectangular with rounded corners
-      className={cn("rounded-md border-gray-200 hover:border-black transition-all h-9", className)}
-      title="Share"
+      // Rectangular rounded corners (rounded-md)
+      className={cn("rounded-md border-gray-200 hover:border-black transition-all h-9 px-3", className)}
     >
       {copied ? <Check className="h-4 w-4" /> : <Share className="h-4 w-4" />}
       {showText && (
-        <span className={cn("ml-2 font-semibold", textClassName)}>
+        <span className={cn(
+          "ml-2 font-semibold",
+          !forceTextOnMobile && "hidden md:inline-block" // Responsive: hidden on mobile unless forced
+        )}>
           {copied ? 'Copied' : 'Share'}
         </span>
       )}
