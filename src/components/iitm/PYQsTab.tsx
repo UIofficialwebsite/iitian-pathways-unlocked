@@ -10,23 +10,26 @@ interface PYQsTabProps {
   level: string;
   year: string | null;
   examType?: string | null;
+  subject?: string | null; // Added subject filter
 }
 
-const PYQsTab = ({ branch, level, year, examType }: PYQsTabProps) => {
+const PYQsTab = ({ branch, level, year, examType, subject }: PYQsTabProps) => {
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
   
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
   const filteredPYQs = pyqs.filter(pyq => {
-    // Check program context (Branch/Level)
+    // 1. Program Match
     const matchesProgram = pyq.branch === branchSlug && pyq.level === levelSlug;
-    // Check dynamic year filter
+    // 2. Year Match
     const matchesYear = year ? pyq.year?.toString() === year : true;
-    // Check dynamic assessment filter (Quiz 1, Quiz 2, etc.)
+    // 3. Exam Type Match (Quiz 1, etc.)
     const matchesType = examType ? pyq.exam_type === examType : true;
+    // 4. Subject Match
+    const matchesSubject = subject ? pyq.subject === subject : true;
     
-    return matchesProgram && matchesYear && matchesType;
+    return matchesProgram && matchesYear && matchesType && matchesSubject;
   });
 
   return (
@@ -37,7 +40,7 @@ const PYQsTab = ({ branch, level, year, examType }: PYQsTabProps) => {
         </div>
       ) : filteredPYQs.length > 0 ? (
         filteredPYQs.map((pyq) => (
-          <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg flex flex-col h-full">
+          <Card key={pyq.id} className="border-none shadow-md hover:shadow-lg flex flex-col h-full bg-white">
             <CardHeader className="flex-grow">
               <div className="flex justify-between items-start mb-2">
                 <span className="px-2 py-1 bg-blue-50 text-[#1E3A8A] text-[10px] font-bold uppercase rounded">
@@ -45,10 +48,10 @@ const PYQsTab = ({ branch, level, year, examType }: PYQsTabProps) => {
                 </span>
                 <span className="text-[11px] font-medium text-gray-400">{pyq.year}</span>
               </div>
-              <CardTitle className="text-lg leading-tight">{pyq.title}</CardTitle>
-              <CardDescription className="line-clamp-2 mt-1">{pyq.description}</CardDescription>
+              <CardTitle className="text-lg leading-tight font-bold">{pyq.title}</CardTitle>
+              <CardDescription className="line-clamp-2 mt-1 text-xs">{pyq.description}</CardDescription>
               {pyq.subject && (
-                <div className="mt-3 inline-flex items-center text-[12px] font-medium text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
+                <div className="mt-3 inline-flex items-center text-[11px] font-semibold text-gray-600 bg-gray-100 px-2.5 py-0.5 rounded-full">
                   {pyq.subject}
                 </div>
               )}
@@ -74,8 +77,8 @@ const PYQsTab = ({ branch, level, year, examType }: PYQsTabProps) => {
           </Card>
         ))
       ) : (
-        <div className="col-span-3 text-center py-20 text-gray-400">
-          No papers found for {examType || 'the selected'} filters in {year || 'any year'}.
+        <div className="col-span-3 flex flex-col items-center justify-center py-20 bg-white border border-dashed rounded-xl">
+           <p className="text-gray-400 text-sm">No papers found for the selected subject/year.</p>
         </div>
       )}
     </div>
