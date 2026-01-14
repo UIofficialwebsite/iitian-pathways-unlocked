@@ -128,6 +128,15 @@ const IITMBSPrep = () => {
 
   const syllabusSubjectOptions = useMemo(() => availableSyllabusCourses.map(c => ({ id: c.id, name: c.name })), [availableSyllabusCourses]);
 
+  // Effect: Auto-select first syllabus subject on filter change - REMOVED to allow "All" selection
+  // Instead, ensure clean state
+  useEffect(() => {
+    if (activeTab === 'syllabus') {
+       // Optional: Could pre-select all or none. 
+       // Keeping selection empty means "Show All" which is handled in the component
+    }
+  }, [availableSyllabusCourses, activeTab]);
+
   // Derive Course options
   const iitmCourses = useMemo(() => 
     courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
@@ -420,136 +429,131 @@ const IITMBSPrep = () => {
           </div>
 
           <div className="bg-white border-b border-[#f3f4f6] overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col gap-3">
-              
-              {/* SYLLABUS TAB SPECIAL 2-ROW LAYOUT */}
-              {activeTab === 'syllabus' ? (
-                <div className="flex flex-col gap-3 w-full">
-                    {/* Row 1: Level */}
-                    <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider w-16">Level</span>
-                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {syllabusLevel} <FilledArrow isOpen={openDropdown === 'level'} />
-                        </button>
-                    </div>
-                    {/* Row 2: Category & Subject */}
-                    <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider w-16 flex-shrink-0">Filters</span>
-                        
-                        {(syllabusLevel === 'Diploma' || syllabusLevel === 'Degree') && (
-                            <button onClick={(e) => handleOpenDropdown('category', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151] flex-shrink-0">
-                                {syllabusLevel === 'Diploma' ? 'Branch' : 'Category'} <FilledArrow isOpen={openDropdown === 'category'} />
-                            </button>
-                        )}
-
-                        <button onClick={(e) => handleOpenDropdown('subject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151] min-w-[140px] justify-between">
-                            <div className="flex items-center gap-2">
-                                {syllabusSubjectIds.length > 0 && (
-                                    <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full">
-                                        {syllabusSubjectIds.length}
-                                    </span>
-                                )}
-                                <span>Subject</span>
-                            </div>
-                            <FilledArrow isOpen={openDropdown === 'subject'} />
-                        </button>
-
-                        {/* Reset Link for Syllabus */}
-                        {syllabusSubjectIds.length > 0 && (
-                            <button onClick={resetFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2 transition-all flex-shrink-0">
-                                Reset Filters
-                            </button>
-                        )}
-                    </div>
-                </div>
-              ) : (
-                /* STANDARD SINGLE ROW SCROLLABLE FILTERS FOR OTHER TABS */
-                <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-x-auto no-scrollbar w-full pb-1 pr-4">
-                    {/* Standard Branch & Level */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center">
+              {/* SCROLLABLE FILTER ROW */}
+              <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-x-auto no-scrollbar w-full pb-1 pr-4">
+                
+                {/* 1. Branch & Level (Standard Tabs) */}
+                {activeTab !== 'syllabus' && activeTab !== 'courses' && (
                     <div className="flex-shrink-0">
                         <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         Branch <FilledArrow isOpen={openDropdown === 'branch'} />
                         </button>
                     </div>
-                    {activeTab !== 'courses' && (
+                )}
+                {activeTab !== 'syllabus' && activeTab !== 'courses' && (
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        Level <FilledArrow isOpen={openDropdown === 'level'} />
+                        </button>
+                    </div>
+                )}
+
+                {/* 1.5. Syllabus Tab Filters */}
+                {activeTab === 'syllabus' && (
+                    <>
+                        {/* Level */}
                         <div className="flex-shrink-0">
                             <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            Level <FilledArrow isOpen={openDropdown === 'level'} />
+                            {syllabusLevel} <FilledArrow isOpen={openDropdown === 'level'} />
                             </button>
                         </div>
-                    )}
+                        
+                        {/* Branch/Category (Only for Diploma/Degree) */}
+                        {(syllabusLevel === 'Diploma' || syllabusLevel === 'Degree') && (
+                            <div className="flex-shrink-0">
+                                <button onClick={(e) => handleOpenDropdown('category', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                                {syllabusCategory} <FilledArrow isOpen={openDropdown === 'category'} />
+                                </button>
+                            </div>
+                        )}
 
-                    {/* Tab Specific Filters */}
-                    {activeTab === 'notes' && (
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('notesSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{selectedNotesSubjects.length}</span>}
-                        Subjects <FilledArrow isOpen={openDropdown === 'notesSubject'} />
-                        </button>
-                        {selectedNotesSubjects.map(sub => (
-                        <div key={sub} className="px-3 py-1 border border-black rounded-full text-[12px] flex items-center gap-2 bg-white font-medium">
-                            {sub} <X className="w-3.5 h-3.5 cursor-pointer" onClick={() => setSelectedNotesSubjects(prev => prev.filter(s => s !== sub))} />
-                        </div>
-                        ))}
-                    </div>
-                    )}
-
-                    {activeTab === 'courses' && (
-                    <>
+                        {/* Subject Selector */}
                         <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('courseLevel', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                                Level <FilledArrow isOpen={openDropdown === 'courseLevel'} />
-                            </button>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('courseSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                                Subject <FilledArrow isOpen={openDropdown === 'courseSubject'} />
-                            </button>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('coursePricing', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                                Pricing <FilledArrow isOpen={openDropdown === 'coursePricing'} />
+                            <button onClick={(e) => handleOpenDropdown('subject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            {syllabusSubjectIds.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{syllabusSubjectIds.length}</span>}
+                            Subjects <FilledArrow isOpen={openDropdown === 'subject'} />
                             </button>
                         </div>
                     </>
-                    )}
+                )}
 
-                    {activeTab === 'pyqs' && (
-                    <>
-                        <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('pyqSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {pyqSubjects.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{pyqSubjects.length}</span>}
-                            Subjects <FilledArrow isOpen={openDropdown === 'pyqSubject'} />
-                            </button>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('year', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {pyqYears.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{pyqYears.length}</span>}
-                            Year <FilledArrow isOpen={openDropdown === 'year'} />
-                            </button>
-                        </div>
-                        <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('examType', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {examTypes.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{examTypes.length}</span>}
-                            Exam <FilledArrow isOpen={openDropdown === 'examType'} />
-                            </button>
-                        </div>
-                    </>
-                    )}
-
-                    {/* Reset Link */}
-                    {((activeTab === 'pyqs' && (pyqYears.length > 0 || examTypes.length > 0 || pyqSubjects.length > 0)) || (activeTab === 'notes' && selectedNotesSubjects.length > 0)) && (
-                    <button onClick={resetFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2 transition-all ml-auto flex-shrink-0">
-                        Reset Filters
+                {/* 2. Tab Specific Filters */}
+                {activeTab === 'notes' && (
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <button onClick={(e) => handleOpenDropdown('notesSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                      {selectedNotesSubjects.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{selectedNotesSubjects.length}</span>}
+                      Subjects <FilledArrow isOpen={openDropdown === 'notesSubject'} />
                     </button>
-                    )}
-                </div>
-              )}
+                    {selectedNotesSubjects.map(sub => (
+                      <div key={sub} className="px-3 py-1 border border-black rounded-full text-[12px] flex items-center gap-2 bg-white font-medium">
+                        {sub} <X className="w-3.5 h-3.5 cursor-pointer" onClick={() => setSelectedNotesSubjects(prev => prev.filter(s => s !== sub))} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeTab === 'courses' && (
+                  <>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('courseLevel', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            Level <FilledArrow isOpen={openDropdown === 'courseLevel'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('courseSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            Subject <FilledArrow isOpen={openDropdown === 'courseSubject'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('coursePricing', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            Pricing <FilledArrow isOpen={openDropdown === 'coursePricing'} />
+                        </button>
+                    </div>
+                  </>
+                )}
+
+                {/* 3. PYQ Dropdowns */}
+                {activeTab === 'pyqs' && (
+                  <>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('pyqSubject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        {pyqSubjects.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{pyqSubjects.length}</span>}
+                        Subjects <FilledArrow isOpen={openDropdown === 'pyqSubject'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('year', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        {pyqYears.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{pyqYears.length}</span>}
+                        Year <FilledArrow isOpen={openDropdown === 'year'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('examType', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        {examTypes.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{examTypes.length}</span>}
+                        Exam <FilledArrow isOpen={openDropdown === 'examType'} />
+                        </button>
+                    </div>
+                  </>
+                )}
+
+                {/* 4. Reset Link */}
+                {((activeTab === 'pyqs' && (pyqYears.length > 0 || examTypes.length > 0 || pyqSubjects.length > 0)) || (activeTab === 'notes' && selectedNotesSubjects.length > 0) || (activeTab === 'syllabus' && syllabusSubjectIds.length > 0)) && (
+                  <button onClick={resetFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2 transition-all ml-auto flex-shrink-0">
+                    Reset Filters
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
-        {isSticky && <div className={activeTab === 'syllabus' ? "h-[160px]" : "h-[120px]"} />}
+        {isSticky && <div className="h-[120px]" />}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 bg-[#fcfcfc]">
           <Breadcrumb>
