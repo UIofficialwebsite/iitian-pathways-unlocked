@@ -1,9 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Share2, Loader2, Download } from "lucide-react";
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-import { toast } from "sonner";
+import React, { useMemo } from "react";
+import PDFPrintShare from "@/components/PDFPrintShare";
 
 // --- Data Definitions ---
 
@@ -26,6 +22,7 @@ export type CourseSyllabus = {
 
 export const SYLLABUS_DATA: CourseSyllabus[] = [
   // --- QUALIFIER LEVEL (Weeks 1-4 Only) ---
+  // Data Science Qualifier
   {
     id: "BSMA1001-Q",
     name: "Mathematics for Data Science I",
@@ -78,6 +75,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 4", topics: "Speaking Skills (Spoken English Preliminaries)" },
     ],
   },
+  // Electronic Systems Qualifier
   {
     id: "MA1101-Q",
     name: "Math for Electronics I",
@@ -299,6 +297,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 12", topics: "Social Skills (Continued)" },
     ],
   },
+  // Electronic Systems Foundation
   {
     id: "MA1101",
     name: "Math for Electronics I",
@@ -563,6 +562,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 8", topics: "Bash Scripting - Logic, Loops, Functions" },
     ],
   },
+  // --- DIPLOMA: DATA SCIENCE ---
   {
     id: "BSCS2004",
     name: "Machine Learning Foundations",
@@ -710,6 +710,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 12", topics: "LLMs Practice: Prompting, Prompt Fine-tuning" },
     ],
   },
+  // --- DIPLOMA: ELECTRONIC SYSTEMS ---
   {
     id: "CS2102",
     name: "Introduction to Python",
@@ -891,6 +892,8 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Module 6", topics: "Capacitance Measurement" },
     ],
   },
+
+  // --- DEGREE LEVEL: CORE ---
   {
     id: "BSCS3001",
     name: "Software Engineering",
@@ -975,6 +978,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 12", topics: "Seq2Seq Models, Attention Mechanism, Transformers, Self-Attention" },
     ],
   },
+  // --- DEGREE: ELECTRONIC SYSTEMS ---
   {
     id: "EE3105",
     name: "Electromagnetic Fields and Transmission Lines",
@@ -1160,6 +1164,8 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Module 8", topics: "Automated Test & Data Analysis" },
     ],
   },
+
+  // --- DEGREE LEVEL: ELECTIVES ---
   {
     id: "BSDA5004",
     name: "Large Language Models",
@@ -1379,8 +1385,6 @@ interface SyllabusTabProps {
 }
 
 const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourseIds }) => {
-  const [isGenerating, setIsGenerating] = useState(false);
-
   // Filter by Level and Branch
   const filteredCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
@@ -1403,65 +1407,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
     }
     return filteredCourses;
   }, [filteredCourses, selectedCourseIds]);
-
-  const handleShare = async () => {
-    setIsGenerating(true);
-    
-    // Temporarily make the print header visible for capture
-    const printHeader = document.getElementById('syllabus-print-header');
-    if (printHeader) {
-      printHeader.classList.remove('hidden');
-      printHeader.classList.add('flex');
-    }
-
-    try {
-      const element = document.getElementById('syllabus-print-container');
-      if (!element) return;
-      
-      const canvas = await html2canvas(element, {
-        scale: 2, // Better resolution
-        useCORS: true,
-        logging: false,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
-      });
-
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [canvas.width, canvas.height] 
-      });
-      
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      const blob = pdf.output('blob');
-      const file = new File([blob], "IITM_BS_Syllabus.pdf", { type: "application/pdf" });
-
-      // Check if Web Share API supports file sharing (mostly mobile)
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'IITM BS Syllabus',
-          text: 'Here is the syllabus for the IITM BS Degree.',
-        });
-      } else {
-        // Fallback for desktop: Download the file
-        pdf.save("IITM_BS_Syllabus.pdf");
-        toast.success("Syllabus downloaded as PDF (Share not supported on this device)");
-      }
-
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast.error("Failed to generate/share PDF.");
-    } finally {
-      setIsGenerating(false);
-      // Re-hide the print header
-      if (printHeader) {
-        printHeader.classList.add('hidden');
-        printHeader.classList.remove('flex');
-      }
-    }
-  };
 
   if (coursesToDisplay.length === 0) {
       return (
@@ -1543,27 +1488,20 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
         `}
       </style>
 
-      {/* Header Actions - Viewable on Screen */}
+      {/* Header Actions - Replaced Button with Component */}
       <div className="flex justify-end mb-4 no-print gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleShare}
-          disabled={isGenerating}
-          className="flex items-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
-        >
-          {isGenerating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Share2 className="w-4 h-4" />
-          )}
-          {isGenerating ? "Generating..." : "Share / Download PDF"}
-        </Button>
+        <PDFPrintShare 
+          targetId="syllabus-print-container" 
+          headerId="syllabus-print-header"
+          fileName="IITM_BS_Syllabus.pdf"
+          shareTitle="IITM BS Syllabus"
+          shareText="Here is the comprehensive syllabus for the IITM BS Degree."
+        />
       </div>
 
       <div id="syllabus-print-container" className="space-y-8 font-sans p-4 bg-white min-h-screen">
         
-        {/* Print Header (Hidden by default, shown during PDF Gen/Print) */}
+        {/* Print Header (Hidden by default, shown during PDF Gen/Print via ID) */}
         <div id="syllabus-print-header" className="hidden print:flex flex-col items-center justify-center mb-8 border-b pb-6">
           <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-16 mb-2" />
           <h1 className="text-2xl font-bold text-gray-900">IITM BS Degree Preparation</h1>
