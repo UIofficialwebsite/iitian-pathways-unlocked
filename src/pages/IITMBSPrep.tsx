@@ -81,7 +81,8 @@ const IITMBSPrep = () => {
 
   // --- DROPDOWN POSITIONING LOGIC ---
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  // Updated state to support right alignment
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left?: number; right?: number; width: number }>({ top: 0, left: 0, width: 0 });
 
   // --- DYNAMIC DATA DERIVATION ---
   
@@ -142,9 +143,29 @@ const IITMBSPrep = () => {
   const handleOpenDropdown = (type: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation(); // Prevent immediate close
     const rect = e.currentTarget.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
     
-    // Fixed positioning logic
-    setDropdownPos({ top: rect.bottom + 8, left: rect.left, width: rect.width });
+    // Smart Positioning Logic:
+    // If there isn't enough space on the right (approx 220px), align to the right edge of the button
+    const spaceOnRight = viewportWidth - rect.left;
+    const minDropdownWidth = 220; 
+    const alignRight = spaceOnRight < minDropdownWidth;
+
+    if (alignRight) {
+        setDropdownPos({ 
+            top: rect.bottom + 8, 
+            right: viewportWidth - rect.right, // Distance from right viewport edge
+            left: undefined,
+            width: rect.width 
+        });
+    } else {
+        setDropdownPos({ 
+            top: rect.bottom + 8, 
+            left: rect.left,
+            right: undefined,
+            width: rect.width 
+        });
+    }
 
     // Sync temps with current REAL state
     if (activeTab === 'pyqs') {
@@ -290,7 +311,13 @@ const IITMBSPrep = () => {
     return (
       <div 
         className="fixed bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] p-3 flex flex-col animate-in fade-in zoom-in-95 duration-100"
-        style={{ top: dropdownPos.top, left: dropdownPos.left, minWidth: Math.max(180, dropdownPos.width) }}
+        style={{ 
+          top: dropdownPos.top, 
+          left: dropdownPos.left ?? 'auto',
+          right: dropdownPos.right ?? 'auto',
+          minWidth: Math.max(180, dropdownPos.width),
+          maxWidth: '95vw' // Ensure it doesn't overflow mobile width
+        }}
       >
         <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1 custom-scrollbar">
           {items.map(item => (
