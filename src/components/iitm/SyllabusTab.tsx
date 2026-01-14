@@ -1427,9 +1427,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
         {`
           .table-container {
             width: 100%;
-            max-width: 900px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            background-color: white;
             margin-bottom: 30px;
           }
 
@@ -1486,7 +1483,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             }
             .table-container {
               box-shadow: none;
-              max-width: 100%;
               width: 100%;
               break-inside: avoid;
             }
@@ -1510,7 +1506,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
         </Button>
       </div>
 
-      <div id="syllabus-print-container" className="space-y-8 font-sans p-4 bg-[#f9f9f9] min-h-screen">
+      <div id="syllabus-print-container" className="space-y-8 font-sans p-4 bg-white min-h-screen">
         
         {/* Print Header */}
         <div className="hidden print:flex flex-col items-center justify-center mb-8 border-b pb-6">
@@ -1530,7 +1526,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
                 <tr>
                   {/* MAIN TITLE */}
                   <th colSpan={2} className="main-header">
-                    {currentCourse.name} <span className="text-sm font-normal">({currentCourse.id} • {currentCourse.credits} Credits)</span>
+                    {currentCourse.name}
                   </th>
                 </tr>
                 <tr className="label-row">
