@@ -120,8 +120,9 @@ const IITMBSPrep = () => {
   const availableSyllabusCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
       if (course.level !== syllabusLevel) return false;
-      if (syllabusLevel === "Diploma" && course.category !== syllabusCategory) return false;
-      if (syllabusLevel === "Degree" && course.category !== syllabusCategory) return false;
+      // In SyllabusTab, for Diploma/Degree we filter by category.
+      // For Qualifier/Foundation, we now have Common and Electronic Systems categories.
+      if (course.category !== syllabusCategory) return false;
       return true;
     });
   }, [syllabusLevel, syllabusCategory]);
@@ -337,7 +338,15 @@ const IITMBSPrep = () => {
         isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel; 
     }
     else if (type === 'category') { // Syllabus Category/Branch
-        items = syllabusLevel === 'Diploma' ? ['Programming', 'Data Science'] : ['Core', 'Elective'];
+        // Update options to include Electronic Systems
+        if (syllabusLevel === 'Diploma') {
+            items = ['Programming', 'Data Science', 'Electronic Systems'];
+        } else if (syllabusLevel === 'Degree') {
+            items = ['Core', 'Elective', 'Electronic Systems'];
+        } else {
+            // For Qualifier and Foundation
+            items = ['Common', 'Electronic Systems'];
+        }
         isCheckbox = false; currentSelection = tempBranch; setSelection = setTempBranch; // reusing tempBranch
     }
     else if (type === 'subject') { // Syllabus Subject
@@ -459,14 +468,12 @@ const IITMBSPrep = () => {
                             </button>
                         </div>
                         
-                        {/* Branch/Category (Only for Diploma/Degree) */}
-                        {(syllabusLevel === 'Diploma' || syllabusLevel === 'Degree') && (
-                            <div className="flex-shrink-0">
-                                <button onClick={(e) => handleOpenDropdown('category', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                                {syllabusCategory} <FilledArrow isOpen={openDropdown === 'category'} />
-                                </button>
-                            </div>
-                        )}
+                        {/* Branch/Category - Updated logic to allow for all levels including Qualifier/Foundation */}
+                        <div className="flex-shrink-0">
+                            <button onClick={(e) => handleOpenDropdown('category', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            {syllabusCategory} <FilledArrow isOpen={openDropdown === 'category'} />
+                            </button>
+                        </div>
 
                         {/* Subject Selector */}
                         <div className="flex-shrink-0">
