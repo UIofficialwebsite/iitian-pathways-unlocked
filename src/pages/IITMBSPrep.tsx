@@ -76,7 +76,7 @@ const IITMBSPrep = () => {
 
   // Syllabus Tab State
   const [syllabusLevel, setSyllabusLevel] = useState<CourseLevel>("Qualifier");
-  const [syllabusCategory, setSyllabusCategory] = useState<string>("Common");
+  const [syllabusBranch, setSyllabusBranch] = useState<string>("Data Science");
   const [syllabusSubjectIds, setSyllabusSubjectIds] = useState<string[]>([]);
 
   // Tools State
@@ -93,7 +93,8 @@ const IITMBSPrep = () => {
   // --- DYNAMIC DATA DERIVATION ---
   
   // Active Context
-  const activeBranch = activeTab === 'pyqs' ? pyqBranch : activeTab === 'notes' ? notesBranch : activeTab === 'courses' ? courseBranch : activeTab === 'syllabus' ? syllabusCategory : toolsBranch;
+  // NOTE: syllabusBranch is separate because it is just a filter key for SyllabusTab
+  const activeBranch = activeTab === 'pyqs' ? pyqBranch : activeTab === 'notes' ? notesBranch : activeTab === 'courses' ? courseBranch : activeTab === 'syllabus' ? syllabusBranch : toolsBranch;
   const activeLevel = activeTab === 'pyqs' ? pyqLevel : activeTab === 'notes' ? notesLevel : activeTab === 'courses' ? courseLevel : activeTab === 'syllabus' ? syllabusLevel : toolsLevel;
 
   const branchSlug = useMemo(() => activeBranch.toLowerCase().replace(/\s+/g, '-'), [activeBranch]);
@@ -120,23 +121,18 @@ const IITMBSPrep = () => {
   const availableSyllabusCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
       if (course.level !== syllabusLevel) return false;
-      // In SyllabusTab, for Diploma/Degree we filter by category.
-      // For Qualifier/Foundation, we now have Common and Electronic Systems categories.
-      if (course.category !== syllabusCategory) return false;
-      return true;
+      
+      // Branch filtering logic matching SyllabusTab
+      if (syllabusBranch === "Electronic Systems") {
+          return course.category === "Electronic Systems";
+      } else {
+          // Data Science Branch includes all other categories
+          return course.category !== "Electronic Systems";
+      }
     });
-  }, [syllabusLevel, syllabusCategory]);
+  }, [syllabusLevel, syllabusBranch]);
 
   const syllabusSubjectOptions = useMemo(() => availableSyllabusCourses.map(c => ({ id: c.id, name: c.name })), [availableSyllabusCourses]);
-
-  // Effect: Auto-select first syllabus subject on filter change - REMOVED to allow "All" selection
-  // Instead, ensure clean state
-  useEffect(() => {
-    if (activeTab === 'syllabus') {
-       // Optional: Could pre-select all or none. 
-       // Keeping selection empty means "Show All" which is handled in the component
-    }
-  }, [availableSyllabusCourses, activeTab]);
 
   // Derive Course options
   const iitmCourses = useMemo(() => 
@@ -190,7 +186,7 @@ const IITMBSPrep = () => {
         setTempBranch(notesBranch); setTempLevel(notesLevel);
         setTempNotesSubjects(selectedNotesSubjects);
     } else if (activeTab === 'syllabus') {
-        setTempLevel(syllabusLevel); setTempBranch(syllabusCategory); setTempSyllabusSubjectIds(syllabusSubjectIds);
+        setTempLevel(syllabusLevel); setTempBranch(syllabusBranch); setTempSyllabusSubjectIds(syllabusSubjectIds);
     } else if (activeTab === 'courses') {
         setTempBranch(courseBranch); 
         setTempCourseLevels(selectedCourseLevels); setTempCourseSubjects(selectedCourseSubjects); setTempCoursePrice(coursePriceRange);
@@ -206,13 +202,10 @@ const IITMBSPrep = () => {
     setSelectedNotesSubjects([]);
   }, [pyqLevel, notesLevel]);
 
-  // Handle Level Change for Syllabus (Reset Category)
+  // Handle Level Change for Syllabus
   const handleSyllabusLevelChange = (newLevel: CourseLevel) => {
     setSyllabusLevel(newLevel);
     setSyllabusSubjectIds([]); // Reset subjects on level change
-    if (newLevel === "Diploma") setSyllabusCategory("Programming");
-    else if (newLevel === "Degree") setSyllabusCategory("Core");
-    else setSyllabusCategory("Common");
   };
 
   useEffect(() => {
@@ -255,9 +248,9 @@ const IITMBSPrep = () => {
         if (type === 'notesSubject') setSelectedNotesSubjects(tempNotesSubjects);
     } else if (activeTab === 'syllabus') {
         if (type === 'level') handleSyllabusLevelChange(tempLevel as CourseLevel);
-        if (type === 'category') {
-            setSyllabusCategory(tempBranch);
-            setSyllabusSubjectIds([]); // Reset subjects on category change
+        if (type === 'branch') {
+            setSyllabusBranch(tempBranch);
+            setSyllabusSubjectIds([]); // Reset subjects on branch change
         } 
         if (type === 'subject') setSyllabusSubjectIds(tempSyllabusSubjectIds);
     } else if (activeTab === 'courses') {
@@ -298,8 +291,8 @@ const IITMBSPrep = () => {
     items.push(activeLabel);
     
     if (activeTab === 'syllabus') {
+        items.push(syllabusBranch); // Show Branch in Breadcrumb
         items.push(syllabusLevel);
-        if (syllabusCategory !== 'Common') items.push(syllabusCategory);
         if (syllabusSubjectIds.length > 0) items.push(`${syllabusSubjectIds.length} Subjects`);
     } else {
         items.push(activeBranch); 
@@ -332,22 +325,22 @@ const IITMBSPrep = () => {
     let currentSelection: any = null;
     let setSelection: any = null;
 
-    if (type === 'branch') { items = branches; isCheckbox = false; currentSelection = tempBranch; setSelection = setTempBranch; }
+    if (type === 'branch') { 
+        if (activeTab === 'syllabus') {
+            items = ['Data Science', 'Electronic Systems'];
+            isCheckbox = false; 
+            currentSelection = tempBranch; 
+            setSelection = setTempBranch;
+        } else {
+            items = branches; 
+            isCheckbox = false; 
+            currentSelection = tempBranch; 
+            setSelection = setTempBranch; 
+        }
+    }
     else if (type === 'level') { 
         items = activeTab === 'syllabus' ? ["Qualifier", "Foundation", "Diploma", "Degree"] : levels; 
         isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel; 
-    }
-    else if (type === 'category') { // Syllabus Category/Branch
-        // Update options to include Electronic Systems
-        if (syllabusLevel === 'Diploma') {
-            items = ['Programming', 'Data Science', 'Electronic Systems'];
-        } else if (syllabusLevel === 'Degree') {
-            items = ['Core', 'Elective', 'Electronic Systems'];
-        } else {
-            // For Qualifier and Foundation
-            items = ['Common', 'Electronic Systems'];
-        }
-        isCheckbox = false; currentSelection = tempBranch; setSelection = setTempBranch; // reusing tempBranch
     }
     else if (type === 'subject') { // Syllabus Subject
         items = syllabusSubjectOptions; // Objects {id, name}
@@ -461,17 +454,17 @@ const IITMBSPrep = () => {
                 {/* 1.5. Syllabus Tab Filters */}
                 {activeTab === 'syllabus' && (
                     <>
-                        {/* Level */}
+                        {/* Branch - Static Label "Branch" */}
                         <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {syllabusLevel} <FilledArrow isOpen={openDropdown === 'level'} />
+                            <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            Branch <FilledArrow isOpen={openDropdown === 'branch'} />
                             </button>
                         </div>
-                        
-                        {/* Branch/Category - Updated logic to allow for all levels including Qualifier/Foundation */}
+
+                        {/* Level - Static Label "Level" */}
                         <div className="flex-shrink-0">
-                            <button onClick={(e) => handleOpenDropdown('category', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                            {syllabusCategory} <FilledArrow isOpen={openDropdown === 'category'} />
+                            <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                            Level <FilledArrow isOpen={openDropdown === 'level'} />
                             </button>
                         </div>
 
@@ -579,7 +572,7 @@ const IITMBSPrep = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {activeTab === "pyqs" && <PYQsTab branch={pyqBranch} level={pyqLevel} years={pyqYears} examTypes={examTypes} subjects={pyqSubjects} />}
             {activeTab === "notes" && <BranchNotesTab branch={notesBranch} level={notesLevel} selectedSubjects={selectedNotesSubjects} onSubjectsLoaded={setAvailableNotesSubjects} />}
-            {activeTab === "syllabus" && <SyllabusTab level={syllabusLevel} category={syllabusCategory} selectedCourseIds={syllabusSubjectIds} />}
+            {activeTab === "syllabus" && <SyllabusTab level={syllabusLevel} branch={syllabusBranch} selectedCourseIds={syllabusSubjectIds} />}
             {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={toolsBranch} level={toolsLevel} />}
             {activeTab === "courses" && <PaidCoursesTab branch={courseBranch} levels={selectedCourseLevels} subjects={selectedCourseSubjects} priceRange={coursePriceRange} />}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
