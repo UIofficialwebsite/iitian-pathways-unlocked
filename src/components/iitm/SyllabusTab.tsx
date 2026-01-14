@@ -1391,24 +1391,27 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
 
 interface SyllabusTabProps {
   level: CourseLevel;
-  category: string;
+  branch: string;
   selectedCourseIds: string[];
 }
 
-const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, selectedCourseIds }) => {
-  // Filter by Level and Category first
+const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourseIds }) => {
+  // Filter by Level and Branch
   const filteredCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
         if (course.level !== level) return false;
-        // For Diploma/Degree, check category. For Foundation/Qualifier, category is usually "Common"
-        if (level === 'Diploma' || level === 'Degree') {
-             if (course.category !== category) return false;
+        
+        // Branch filtering
+        if (branch === "Electronic Systems") {
+            return course.category === "Electronic Systems";
+        } else {
+            // Data Science Branch (includes Common, Programming, Data Science, Core, Elective)
+            return course.category !== "Electronic Systems";
         }
-        return true;
     });
-  }, [level, category]);
+  }, [level, branch]);
 
-  // If specific subjects are selected, filter by them. Otherwise show all matching level/category.
+  // If specific subjects are selected, filter by them. Otherwise show all matching level/branch.
   const coursesToDisplay = useMemo(() => {
     if (selectedCourseIds.length > 0) {
       return filteredCourses.filter(c => selectedCourseIds.includes(c.id));
@@ -1479,9 +1482,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, selectedCour
           <p className="text-gray-500">Comprehensive Syllabus & Study Resources</p>
           <div className="mt-4 flex gap-3 text-sm text-gray-600">
             <span className="px-3 py-1 bg-gray-100 rounded-full">{level} Level</span>
-            {(level === 'Diploma' || level === 'Degree') && (
-              <span className="px-3 py-1 bg-gray-100 rounded-full">{category}</span>
-            )}
+            <span className="px-3 py-1 bg-gray-100 rounded-full">{branch}</span>
           </div>
         </div>
 
