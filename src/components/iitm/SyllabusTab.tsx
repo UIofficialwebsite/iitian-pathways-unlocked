@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Share2, BookOpen, GraduationCap, CheckCircle2 } from "lucide-react";
 
 // --- Data Definitions ---
 
@@ -848,6 +850,10 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, selectedCour
     return filteredCourses;
   }, [filteredCourses, selectedCourseIds]);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (coursesToDisplay.length === 0) {
       return (
         <div className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/5">
@@ -857,55 +863,148 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, selectedCour
   }
 
   return (
-    <div className="space-y-8 font-sans">
-      {coursesToDisplay.map(currentCourse => (
-        <Card key={currentCourse.id} className="border-secondary/20 shadow-sm animate-in fade-in duration-300">
-          <CardHeader className="bg-muted/30 pb-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <CardTitle className="text-xl text-primary">{currentCourse.name}</CardTitle>
-                <CardDescription className="mt-1 flex items-center gap-2">
-                  <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
-                    {currentCourse.id}
-                  </span>
-                  <span>• {currentCourse.credits} Credits</span>
-                </CardDescription>
+    <>
+      <style>
+        {`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            #syllabus-print-container, #syllabus-print-container * {
+              visibility: visible;
+            }
+            #syllabus-print-container {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+              padding: 20px;
+              background: white;
+            }
+            .no-print {
+              display: none !important;
+            }
+            .page-break {
+              page-break-before: always;
+            }
+          }
+        `}
+      </style>
+
+      {/* Header Actions - Viewable on Screen */}
+      <div className="flex justify-end mb-4 no-print">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handlePrint}
+          className="flex items-center gap-2 text-primary border-primary/20 hover:bg-primary/5"
+        >
+          <Share2 className="w-4 h-4" />
+          Share PDF
+        </Button>
+      </div>
+
+      <div id="syllabus-print-container" className="space-y-8 font-sans">
+        
+        {/* Print Header */}
+        <div className="hidden print:flex flex-col items-center justify-center mb-8 border-b pb-6">
+          <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-16 mb-2" />
+          <h1 className="text-2xl font-bold text-gray-900">IITM BS Degree Preparation</h1>
+          <p className="text-gray-500">Comprehensive Syllabus & Study Resources</p>
+          <div className="mt-4 flex gap-3 text-sm text-gray-600">
+            <span className="px-3 py-1 bg-gray-100 rounded-full">{level} Level</span>
+            {(level === 'Diploma' || level === 'Degree') && (
+              <span className="px-3 py-1 bg-gray-100 rounded-full">{category}</span>
+            )}
+          </div>
+        </div>
+
+        {coursesToDisplay.map((currentCourse, index) => (
+          <div key={currentCourse.id} className={index > 0 ? "print:mt-8" : ""}>
+            <Card className="border-secondary/20 shadow-sm animate-in fade-in duration-300 break-inside-avoid">
+              <CardHeader className="bg-muted/30 pb-4">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <CardTitle className="text-xl text-primary">{currentCourse.name}</CardTitle>
+                    <CardDescription className="mt-1 flex items-center gap-2">
+                      <span className="font-mono text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                        {currentCourse.id}
+                      </span>
+                      <span>• {currentCourse.credits} Credits</span>
+                    </CardDescription>
+                  </div>
+                  <Badge variant="outline" className="w-fit">
+                    {currentCourse.level} {currentCourse.category !== "Common" ? `• ${currentCourse.category}` : ""}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-hidden rounded-b-lg border-t">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableHead className="w-[120px] font-semibold text-primary">Week/Module</TableHead>
+                        <TableHead className="font-semibold text-primary">Topics Covered</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {currentCourse.syllabus.map((row, idx) => (
+                        <TableRow
+                          key={idx}
+                          className="transition-colors hover:bg-muted/30 even:bg-muted/10"
+                        >
+                          <TableCell className="font-medium text-muted-foreground align-top">
+                            {row.week}
+                          </TableCell>
+                          <TableCell className="text-foreground align-top leading-relaxed">
+                            {row.topics}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        ))}
+
+        {/* Print Footer - Promotional Content */}
+        <div className="hidden print:block mt-12 pt-8 border-t border-gray-200">
+          <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <GraduationCap className="w-5 h-5 text-primary" />
+              Accelerate Your Learning
+            </h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Access comprehensive study materials, exclusive batches, and expert guidance for your {level} level courses.
+            </p>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <BookOpen className="w-4 h-4 text-primary mt-1" />
+                <div>
+                  <h4 className="font-semibold text-sm">Premium Batches</h4>
+                  <p className="text-xs text-gray-500">Live classes & doubt clearing sessions</p>
+                </div>
               </div>
-              <Badge variant="outline" className="w-fit">
-                {currentCourse.level} {currentCourse.category !== "Common" ? `• ${currentCourse.category}` : ""}
-              </Badge>
+              <div className="flex items-start gap-3">
+                <CheckCircle2 className="w-4 h-4 text-primary mt-1" />
+                <div>
+                  <h4 className="font-semibold text-sm">Mock Tests</h4>
+                  <p className="text-xs text-gray-500">Weekly quizzes & exam simulations</p>
+                </div>
+              </div>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-hidden rounded-b-lg border-t">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="w-[120px] font-semibold text-primary">Week/Module</TableHead>
-                    <TableHead className="font-semibold text-primary">Topics Covered</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentCourse.syllabus.map((row, index) => (
-                    <TableRow
-                      key={index}
-                      className="transition-colors hover:bg-muted/30 even:bg-muted/10"
-                    >
-                      <TableCell className="font-medium text-muted-foreground align-top">
-                        {row.week}
-                      </TableCell>
-                      <TableCell className="text-foreground align-top leading-relaxed">
-                        {row.topics}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+
+            <div className="mt-6 text-center">
+              <p className="text-xs font-medium text-gray-400">Visit our platform for more resources</p>
+              <p className="text-sm font-bold text-primary">ui.dev/iitm-bs</p>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 };
 
