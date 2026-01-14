@@ -39,11 +39,10 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       
       const canvas = await html2canvas(element, {
         scale: 2, // Better resolution
-        useCORS: true, // Handle external images like logos
+        useCORS: true,
         logging: false,
-        windowWidth: element.scrollWidth, // Ensure full width capture
-        windowHeight: element.scrollHeight, // Ensure full height capture
-        // KEY FIX: Modify the cloned document, not the real DOM
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight,
         onclone: (clonedDoc) => {
           if (headerId) {
             const clonedHeader = clonedDoc.getElementById(headerId);
@@ -58,14 +57,31 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
 
       const imgData = canvas.toDataURL('image/png');
       
-      // Calculate PDF dimensions based on the canvas aspect ratio
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'px',
-        format: [canvas.width, canvas.height] 
-      });
+      // A4 Page Dimensions in mm
+      const pdfWidth = 210;
+      const pdfHeight = 297;
       
-      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      // Calculate image dimensions to fit A4 width
+      const imgWidth = pdfWidth;
+      const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add the first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add subsequent pages if content overflows
+      while (heightLeft > 0) {
+        position -= pdfHeight; // Move the image up for the next page
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: "application/pdf" });
 
