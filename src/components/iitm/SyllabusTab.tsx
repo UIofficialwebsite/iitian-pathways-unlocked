@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -24,25 +24,80 @@ type WeekContent = {
   topics: string;
 };
 
-type CourseLevel = "Foundation" | "Diploma" | "Degree";
-type CourseCategory = "Programming" | "Data Science" | "Core" | "Elective";
+type CourseLevel = "Qualifier" | "Foundation" | "Diploma" | "Degree";
+type CourseCategory = "Common" | "Programming" | "Data Science" | "Core" | "Elective";
 
 type CourseSyllabus = {
   id: string;
   name: string;
   credits: number;
   level: CourseLevel;
-  category?: CourseCategory; 
+  category: CourseCategory; 
   syllabus: WeekContent[];
 };
 
 const SYLLABUS_DATA: CourseSyllabus[] = [
+  // --- QUALIFIER LEVEL (Weeks 1-4 Only) ---
+  {
+    id: "BSMA1001-Q",
+    name: "Mathematics for Data Science I",
+    credits: 4,
+    level: "Qualifier",
+    category: "Common",
+    syllabus: [
+      { week: "Week 1", topics: "Set Theory - Number system, Sets and their operations, Relations and functions" },
+      { week: "Week 2", topics: "Rectangular coordinate system, Straight Lines - Slope, Parallel/perpendicular lines, General equations" },
+      { week: "Week 3", topics: "Quadratic Functions - Minima, maxima, vertex, slope, Quadratic Equations" },
+      { week: "Week 4", topics: "Algebra of Polynomials, Graphs of Polynomials - X-intercepts, end behavior, turning points" },
+    ],
+  },
+  {
+    id: "BSMA1002-Q",
+    name: "Statistics for Data Science I",
+    credits: 4,
+    level: "Qualifier",
+    category: "Common",
+    syllabus: [
+      { week: "Week 1", topics: "Introduction, Types of data, Descriptive vs Inferential statistics, Scales of measurement" },
+      { week: "Week 2", topics: "Describing categorical data - Frequency distribution, Graphing, Mode and median" },
+      { week: "Week 3", topics: "Describing numerical data - Central tendency (Mean, median, mode), Dispersion (Variance, SD, IQR)" },
+      { week: "Week 4", topics: "Association between variables - Contingency tables, Scatterplot, Covariance, Pearson correlation" },
+    ],
+  },
+  {
+    id: "BSCS1001-Q",
+    name: "Computational Thinking",
+    credits: 4,
+    level: "Qualifier",
+    category: "Common",
+    syllabus: [
+      { week: "Week 1", topics: "Variables, Initialization, Iterators, Filtering, Datatypes, Flowcharts" },
+      { week: "Week 2", topics: "Iteration, Filtering, Selection, Pseudocode, Min/Max" },
+      { week: "Week 3", topics: "Multiple iterations, Procedures, Parameters, Side effects" },
+      { week: "Week 4", topics: "Nested iterations, Binning" },
+    ],
+  },
+  {
+    id: "BSHS1001-Q",
+    name: "English I",
+    credits: 4,
+    level: "Qualifier",
+    category: "Common",
+    syllabus: [
+      { week: "Week 1", topics: "Sounds and Words (Vowel and Consonant sounds)" },
+      { week: "Week 2", topics: "Parts of Speech" },
+      { week: "Week 3", topics: "Sentences (Phrases and Idioms)" },
+      { week: "Week 4", topics: "Speaking Skills (Spoken English Preliminaries)" },
+    ],
+  },
+
   // --- FOUNDATION LEVEL ---
   {
     id: "BSMA1001",
     name: "Mathematics for Data Science I",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Set Theory - Number system, Sets and their operations, Relations and functions" },
       { week: "Week 2", topics: "Rectangular coordinate system, Straight Lines - Slope, Parallel/perpendicular lines, General equations" },
@@ -63,6 +118,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "Statistics for Data Science I",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Introduction, Types of data, Descriptive vs Inferential statistics, Scales of measurement" },
       { week: "Week 2", topics: "Describing categorical data - Frequency distribution, Graphing, Mode and median" },
@@ -83,6 +139,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "Mathematics for Data Science II",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Vectors, Matrices, Systems of Linear Equations, Determinants" },
       { week: "Week 2", topics: "Solving linear equations, Cramer's Rule, Gaussian elimination, Row reduction" },
@@ -102,6 +159,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "Statistics for Data Science II",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Multiple random variables - Distributions" },
       { week: "Week 2", topics: "Independence, Functions of multiple random variables" },
@@ -122,6 +180,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "Computational Thinking",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Variables, Initialization, Iterators, Filtering, Datatypes, Flowcharts" },
       { week: "Week 2", topics: "Iteration, Filtering, Selection, Pseudocode, Min/Max" },
@@ -142,6 +201,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "Programming in Python",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Introduction to algorithms" },
       { week: "Week 2", topics: "Conditionals" },
@@ -162,6 +222,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "English I",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Sounds and Words (Vowel and Consonant sounds)" },
       { week: "Week 2", topics: "Parts of Speech" },
@@ -182,6 +243,7 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
     name: "English II",
     credits: 4,
     level: "Foundation",
+    category: "Common",
     syllabus: [
       { week: "Week 1", topics: "Patterns in Sentences" },
       { week: "Week 2", topics: "Patterns in Sentences (Continued)" },
@@ -767,11 +829,11 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
 ];
 
 const SyllabusTab = () => {
-  const [selectedLevel, setSelectedLevel] = useState<CourseLevel>("Foundation");
-  const [selectedCategory, setSelectedCategory] = useState<string>(""); 
+  const [selectedLevel, setSelectedLevel] = useState<CourseLevel>("Qualifier");
+  const [selectedCategory, setSelectedCategory] = useState<string>("Common"); 
   const [selectedCourseId, setSelectedCourseId] = useState<string>("");
 
-  // Filter logic
+  // Determine available courses based on filter selection
   const availableCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
       if (course.level !== selectedLevel) return false;
@@ -782,29 +844,36 @@ const SyllabusTab = () => {
       } else if (selectedLevel === "Degree") {
          if (course.category !== selectedCategory) return false;
       }
+      // Foundation and Qualifier typically don't have sub-categories exposed to user in the same way, 
+      // or default to "Common".
       
       return true;
     });
   }, [selectedLevel, selectedCategory]);
 
-  // Set default course when filter changes
-  useMemo(() => {
+  // Effect to automatically select the first course when the list changes
+  // This implements the "reset filters then show according to the highest filter selected" logic
+  useEffect(() => {
     if (availableCourses.length > 0) {
-        const exists = availableCourses.find(c => c.id === selectedCourseId);
-        if (!exists) {
-             setSelectedCourseId(availableCourses[0].id);
-        }
+      // Always switch to the first course of the new filtered list
+      setSelectedCourseId(availableCourses[0].id);
     } else {
-        setSelectedCourseId("");
+      setSelectedCourseId("");
     }
-  }, [availableCourses, selectedCourseId]);
+  }, [availableCourses]); // Depend on availableCourses
 
-  // Reset category default when level changes
+  // Handle Level Change: Reset Category intelligently
   const handleLevelChange = (val: CourseLevel) => {
       setSelectedLevel(val);
-      if (val === "Diploma") setSelectedCategory("Programming");
-      if (val === "Degree") setSelectedCategory("Core");
-      if (val === "Foundation") setSelectedCategory(""); 
+      
+      // Set default category based on level
+      if (val === "Diploma") {
+        setSelectedCategory("Programming");
+      } else if (val === "Degree") {
+        setSelectedCategory("Core");
+      } else {
+        setSelectedCategory("Common"); 
+      }
   };
 
   const currentCourse = SYLLABUS_DATA.find((c) => c.id === selectedCourseId);
@@ -814,7 +883,7 @@ const SyllabusTab = () => {
       <div className="flex flex-col gap-4">
         <h2 className="text-2xl font-bold tracking-tight text-primary">Course Syllabus</h2>
         
-        {/* Filters */}
+        {/* Filters - Row 2 */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="w-full md:w-1/3">
             <label className="text-sm font-medium mb-2 block text-muted-foreground">Level</label>
@@ -826,6 +895,7 @@ const SyllabusTab = () => {
                 <SelectValue placeholder="Select Level" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="Qualifier">Qualifier Level</SelectItem>
                 <SelectItem value="Foundation">Foundation Level</SelectItem>
                 <SelectItem value="Diploma">Diploma Level</SelectItem>
                 <SelectItem value="Degree">Degree Level</SelectItem>
@@ -881,7 +951,7 @@ const SyllabusTab = () => {
               <SelectContent>
                 {availableCourses.map((course) => (
                   <SelectItem key={course.id} value={course.id}>
-                    {course.id} - {course.name}
+                    {course.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -905,7 +975,7 @@ const SyllabusTab = () => {
                 </CardDescription>
               </div>
               <Badge variant="outline" className="w-fit">
-                {currentCourse.level} {currentCourse.category ? `• ${currentCourse.category}` : ""}
+                {currentCourse.level} {currentCourse.category !== "Common" ? `• ${currentCourse.category}` : ""}
               </Badge>
             </div>
           </CardHeader>
