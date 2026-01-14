@@ -10,7 +10,7 @@ interface PDFPrintShareProps {
   fileName?: string;
   shareTitle?: string;
   shareText?: string;
-  headerId?: string; // Optional: ID of a header to temporarily show during capture
+  headerId?: string; // Optional: ID of a header to show ONLY in the PDF
   buttonLabel?: string;
   className?: string;
 }
@@ -28,30 +28,37 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
 
   const handleShare = async () => {
     setIsGenerating(true);
-    
-    // Temporarily make the print header visible for capture if ID is provided
-    const printHeader = headerId ? document.getElementById(headerId) : null;
-    if (printHeader) {
-      printHeader.classList.remove('hidden');
-      printHeader.classList.add('flex');
-    }
 
     try {
       const element = document.getElementById(targetId);
       if (!element) {
         toast.error("Content to print not found.");
+        setIsGenerating(false);
         return;
       }
       
       const canvas = await html2canvas(element, {
         scale: 2, // Better resolution
-        useCORS: true,
+        useCORS: true, // Handle external images like logos
         logging: false,
-        windowWidth: element.scrollWidth,
-        windowHeight: element.scrollHeight
+        windowWidth: element.scrollWidth, // Ensure full width capture
+        windowHeight: element.scrollHeight, // Ensure full height capture
+        // KEY FIX: Modify the cloned document, not the real DOM
+        onclone: (clonedDoc) => {
+          if (headerId) {
+            const clonedHeader = clonedDoc.getElementById(headerId);
+            if (clonedHeader) {
+              // Make the header visible in the PDF (clone) only
+              clonedHeader.classList.remove('hidden');
+              clonedHeader.classList.add('flex');
+            }
+          }
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
+      
+      // Calculate PDF dimensions based on the canvas aspect ratio
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'px',
@@ -80,11 +87,6 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       toast.error("Failed to generate/share PDF.");
     } finally {
       setIsGenerating(false);
-      // Re-hide the print header
-      if (printHeader) {
-        printHeader.classList.add('hidden');
-        printHeader.classList.remove('flex');
-      }
     }
   };
 
