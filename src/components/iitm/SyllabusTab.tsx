@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -824,17 +824,42 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
 interface SyllabusTabProps {
   level: CourseLevel;
   category: string;
-  courseId: string;
+  selectedCourseIds: string[];
 }
 
-const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, courseId }) => {
-  const currentCourse = SYLLABUS_DATA.find((c) => c.id === courseId);
+const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, selectedCourseIds }) => {
+  // Filter by Level and Category first
+  const filteredCourses = useMemo(() => {
+    return SYLLABUS_DATA.filter((course) => {
+        if (course.level !== level) return false;
+        // For Diploma/Degree, check category. For Foundation/Qualifier, category is usually "Common"
+        if (level === 'Diploma' || level === 'Degree') {
+             if (course.category !== category) return false;
+        }
+        return true;
+    });
+  }, [level, category]);
+
+  // If specific subjects are selected, filter by them. Otherwise show all matching level/category.
+  const coursesToDisplay = useMemo(() => {
+    if (selectedCourseIds.length > 0) {
+      return filteredCourses.filter(c => selectedCourseIds.includes(c.id));
+    }
+    return filteredCourses;
+  }, [filteredCourses, selectedCourseIds]);
+
+  if (coursesToDisplay.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/5">
+          No courses found for the selected criteria.
+        </div>
+      );
+  }
 
   return (
-    <div className="space-y-6 font-sans">
-      {/* Syllabus Table Display */}
-      {currentCourse ? (
-        <Card className="border-secondary/20 shadow-sm animate-in fade-in duration-300">
+    <div className="space-y-8 font-sans">
+      {coursesToDisplay.map(currentCourse => (
+        <Card key={currentCourse.id} className="border-secondary/20 shadow-sm animate-in fade-in duration-300">
           <CardHeader className="bg-muted/30 pb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -862,8 +887,8 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, courseId }) 
                 </TableHeader>
                 <TableBody>
                   {currentCourse.syllabus.map((row, index) => (
-                    <TableRow 
-                      key={index} 
+                    <TableRow
+                      key={index}
                       className="transition-colors hover:bg-muted/30 even:bg-muted/10"
                     >
                       <TableCell className="font-medium text-muted-foreground align-top">
@@ -879,11 +904,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, courseId }) 
             </div>
           </CardContent>
         </Card>
-      ) : (
-        <div className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/5">
-          Select a course above to view syllabus details
-        </div>
-      )}
+      ))}
     </div>
   );
 };
