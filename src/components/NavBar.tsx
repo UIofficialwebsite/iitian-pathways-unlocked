@@ -193,7 +193,8 @@ const NavBar = () => {
                 </Button>
               </SheetTrigger>
               
-              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[250] border-none font-['Inter',sans-serif] bg-white">
+              {/* UPDATED: Changed z-index from z-[250] to z-[10001] to overlay the NavBar (which is z-[10000]) */}
+              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[10001] border-none font-['Inter',sans-serif] bg-white">
                 {/* Mobile Header: Logo or Title Replacement */}
                 <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
                   <div className="flex items-center gap-4">
