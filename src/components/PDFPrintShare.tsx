@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Loader2 } from "lucide-react";
+import { Share2, Loader2, Link, Download } from "lucide-react";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface PDFPrintShareProps {
   targetId: string;
@@ -21,12 +22,39 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
   shareTitle = "Share PDF",
   shareText = "Here is the shared PDF document.",
   headerId,
-  buttonLabel = "Share / Download PDF",
   className,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
+  const isMobile = useIsMobile(); // Detect if mobile or desktop
 
   const handleShare = async () => {
+    // --- DESKTOP BEHAVIOR: Share Link Only ---
+    if (!isMobile) {
+      const url = window.location.href;
+      
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: shareTitle,
+            text: shareText,
+            url: url,
+          });
+        } catch (err) {
+           console.log("Share cancelled or not supported");
+        }
+      } else {
+        // Fallback for browsers without Web Share API (copy to clipboard)
+        try {
+          await navigator.clipboard.writeText(url);
+          toast.success("Link copied to clipboard!");
+        } catch (err) {
+          toast.error("Failed to copy link.");
+        }
+      }
+      return;
+    }
+
+    // --- MOBILE BEHAVIOR: Share PDF File ---
     setIsGenerating(true);
 
     try {
@@ -70,13 +98,12 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Add the first page
+      // Add pages
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // Add subsequent pages if content overflows
       while (heightLeft > 0) {
-        position -= pdfHeight; // Move the image up for the next page
+        position -= pdfHeight;
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
@@ -85,7 +112,7 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       const blob = pdf.output('blob');
       const file = new File([blob], fileName, { type: "application/pdf" });
 
-      // Check if Web Share API supports file sharing (mostly mobile)
+      // Share the file
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -93,14 +120,14 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
           text: shareText,
         });
       } else {
-        // Fallback for desktop: Download the file
+        // Fallback if file sharing isn't supported on this mobile device
         pdf.save(fileName);
-        toast.success("PDF downloaded (Share not supported on this device)");
+        toast.success("PDF downloaded (Share not supported)");
       }
 
     } catch (error) {
       console.error("Error generating PDF:", error);
-      toast.error("Failed to generate/share PDF.");
+      toast.error("Failed to generate PDF.");
     } finally {
       setIsGenerating(false);
     }
@@ -117,9 +144,9 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       {isGenerating ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <Share2 className="w-4 h-4" />
+        isMobile ? <Share2 className="w-4 h-4" /> : <Link className="w-4 h-4" />
       )}
-      {isGenerating ? "Generating..." : buttonLabel}
+      {isGenerating ? "Generating..." : (isMobile ? "Share PDF" : "Share Link")}
     </Button>
   );
 };
