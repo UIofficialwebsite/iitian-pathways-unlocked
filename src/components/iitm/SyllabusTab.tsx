@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Share2, Loader2, Download } from "lucide-react";
 import html2canvas from 'html2canvas';
