@@ -1,5 +1,7 @@
 import React, { useMemo } from "react";
 import PDFPrintShare from "@/components/PDFPrintShare";
+import { Badge } from "@/components/ui/badge";
+import { BookOpen, Clock, GraduationCap } from "lucide-react";
 
 // --- Data Definitions ---
 
@@ -1416,6 +1418,13 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
       );
   }
 
+  // Helper to determine gradient color based on credits or category
+  const getGradientClass = (credits: number) => {
+    if (credits >= 5) return "from-purple-500 to-indigo-600";
+    if (credits === 4) return "from-teal-500 to-emerald-600";
+    return "from-blue-500 to-cyan-600";
+  };
+
   return (
     <>
       <style>
@@ -1423,6 +1432,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
           .table-container {
             width: 100%;
             margin-bottom: 30px;
+            break-inside: avoid;
           }
 
           table {
@@ -1432,7 +1442,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
           }
 
           .main-header {
-            background-color: #A9D0D5; /* Teal color from image */
+            background-color: #A9D0D5;
             color: #333;
             text-align: center;
             font-weight: bold;
@@ -1448,7 +1458,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             color: #333;
           }
 
-          /* Center align the first column (Week) */
           td:first-child {
             text-align: center;
           }
@@ -1461,90 +1470,131 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             font-weight: bold;
           }
 
+          /* Print Visibility Control */
           @media print {
-            body * {
-              visibility: hidden;
-            }
-            #syllabus-print-container, #syllabus-print-container * {
-              visibility: visible;
-            }
-            #syllabus-print-container {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              padding: 20px;
-              background: white;
-            }
-            .table-container {
-              box-shadow: none;
-              width: 100%;
-              break-inside: avoid;
-            }
-            .no-print {
-              display: none !important;
-            }
+            body * { visibility: hidden; }
+            #syllabus-print-container, #syllabus-print-container * { visibility: visible; }
+            #syllabus-print-container { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white; }
+            .no-print { display: none !important; }
           }
         `}
       </style>
 
-      {/* Header Actions - Replaced Button with Component */}
+      {/* Action Bar */}
       <div className="flex justify-end mb-4 no-print gap-2">
         <PDFPrintShare 
           targetId="syllabus-print-container" 
           headerId="syllabus-print-header"
-          fileName="IITM_BS_Syllabus.pdf"
+          fileName={`IITM_BS_${level}_Syllabus.pdf`}
           shareTitle="IITM BS Syllabus"
-          shareText="Here is the comprehensive syllabus for the IITM BS Degree."
+          shareText="Check out this comprehensive syllabus for the IITM BS Degree."
         />
       </div>
 
-      <div id="syllabus-print-container" className="space-y-8 font-sans p-4 bg-white min-h-screen">
+      {/* HIDDEN HEADER FOR PDF (Repeating on every page) */}
+      <div id="syllabus-print-header" className="hidden flex-col items-center justify-center p-6 bg-white border-b-2 border-[#A9D0D5]">
+        <div className="flex items-center gap-4 mb-2">
+           <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-12" />
+           <div className="h-8 w-[1px] bg-gray-300"></div>
+           <span className="text-xl font-bold text-gray-800 tracking-tight">IITM BS Degree</span>
+        </div>
+        <h1 className="text-2xl font-bold text-gray-900 mt-2">Syllabus & Course Curriculum</h1>
+        <div className="flex gap-2 mt-2">
+            <span className="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full border">{level} Level</span>
+            <span className="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full border">{branch}</span>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT CONTAINER */}
+      <div id="syllabus-print-container" className="font-sans bg-white min-h-screen pt-4">
         
-        {/* Print Header (Hidden by default, shown during PDF Gen/Print via ID) */}
-        <div id="syllabus-print-header" className="hidden print:flex flex-col items-center justify-center mb-8 border-b pb-6">
-          <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-16 mb-2" />
-          <h1 className="text-2xl font-bold text-gray-900">IITM BS Degree Preparation</h1>
-          <p className="text-gray-500">Comprehensive Syllabus & Study Resources</p>
-          <div className="mt-4 flex gap-3 text-sm text-gray-600">
-            <span className="px-3 py-1 bg-gray-100 rounded-full">{level} Level</span>
-            <span className="px-3 py-1 bg-gray-100 rounded-full">{branch}</span>
-          </div>
+        {/* Course Tables Section */}
+        <div className="px-8 space-y-8">
+            {coursesToDisplay.map((currentCourse) => (
+            <div key={currentCourse.id} className="table-container">
+                <table>
+                <thead>
+                    <tr>
+                    <th colSpan={2} className="main-header">
+                        {currentCourse.name}
+                    </th>
+                    </tr>
+                    <tr className="label-row">
+                    <td className="col-small">Week</td>
+                    <td className="col-large">Topics Covered</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {currentCourse.syllabus.map((row, idx) => (
+                    <tr key={idx}>
+                        <td>{row.week}</td>
+                        <td>{row.topics}</td>
+                    </tr>
+                    ))}
+                </tbody>
+                </table>
+            </div>
+            ))}
         </div>
 
-        {coursesToDisplay.map((currentCourse) => (
-          <div key={currentCourse.id} className="table-container">
-            <table>
-              <thead>
-                <tr>
-                  {/* MAIN TITLE */}
-                  <th colSpan={2} className="main-header">
-                    {currentCourse.name}
-                  </th>
-                </tr>
-                <tr className="label-row">
-                  {/* COLUMN HEADERS */}
-                  <td className="col-small">Week</td>
-                  <td className="col-large">Topics Covered</td>
-                </tr>
-              </thead>
-              <tbody>
-                {currentCourse.syllabus.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{row.week}</td>
-                    <td>{row.topics}</td>
-                  </tr>
+        {/* BATCH CARDS SECTION (At the end of PDF) */}
+        <div className="mt-12 px-8 break-before-page">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Selected Course Batch Summary</h2>
+            
+            <div className="grid grid-cols-2 gap-6">
+                {coursesToDisplay.map((course) => (
+                    <div 
+                        key={course.id} 
+                        className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white break-inside-avoid flex flex-col"
+                    >
+                        {/* Card Header with Gradient */}
+                        <div className={`h-24 bg-gradient-to-r ${getGradientClass(course.credits)} relative p-4 flex items-end justify-between`}>
+                            <Badge className="bg-white/90 text-black hover:bg-white font-bold backdrop-blur-sm shadow-sm">
+                                {course.id}
+                            </Badge>
+                            <div className="p-1.5 bg-white/20 backdrop-blur-md rounded-full text-white">
+                                <GraduationCap className="w-5 h-5" />
+                            </div>
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-900 leading-tight mb-3">
+                                    {course.name}
+                                </h3>
+                                <div className="flex flex-wrap gap-2 mb-4">
+                                    <Badge variant="outline" className="flex items-center gap-1 border-gray-300 text-gray-700">
+                                        <BookOpen className="w-3 h-3" /> {course.credits} Credits
+                                    </Badge>
+                                    <Badge variant="outline" className="flex items-center gap-1 border-gray-300 text-gray-700">
+                                        {course.category}
+                                    </Badge>
+                                </div>
+                            </div>
+                            
+                            <div className="pt-4 border-t border-gray-100 flex items-center text-xs text-gray-500 gap-2">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>12 Weeks Duration</span>
+                                <span className="text-gray-300">•</span>
+                                <span>Comprehensive Syllabus</span>
+                            </div>
+                        </div>
+                    </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        ))}
-        
-        {/* Print Footer */}
-        <div className="hidden print:block mt-12 pt-8 border-t border-gray-200 text-center">
-            <p className="text-xs font-medium text-gray-400">Visit our platform for more resources</p>
-            <p className="text-sm font-bold text-primary">ui.dev/iitm-bs</p>
+            </div>
         </div>
+
+        {/* GREY BLOCK FOOTER (At the very end) */}
+        <div className="mt-16 bg-gray-100 py-8 border-t border-gray-200 text-center break-inside-avoid">
+            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Generated via</p>
+            <p className="text-lg font-bold text-primary">ui.dev/iitm-bs</p>
+            <p className="text-xs text-gray-400 mt-2">The Comprehensive Resource Hub for IITM BS Degree</p>
+            <div className="flex justify-center gap-4 mt-4 text-xs text-gray-400">
+                <span>Subject Notes</span> • <span>PYQs</span> • <span>Grade Calculator</span> • <span>Community</span>
+            </div>
+        </div>
+
       </div>
     </>
   );
