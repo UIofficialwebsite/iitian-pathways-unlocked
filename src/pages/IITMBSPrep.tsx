@@ -44,6 +44,9 @@ const IITMBSPrep = () => {
   const { courses, pyqs } = useBackend();
   
   const filterRef = useRef<HTMLDivElement>(null);
+  // NEW: Ref to track the dropdown container
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
@@ -81,7 +84,7 @@ const IITMBSPrep = () => {
 
   // --- DROPDOWN POSITIONING LOGIC ---
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-  // Updated state to support right alignment
+  // Support right alignment
   const [dropdownPos, setDropdownPos] = useState<{ top: number; left?: number; right?: number; width: number }>({ top: 0, left: 0, width: 0 });
 
   // --- DYNAMIC DATA DERIVATION ---
@@ -310,13 +313,14 @@ const IITMBSPrep = () => {
 
     return (
       <div 
+        ref={dropdownRef} // ATTACHED REF HERE
         className="fixed bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-[99999] p-3 flex flex-col animate-in fade-in zoom-in-95 duration-100"
         style={{ 
           top: dropdownPos.top, 
           left: dropdownPos.left ?? 'auto',
           right: dropdownPos.right ?? 'auto',
           minWidth: Math.max(180, dropdownPos.width),
-          maxWidth: '95vw' // Ensure it doesn't overflow mobile width
+          maxWidth: '95vw' 
         }}
       >
         <div className="max-h-[200px] overflow-y-auto mb-3 space-y-1 custom-scrollbar">
@@ -351,9 +355,9 @@ const IITMBSPrep = () => {
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-        // Since dropdown is fixed/portal, we just check if click is NOT on a button
         const target = e.target as HTMLElement;
-        if (!target.closest('button')) {
+        // CORRECTED LOGIC: Only close if click is NOT in dropdown AND NOT on a button
+        if (dropdownRef.current && !dropdownRef.current.contains(target) && !target.closest('button')) {
             setOpenDropdown(null);
         }
     };
