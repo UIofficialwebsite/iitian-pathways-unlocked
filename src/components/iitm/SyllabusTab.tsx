@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -7,28 +7,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 
 // --- Data Definitions ---
 
-type WeekContent = {
+export type WeekContent = {
   week: string;
   topics: string;
 };
 
-type CourseLevel = "Qualifier" | "Foundation" | "Diploma" | "Degree";
-type CourseCategory = "Common" | "Programming" | "Data Science" | "Core" | "Elective";
+export type CourseLevel = "Qualifier" | "Foundation" | "Diploma" | "Degree";
+export type CourseCategory = "Common" | "Programming" | "Data Science" | "Core" | "Elective";
 
-type CourseSyllabus = {
+export type CourseSyllabus = {
   id: string;
   name: string;
   credits: number;
@@ -37,7 +29,7 @@ type CourseSyllabus = {
   syllabus: WeekContent[];
 };
 
-const SYLLABUS_DATA: CourseSyllabus[] = [
+export const SYLLABUS_DATA: CourseSyllabus[] = [
   // --- QUALIFIER LEVEL (Weeks 1-4 Only) ---
   {
     id: "BSMA1001-Q",
@@ -829,147 +821,20 @@ const SYLLABUS_DATA: CourseSyllabus[] = [
   },
 ];
 
-const SyllabusTab = () => {
-  const [selectedLevel, setSelectedLevel] = useState<CourseLevel>("Qualifier");
-  const [selectedCategory, setSelectedCategory] = useState<string>("Common"); 
-  const [selectedCourseId, setSelectedCourseId] = useState<string>("");
+interface SyllabusTabProps {
+  level: CourseLevel;
+  category: string;
+  courseId: string;
+}
 
-  // Determine available courses based on filter selection
-  const availableCourses = useMemo(() => {
-    return SYLLABUS_DATA.filter((course) => {
-      if (course.level !== selectedLevel) return false;
-      
-      // Filter by Category/Branch depending on Level
-      if (selectedLevel === "Diploma") {
-         if (course.category !== selectedCategory) return false;
-      } else if (selectedLevel === "Degree") {
-         if (course.category !== selectedCategory) return false;
-      }
-      
-      return true;
-    });
-  }, [selectedLevel, selectedCategory]);
-
-  // Effect to automatically select the first course when the list changes
-  useEffect(() => {
-    if (availableCourses.length > 0) {
-      setSelectedCourseId(availableCourses[0].id);
-    } else {
-      setSelectedCourseId("");
-    }
-  }, [availableCourses]);
-
-  // Handle Level Change: Reset Category intelligently
-  const handleLevelChange = (val: CourseLevel) => {
-      setSelectedLevel(val);
-      
-      // Set default category based on level
-      if (val === "Diploma") {
-        setSelectedCategory("Programming");
-      } else if (val === "Degree") {
-        setSelectedCategory("Core");
-      } else {
-        setSelectedCategory("Common"); 
-      }
-  };
-
-  const currentCourse = SYLLABUS_DATA.find((c) => c.id === selectedCourseId);
+const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, category, courseId }) => {
+  const currentCourse = SYLLABUS_DATA.find((c) => c.id === courseId);
 
   return (
     <div className="space-y-6 font-sans">
-      <div className="flex flex-col gap-4">
-        <h2 className="text-2xl font-bold tracking-tight text-primary">Course Syllabus</h2>
-        
-        {/* Filters Container - Separated into visual rows */}
-        <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card shadow-sm">
-          
-          {/* Row 1: Level Selection */}
-          <div className="w-full">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Level</label>
-            <Select
-              value={selectedLevel}
-              onValueChange={handleLevelChange}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Qualifier">Qualifier Level</SelectItem>
-                <SelectItem value="Foundation">Foundation Level</SelectItem>
-                <SelectItem value="Diploma">Diploma Level</SelectItem>
-                <SelectItem value="Degree">Degree Level</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Separator className="bg-border/50" />
-
-          {/* Row 2: Category/Branch (if applicable) & Subject */}
-          <div className="flex flex-col md:flex-row gap-4">
-            
-            {/* Conditional Filter: Branch (Diploma) or Category (Degree) */}
-            {selectedLevel === "Diploma" && (
-              <div className="w-full md:w-1/2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Branch</label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Programming">Programming</SelectItem>
-                    <SelectItem value="Data Science">Data Science</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {selectedLevel === "Degree" && (
-              <div className="w-full md:w-1/2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Category</label>
-                <Select
-                  value={selectedCategory}
-                  onValueChange={setSelectedCategory}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Core">Core Courses</SelectItem>
-                    <SelectItem value="Elective">Elective Courses</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {/* Subject Selection - Takes full width if no category filter, else shares row */}
-            <div className={`w-full ${selectedLevel === "Diploma" || selectedLevel === "Degree" ? "md:w-1/2" : ""}`}>
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Subject</label>
-              <Select
-                value={selectedCourseId}
-                onValueChange={setSelectedCourseId}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select Subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableCourses.map((course) => (
-                    <SelectItem key={course.id} value={course.id}>
-                      {course.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Syllabus Table Display */}
       {currentCourse ? (
-        <Card className="border-secondary/20 shadow-sm">
+        <Card className="border-secondary/20 shadow-sm animate-in fade-in duration-300">
           <CardHeader className="bg-muted/30 pb-4">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
@@ -1015,8 +880,8 @@ const SyllabusTab = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg text-muted-foreground">
-          Select a course to view syllabus
+        <div className="flex items-center justify-center h-40 border-2 border-dashed rounded-lg text-muted-foreground bg-muted/5">
+          Select a course above to view syllabus details
         </div>
       )}
     </div>
