@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 // --- Data Definitions ---
 
@@ -844,18 +845,14 @@ const SyllabusTab = () => {
       } else if (selectedLevel === "Degree") {
          if (course.category !== selectedCategory) return false;
       }
-      // Foundation and Qualifier typically don't have sub-categories exposed to user in the same way, 
-      // or default to "Common".
       
       return true;
     });
   }, [selectedLevel, selectedCategory]);
 
   // Effect to automatically select the first course when the list changes
-  // This implements the "reset filters then show according to the highest filter selected" logic
   useEffect(() => {
     if (availableCourses.length > 0) {
-      // Always switch to the first course of the new filtered list
       setSelectedCourseId(availableCourses[0].id);
     } else {
       setSelectedCourseId("");
@@ -883,69 +880,82 @@ const SyllabusTab = () => {
       <div className="flex flex-col gap-4">
         <h2 className="text-2xl font-bold tracking-tight text-primary">Course Syllabus</h2>
         
-        {/* Filters - Row 2 */}
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-1/3">
-            <label className="text-sm font-medium mb-2 block text-muted-foreground">Level</label>
-            <Select
-              value={selectedLevel}
-              onValueChange={handleLevelChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select Level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Qualifier">Qualifier Level</SelectItem>
-                <SelectItem value="Foundation">Foundation Level</SelectItem>
-                <SelectItem value="Diploma">Diploma Level</SelectItem>
-                <SelectItem value="Degree">Degree Level</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Filters Container - Separated into visual rows */}
+        <div className="flex flex-col gap-4 p-4 border rounded-lg bg-card shadow-sm">
+          
+          {/* Row 1: Broad Filters (Level & Category/Branch) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="w-full">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Level</label>
+              <Select
+                value={selectedLevel}
+                onValueChange={handleLevelChange}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select Level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Qualifier">Qualifier Level</SelectItem>
+                  <SelectItem value="Foundation">Foundation Level</SelectItem>
+                  <SelectItem value="Diploma">Diploma Level</SelectItem>
+                  <SelectItem value="Degree">Degree Level</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Conditional Second Filter in Row 1 */}
+            {selectedLevel === "Diploma" && (
+              <div className="w-full">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Branch</label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Programming">Programming</SelectItem>
+                    <SelectItem value="Data Science">Data Science</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {selectedLevel === "Degree" && (
+              <div className="w-full">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Category</label>
+                <Select
+                  value={selectedCategory}
+                  onValueChange={setSelectedCategory}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Core">Core Courses</SelectItem>
+                    <SelectItem value="Elective">Elective Courses</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            
+            {/* Empty placeholder for grid alignment if only Level is shown */}
+            {(selectedLevel === "Qualifier" || selectedLevel === "Foundation") && (
+              <div className="hidden md:block w-full"></div>
+            )}
           </div>
 
-          {selectedLevel === "Diploma" && (
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium mb-2 block text-muted-foreground">Branch</label>
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Branch" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Programming">Programming</SelectItem>
-                  <SelectItem value="Data Science">Data Science</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <Separator className="bg-border/50" />
 
-          {selectedLevel === "Degree" && (
-            <div className="w-full md:w-1/3">
-              <label className="text-sm font-medium mb-2 block text-muted-foreground">Category</label>
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Core">Core Courses</SelectItem>
-                  <SelectItem value="Elective">Elective Courses</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          <div className="w-full md:w-1/3">
-            <label className="text-sm font-medium mb-2 block text-muted-foreground">Subject</label>
+          {/* Row 2: Specific Filter (Subject) */}
+          <div className="w-full">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 block">Subject</label>
             <Select
               value={selectedCourseId}
               onValueChange={setSelectedCourseId}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Subject" />
               </SelectTrigger>
               <SelectContent>
