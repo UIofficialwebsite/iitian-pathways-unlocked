@@ -53,7 +53,7 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                     {/* Custom Logo Icon Area */}
                     <div className="shrink-0">
                       <img 
-                        src="https://i.ibb.co/MHqJ4nm/image.png" 
+                        src="https://i.ibb.co/XkVT3SgT/image.png" 
                         alt="PYQ logo" 
                         className="w-10 h-10 object-contain"
                       />
