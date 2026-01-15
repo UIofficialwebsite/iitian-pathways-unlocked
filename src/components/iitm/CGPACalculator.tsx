@@ -152,29 +152,75 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     pageStyle: `
       @page {
         size: A4;
-        margin: 20mm;
+        margin: 0;
       }
       @media print {
         body {
           -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          background-color: white;
         }
-        .print-footer {
-          position: fixed;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          padding-top: 10px;
-          border-top: 1px solid #000;
+        
+        /* Main Container for the Border */
+        .print-page-wrapper {
+          padding: 10mm;
+          min-height: 297mm;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .print-border-container {
+          border: 3px double #1a1a1a;
+          padding: 15mm;
+          min-height: 275mm;
+          position: relative;
           background: white;
         }
+
+        /* Corner decorations (optional for professional look) */
+        .corner-tl, .corner-tr, .corner-bl, .corner-br {
+          position: absolute;
+          width: 20px;
+          height: 20px;
+          border-color: #000;
+          border-style: solid;
+        }
+        .corner-tl { top: -1px; left: -1px; border-width: 4px 0 0 4px; }
+        .corner-tr { top: -1px; right: -1px; border-width: 4px 4px 0 0; }
+        .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 4px 4px; }
+        .corner-br { bottom: -1px; right: -1px; border-width: 0 4px 4px 0; }
+
+        /* Watermark */
+        .watermark {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 8rem;
+          color: rgba(0,0,0,0.03);
+          font-weight: 900;
+          text-transform: uppercase;
+          pointer-events: none;
+          z-index: 0;
+          white-space: nowrap;
+        }
+
+        .print-footer {
+          position: absolute;
+          bottom: 15mm;
+          left: 15mm;
+          right: 15mm;
+          border-top: 1px solid #ccc;
+          padding-top: 10px;
+        }
+
         .print-header {
           display: flex !important;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
           border-bottom: 2px solid #000;
-          padding-bottom: 20px;
+          padding-bottom: 15px;
+          margin-bottom: 30px;
         }
+
         .screen-only {
           display: none !important;
         }
@@ -368,148 +414,151 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
       {/* 3. REPORT SECTION */}
       {showReport && (
-        <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500 relative min-h-screen">
+        <div className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
            
-           <div className="max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0 print:border-0 print:p-0">
-             
-             {/* PRINT HEADER: Visible only in Print Mode via CSS */}
-             <div className="hidden print-header flex-row justify-between items-center w-full">
-                <div className="flex items-center">
-                   <img src="https://i.ibb.co/RT8FMKst/UI-Logo.png" alt="UI Logo" className="h-12 w-auto object-contain" />
-                </div>
-                <div className="text-right">
-                   <h1 className="text-xl font-bold uppercase text-black font-sans">Expected Performance Report</h1>
-                   <p className="text-xs text-gray-500 font-sans">{new Date().toLocaleDateString()}</p>
-                </div>
-             </div>
+           {/* WRAPPER FOR PRINT REF */}
+           <div ref={reportRef} className="print-page-wrapper">
+             <div className="print-border-container relative">
+                
+                {/* Decorative Corners for Print */}
+                <div className="hidden print:block corner-tl"></div>
+                <div className="hidden print:block corner-tr"></div>
+                <div className="hidden print:block corner-bl"></div>
+                <div className="hidden print:block corner-br"></div>
+                
+                {/* Watermark */}
+                <div className="hidden print:block watermark">CONFIDENTIAL</div>
 
-             {/* Screen Header */}
-             <div className="flex flex-col items-center justify-center text-center space-y-3 screen-only">
-                <h2 className="text-3xl font-semibold tracking-tight text-black font-sans uppercase">
-                  Expected Performance Report
-                </h2>
-                <p className="text-xs text-gray-500 font-medium font-sans uppercase tracking-widest">
-                  Academic Projection
-                </p>
-                <div className="flex justify-center gap-4 pt-2">
-                   <Button onClick={handlePrint} variant="outline" className="h-8 text-[10px] uppercase font-medium tracking-wide text-black border-black hover:bg-gray-50 rounded-none font-sans">
-                      <Download className="w-3 h-3 mr-2" /> Download
-                   </Button>
-                   <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-none font-sans">
-                      <RefreshCw className="w-3 h-3 mr-2" /> Reset
-                   </Button>
-                </div>
-             </div>
-
-             <div className="w-full h-px bg-black screen-only"></div>
-
-             {/* PREVIOUS RECORD SUMMARY */}
-             {(currentCGPA || creditsCompleted) && (
-                <div className="bg-gray-50 p-4 border border-black rounded-none print:border print:border-black">
-                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 font-sans">Previous Academic Record</h4>
-                   <div className="grid grid-cols-3 gap-4 text-center divide-x divide-gray-300">
-                      <div>
-                         <span className="block text-xl font-bold text-black font-sans">{currentCGPA || "-"}</span>
-                         <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Current CGPA</span>
+                {/* PRINT HEADER */}
+                <div className="hidden print-header flex-row justify-between items-end w-full">
+                    <div className="flex items-center gap-4">
+                      {/* Placeholder for actual logo - using high contrast for print */}
+                      <div className="h-16 w-16 bg-black flex items-center justify-center text-white font-bold text-2xl tracking-tighter">UI</div>
+                      <div className="flex flex-col">
+                        <h1 className="text-2xl font-bold uppercase text-black font-sans leading-none tracking-wide">Institute of Excellence</h1>
+                        <p className="text-sm text-gray-600 font-sans tracking-widest uppercase mt-1">Official Transcript Projection</p>
                       </div>
-                      <div>
-                         <span className="block text-xl font-bold text-black font-sans">{creditsCompleted || "0"}</span>
-                         <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Credits Earned</span>
-                      </div>
-                      <div>
-                         <span className="block text-xl font-bold text-black font-sans">{subjectsCompleted || "0"}</span>
-                         <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Subjects Completed</span>
-                      </div>
-                   </div>
-                </div>
-             )}
-
-             {/* Stats Row */}
-             <div className="flex flex-col md:flex-row justify-between items-center gap-12 px-8 py-4 print:py-6">
-               <div className="text-center flex-1">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Semester GPA</h3>
-                  <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
-               </div>
-               <div className="hidden md:block w-px h-16 bg-gray-200 print:bg-black"></div>
-               <div className="text-center flex-1">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Cumulative CGPA</h3>
-                  <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
-               </div>
-             </div>
-
-             {/* Chart Section */}
-             <div className="flex flex-col items-center py-6 bg-gray-50/50 border border-black rounded-none print:border print:bg-white print:border-black">
-                 <div className="mb-8 relative">
-                    <div 
-                       className="w-48 h-48 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-200 print:border-black print:ring-0"
-                       style={{ background: getConicGradient() }}
-                    >
-                       <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-inner print:shadow-none">
-                          <span className="text-3xl font-semibold text-black leading-none font-sans">{courses.length}</span>
-                          <span className="text-[9px] uppercase font-medium text-gray-400 tracking-wider mt-1 font-sans">New Subjects</span>
-                       </div>
                     </div>
-                 </div>
-                 
-                 <div className="flex flex-wrap justify-center gap-6">
-                    {Object.entries(gradeDistribution).map(([grade, count]) => (
-                       count > 0 && (
-                          <div key={grade} className="flex items-center gap-2">
-                             <div className={`w-3 h-3 rounded-none border border-black ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div>
-                             <span className="text-xs font-medium text-gray-600 font-sans">{grade} Grade: <span className="text-black font-bold">{count}</span></span>
-                          </div>
-                       )
-                    ))}
-                 </div>
-             </div>
-
-             {/* Transcript Table */}
-             <div className="print:mb-10">
-                <div className="flex justify-between items-end mb-3 border-b-2 border-black pb-2">
-                   <h3 className="text-xs font-bold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
-                   <div className="flex gap-4 text-[10px] uppercase font-medium font-sans text-gray-500">
-                      <span>Total Credits: <span className="text-black font-bold">{totalCredits}</span></span>
-                      <span>Total Subjects: <span className="text-black font-bold">{totalSubjects}</span></span>
-                   </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold uppercase tracking-widest text-gray-900">Report ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
+                      <p className="text-xs text-gray-600 font-sans">{new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                    </div>
                 </div>
-                <div className="border border-black rounded-none">
-                  <table className="w-full text-left border-collapse">
-                     <thead>
-                        <tr className="bg-gray-100 border-b border-black print:bg-white">
-                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black font-sans border-r border-black">Subject Name</th>
-                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-center font-sans border-r border-black">Credits</th>
-                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-right font-sans">Grade Point</th>
-                        </tr>
-                     </thead>
-                     <tbody className="divide-y divide-black">
-                        {courses.map((c, i) => (
-                           <tr key={i} className="hover:bg-gray-50 print:hover:bg-transparent">
-                              <td className="py-3 px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
-                              <td className="py-3 px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
-                              <td className="py-3 px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
-                           </tr>
-                        ))}
-                     </tbody>
-                  </table>
+
+                {/* Screen-only Header (retained for UI) */}
+                <div className="max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 screen-only">
+                    <div className="flex flex-col items-center justify-center text-center space-y-3">
+                        <h2 className="text-3xl font-semibold tracking-tight text-black font-sans uppercase">
+                        Expected Performance Report
+                        </h2>
+                        <div className="flex justify-center gap-4 pt-2">
+                        <Button onClick={handlePrint} variant="outline" className="h-8 text-[10px] uppercase font-medium tracking-wide text-black border-black hover:bg-gray-50 rounded-none font-sans">
+                            <Download className="w-3 h-3 mr-2" /> Download Official PDF
+                        </Button>
+                        <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-none font-sans">
+                            <RefreshCw className="w-3 h-3 mr-2" /> Reset
+                        </Button>
+                        </div>
+                    </div>
                 </div>
-             </div>
 
-             {/* PRINT FOOTER: Fixed at bottom of every page */}
-             <div className="hidden print-footer w-full flex-row justify-between items-center pt-2">
-                <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
-                   Calculated by UI Calculator
-                </span>
-                <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
-                   Foundation & Diploma Batches available • Study now from UI
-                </span>
-             </div>
+                {/* MAIN CONTENT AREA */}
+                <div className="print:px-4 print:py-2 max-w-[1000px] mx-auto">
+                    
+                    {/* Student Info / Context */}
+                    <div className="mb-8 p-4 border-l-4 border-black bg-gray-50 print:bg-transparent print:border-l-2 print:border-black print:pl-4">
+                        <div className="grid grid-cols-2 gap-y-2">
+                            <div className="text-sm"><span className="font-bold text-gray-500 uppercase text-[10px] tracking-widest w-24 inline-block">Branch:</span> <span className="font-semibold">{branch}</span></div>
+                            <div className="text-sm"><span className="font-bold text-gray-500 uppercase text-[10px] tracking-widest w-24 inline-block">Level:</span> <span className="font-semibold">{level}</span></div>
+                            <div className="text-sm"><span className="font-bold text-gray-500 uppercase text-[10px] tracking-widest w-24 inline-block">Semesters:</span> <span className="font-semibold">{creditsCompleted ? Math.ceil(parseInt(creditsCompleted)/20) + 1 : 1} (Est.)</span></div>
+                        </div>
+                    </div>
 
-             {/* Screen Footer */}
-             <div className="flex justify-between items-center pt-6 border-t border-gray-200 screen-only">
-                <span className="text-[9px] text-gray-400 font-sans uppercase tracking-wider">Generated on {new Date().toLocaleDateString()}</span>
-                <span className="text-[10px] font-bold text-black font-sans uppercase tracking-wider">Calculated by UI Calculator</span>
-             </div>
+                    {/* PREVIOUS RECORD SUMMARY */}
+                    {(currentCGPA || creditsCompleted) && (
+                        <div className="mb-8">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-3 border-b border-gray-300 pb-1">Previous Academic Standing</h4>
+                        <div className="flex justify-start gap-12 text-left">
+                            <div>
+                                <span className="block text-2xl font-bold text-black font-sans">{currentCGPA || "-"}</span>
+                                <span className="text-[10px] uppercase text-gray-500 font-sans tracking-wide">Current CGPA</span>
+                            </div>
+                            <div>
+                                <span className="block text-2xl font-bold text-black font-sans">{creditsCompleted || "0"}</span>
+                                <span className="text-[10px] uppercase text-gray-500 font-sans tracking-wide">Credits Earned</span>
+                            </div>
+                            <div>
+                                <span className="block text-2xl font-bold text-black font-sans">{subjectsCompleted || "0"}</span>
+                                <span className="text-[10px] uppercase text-gray-500 font-sans tracking-wide">Subjects Completed</span>
+                            </div>
+                        </div>
+                        </div>
+                    )}
 
+                    {/* Current Semester Performance */}
+                    <div className="mb-10">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-gray-800 mb-4 border-b border-gray-300 pb-1">Projected Performance</h4>
+                        
+                        {/* Big Stats */}
+                        <div className="flex flex-row justify-start gap-16 items-start mb-8">
+                            <div className="text-left">
+                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 font-sans">Projected Semester GPA</h3>
+                                <div className="text-5xl font-bold text-black tracking-tight font-sans">{semesterGPA.toFixed(2)}</div>
+                            </div>
+                            <div className="w-px h-12 bg-gray-300"></div>
+                            <div className="text-left">
+                                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 font-sans">New Cumulative CGPA</h3>
+                                <div className="text-5xl font-bold text-black tracking-tight font-sans">{cumulativeCGPA.toFixed(2)}</div>
+                            </div>
+                        </div>
+
+                        {/* Transcript Table */}
+                        <div className="w-full">
+                            <div className="flex justify-between items-end mb-2">
+                                <h3 className="text-xs font-bold text-black uppercase tracking-wide font-sans">Detailed Course List</h3>
+                            </div>
+                            <table className="w-full text-left border-collapse border-t-2 border-b-2 border-black">
+                                <thead>
+                                    <tr className="border-b border-black">
+                                        <th className="py-2 px-2 text-[10px] font-bold uppercase tracking-wider text-black font-sans w-2/3">Course Name</th>
+                                        <th className="py-2 px-2 text-[10px] font-bold uppercase tracking-wider text-black text-center font-sans">Credits</th>
+                                        <th className="py-2 px-2 text-[10px] font-bold uppercase tracking-wider text-black text-right font-sans">Grade</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {courses.map((c, i) => (
+                                    <tr key={i} className="print:break-inside-avoid">
+                                        <td className="py-2 px-2 text-xs font-medium text-black font-sans">{c.name || `Course Element ${i+1}`}</td>
+                                        <td className="py-2 px-2 text-xs text-black text-center font-sans">{c.credits}</td>
+                                        <td className="py-2 px-2 text-xs font-bold text-black text-right font-sans">{c.grade} <span className="text-[10px] font-normal text-gray-500 ml-1">({getPoint(c.grade)} pts)</span></td>
+                                    </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot>
+                                    <tr className="bg-gray-50 print:bg-gray-100 font-bold border-t border-black">
+                                        <td className="py-2 px-2 text-xs uppercase">Total</td>
+                                        <td className="py-2 px-2 text-center text-xs">{courses.reduce((acc, curr) => acc + (parseFloat(curr.credits)||0), 0)}</td>
+                                        <td className="py-2 px-2 text-right text-xs">-</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {/* PRINT FOOTER */}
+                <div className="hidden print-footer w-full flex-row justify-between items-center">
+                    <div className="text-[9px] text-gray-500 font-sans uppercase tracking-wider">
+                        <p>This document is a system-generated estimation and not an official grade card.</p>
+                        <p>Verify all inputs against official academic records.</p>
+                    </div>
+                    <div className="text-right">
+                        <span className="block text-[10px] font-bold text-black uppercase tracking-wider font-sans">Academic Cell</span>
+                        <span className="text-[9px] text-gray-500 uppercase">Authorized Signatory</span>
+                    </div>
+                </div>
+
+             </div>
            </div>
         </div>
       )}
