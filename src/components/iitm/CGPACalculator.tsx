@@ -152,7 +152,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     pageStyle: `
       @page {
         size: A4;
-        margin: 0;
+        margin: 10mm;
       }
       @media print {
         body {
@@ -163,20 +163,18 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           padding: 0;
         }
         
-        /* The exact A4 container */
+        /* The Wrapper allows content to flow across pages */
         .print-page-wrapper {
-          width: 210mm;
-          height: 297mm;
-          padding: 10mm; /* 10mm Margin around the page */
+          width: 100%;
+          min-height: 100vh;
           box-sizing: border-box;
           position: relative;
-          overflow: hidden;
         }
 
-        /* The bordered content box */
+        /* The bordered content box - wraps EVERYTHING */
         .print-border-container {
           width: 100%;
-          height: 100%;
+          min-height: 275mm; /* Minimum height for 1 page, but allows growth */
           border: 3px double #1a1a1a;
           padding: 10mm 15mm;
           box-sizing: border-box;
@@ -195,28 +193,10 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             max-width: none !important;
         }
 
-        /* Corrected Corner Alignments for double border */
-        .corner-tl, .corner-tr, .corner-bl, .corner-br {
-          position: absolute;
-          width: 25px;
-          height: 25px;
-          border-color: #000;
-          border-style: solid;
-          z-index: 10;
-        }
-        /* Top Left */
-        .corner-tl { top: -5px; left: -5px; border-width: 5px 0 0 5px; }
-        /* Top Right */
-        .corner-tr { top: -5px; right: -5px; border-width: 5px 5px 0 0; }
-        /* Bottom Left */
-        .corner-bl { bottom: -5px; left: -5px; border-width: 0 0 5px 5px; }
-        /* Bottom Right */
-        .corner-br { bottom: -5px; right: -5px; border-width: 0 5px 5px 0; }
-
-        /* Watermark */
+        /* Watermark - Fixed position to center on page */
         .watermark {
-          position: absolute;
-          top: 45%;
+          position: fixed;
+          top: 50%;
           left: 50%;
           transform: translate(-50%, -50%) rotate(-45deg);
           font-size: 8rem;
@@ -228,15 +208,16 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           white-space: nowrap;
         }
 
-        /* Sticky Footer at bottom of border container */
+        /* Footer at the end of the content flow */
         .print-footer {
-          margin-top: auto;
+          margin-top: 50px;
           border-top: 1px solid #000;
           padding-top: 10px;
           display: flex !important;
           width: 100%;
           justify-content: space-between;
           align-items: center;
+          page-break-inside: avoid;
         }
 
         .print-header {
@@ -244,6 +225,20 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           border-bottom: 2px solid #000;
           padding-bottom: 15px;
           margin-bottom: 25px;
+        }
+
+        table {
+           page-break-inside: auto;
+        }
+        tr {
+           page-break-inside: avoid;
+           page-break-after: auto;
+        }
+        thead {
+           display: table-header-group;
+        }
+        tfoot {
+           display: table-footer-group;
         }
 
         .screen-only {
@@ -446,17 +441,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
              
              {/* .print-border-container: 
                 - On screen: Standard card styling
-                - On print: Professional border with specific dimensions
+                - On print: Professional border, grows with content
              */}
              <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
              
-                 {/* Decorative Corners for Print (Correctly positioned) */}
-                 <div className="hidden print:block corner-tl"></div>
-                 <div className="hidden print:block corner-tr"></div>
-                 <div className="hidden print:block corner-bl"></div>
-                 <div className="hidden print:block corner-br"></div>
-                 
-                 {/* Watermark */}
+                 {/* Watermark - Fixed on Page */}
                  <div className="hidden print:block watermark">EXPECTED</div>
 
                  {/* PRINT HEADER: Visible only in Print Mode via CSS */}
@@ -581,7 +570,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </div>
                  </div>
 
-                 {/* PRINT FOOTER: Fixed at bottom of the container */}
+                 {/* PRINT FOOTER: At the end of document flow */}
                  <div className="hidden print-footer">
                     <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
                        Calculated by UI Calculator
