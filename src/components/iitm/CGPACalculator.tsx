@@ -3,9 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, Briefcase, TrendingUp, ArrowRight } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw, Briefcase, MapPin, Building2, TrendingUp, ArrowRight } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
-import { useJobsManager } from "@/hooks/useJobsManager"; // Importing the actual Jobs Manager
+import { useJobsManager } from "@/hooks/useJobsManager";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import Autoplay from "embla-carousel-autoplay";
 
 type Grade = "10" | "9" | "8" | "7" | "6" | "5" | "4" | "0";
 
@@ -43,6 +53,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const { jobs, isLoading: jobsLoading } = useJobsManager();
   
   const reportRef = useRef<HTMLDivElement>(null);
+  
+  // Autoplay plugin for the carousel
+  const plugin = useRef(
+    Autoplay({ delay: 3000, stopOnInteraction: true })
+  );
 
   const gradeOptions: { value: Grade; label: string; point: number }[] = [
     { value: "10", label: "S (10)", point: 10 },
@@ -162,15 +177,13 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* MAIN CONTENT GRID: Inputs (Left) + Jobs Sidebar (Right) */}
+      {/* MAIN CONTENT GRID */}
       <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[500px] border-b border-gray-100">
         
         {/* LEFT COLUMN: INPUTS (8/12) */}
         <div className="lg:col-span-8 p-6 md:p-8 border-r border-gray-100">
-          <div className="mb-6">
-            <h2 className="text-xl font-bold tracking-tight mb-1 text-black uppercase">CGPA Calculator</h2>
-            <p className="text-gray-500 text-xs font-medium">Enter your marks to get an accurate prediction.</p>
-          </div>
+          
+          {/* REMOVED HEADER AS REQUESTED */}
 
           {/* Academic Status */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -261,46 +274,63 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN: LIVE JOBS SYNC (4/12) */}
-        <div className="lg:col-span-4 bg-gray-50/50 p-6 md:p-8 flex flex-col gap-6 border-l border-gray-100 h-full">
-           
-           {/* Header for Right Panel */}
-           <div className="mb-2">
-              <h3 className="text-sm font-bold uppercase tracking-wide text-black flex items-center gap-2">
-                 <Briefcase className="w-4 h-4" /> Latest Opportunities
-              </h3>
-              <p className="text-[10px] text-gray-500 mt-1">Live updates from placement portal</p>
-           </div>
+        {/* RIGHT COLUMN: JOB CARDS SLIDER (4/12) */}
+        <div className="lg:col-span-4 p-6 md:p-8 h-full flex flex-col justify-center">
+           {jobsLoading ? (
+              <div className="text-center text-sm text-gray-400">Loading opportunities...</div>
+           ) : jobs && jobs.length > 0 ? (
+              <Carousel
+                plugins={[plugin.current]}
+                className="w-full max-w-xs mx-auto"
+                onMouseEnter={plugin.current.stop}
+                onMouseLeave={plugin.current.reset}
+              >
+                <CarouselContent>
+                  {jobs.slice(0, 8).map((job) => (
+                    <CarouselItem key={job.id}>
+                      <Card className="border border-gray-200 shadow-sm rounded-lg hover:shadow-md transition-all">
+                        <CardContent className="p-6 space-y-4">
+                           <div className="space-y-2">
+                              <Badge variant="secondary" className="bg-gray-100 text-gray-600 hover:bg-gray-200 text-[10px] font-bold uppercase tracking-wider rounded-sm">
+                                {job.job_type}
+                              </Badge>
+                              <h3 className="font-bold text-lg leading-tight text-gray-900 line-clamp-2">{job.title}</h3>
+                           </div>
+                           
+                           <div className="space-y-2 text-sm text-gray-500">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-gray-400" />
+                                <span className="font-medium text-gray-700">{job.company}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span>{job.location}</span>
+                              </div>
+                              {job.stipend && (
+                                <div className="flex items-center gap-2">
+                                  <Briefcase className="w-4 h-4 text-gray-400" />
+                                  <span className="text-black font-semibold">{job.stipend}</span>
+                                </div>
+                              )}
+                           </div>
 
-           {/* Live Jobs List */}
-           <div className="bg-white p-5 rounded-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between mb-4">
-                 <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Recent Openings</h4>
-                 <TrendingUp className="w-4 h-4 text-green-600" />
+                           <Button className="w-full bg-black text-white hover:bg-gray-800 rounded-sm h-9 text-xs uppercase font-bold tracking-wider mt-2">
+                              View Details
+                           </Button>
+                        </CardContent>
+                      </Card>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                {/* Optional: Navigation Arrows if desired, hidden for cleaner look as requested "one by one" implies auto */}
+                {/* <CarouselPrevious />
+                <CarouselNext /> */}
+              </Carousel>
+           ) : (
+              <div className="text-center text-sm text-gray-400 border border-dashed border-gray-200 p-8 rounded-lg">
+                 No active job openings available at the moment.
               </div>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-1">
-                 {jobsLoading ? (
-                    <div className="text-center py-8 text-xs text-gray-400 italic">Loading openings...</div>
-                 ) : jobs.length > 0 ? (
-                    jobs.slice(0, 5).map((job) => (
-                      <div key={job.id} className="flex justify-between items-start border-b border-gray-50 last:border-0 pb-3 last:pb-0 group">
-                         <div>
-                            <div className="font-bold text-sm text-gray-900 group-hover:text-black transition-colors line-clamp-1">{job.title}</div>
-                            <div className="text-[11px] text-gray-500">{job.company}</div>
-                         </div>
-                         <div className="text-[10px] font-bold text-black bg-gray-100 px-2 py-1 rounded-sm whitespace-nowrap ml-2">
-                            {job.stipend || "View Details"}
-                         </div>
-                      </div>
-                    ))
-                 ) : (
-                    <div className="text-center py-8 text-xs text-gray-400">No active job listings found.</div>
-                 )}
-              </div>
-              <Button variant="link" className="w-full text-[10px] text-black font-bold uppercase mt-2 h-auto p-0">
-                 View All Opportunities <ArrowRight className="w-3 h-3 ml-1" />
-              </Button>
-           </div>
+           )}
         </div>
       </div>
 
