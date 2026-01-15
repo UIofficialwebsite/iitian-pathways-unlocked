@@ -27,9 +27,6 @@ interface CGPACalculatorProps {
   level?: string;
 }
 
-// REPLACE THIS WITH YOUR ACTUAL JOB APPLICATION URL
-const APPLY_LINK = "https://forms.gle/your-application-form-link";
-
 const CGPACalculator: React.FC<CGPACalculatorProps> = ({ 
   branch = "Data Science", 
   level = "Foundation" 
@@ -556,42 +553,36 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </div>
                  </div>
 
-                 {/* UPDATED: CAREER OPPORTUNITIES SECTION (Print Only) WITH QR CODE */}
+                 {/* UPDATED: "WORK WITH US" SECTION (Print Only) WITH QR CODE INSIDE CARD */}
                  {!jobsLoading && jobs && jobs.length > 0 && (
                     <div className="hidden print:block mt-8 pt-8 border-t-2 border-dashed border-gray-300 break-inside-avoid">
-                      <div className="flex items-start justify-between">
-                         <div className="flex-1 pr-6">
-                            <div className="flex items-center gap-2 mb-4">
-                               <div className="h-2 w-2 bg-black rounded-full"></div>
-                               <h3 className="text-sm font-bold uppercase tracking-widest text-black font-sans">
-                                  Career Pathways & Opportunities
-                               </h3>
+                        <div className="flex items-center gap-2 mb-4">
+                           <div className="h-2 w-2 bg-black rounded-full"></div>
+                           <h3 className="text-sm font-bold uppercase tracking-widest text-black font-sans">
+                              Work With Us
+                           </h3>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          {jobs.slice(0, 4).map((job) => (
+                            <div key={job.id} className="border border-gray-200 p-2 flex flex-row justify-between items-center gap-2">
+                               <div className="flex-1">
+                                 <h4 className="font-bold text-[10px] text-black uppercase leading-tight mb-1">{job.title}</h4>
+                                 <p className="text-[8px] text-gray-500 line-clamp-2 leading-tight">{job.description || "Join our team."}</p>
+                                 <div className="mt-1 text-[8px] font-semibold text-green-700 uppercase tracking-wider">Open Now</div>
+                               </div>
+                               <div className="shrink-0 flex flex-col items-center">
+                                 <img 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + '/career/job/' + job.id)}&color=000000`} 
+                                    alt="Scan to Apply" 
+                                    className="w-12 h-12 object-contain border border-black p-0.5"
+                                  />
+                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              {jobs.slice(0, 4).map((job) => (
-                                <div key={job.id} className="border border-gray-200 p-3 flex flex-col justify-between">
-                                   <div>
-                                     <h4 className="font-bold text-[10px] text-black uppercase">{job.title}</h4>
-                                     <p className="text-[9px] text-gray-500 mt-1 line-clamp-1">{job.description || "Exciting opportunity available."}</p>
-                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                            <p className="text-[9px] text-gray-400 mt-4 italic">
-                              * Scan QR code to view all openings and apply directly.
-                            </p>
-                         </div>
-                         
-                         {/* QR Code Section */}
-                         <div className="flex flex-col items-center justify-center border border-black p-3 bg-white shrink-0">
-                            <img 
-                              src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(APPLY_LINK)}&color=000000`} 
-                              alt="Scan to Apply" 
-                              className="w-24 h-24 object-contain"
-                            />
-                            <span className="text-[8px] font-bold uppercase mt-2 tracking-wider">Scan to Apply</span>
-                         </div>
-                      </div>
+                          ))}
+                        </div>
+                        <p className="text-[9px] text-gray-400 mt-4 italic text-center">
+                          * Scan the QR code on a job card to view details and apply.
+                        </p>
                     </div>
                  )}
 
