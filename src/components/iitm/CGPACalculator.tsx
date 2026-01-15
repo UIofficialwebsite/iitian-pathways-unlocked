@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw, ExternalLink } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import {
@@ -210,8 +210,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="default" 
-                        // Apply Now: Bold, Black & White
-                        className="h-8 text-xs font-bold tracking-wider px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                        // Apply Now: Semi-bold, Larger Size (text-sm)
+                        className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
                       >
                         Apply Now
                       </Button>
@@ -312,7 +312,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             </Button>
             <Button 
               onClick={handleCalculate} 
-              // Deep Blue, White Text, Non-bold
               className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white uppercase text-xs tracking-wider font-normal rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
