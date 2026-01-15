@@ -6,7 +6,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "maths1",
       name: "Mathematics 1",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -16,7 +15,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "english1",
       name: "English 1",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -26,7 +24,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "computational",
       name: "Computational Thinking",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -36,7 +33,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "statistics1",
       name: "Statistics 1",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
@@ -47,18 +43,16 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "maths2",
       name: "Mathematics 2",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
-        { id: "Bonus", label: "Course Specific Activity (Max 100)", min: 0, max: 100 } // Treated as additive 'E' in formula
+        { id: "Bonus", label: "Course Specific Activity (Max 100)", min: 0, max: 100 }
       ]
     },
     {
       key: "english2",
       name: "English 2",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
@@ -78,7 +72,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       key: "statistics2",
       name: "Statistics 2",
       fields: [
-        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
@@ -222,7 +215,6 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       fields: [
         { id: "GAA", label: "Graded Assign (GAA)", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
-        // Note: TDS grading is component based (Projects/ROE), simplified here as generic inputs
       ]
     }
   ],
@@ -486,5 +478,8 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
         { id: "F", label: "End Term Exam", min: 0, max: 100 }
       ]
     }
-  ]
+  ],
+  "foundation-electronic-systems": [],
+  "diploma-electronic-systems": [],
+  "degree-electronic-systems": []
 };
