@@ -73,6 +73,11 @@ const IITMBSPrep = () => {
   const [selectedCourseLevels, setSelectedCourseLevels] = useState<string[]>([]);
   const [selectedCourseSubjects, setSelectedCourseSubjects] = useState<string[]>([]);
   const [coursePriceRange, setCoursePriceRange] = useState<string | null>(null);
+  
+  // NEW: Additional Course Filters
+  const [newlyLaunched, setNewlyLaunched] = useState(false);
+  const [fastrackOnly, setFastrackOnly] = useState(false);
+  const [bestSellerOnly, setBestSellerOnly] = useState(false);
 
   // Syllabus Tab State
   const [syllabusLevel, setSyllabusLevel] = useState<CourseLevel>("Qualifier");
@@ -93,7 +98,6 @@ const IITMBSPrep = () => {
   // --- DYNAMIC DATA DERIVATION ---
   
   // Active Context
-  // NOTE: syllabusBranch is separate because it is just a filter key for SyllabusTab
   const activeBranch = activeTab === 'pyqs' ? pyqBranch : activeTab === 'notes' ? notesBranch : activeTab === 'courses' ? courseBranch : activeTab === 'syllabus' ? syllabusBranch : toolsBranch;
   const activeLevel = activeTab === 'pyqs' ? pyqLevel : activeTab === 'notes' ? notesLevel : activeTab === 'courses' ? courseLevel : activeTab === 'syllabus' ? syllabusLevel : toolsLevel;
 
@@ -164,6 +168,8 @@ const IITMBSPrep = () => {
   const [tempCourseLevels, setTempCourseLevels] = useState<string[]>([]);
   const [tempCourseSubjects, setTempCourseSubjects] = useState<string[]>([]);
   const [tempCoursePrice, setTempCoursePrice] = useState<string | null>(null);
+  // Tool Temps
+  const [tempSelectedTool, setTempSelectedTool] = useState(selectedTool);
 
   const handleOpenDropdown = (type: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -190,8 +196,9 @@ const IITMBSPrep = () => {
     } else if (activeTab === 'courses') {
         setTempBranch(courseBranch); 
         setTempCourseLevels(selectedCourseLevels); setTempCourseSubjects(selectedCourseSubjects); setTempCoursePrice(coursePriceRange);
-    } else {
+    } else if (activeTab === 'tools') {
         setTempBranch(toolsBranch); setTempLevel(toolsLevel);
+        setTempSelectedTool(selectedTool);
     }
     
     setOpenDropdown(openDropdown === type ? null : type);
@@ -202,10 +209,9 @@ const IITMBSPrep = () => {
     setSelectedNotesSubjects([]);
   }, [pyqLevel, notesLevel]);
 
-  // Handle Level Change for Syllabus
   const handleSyllabusLevelChange = (newLevel: CourseLevel) => {
     setSyllabusLevel(newLevel);
-    setSyllabusSubjectIds([]); // Reset subjects on level change
+    setSyllabusSubjectIds([]); 
   };
 
   useEffect(() => {
@@ -250,7 +256,7 @@ const IITMBSPrep = () => {
         if (type === 'level') handleSyllabusLevelChange(tempLevel as CourseLevel);
         if (type === 'branch') {
             setSyllabusBranch(tempBranch);
-            setSyllabusSubjectIds([]); // Reset subjects on branch change
+            setSyllabusSubjectIds([]); 
         } 
         if (type === 'subject') setSyllabusSubjectIds(tempSyllabusSubjectIds);
     } else if (activeTab === 'courses') {
@@ -258,9 +264,10 @@ const IITMBSPrep = () => {
         if (type === 'courseLevel') setSelectedCourseLevels(tempCourseLevels);
         if (type === 'courseSubject') setSelectedCourseSubjects(tempCourseSubjects);
         if (type === 'coursePricing') setCoursePriceRange(tempCoursePrice);
-    } else {
+    } else if (activeTab === 'tools') {
         if (type === 'branch') setToolsBranch(tempBranch);
         if (type === 'level') setToolsLevel(tempLevel);
+        if (type === 'tool') setSelectedTool(tempSelectedTool);
     }
     setOpenDropdown(null);
   };
@@ -274,6 +281,14 @@ const IITMBSPrep = () => {
     }
     if (activeTab === 'syllabus') {
         setSyllabusSubjectIds([]);
+    }
+    if (activeTab === 'courses') {
+        setBestSellerOnly(false);
+        setNewlyLaunched(false);
+        setFastrackOnly(false);
+        setSelectedCourseLevels([]);
+        setSelectedCourseSubjects([]);
+        setCoursePriceRange(null);
     }
     setOpenDropdown(null);
   };
@@ -291,12 +306,16 @@ const IITMBSPrep = () => {
     items.push(activeLabel);
     
     if (activeTab === 'syllabus') {
-        items.push(syllabusBranch); // Show Branch in Breadcrumb
+        items.push(syllabusBranch);
         items.push(syllabusLevel);
         if (syllabusSubjectIds.length > 0) items.push(`${syllabusSubjectIds.length} Subjects`);
+    } else if (activeTab === 'tools') {
+        items.push(activeBranch);
+        const toolName = selectedTool.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        items.push(toolName);
     } else {
         items.push(activeBranch); 
-        if (['notes', 'pyqs', 'tools'].includes(activeTab)) items.push(activeLevel); 
+        if (['notes', 'pyqs'].includes(activeTab)) items.push(activeLevel); 
     }
     
     if (activeTab === 'pyqs') {
@@ -342,9 +361,9 @@ const IITMBSPrep = () => {
         items = activeTab === 'syllabus' ? ["Qualifier", "Foundation", "Diploma", "Degree"] : levels; 
         isCheckbox = false; currentSelection = tempLevel; setSelection = setTempLevel; 
     }
-    else if (type === 'subject') { // Syllabus Subject
-        items = syllabusSubjectOptions; // Objects {id, name}
-        isCheckbox = true; // CHANGED to true for multi-select
+    else if (type === 'subject') {
+        items = syllabusSubjectOptions;
+        isCheckbox = true; 
         currentSelection = tempSyllabusSubjectIds; 
         setSelection = setTempSyllabusSubjectIds;
     }
@@ -355,6 +374,16 @@ const IITMBSPrep = () => {
     else if (type === 'courseLevel') { items = availableCourseLevels; currentSelection = tempCourseLevels; setSelection = setTempCourseLevels; }
     else if (type === 'courseSubject') { items = availableCourseSubjects; currentSelection = tempCourseSubjects; setSelection = setTempCourseSubjects; }
     else if (type === 'coursePricing') { items = ['free', 'paid']; isCheckbox = false; currentSelection = tempCoursePrice; setSelection = setTempCoursePrice; }
+    else if (type === 'tool') {
+        items = [
+            { id: 'cgpa-calculator', name: 'CGPA Calculator' },
+            { id: 'grade-calculator', name: 'Grade Calculator' },
+            { id: 'marks-predictor', name: 'Marks Predictor' }
+        ];
+        isCheckbox = false; 
+        currentSelection = tempSelectedTool; 
+        setSelection = setTempSelectedTool; 
+    }
 
     const selectionArray = Array.isArray(currentSelection) ? currentSelection : [];
 
@@ -436,14 +465,14 @@ const IITMBSPrep = () => {
               <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-x-auto no-scrollbar w-full pb-1 pr-4">
                 
                 {/* 1. Branch & Level (Standard Tabs) */}
-                {activeTab !== 'syllabus' && activeTab !== 'courses' && (
+                {activeTab !== 'syllabus' && activeTab !== 'courses' && activeTab !== 'tools' && (
                     <div className="flex-shrink-0">
                         <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         Branch <FilledArrow isOpen={openDropdown === 'branch'} />
                         </button>
                     </div>
                 )}
-                {activeTab !== 'syllabus' && activeTab !== 'courses' && (
+                {activeTab !== 'syllabus' && activeTab !== 'courses' && activeTab !== 'tools' && (
                     <div className="flex-shrink-0">
                         <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         Level <FilledArrow isOpen={openDropdown === 'level'} />
@@ -451,24 +480,40 @@ const IITMBSPrep = () => {
                     </div>
                 )}
 
-                {/* 1.5. Syllabus Tab Filters */}
+                {/* 1.5. Tools Tab Filters */}
+                {activeTab === 'tools' && (
+                  <>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('tool', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        Tool <FilledArrow isOpen={openDropdown === 'tool'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                        </button>
+                    </div>
+                    <div className="flex-shrink-0">
+                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                        Level <FilledArrow isOpen={openDropdown === 'level'} />
+                        </button>
+                    </div>
+                  </>
+                )}
+
+                {/* 1.6. Syllabus Tab Filters */}
                 {activeTab === 'syllabus' && (
                     <>
-                        {/* Branch - Static Label "Branch" */}
                         <div className="flex-shrink-0">
                             <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                             Branch <FilledArrow isOpen={openDropdown === 'branch'} />
                             </button>
                         </div>
-
-                        {/* Level - Static Label "Level" */}
                         <div className="flex-shrink-0">
                             <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                             Level <FilledArrow isOpen={openDropdown === 'level'} />
                             </button>
                         </div>
-
-                        {/* Subject Selector */}
                         <div className="flex-shrink-0">
                             <button onClick={(e) => handleOpenDropdown('subject', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                             {syllabusSubjectIds.length > 0 && <span className="w-5 h-5 flex items-center justify-center bg-[#6366f1] text-white text-[10px] rounded-full mr-2">{syllabusSubjectIds.length}</span>}
@@ -515,6 +560,18 @@ const IITMBSPrep = () => {
                             Pricing <FilledArrow isOpen={openDropdown === 'coursePricing'} />
                         </button>
                     </div>
+                    <button onClick={() => setBestSellerOnly(!bestSellerOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${bestSellerOnly ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
+                      Best Seller
+                      {bestSellerOnly && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={() => setNewlyLaunched(!newlyLaunched)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${newlyLaunched ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
+                      Newly Launched
+                      {newlyLaunched && <X className="w-3.5 h-3.5" />}
+                    </button>
+                    <button onClick={() => setFastrackOnly(!fastrackOnly)} className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${fastrackOnly ? 'bg-white border-[#e5e7eb] text-[#374151]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}>
+                      Fastrack Batch
+                      {fastrackOnly && <X className="w-3.5 h-3.5" />}
+                    </button>
                   </>
                 )}
 
@@ -543,7 +600,7 @@ const IITMBSPrep = () => {
                 )}
 
                 {/* 4. Reset Link */}
-                {((activeTab === 'pyqs' && (pyqYears.length > 0 || examTypes.length > 0 || pyqSubjects.length > 0)) || (activeTab === 'notes' && selectedNotesSubjects.length > 0) || (activeTab === 'syllabus' && syllabusSubjectIds.length > 0)) && (
+                {((activeTab === 'pyqs' && (pyqYears.length > 0 || examTypes.length > 0 || pyqSubjects.length > 0)) || (activeTab === 'notes' && selectedNotesSubjects.length > 0) || (activeTab === 'syllabus' && syllabusSubjectIds.length > 0) || (activeTab === 'courses' && (selectedCourseLevels.length > 0 || selectedCourseSubjects.length > 0 || coursePriceRange || bestSellerOnly || newlyLaunched || fastrackOnly))) && (
                   <button onClick={resetFilters} className="text-[#6366f1] text-[12px] font-medium hover:underline px-2 transition-all ml-auto flex-shrink-0">
                     Reset Filters
                   </button>
@@ -574,7 +631,15 @@ const IITMBSPrep = () => {
             {activeTab === "notes" && <BranchNotesTab branch={notesBranch} level={notesLevel} selectedSubjects={selectedNotesSubjects} onSubjectsLoaded={setAvailableNotesSubjects} />}
             {activeTab === "syllabus" && <SyllabusTab level={syllabusLevel} branch={syllabusBranch} selectedCourseIds={syllabusSubjectIds} />}
             {activeTab === "tools" && <IITMToolsTab selectedTool={selectedTool} branch={toolsBranch} level={toolsLevel} />}
-            {activeTab === "courses" && <PaidCoursesTab branch={courseBranch} levels={selectedCourseLevels} subjects={selectedCourseSubjects} priceRange={coursePriceRange} />}
+            {activeTab === "courses" && <PaidCoursesTab 
+                branch={courseBranch} 
+                levels={selectedCourseLevels} 
+                subjects={selectedCourseSubjects} 
+                priceRange={coursePriceRange} 
+                newlyLaunched={newlyLaunched}
+                fasttrackOnly={fastrackOnly}
+                bestSellerOnly={bestSellerOnly}
+            />}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
             {activeTab === "dates" && <ImportantDatesTab sortOrder={sortOrder} />}
           </div>
