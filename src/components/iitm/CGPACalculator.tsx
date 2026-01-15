@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw, TrendingUp, BookOpen, Briefcase, ArrowRight } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
 type Grade = "10" | "9" | "8" | "7" | "6" | "5" | "4" | "0";
@@ -15,12 +15,20 @@ interface Course {
   grade: Grade;
 }
 
-const CGPACalculator = () => {
+interface CGPACalculatorProps {
+  branch?: string;
+  level?: string;
+}
+
+const CGPACalculator: React.FC<CGPACalculatorProps> = ({ 
+  branch = "Data Science", 
+  level = "Foundation" 
+}) => {
   // Input States
   const [currentCGPA, setCurrentCGPA] = useState("");
   const [creditsCompleted, setCreditsCompleted] = useState("");
   const [courses, setCourses] = useState<Course[]>([
-    { id: "1", name: "Course 1", credits: "4", grade: "10" }
+    { id: "1", name: "", credits: "4", grade: "10" }
   ]);
   const [showReport, setShowReport] = useState(false);
 
@@ -30,7 +38,7 @@ const CGPACalculator = () => {
   const [totalCredits, setTotalCredits] = useState(0);
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
   
-  const componentRef = useRef<HTMLDivElement>(null);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const gradeOptions: { value: Grade; label: string; point: number }[] = [
     { value: "10", label: "S (10)", point: 10 },
@@ -44,9 +52,26 @@ const CGPACalculator = () => {
 
   const getPoint = (g: Grade) => parseInt(g);
 
+  // --- Dynamic Promotions Data ---
+  const promotions = {
+    jobs: branch.includes("Electronic") ? [
+      { role: "Embedded Engineer", pay: "₹12L", company: "Qualcomm" },
+      { role: "VLSI Design", pay: "₹18L", company: "Intel" },
+      { role: "IoT Architect", pay: "₹15L", company: "Siemens" }
+    ] : [
+      { role: "Data Analyst", pay: "₹10L", company: "Accenture" },
+      { role: "ML Engineer", pay: "₹24L", company: "Google" },
+      { role: "Business Analyst", pay: "₹14L", company: "Deloitte" }
+    ],
+    recommendedCourses: branch.includes("Electronic") ? [
+      "Advanced Circuit Design", "Embedded Systems with ARM"
+    ] : [
+      "Python for Data Science", "Machine Learning A-Z"
+    ]
+  };
+
   // --- Calculations ---
   useEffect(() => {
-    // 1. Semester Stats
     let semPoints = 0;
     let semCredits = 0;
     const dist: Record<string, number> = { S: 0, A: 0, B: 0, C: 0, Others: 0 };
@@ -58,7 +83,6 @@ const CGPACalculator = () => {
       semPoints += gp * cr;
       semCredits += cr;
 
-      // Distribution
       if (c.grade === "10") dist.S++;
       else if (c.grade === "9") dist.A++;
       else if (c.grade === "8") dist.B++;
@@ -69,11 +93,9 @@ const CGPACalculator = () => {
     const sGPA = semCredits > 0 ? semPoints / semCredits : 0;
     setSemesterGPA(sGPA);
 
-    // 2. Cumulative Stats
     const pastCGPA = parseFloat(currentCGPA) || 0;
     const pastCredits = parseFloat(creditsCompleted) || 0;
     
-    // Weighted Formula
     const totalSemPoints = semPoints; 
     const finalTotalCredits = pastCredits + semCredits;
     const totalPoints = (pastCGPA * pastCredits) + totalSemPoints;
@@ -83,12 +105,11 @@ const CGPACalculator = () => {
     setCumulativeCGPA(cCGPA);
     setTotalCredits(finalTotalCredits);
     setGradeDistribution(dist);
-
   }, [courses, currentCGPA, creditsCompleted]);
 
   // --- Handlers ---
   const addCourse = () => {
-    setCourses([...courses, { id: Date.now().toString(), name: `Course ${courses.length + 1}`, credits: "4", grade: "10" }]);
+    setCourses([...courses, { id: Date.now().toString(), name: "", credits: "4", grade: "10" }]);
   };
 
   const removeCourse = (index: number) => {
@@ -105,36 +126,35 @@ const CGPACalculator = () => {
     setCourses(newCourses);
   };
 
+  const handleCalculate = () => {
+    setShowReport(true);
+    // Scroll to report after a short delay to allow rendering
+    setTimeout(() => {
+      reportRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   const handleReset = () => {
-    if (window.confirm("Clear all data and start over?")) {
+    if (window.confirm("Start over?")) {
       setCurrentCGPA("");
       setCreditsCompleted("");
-      setCourses([{ id: "1", name: "Course 1", credits: "4", grade: "10" }]);
+      setCourses([{ id: "1", name: "", credits: "4", grade: "10" }]);
       setShowReport(false);
     }
   };
   
   const handlePrint = useReactToPrint({
-    contentRef: componentRef,
-    documentTitle: "CGPA_Report",
+    contentRef: reportRef,
+    documentTitle: "Grade_Report",
   });
 
-  // --- Donut Chart Gradient ---
   const getConicGradient = () => {
     const total = courses.length;
-    if (total === 0) return "conic-gradient(#e5e7eb 0deg 360deg)";
+    if (total === 0) return "conic-gradient(#f3f4f6 0deg 360deg)";
 
-    const colors = {
-      S: "#000000",   
-      A: "#4b5563",   
-      B: "#9ca3af",   
-      C: "#d1d5db",   
-      Others: "#f3f4f6" 
-    };
-
+    const colors = { S: "#000000", A: "#4b5563", B: "#9ca3af", C: "#d1d5db", Others: "#f3f4f6" };
     let currentDeg = 0;
     const segments: string[] = [];
-
     const entries = [
       { key: "S", count: gradeDistribution.S, color: colors.S },
       { key: "A", count: gradeDistribution.A, color: colors.A },
@@ -155,216 +175,265 @@ const CGPACalculator = () => {
   };
 
   return (
-    <div className="bg-white font-sans text-gray-900 pb-10">
+    <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* INPUT SECTION */}
-      <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
+      {/* MAIN CONTENT GRID: Inputs (Left) + Promotions (Right) */}
+      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-0 min-h-[600px] border-b border-gray-100">
         
-        {/* Academic Status */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="current-cgpa" className="text-xs font-bold uppercase tracking-wide text-gray-500">Current CGPA</Label>
+        {/* LEFT COLUMN: INPUTS (8/12) */}
+        <div className="lg:col-span-8 p-6 md:p-8 border-r border-gray-100">
+          <div className="mb-6">
+            <h2 className="text-xl font-bold tracking-tight mb-1 text-black uppercase">CGPA Calculator</h2>
+            <p className="text-gray-500 text-xs font-medium">Enter your marks to get an accurate prediction.</p>
+          </div>
+
+          {/* Academic Status */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="space-y-1.5">
+              <Label htmlFor="current-cgpa" className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Current CGPA</Label>
               <Input
                 id="current-cgpa"
                 type="number"
-                placeholder="e.g. 8.5"
+                placeholder="0.00"
                 value={currentCGPA}
                 onChange={(e) => setCurrentCGPA(e.target.value)}
                 className="h-10 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="credits-completed" className="text-xs font-bold uppercase tracking-wide text-gray-500">Credits Completed</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="credits-completed" className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Credits Earned</Label>
               <Input
                 id="credits-completed"
                 type="number"
-                placeholder="e.g. 40"
+                placeholder="0"
                 value={creditsCompleted}
                 onChange={(e) => setCreditsCompleted(e.target.value)}
                 className="h-10 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
               />
             </div>
           </div>
+
+          {/* Course Inputs */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-end pb-2 border-b border-gray-100">
+               <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Semester Subjects</Label>
+            </div>
+
+            <div className="space-y-2">
+              {courses.map((course, index) => (
+                <div key={course.id} className="grid grid-cols-12 gap-2 items-center group">
+                  <div className="col-span-6 md:col-span-7">
+                    <Input
+                      placeholder="Subject Name"
+                      value={course.name}
+                      onChange={(e) => updateCourse(index, "name", e.target.value)}
+                      className="bg-transparent border-transparent hover:bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 font-medium text-sm h-9 px-2 rounded-sm transition-colors"
+                    />
+                  </div>
+                  <div className="col-span-2 md:col-span-2">
+                      <Input
+                      type="number"
+                      placeholder="Cr"
+                      value={course.credits}
+                      onChange={(e) => updateCourse(index, "credits", e.target.value)}
+                      className="text-center h-9 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm"
+                    />
+                  </div>
+                  <div className="col-span-3 md:col-span-2">
+                    <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
+                      <SelectTrigger className="h-9 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm bg-white">
+                        <SelectValue placeholder="Grade" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                     <button
+                      onClick={() => removeCourse(index)}
+                      className="text-gray-300 hover:text-red-500 transition-colors"
+                      disabled={courses.length <= 1}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 flex gap-3">
+               <Button onClick={addCourse} variant="outline" className="h-10 px-4 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-[10px] tracking-wider font-bold rounded-sm">
+                <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
+              </Button>
+              <Button 
+                onClick={handleCalculate} 
+                className="flex-1 h-10 bg-black hover:bg-gray-800 text-white uppercase text-[11px] tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99]"
+              >
+                Calculate Result
+              </Button>
+            </div>
+          </div>
         </div>
 
-        {/* Course Inputs */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-end border-b border-gray-100 pb-2">
-             <Label className="text-xs font-bold uppercase tracking-wide text-gray-500">Semester Courses</Label>
-             <span className="text-[10px] text-gray-400 font-medium">{courses.length} courses added</span>
-          </div>
+        {/* RIGHT COLUMN: PROMOTIONS (4/12) - "Square/Rectangle type area" */}
+        <div className="lg:col-span-4 bg-gray-50/50 p-6 md:p-8 flex flex-col gap-6 border-l border-gray-100 h-full">
+           
+           {/* Header for Right Panel */}
+           <div className="mb-2">
+              <h3 className="text-sm font-bold uppercase tracking-wide text-black flex items-center gap-2">
+                 <Briefcase className="w-4 h-4" /> Career & Growth
+              </h3>
+              <p className="text-[10px] text-gray-500 mt-1">Opportunities for {branch}</p>
+           </div>
 
-          <div className="space-y-2">
-            {courses.map((course, index) => (
-              <div key={course.id} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-white p-3 rounded-sm border border-gray-200 shadow-sm">
-                <div className="flex-grow w-full md:w-auto">
-                  <Input
-                    placeholder="Course Name"
-                    value={course.name}
-                    onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    className="border-transparent bg-transparent hover:bg-gray-50 focus:bg-white focus:border-black focus:ring-0 font-medium text-sm h-9 px-2 rounded-sm"
-                  />
-                </div>
-                <div className="w-full md:w-24">
-                    <Input
-                    type="number"
-                    placeholder="Credits"
-                    value={course.credits}
-                    onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    className="border-gray-200 focus:border-black focus:ring-0 text-center h-9 text-sm rounded-sm"
-                  />
-                </div>
-                <div className="w-full md:w-36">
-                  <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    <SelectTrigger className="border-gray-200 focus:border-black focus:ring-0 bg-white h-9 text-sm rounded-sm">
-                      <SelectValue placeholder="Grade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-sm">{opt.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => removeCourse(index)}
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0 h-9 w-9 rounded-sm"
-                  disabled={courses.length <= 1}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+           {/* Jobs Card */}
+           <div className="bg-white p-5 rounded-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between mb-4">
+                 <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Top Jobs</h4>
+                 <TrendingUp className="w-4 h-4 text-green-600" />
               </div>
-            ))}
-          </div>
+              <div className="space-y-4">
+                 {promotions.jobs.map((job, i) => (
+                    <div key={i} className="flex justify-between items-start border-b border-gray-50 last:border-0 pb-3 last:pb-0">
+                       <div>
+                          <div className="font-bold text-sm text-gray-900">{job.role}</div>
+                          <div className="text-[11px] text-gray-500">{job.company}</div>
+                       </div>
+                       <div className="text-xs font-bold text-black bg-gray-100 px-2 py-1 rounded-sm">
+                          {job.pay}
+                       </div>
+                    </div>
+                 ))}
+              </div>
+              <Button variant="link" className="w-full text-[10px] text-black font-bold uppercase mt-2 h-auto p-0">
+                 View All Opportunities <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+           </div>
 
-          <div className="pt-2 flex flex-col sm:flex-row gap-3">
-             <Button onClick={addCourse} variant="outline" className="flex-1 h-10 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-[11px] tracking-wider font-bold rounded-sm">
-              <Plus className="mr-2 h-3.5 w-3.5" /> Add Course
-            </Button>
-            <Button 
-              onClick={() => setShowReport(true)} 
-              className="flex-1 h-10 bg-black hover:bg-gray-800 text-white uppercase text-[11px] tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99]"
-            >
-              Calculate Result
-            </Button>
-          </div>
+           {/* Courses Card */}
+           <div className="bg-white p-5 rounded-sm border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+               <div className="flex items-center justify-between mb-4">
+                 <h4 className="text-xs font-bold uppercase text-gray-400 tracking-wider">Recommended</h4>
+                 <BookOpen className="w-4 h-4 text-blue-600" />
+              </div>
+              <div className="space-y-3">
+                 {promotions.recommendedCourses.map((course, i) => (
+                    <div key={i} className="flex items-center gap-3 group cursor-pointer">
+                       <div className="w-8 h-8 bg-gray-100 rounded-sm flex items-center justify-center text-xs font-bold group-hover:bg-black group-hover:text-white transition-colors">
+                          {i + 1}
+                       </div>
+                       <div className="text-xs font-medium text-gray-700 group-hover:text-black transition-colors">
+                          {course}
+                       </div>
+                    </div>
+                 ))}
+              </div>
+           </div>
         </div>
       </div>
 
-      {/* REPORT SECTION - Shown conditionally */}
+      {/* BOTTOM SECTION: FULL WIDTH REPORT */}
       {showReport && (
-        <div className="animate-in slide-in-from-bottom-5 fade-in duration-300">
-           <div className="max-w-4xl mx-auto mt-6 border-t border-black pt-8 px-4 md:px-6" ref={componentRef}>
+        <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
+           <div className="max-w-[1600px] mx-auto p-6 md:p-10">
              
              {/* Report Header */}
-             <div className="text-center mb-8">
-               <h2 className="text-2xl font-black tracking-tight uppercase text-black mb-1">Performance Report</h2>
-               <p className="text-gray-400 text-xs font-semibold tracking-wide uppercase">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-             </div>
-
-             {/* Top Stats */}
-             <div className="flex flex-col md:flex-row justify-center items-stretch mb-10 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-               <div className="flex-1 text-center py-4 md:px-6">
-                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Current Semester</h3>
-                 <div className="text-5xl md:text-6xl font-black text-black tracking-tighter leading-none">{semesterGPA.toFixed(2)}</div>
-                 <p className="text-xs font-bold text-gray-500 mt-2 uppercase">GPA</p>
+             <div className="flex flex-col md:flex-row justify-between items-end mb-10 border-b border-black pb-4">
+               <div>
+                  <h2 className="text-3xl font-black tracking-tighter uppercase text-black mb-1">Academic Report</h2>
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Performance Analysis & Breakdown</p>
                </div>
-               <div className="flex-1 text-center py-4 md:px-6">
-                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Cumulative</h3>
-                 <div className="text-5xl md:text-6xl font-black text-black tracking-tighter leading-none">{cumulativeCGPA.toFixed(2)}</div>
-                 <p className="text-xs font-bold text-gray-500 mt-2 uppercase">CGPA</p>
+               <div className="flex gap-3 mt-4 md:mt-0 print:hidden">
+                  <Button onClick={handlePrint} className="h-9 bg-black text-white hover:bg-gray-800 text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                     <Download className="w-3 h-3 mr-2" /> Download PDF
+                  </Button>
+                  <Button onClick={handleReset} variant="outline" className="h-9 border-gray-300 text-gray-600 hover:text-black hover:border-black text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                     <RefreshCw className="w-3 h-3 mr-2" /> New Calculation
+                  </Button>
                </div>
              </div>
 
-             {/* Grade Breakdown (Donut + Legend) */}
-             <div className="mb-10 bg-gray-50 rounded-sm p-6 border border-gray-100">
-               <h3 className="text-xs font-bold text-center mb-6 text-gray-500 uppercase tracking-widest">Grade Analysis</h3>
-               <div className="flex flex-col md:flex-row justify-center items-center gap-10 md:gap-20">
-                 
-                 {/* CSS Conic Gradient Donut */}
-                 <div className="relative">
-                   <div 
-                      className="w-40 h-40 rounded-full flex items-center justify-center shadow-sm border-[3px] border-white"
-                      style={{ background: getConicGradient() }}
-                   >
-                     <div className="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                        <span className="text-2xl font-black text-black leading-none">{courses.length}</span>
-                        <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider mt-1">Courses</span>
-                     </div>
+             <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                
+                {/* 1. KEY METRICS */}
+                <div className="space-y-8">
+                   <div className="bg-gray-50 p-6 rounded-sm border border-gray-100">
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Semester Performance</h3>
+                      <div className="text-6xl font-black text-black tracking-tighter leading-none">{semesterGPA.toFixed(2)}</div>
+                      <div className="text-xs font-bold text-green-600 mt-2 flex items-center gap-1">
+                         <TrendingUp className="w-3 h-3" /> GPA Score
+                      </div>
                    </div>
-                 </div>
+                   <div className="bg-black text-white p-6 rounded-sm shadow-xl">
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-4">Cumulative Standing</h3>
+                      <div className="text-6xl font-black text-white tracking-tighter leading-none">{cumulativeCGPA.toFixed(2)}</div>
+                      <div className="text-xs font-bold text-gray-400 mt-2">
+                         Overall CGPA
+                      </div>
+                   </div>
+                </div>
 
-                 {/* Custom Legend */}
-                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 bg-black rounded-[1px]"></div>
-                      <span className="font-semibold text-xs text-gray-700">S Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.S || 0})</span></span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 bg-gray-600 rounded-[1px]"></div>
-                      <span className="font-semibold text-xs text-gray-700">A Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.A || 0})</span></span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 bg-gray-400 rounded-[1px]"></div>
-                      <span className="font-semibold text-xs text-gray-700">B Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.B || 0})</span></span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 bg-gray-300 rounded-[1px]"></div>
-                      <span className="font-semibold text-xs text-gray-700">C Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.C || 0})</span></span>
-                    </div>
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 bg-gray-100 rounded-[1px] border border-gray-200"></div>
-                      <span className="font-semibold text-xs text-gray-700">Others <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.Others || 0})</span></span>
-                    </div>
-                 </div>
-               </div>
-             </div>
+                {/* 2. VISUAL ANALYSIS */}
+                <div className="flex flex-col items-center justify-center bg-white border border-gray-100 rounded-sm p-8">
+                   <div className="relative mb-8">
+                      <div 
+                         className="w-48 h-48 rounded-full flex items-center justify-center shadow-sm border-[4px] border-gray-50"
+                         style={{ background: getConicGradient() }}
+                      >
+                         <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                            <span className="text-3xl font-black text-black leading-none">{courses.length}</span>
+                            <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider mt-1">Subjects</span>
+                         </div>
+                      </div>
+                   </div>
+                   
+                   <div className="w-full grid grid-cols-2 gap-x-8 gap-y-3">
+                      <div className="flex items-center justify-between text-xs border-b border-gray-50 pb-1">
+                         <span className="font-bold text-gray-500">S Grade</span>
+                         <span className="font-black text-black">{gradeDistribution.S || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs border-b border-gray-50 pb-1">
+                         <span className="font-bold text-gray-500">A Grade</span>
+                         <span className="font-black text-black">{gradeDistribution.A || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs border-b border-gray-50 pb-1">
+                         <span className="font-bold text-gray-500">B Grade</span>
+                         <span className="font-black text-black">{gradeDistribution.B || 0}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs border-b border-gray-50 pb-1">
+                         <span className="font-bold text-gray-500">Others</span>
+                         <span className="font-black text-black">{gradeDistribution.Others || 0}</span>
+                      </div>
+                   </div>
+                </div>
 
-             {/* Summary Table */}
-             <div className="mb-10">
-               <div className="flex justify-between items-center mb-4 border-b border-black pb-2">
-                 <h3 className="text-sm font-black text-black uppercase tracking-tight">Course Summary</h3>
-                 <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-sm uppercase tracking-wider">{totalCredits} Total Credits</span>
-               </div>
-               
-               <div className="rounded-sm border border-gray-200 overflow-hidden">
-                 <table className="w-full text-left border-collapse">
-                   <thead>
-                     <tr className="bg-gray-50 border-b border-gray-200">
-                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Course</th>
-                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-center">Credits</th>
-                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Grade Point</th>
-                     </tr>
-                   </thead>
-                   <tbody className="divide-y divide-gray-100 text-sm">
-                     {courses.map((c) => (
-                       <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
-                         <td className="py-2.5 px-4 font-semibold text-gray-800">{c.name}</td>
-                         <td className="py-2.5 px-4 text-gray-600 text-center">{c.credits}</td>
-                         <td className="py-2.5 px-4 font-bold text-black text-right">{getPoint(c.grade)}</td>
-                       </tr>
-                     ))}
-                   </tbody>
-                 </table>
-               </div>
-             </div>
+                {/* 3. DETAILED TABLE */}
+                <div className="border border-gray-200 rounded-sm overflow-hidden">
+                   <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
+                      <h3 className="text-xs font-black text-black uppercase tracking-wide">Transcript Preview</h3>
+                      <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-sm uppercase">{totalCredits} Credits</span>
+                   </div>
+                   <div className="overflow-y-auto max-h-[300px]">
+                      <table className="w-full text-left border-collapse">
+                         <thead className="sticky top-0 bg-white">
+                            <tr className="border-b border-gray-100">
+                               <th className="py-3 px-5 text-[10px] font-bold uppercase tracking-wider text-gray-400">Subject</th>
+                               <th className="py-3 px-5 text-[10px] font-bold uppercase tracking-wider text-gray-400 text-right">GP</th>
+                            </tr>
+                         </thead>
+                         <tbody className="divide-y divide-gray-50">
+                            {courses.map((c, i) => (
+                               <tr key={i} className="hover:bg-gray-50/50">
+                                  <td className="py-2.5 px-5 text-xs font-semibold text-gray-800 truncate max-w-[150px]">{c.name || `Subject ${i+1}`}</td>
+                                  <td className="py-2.5 px-5 text-xs font-bold text-black text-right">{getPoint(c.grade)}</td>
+                               </tr>
+                            ))}
+                         </tbody>
+                      </table>
+                   </div>
+                </div>
 
-             {/* Report Footer Actions */}
-             <div className="flex flex-col md:flex-row gap-3 print:hidden">
-               <Button 
-                 onClick={handlePrint} 
-                 className="flex-1 h-11 bg-black text-white hover:bg-gray-800 font-bold uppercase tracking-wider text-[11px] rounded-sm transition-colors"
-               >
-                 <Download className="mr-2 h-3.5 w-3.5" /> Download PDF
-               </Button>
-               <Button 
-                 onClick={handleReset} 
-                 variant="outline" 
-                 className="flex-1 h-11 border border-gray-300 text-gray-600 hover:border-black hover:text-black font-bold uppercase tracking-wider text-[11px] rounded-sm transition-colors"
-               >
-                 <RefreshCw className="mr-2 h-3.5 w-3.5" /> Start New
-               </Button>
              </div>
            </div>
         </div>
