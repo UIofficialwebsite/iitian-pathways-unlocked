@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from "react";
 import { ALL_SUBJECTS } from "./data/subjectsData";
 import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/gradeCalculations";
@@ -14,10 +13,10 @@ interface GradeCalculatorProps {
 
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [selectedSubject, setSelectedSubject] = useState("");
-  const [inputValues, setInputValues] = useState<Record<string, number>>({});
+  // State holds strings to allow better control over typing (e.g. empty fields or "85.")
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
-  // Advanced filtering logic to get subjects based on branch and level
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
       if (branch === "electronic-systems") {
@@ -25,7 +24,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
         if (level === "diploma") return "diploma-electronic-systems";
         if (level === "degree") return "degree-electronic-systems";
       }
-      // For data-science branch
       return level;
     };
 
@@ -42,17 +40,25 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setInputValues(prev => ({
-      ...prev,
-      [fieldId]: numValue
-    }));
+    // Regex allows empty string, integers, or decimals (e.g., "9", "90", "90.")
+    if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      setInputValues(prev => ({
+        ...prev,
+        [fieldId]: value
+      }));
+    }
   };
 
   const calculateGrade = () => {
     if (!selectedSubject || !currentSubject) return;
 
-    const score = calculateGradeByLevel(level, selectedSubject, inputValues);
+    // Convert strings to numbers for calculation
+    const numericValues: Record<string, number> = {};
+    Object.keys(inputValues).forEach(key => {
+      numericValues[key] = parseFloat(inputValues[key]) || 0;
+    });
+
+    const score = calculateGradeByLevel(level, selectedSubject, numericValues);
     const letter = getGradeLetter(score);
     const points = getGradePoints(score);
 
@@ -71,7 +77,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   return (
     <div className="space-y-6">
       <div className="space-y-4">
-        {/* Subject Selector */}
         <SubjectSelector
           subjects={filteredSubjects}
           selectedSubject={selectedSubject}
