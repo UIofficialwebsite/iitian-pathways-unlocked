@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,7 @@ import { Subject } from "../types/gradeTypes";
 
 interface ScoreInputFormProps {
   subject: Subject;
-  inputValues: Record<string, number>;
+  inputValues: Record<string, string>; // Changed to string to support better input handling
   onInputChange: (fieldId: string, value: string) => void;
   onCalculate: () => void;
   onReset: () => void;
@@ -33,12 +32,11 @@ export default function ScoreInputForm({
               <Label htmlFor={field.id}>{field.label}</Label>
               <Input
                 id={field.id}
-                type="number"
-                min={field.min}
-                max={field.max}
+                type="text"
+                inputMode="decimal"
                 value={inputValues[field.id] || ""}
                 onChange={(e) => onInputChange(field.id, e.target.value)}
-                placeholder={`Enter ${field.label.toLowerCase()}`}
+                placeholder={`Enter ${field.label.toLowerCase()} (Max ${field.max})`}
               />
             </div>
           ))}
