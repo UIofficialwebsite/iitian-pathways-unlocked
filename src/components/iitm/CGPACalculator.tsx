@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, ExternalLink } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import {
@@ -141,7 +141,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   const handlePrint = useReactToPrint({
     contentRef: reportRef,
-    documentTitle: "Grade_Report",
+    documentTitle: "Expected_Performance_Report",
   });
 
   const getConicGradient = () => {
@@ -191,11 +191,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                 <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-4 overflow-hidden">
-                      {/* OPEN NOW Tag: Bigger, Bold */}
                       <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
                         OPEN NOW
                       </span>
-                      {/* Job Title - Looping Text */}
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
                         {job.title} applications are live
                       </span>
@@ -210,7 +208,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="default" 
-                        // Apply Now: Semi-bold, Larger Size (text-sm)
                         className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
                       >
                         Apply Now
@@ -224,7 +221,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         </div>
       )}
 
-      {/* 2. MAIN INPUTS (Full Width) */}
+      {/* 2. MAIN INPUTS */}
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20">
         
         {/* Academic Status */}
@@ -253,7 +250,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           </div>
         </div>
 
-        {/* Course Inputs - Full Width */}
+        {/* Course Inputs */}
         <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-200">
              <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
@@ -320,85 +317,101 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         </div>
       </div>
 
-      {/* 3. REPORT SECTION (Bottom, Full Width, Vertical) */}
+      {/* 3. REPORT SECTION - Designed as a Clean PDF Report */}
       {showReport && (
         <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
-           <div className="max-w-[1600px] mx-auto p-6 md:p-12 space-y-16">
+           <div className="max-w-[1600px] mx-auto p-8 md:p-14 space-y-12">
              
              {/* Report Header */}
-             <div className="text-center">
-                <h2 className="text-3xl font-black tracking-tight uppercase text-black mb-2 font-sans">Performance Report</h2>
-                <div className="flex justify-center gap-4 print:hidden">
-                   <Button onClick={handlePrint} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100 font-sans">
-                      <Download className="w-3 h-3 mr-2" /> Download PDF
+             <div className="flex flex-col items-center justify-center text-center space-y-4">
+                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-black font-sans">
+                  Expected Performance Report
+                </h2>
+                <p className="text-sm text-gray-500 font-normal font-sans max-w-lg">
+                  This report provides an estimated projection of your academic performance based on the data entered.
+                </p>
+                <div className="flex justify-center gap-4 print:hidden pt-2">
+                   <Button onClick={handlePrint} variant="outline" className="h-9 text-xs uppercase font-medium tracking-wide text-black border-gray-300 hover:bg-gray-50 rounded-sm font-sans">
+                      <Download className="w-3.5 h-3.5 mr-2" /> Download PDF
                    </Button>
-                   <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100 font-sans">
-                      <RefreshCw className="w-3 h-3 mr-2" /> Reset
+                   <Button onClick={handleReset} variant="ghost" className="h-9 text-xs uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-sm font-sans">
+                      <RefreshCw className="w-3.5 h-3.5 mr-2" /> Reset Data
                    </Button>
                 </div>
              </div>
 
-             {/* Stats Row */}
-             <div className="flex flex-col md:flex-row justify-center items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100 border-y border-gray-100 py-12">
-               <div className="flex-1 text-center px-6 py-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 font-sans">Semester GPA</h3>
-                  <div className="text-8xl font-black text-black tracking-tighter leading-none font-sans">{semesterGPA.toFixed(2)}</div>
+             <div className="w-full h-px bg-gray-100"></div>
+
+             {/* Stats Row - Clean & Minimal */}
+             <div className="flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24 py-6">
+               <div className="text-center">
+                  <h3 className="text-xs font-medium uppercase tracking-widest text-gray-500 mb-3 font-sans">Semester GPA</h3>
+                  <div className="text-7xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
                </div>
-               <div className="flex-1 text-center px-6 py-4">
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 font-sans">Cumulative CGPA</h3>
-                  <div className="text-8xl font-black text-black tracking-tighter leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
+               <div className="hidden md:block w-px h-24 bg-gray-100"></div>
+               <div className="text-center">
+                  <h3 className="text-xs font-medium uppercase tracking-widest text-gray-500 mb-3 font-sans">Cumulative CGPA</h3>
+                  <div className="text-7xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
                </div>
              </div>
 
-             {/* Chart Section */}
-             <div className="flex flex-col items-center">
-                 <div className="mb-10">
+             {/* Visual Analysis */}
+             <div className="flex flex-col items-center py-6">
+                 <div className="mb-10 relative">
                     <div 
-                       className="w-64 h-64 rounded-full flex items-center justify-center shadow-sm border-[6px] border-white ring-1 ring-gray-100"
+                       className="w-56 h-56 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-100"
                        style={{ background: getConicGradient() }}
                     >
-                       <div className="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                          <span className="text-5xl font-black text-black leading-none font-sans">{courses.length}</span>
-                          <span className="text-xs uppercase font-bold text-gray-400 tracking-wider mt-2 font-sans">Subjects</span>
+                       <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                          <span className="text-4xl font-semibold text-black leading-none font-sans">{courses.length}</span>
+                          <span className="text-[10px] uppercase font-medium text-gray-400 tracking-wider mt-2 font-sans">Subjects</span>
                        </div>
                     </div>
                  </div>
-                 <div className="flex flex-wrap justify-center gap-8 md:gap-12">
+                 
+                 <div className="flex flex-wrap justify-center gap-8">
                     {Object.entries(gradeDistribution).map(([grade, count]) => (
                        count > 0 && (
-                          <div key={grade} className="flex items-center gap-3">
-                             <div className={`w-3 h-3 rounded-full ${grade === 'S' ? 'bg-black' : 'bg-gray-300'}`}></div>
-                             <span className="text-sm font-bold text-gray-700 font-sans">{grade} Grade: {count}</span>
+                          <div key={grade} className="flex items-center gap-2.5">
+                             <div className={`w-2.5 h-2.5 rounded-sm ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div>
+                             <span className="text-sm font-medium text-gray-600 font-sans">{grade} Grade: <span className="text-black">{count}</span></span>
                           </div>
                        )
                     ))}
                  </div>
              </div>
 
-             {/* Detailed Table */}
-             <div className="border border-gray-200 rounded-sm overflow-hidden mt-10">
-                <div className="bg-gray-50 px-8 py-5 border-b border-gray-200 flex justify-between items-center">
-                   <h3 className="text-sm font-black text-black uppercase tracking-wide font-sans">Transcript</h3>
-                   <span className="text-xs font-bold bg-black text-white px-3 py-1 rounded-sm uppercase font-sans">{totalCredits} Credits</span>
+             {/* Transcript Table - Minimal Border */}
+             <div className="pt-4">
+                <div className="flex justify-between items-end mb-4 border-b border-black pb-2">
+                   <h3 className="text-sm font-semibold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
+                   <span className="text-xs font-medium text-gray-500 font-sans">Total Credits: {totalCredits}</span>
                 </div>
-                <table className="w-full text-left border-collapse">
-                   <thead>
-                      <tr className="border-b border-gray-100">
-                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 font-sans">Subject</th>
-                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 text-center font-sans">Cr</th>
-                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 text-right font-sans">GP</th>
-                      </tr>
-                   </thead>
-                   <tbody className="divide-y divide-gray-50">
-                      {courses.map((c, i) => (
-                         <tr key={i} className="hover:bg-gray-50/50">
-                            <td className="py-4 px-8 text-sm font-semibold text-gray-800 font-sans">{c.name || `Subject ${i+1}`}</td>
-                            <td className="py-4 px-8 text-sm text-gray-600 text-center font-sans">{c.credits}</td>
-                            <td className="py-4 px-8 text-sm font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
-                         </tr>
-                      ))}
-                   </tbody>
-                </table>
+                <div className="overflow-hidden rounded-sm border border-gray-200">
+                  <table className="w-full text-left border-collapse">
+                     <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200">
+                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 font-sans">Subject Name</th>
+                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-center font-sans">Credits</th>
+                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-right font-sans">Grade Point</th>
+                        </tr>
+                     </thead>
+                     <tbody className="divide-y divide-gray-100">
+                        {courses.map((c, i) => (
+                           <tr key={i} className="hover:bg-gray-50/50">
+                              <td className="py-3.5 px-6 text-sm font-normal text-gray-900 font-sans">{c.name || `Subject ${i+1}`}</td>
+                              <td className="py-3.5 px-6 text-sm font-normal text-gray-600 text-center font-sans">{c.credits}</td>
+                              <td className="py-3.5 px-6 text-sm font-semibold text-black text-right font-sans">{getPoint(c.grade)}</td>
+                           </tr>
+                        ))}
+                     </tbody>
+                  </table>
+                </div>
+             </div>
+
+             {/* Footer Note */}
+             <div className="text-center text-[10px] text-gray-400 font-sans pt-8">
+                Generated via IITM Calculator • {new Date().toLocaleDateString()}
              </div>
 
            </div>
