@@ -37,12 +37,12 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
+    // Allows empty string or decimal numbers
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setInputValues(prev => ({ ...prev, [fieldId]: value }));
     }
   };
 
-  // Live calculation effect (optional: or trigger via button)
   const calculateGrade = () => {
     if (!selectedSubject || !currentSubject) return;
 
@@ -67,12 +67,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
 
   return (
     <div className="w-full max-w-[500px] mx-auto p-5 font-sans text-black">
-      {/* Header */}
-      <header className="mb-12">
-        <h1 className="text-[32px] font-extrabold tracking-tight mb-2">Grade Planner</h1>
-        <p className="text-base text-[#666666] font-normal">Calculate your expected course result.</p>
-      </header>
-
+      
       {/* 01. Select Course */}
       <div className="mb-10">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#999999] mb-4">
@@ -106,7 +101,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
           subject={currentSubject}
           inputValues={inputValues}
           onInputChange={handleInputChange}
-          onCalculate={calculateGrade} // Pass calculator trigger
+          onCalculate={calculateGrade}
         />
       )}
 
