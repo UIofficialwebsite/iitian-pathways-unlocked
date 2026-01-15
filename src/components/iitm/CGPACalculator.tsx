@@ -175,7 +175,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       
       {/* 1. TOP ROW: JOB TICKER */}
       {!jobsLoading && jobs && jobs.length > 0 && (
-        <div className="w-full bg-black text-white py-2 px-6 mb-8">
+        <div className="w-full bg-black text-white py-3 px-6 mb-8">
           <Carousel
             plugins={[plugin.current]}
             className="w-full"
@@ -189,10 +189,10 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             <CarouselContent>
               {jobs.map((job) => (
                 <CarouselItem key={job.id} className="basis-full">
-                  <div className="flex items-center justify-between gap-4 h-8 w-full max-w-[1600px] mx-auto">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      {/* OPEN NOW Tag - Non-bold */}
-                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-2 py-0.5 rounded-sm text-[10px] font-normal uppercase tracking-wider whitespace-nowrap font-sans">
+                  <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
+                    <div className="flex items-center gap-4 overflow-hidden">
+                      {/* OPEN NOW Tag: Bigger, Bold */}
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
                         OPEN NOW
                       </span>
                       {/* Job Title - Looping Text */}
@@ -210,8 +210,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="default" 
-                        // Apply Now Button - Black & White, Non-bold, Inter
-                        className="h-7 text-[11px] font-sans font-normal tracking-wider px-4 bg-white text-black hover:bg-gray-200 border-none rounded-sm"
+                        // Apply Now: Bold, Black & White
+                        className="h-8 text-xs font-bold tracking-wider px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
                       >
                         Apply Now
                       </Button>
@@ -302,19 +302,17 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             ))}
           </div>
 
-          {/* Action Buttons: Moved to RIGHT side */}
           <div className="pt-8 flex justify-end gap-4 w-full">
              <Button 
                onClick={addCourse} 
                variant="outline" 
-               // Add Row: Matches Calculate style but outline/lighter? Or keeping consistent structure.
                className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-normal rounded-sm font-sans"
              >
               <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
             </Button>
             <Button 
               onClick={handleCalculate} 
-              // Calculate: Deep Blue, Non-bold, White Text
+              // Deep Blue, White Text, Non-bold
               className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white uppercase text-xs tracking-wider font-normal rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
