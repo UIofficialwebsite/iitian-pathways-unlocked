@@ -34,6 +34,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   // Input States
   const [currentCGPA, setCurrentCGPA] = useState("");
   const [creditsCompleted, setCreditsCompleted] = useState("");
+  const [subjectsCompleted, setSubjectsCompleted] = useState(""); // New State
   const [courses, setCourses] = useState<Course[]>([
     { id: "1", name: "", credits: "4", grade: "10" }
   ]);
@@ -43,6 +44,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const [semesterGPA, setSemesterGPA] = useState(0);
   const [cumulativeCGPA, setCumulativeCGPA] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
+  const [totalSubjects, setTotalSubjects] = useState(0); // New Result State
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
   
   // Jobs Data Integration
@@ -50,7 +52,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   const reportRef = useRef<HTMLDivElement>(null);
   
-  // Autoplay plugin for the carousel
+  // Autoplay plugin
   const plugin = useRef(
     Autoplay({ delay: 3500, stopOnInteraction: false })
   );
@@ -92,17 +94,21 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
     const pastCGPA = parseFloat(currentCGPA) || 0;
     const pastCredits = parseFloat(creditsCompleted) || 0;
+    const pastSubjects = parseInt(subjectsCompleted) || 0;
     
     const totalSemPoints = semPoints; 
     const finalTotalCredits = pastCredits + semCredits;
+    const finalTotalSubjects = pastSubjects + courses.length; // Calculate Total Subjects
+
     const totalPoints = (pastCGPA * pastCredits) + totalSemPoints;
     
     const cCGPA = finalTotalCredits > 0 ? totalPoints / finalTotalCredits : 0;
     
     setCumulativeCGPA(cCGPA);
     setTotalCredits(finalTotalCredits);
+    setTotalSubjects(finalTotalSubjects);
     setGradeDistribution(dist);
-  }, [courses, currentCGPA, creditsCompleted]);
+  }, [courses, currentCGPA, creditsCompleted, subjectsCompleted]);
 
   // --- Handlers ---
   const addCourse = () => {
@@ -134,6 +140,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     if (window.confirm("Start over?")) {
       setCurrentCGPA("");
       setCreditsCompleted("");
+      setSubjectsCompleted("");
       setCourses([{ id: "1", name: "", credits: "4", grade: "10" }]);
       setShowReport(false);
     }
@@ -224,8 +231,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 2. MAIN INPUTS */}
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20">
         
-        {/* Academic Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 w-full">
+        {/* Academic Status - 3 Columns now to include Subjects Completed */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 w-full">
           <div className="space-y-3 w-full">
             <Label htmlFor="current-cgpa" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Current CGPA</Label>
             <Input
@@ -245,6 +252,17 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0"
               value={creditsCompleted}
               onChange={(e) => setCreditsCompleted(e.target.value)}
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
+            />
+          </div>
+          <div className="space-y-3 w-full">
+            <Label htmlFor="subjects-completed" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Subjects Completed</Label>
+            <Input
+              id="subjects-completed"
+              type="number"
+              placeholder="0"
+              value={subjectsCompleted}
+              onChange={(e) => setSubjectsCompleted(e.target.value)}
               className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
             />
           </div>
@@ -317,7 +335,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         </div>
       </div>
 
-      {/* 3. REPORT SECTION - Designed as a Clean PDF Report */}
+      {/* 3. REPORT SECTION */}
       {showReport && (
         <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
            <div className="max-w-[1600px] mx-auto p-8 md:p-14 space-y-12">
@@ -342,7 +360,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
              <div className="w-full h-px bg-gray-100"></div>
 
-             {/* Stats Row - Clean & Minimal */}
+             {/* Stats Row */}
              <div className="flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24 py-6">
                <div className="text-center">
                   <h3 className="text-xs font-medium uppercase tracking-widest text-gray-500 mb-3 font-sans">Semester GPA</h3>
@@ -381,26 +399,30 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  </div>
              </div>
 
-             {/* Transcript Table - Minimal Border */}
+             {/* Transcript Table - Enhanced Borders */}
              <div className="pt-4">
                 <div className="flex justify-between items-end mb-4 border-b border-black pb-2">
                    <h3 className="text-sm font-semibold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
-                   <span className="text-xs font-medium text-gray-500 font-sans">Total Credits: {totalCredits}</span>
+                   <div className="flex gap-4">
+                      <span className="text-xs font-medium text-gray-500 font-sans">Total Credits: <span className="text-black">{totalCredits}</span></span>
+                      <span className="text-xs font-medium text-gray-500 font-sans">Total Subjects: <span className="text-black">{totalSubjects}</span></span>
+                   </div>
                 </div>
-                <div className="overflow-hidden rounded-sm border border-gray-200">
+                {/* Table with visible proper borders */}
+                <div className="overflow-hidden rounded-sm border border-gray-300">
                   <table className="w-full text-left border-collapse">
                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 font-sans">Subject Name</th>
-                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-center font-sans">Credits</th>
+                        <tr className="bg-gray-50 border-b border-gray-300">
+                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 font-sans border-r border-gray-300">Subject Name</th>
+                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-center font-sans border-r border-gray-300">Credits</th>
                            <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-right font-sans">Grade Point</th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-gray-100">
+                     <tbody className="divide-y divide-gray-300">
                         {courses.map((c, i) => (
                            <tr key={i} className="hover:bg-gray-50/50">
-                              <td className="py-3.5 px-6 text-sm font-normal text-gray-900 font-sans">{c.name || `Subject ${i+1}`}</td>
-                              <td className="py-3.5 px-6 text-sm font-normal text-gray-600 text-center font-sans">{c.credits}</td>
+                              <td className="py-3.5 px-6 text-sm font-normal text-gray-900 font-sans border-r border-gray-300">{c.name || `Subject ${i+1}`}</td>
+                              <td className="py-3.5 px-6 text-sm font-normal text-gray-600 text-center font-sans border-r border-gray-300">{c.credits}</td>
                               <td className="py-3.5 px-6 text-sm font-semibold text-black text-right font-sans">{getPoint(c.grade)}</td>
                            </tr>
                         ))}
@@ -411,7 +433,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
              {/* Footer Note */}
              <div className="text-center text-[10px] text-gray-400 font-sans pt-8">
-                Generated via IITM Calculator • {new Date().toLocaleDateString()}
+                Calculated by UI Calculator • {new Date().toLocaleDateString()}
              </div>
 
            </div>
