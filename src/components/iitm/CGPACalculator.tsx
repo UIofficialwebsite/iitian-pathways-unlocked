@@ -34,7 +34,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   // Input States
   const [currentCGPA, setCurrentCGPA] = useState("");
   const [creditsCompleted, setCreditsCompleted] = useState("");
-  const [subjectsCompleted, setSubjectsCompleted] = useState(""); // New State
+  const [subjectsCompleted, setSubjectsCompleted] = useState("");
   const [courses, setCourses] = useState<Course[]>([
     { id: "1", name: "", credits: "4", grade: "10" }
   ]);
@@ -44,7 +44,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const [semesterGPA, setSemesterGPA] = useState(0);
   const [cumulativeCGPA, setCumulativeCGPA] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
-  const [totalSubjects, setTotalSubjects] = useState(0); // New Result State
+  const [totalSubjects, setTotalSubjects] = useState(0);
   const [gradeDistribution, setGradeDistribution] = useState<Record<string, number>>({});
   
   // Jobs Data Integration
@@ -96,17 +96,16 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     const pastCredits = parseFloat(creditsCompleted) || 0;
     const pastSubjects = parseInt(subjectsCompleted) || 0;
     
+    // Formula: (Past Grade Points + Current Semester Grade Points) / Total Credits
     const totalSemPoints = semPoints; 
     const finalTotalCredits = pastCredits + semCredits;
-    const finalTotalSubjects = pastSubjects + courses.length; // Calculate Total Subjects
-
     const totalPoints = (pastCGPA * pastCredits) + totalSemPoints;
     
     const cCGPA = finalTotalCredits > 0 ? totalPoints / finalTotalCredits : 0;
     
     setCumulativeCGPA(cCGPA);
     setTotalCredits(finalTotalCredits);
-    setTotalSubjects(finalTotalSubjects);
+    setTotalSubjects(pastSubjects + courses.length);
     setGradeDistribution(dist);
   }, [courses, currentCGPA, creditsCompleted, subjectsCompleted]);
 
@@ -231,7 +230,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 2. MAIN INPUTS */}
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20">
         
-        {/* Academic Status - 3 Columns now to include Subjects Completed */}
+        {/* Academic Status - 3 Columns */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 w-full">
           <div className="space-y-3 w-full">
             <Label htmlFor="current-cgpa" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Current CGPA</Label>
@@ -338,92 +337,92 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 3. REPORT SECTION */}
       {showReport && (
         <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
-           <div className="max-w-[1600px] mx-auto p-8 md:p-14 space-y-12">
+           {/* Added visible outer border for PDF feel */}
+           <div className="max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-10 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0 print:border-2">
              
              {/* Report Header */}
-             <div className="flex flex-col items-center justify-center text-center space-y-4">
-                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-black font-sans">
+             <div className="flex flex-col items-center justify-center text-center space-y-3">
+                <h2 className="text-3xl font-semibold tracking-tight text-black font-sans uppercase">
                   Expected Performance Report
                 </h2>
-                <p className="text-sm text-gray-500 font-normal font-sans max-w-lg">
-                  This report provides an estimated projection of your academic performance based on the data entered.
+                <p className="text-xs text-gray-500 font-medium font-sans uppercase tracking-widest">
+                  Academic Projection
                 </p>
-                <div className="flex justify-center gap-4 print:hidden pt-2">
-                   <Button onClick={handlePrint} variant="outline" className="h-9 text-xs uppercase font-medium tracking-wide text-black border-gray-300 hover:bg-gray-50 rounded-sm font-sans">
-                      <Download className="w-3.5 h-3.5 mr-2" /> Download PDF
+                <div className="flex justify-center gap-4 print:hidden pt-4">
+                   <Button onClick={handlePrint} variant="outline" className="h-8 text-[10px] uppercase font-medium tracking-wide text-black border-black hover:bg-gray-50 rounded-none font-sans">
+                      <Download className="w-3 h-3 mr-2" /> Download
                    </Button>
-                   <Button onClick={handleReset} variant="ghost" className="h-9 text-xs uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-sm font-sans">
-                      <RefreshCw className="w-3.5 h-3.5 mr-2" /> Reset Data
+                   <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-none font-sans">
+                      <RefreshCw className="w-3 h-3 mr-2" /> Reset
                    </Button>
                 </div>
              </div>
 
-             <div className="w-full h-px bg-gray-100"></div>
+             <div className="w-full h-px bg-black"></div>
 
              {/* Stats Row */}
-             <div className="flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24 py-6">
-               <div className="text-center">
-                  <h3 className="text-xs font-medium uppercase tracking-widest text-gray-500 mb-3 font-sans">Semester GPA</h3>
-                  <div className="text-7xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
+             <div className="flex flex-col md:flex-row justify-between items-center gap-12 px-8 py-4">
+               <div className="text-center flex-1">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Semester GPA</h3>
+                  <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
                </div>
-               <div className="hidden md:block w-px h-24 bg-gray-100"></div>
-               <div className="text-center">
-                  <h3 className="text-xs font-medium uppercase tracking-widest text-gray-500 mb-3 font-sans">Cumulative CGPA</h3>
-                  <div className="text-7xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
+               <div className="hidden md:block w-px h-16 bg-gray-200"></div>
+               <div className="text-center flex-1">
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Cumulative CGPA</h3>
+                  <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
                </div>
              </div>
 
-             {/* Visual Analysis */}
-             <div className="flex flex-col items-center py-6">
-                 <div className="mb-10 relative">
+             {/* Chart Section */}
+             <div className="flex flex-col items-center py-4 bg-gray-50/50 border border-gray-100 rounded-none">
+                 <div className="mb-8 relative">
                     <div 
-                       className="w-56 h-56 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-100"
+                       className="w-48 h-48 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-200"
                        style={{ background: getConicGradient() }}
                     >
-                       <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                          <span className="text-4xl font-semibold text-black leading-none font-sans">{courses.length}</span>
-                          <span className="text-[10px] uppercase font-medium text-gray-400 tracking-wider mt-2 font-sans">Subjects</span>
+                       <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                          <span className="text-3xl font-semibold text-black leading-none font-sans">{courses.length}</span>
+                          <span className="text-[9px] uppercase font-medium text-gray-400 tracking-wider mt-1 font-sans">Subjects</span>
                        </div>
                     </div>
                  </div>
                  
-                 <div className="flex flex-wrap justify-center gap-8">
+                 <div className="flex flex-wrap justify-center gap-6">
                     {Object.entries(gradeDistribution).map(([grade, count]) => (
                        count > 0 && (
-                          <div key={grade} className="flex items-center gap-2.5">
-                             <div className={`w-2.5 h-2.5 rounded-sm ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div>
-                             <span className="text-sm font-medium text-gray-600 font-sans">{grade} Grade: <span className="text-black">{count}</span></span>
+                          <div key={grade} className="flex items-center gap-2">
+                             <div className={`w-2.5 h-2.5 rounded-none ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div>
+                             <span className="text-xs font-medium text-gray-600 font-sans">{grade} Grade: <span className="text-black font-bold">{count}</span></span>
                           </div>
                        )
                     ))}
                  </div>
              </div>
 
-             {/* Transcript Table - Enhanced Borders */}
-             <div className="pt-4">
-                <div className="flex justify-between items-end mb-4 border-b border-black pb-2">
-                   <h3 className="text-sm font-semibold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
-                   <div className="flex gap-4">
-                      <span className="text-xs font-medium text-gray-500 font-sans">Total Credits: <span className="text-black">{totalCredits}</span></span>
-                      <span className="text-xs font-medium text-gray-500 font-sans">Total Subjects: <span className="text-black">{totalSubjects}</span></span>
+             {/* Transcript Table */}
+             <div>
+                <div className="flex justify-between items-end mb-3 border-b-2 border-black pb-2">
+                   <h3 className="text-xs font-bold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
+                   <div className="flex gap-4 text-[10px] uppercase font-medium font-sans text-gray-500">
+                      <span>Total Credits: <span className="text-black font-bold">{totalCredits}</span></span>
+                      <span>Total Subjects: <span className="text-black font-bold">{totalSubjects}</span></span>
                    </div>
                 </div>
-                {/* Table with visible proper borders */}
-                <div className="overflow-hidden rounded-sm border border-gray-300">
+                <div className="border border-black rounded-none">
                   <table className="w-full text-left border-collapse">
                      <thead>
-                        <tr className="bg-gray-50 border-b border-gray-300">
-                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 font-sans border-r border-gray-300">Subject Name</th>
-                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-center font-sans border-r border-gray-300">Credits</th>
-                           <th className="py-4 px-6 text-[11px] font-medium uppercase tracking-wider text-gray-500 text-right font-sans">Grade Point</th>
+                        <tr className="bg-gray-50 border-b border-black">
+                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black font-sans border-r border-black">Subject Name</th>
+                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-center font-sans border-r border-black">Credits</th>
+                           <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-right font-sans">Grade Point</th>
                         </tr>
                      </thead>
-                     <tbody className="divide-y divide-gray-300">
+                     <tbody className="divide-y divide-black">
                         {courses.map((c, i) => (
-                           <tr key={i} className="hover:bg-gray-50/50">
-                              <td className="py-3.5 px-6 text-sm font-normal text-gray-900 font-sans border-r border-gray-300">{c.name || `Subject ${i+1}`}</td>
-                              <td className="py-3.5 px-6 text-sm font-normal text-gray-600 text-center font-sans border-r border-gray-300">{c.credits}</td>
-                              <td className="py-3.5 px-6 text-sm font-semibold text-black text-right font-sans">{getPoint(c.grade)}</td>
+                           <tr key={i} className="hover:bg-gray-50">
+                              <td className="py-3 px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
+                              <td className="py-3 px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
+                              <td className="py-3 px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
                            </tr>
                         ))}
                      </tbody>
@@ -432,8 +431,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
              </div>
 
              {/* Footer Note */}
-             <div className="text-center text-[10px] text-gray-400 font-sans pt-8">
-                Calculated by UI Calculator • {new Date().toLocaleDateString()}
+             <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                <span className="text-[9px] text-gray-400 font-sans uppercase tracking-wider">Generated on {new Date().toLocaleDateString()}</span>
+                <span className="text-[10px] font-bold text-black font-sans uppercase tracking-wider">Calculated by UI Calculator</span>
              </div>
 
            </div>
