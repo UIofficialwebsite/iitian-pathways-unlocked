@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw, ExternalLink } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import {
@@ -173,7 +173,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* 1. TOP ROW: JOB TICKER (Banner Style) */}
+      {/* 1. TOP ROW: JOB TICKER */}
       {!jobsLoading && jobs && jobs.length > 0 && (
         <div className="w-full bg-black text-white py-2 px-6 mb-8">
           <Carousel
@@ -191,6 +191,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                 <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-8 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-3 overflow-hidden">
+                      {/* OPEN NOW Tag - Big Screen Only, Grey BG, Green Text */}
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                        OPEN NOW
+                      </span>
+                      {/* Job Title - Looping Text */}
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
                         {job.title} applications are live
                       </span>
@@ -204,11 +209,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     >
                       <Button 
                         size="sm" 
-                        variant="secondary" 
-                        // Updated: Grey background, Green Text, "Open Now"
-                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-gray-100 text-green-600 hover:bg-gray-200 border-none rounded-sm"
+                        variant="default" 
+                        // Apply Now Button - Deep Blue, Reduced Opacity
+                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-blue-700/90 text-white hover:bg-blue-800 border-none rounded-sm"
                       >
-                        Open Now
+                        Apply Now
                       </Button>
                     </a>
                   </div>
@@ -232,8 +237,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0.00"
               value={currentCGPA}
               onChange={(e) => setCurrentCGPA(e.target.value)}
-              // Updated: bg-white, font-normal, border-2
-              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal"
+              // bg-white, font-normal inside
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
             />
           </div>
           <div className="space-y-3 w-full">
@@ -244,8 +249,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0"
               value={creditsCompleted}
               onChange={(e) => setCreditsCompleted(e.target.value)}
-              // Updated: bg-white, font-normal, border-2
-              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal"
+              // bg-white, font-normal inside
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
             />
           </div>
         </div>
@@ -253,7 +258,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         {/* Course Inputs - Full Width */}
         <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-200">
-             {/* Updated: Semi-bold label */}
              <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
           </div>
 
@@ -265,7 +269,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Subject Name"
                     value={course.name}
                     onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    // Updated: bg-white, font-normal inside box
+                    // bg-white, font-normal text inside
                     className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
                   />
                 </div>
@@ -275,13 +279,12 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Cr"
                     value={course.credits}
                     onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    // Updated: bg-white, font-normal inside box
+                    // bg-white, font-normal text inside
                     className="text-center h-11 text-sm bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans font-normal placeholder:text-gray-400"
                   />
                 </div>
                 <div className="col-span-3 md:col-span-2">
                   <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    {/* Updated: bg-white */}
                     <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal">
                       <SelectValue placeholder="Grade" />
                     </SelectTrigger>
@@ -291,10 +294,10 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                   </Select>
                 </div>
                 <div className="col-span-1 flex justify-center">
-                   {/* Updated: Always visible (removed opacity group-hover) */}
+                   {/* Delete Icon Always Visible */}
                    <button
                     onClick={() => removeCourse(index)}
-                    className="text-gray-300 hover:text-red-500 transition-colors"
+                    className="text-gray-400 hover:text-red-500 transition-colors"
                     disabled={courses.length <= 1}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -310,8 +313,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             </Button>
             <Button 
               onClick={handleCalculate} 
-              // Updated: Light Blue Background
-              className="flex-1 h-12 bg-blue-500 hover:bg-blue-600 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
+              // Calculate Button: Light Blue
+              className="flex-1 h-12 bg-blue-400 hover:bg-blue-500 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
             </Button>
