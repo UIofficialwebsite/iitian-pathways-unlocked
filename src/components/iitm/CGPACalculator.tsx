@@ -412,7 +412,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
            {/* Wrap content for ReactToPrint */}
            <div ref={reportRef} className="print-page-wrapper">
              
-             <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
+             <div className="print-border-container report-card max-w-[1000px] mx-auto my-6 md:my-12 p-4 md:p-14 space-y-6 md:space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
              
                  {/* PRINT HEADER */}
                  <div className="hidden print-header flex-row justify-between items-center w-full">
@@ -449,7 +449,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  {(currentCGPA || creditsCompleted) && (
                     <div className="bg-gray-50 p-4 border border-black rounded-none print:border print:border-black print:mb-6">
                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 font-sans">Previous Academic Record</h4>
-                       <div className="grid grid-cols-3 gap-4 text-center divide-x divide-gray-300">
+                       <div className="grid grid-cols-3 gap-2 md:gap-4 text-center divide-x divide-gray-300">
                           <div>
                              <span className="block text-xl font-bold text-black font-sans">{currentCGPA || "-"}</span>
                              <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Current CGPA</span>
@@ -466,16 +466,16 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </div>
                  )}
 
-                 {/* Stats Row */}
-                 <div className="flex flex-row justify-between items-center gap-4 md:gap-12 px-4 md:px-8 py-4 print:py-4 print:mb-4">
-                   <div className="text-center flex-1">
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Semester GPA</h3>
-                      <div className="text-4xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
+                 {/* Stats Row - Optimized for Mobile Row Layout */}
+                 <div className="flex flex-row justify-between items-center gap-2 md:gap-12 px-0 md:px-8 py-4 print:py-4 print:mb-4">
+                   <div className="text-center flex-1 min-w-0">
+                      <h3 className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 md:mb-2 font-sans truncate">Semester GPA</h3>
+                      <div className="text-3xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
                    </div>
-                   <div className="block w-px h-12 md:h-16 bg-gray-200 print:bg-black"></div>
-                   <div className="text-center flex-1">
-                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Cumulative CGPA</h3>
-                      <div className="text-4xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
+                   <div className="block w-px h-10 md:h-16 bg-gray-200 print:bg-black shrink-0"></div>
+                   <div className="text-center flex-1 min-w-0">
+                      <h3 className="text-[8px] md:text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-1 md:mb-2 font-sans truncate">Cumulative CGPA</h3>
+                      <div className="text-3xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
                    </div>
                  </div>
 
@@ -505,8 +505,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                      </div>
                  </div>
 
-                 {/* Transcript Table */}
-                 <div className="print:flex-grow">
+                 {/* Transcript Table - With horizontal scroll safety */}
+                 <div className="print:flex-grow w-full overflow-hidden">
                     <div className="flex justify-between items-end mb-3 border-b-2 border-black pb-2">
                        <h3 className="text-xs font-bold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
                        <div className="flex gap-4 text-[10px] uppercase font-medium font-sans text-gray-500">
@@ -514,21 +514,21 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                           <span>Total Subjects: <span className="text-black font-bold">{totalSubjects}</span></span>
                        </div>
                     </div>
-                    <div className="border border-black rounded-none">
-                      <table className="w-full text-left border-collapse">
+                    <div className="border border-black rounded-none overflow-x-auto">
+                      <table className="w-full text-left border-collapse min-w-[300px]">
                          <thead>
                             <tr className="bg-gray-100 border-b border-black print:bg-white">
-                               <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black font-sans border-r border-black">Subject Name</th>
-                               <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-center font-sans border-r border-black">Credits</th>
-                               <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-black text-right font-sans">Grade Point</th>
+                               <th className="py-2 md:py-3 px-2 md:px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-black font-sans border-r border-black">Subject Name</th>
+                               <th className="py-2 md:py-3 px-2 md:px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-black text-center font-sans border-r border-black">Credits</th>
+                               <th className="py-2 md:py-3 px-2 md:px-4 text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-black text-right font-sans">Grade Point</th>
                             </tr>
                          </thead>
                          <tbody className="divide-y divide-black">
                             {courses.map((c, i) => (
                                <tr key={i} className="hover:bg-gray-50 print:hover:bg-transparent">
-                                  <td className="py-2 px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
-                                  <td className="py-2 px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
-                                  <td className="py-2 px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
+                                  <td className="py-2 px-2 md:px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
+                                  <td className="py-2 px-2 md:px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
+                                  <td className="py-2 px-2 md:px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
                                </tr>
                             ))}
                          </tbody>
