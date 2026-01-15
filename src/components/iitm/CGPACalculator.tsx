@@ -50,7 +50,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   
   const reportRef = useRef<HTMLDivElement>(null);
   
-  // Autoplay plugin for the carousel (Looping enabled)
+  // Autoplay plugin for the carousel
   const plugin = useRef(
     Autoplay({ delay: 3500, stopOnInteraction: false })
   );
@@ -191,7 +191,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                 <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-8 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      {/* Loop Text: Job Title + applications are live */}
                       <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
                         {job.title} applications are live
                       </span>
@@ -206,9 +205,10 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="secondary" 
-                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-white text-black hover:bg-gray-200 border-none rounded-sm"
+                        // Updated: Grey background, Green Text, "Open Now"
+                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-gray-100 text-green-600 hover:bg-gray-200 border-none rounded-sm"
                       >
-                        Apply Now
+                        Open Now
                       </Button>
                     </a>
                   </div>
@@ -222,19 +222,18 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 2. MAIN INPUTS (Full Width) */}
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20">
         
-        {/* Academic Status - Using full grid width */}
+        {/* Academic Status */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 w-full">
           <div className="space-y-3 w-full">
-            {/* Added: Semi-bold font and Sans-serif */}
             <Label htmlFor="current-cgpa" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Current CGPA</Label>
-            {/* Added: Visible border (border-2 border-gray-300) and Semi-bold text */}
             <Input
               id="current-cgpa"
               type="number"
               placeholder="0.00"
               value={currentCGPA}
               onChange={(e) => setCurrentCGPA(e.target.value)}
-              className="h-12 w-full text-lg bg-gray-50 border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-semibold placeholder:font-medium"
+              // Updated: bg-white, font-normal, border-2
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal"
             />
           </div>
           <div className="space-y-3 w-full">
@@ -245,7 +244,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0"
               value={creditsCompleted}
               onChange={(e) => setCreditsCompleted(e.target.value)}
-              className="h-12 w-full text-lg bg-gray-50 border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-semibold placeholder:font-medium"
+              // Updated: bg-white, font-normal, border-2
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal"
             />
           </div>
         </div>
@@ -253,7 +253,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         {/* Course Inputs - Full Width */}
         <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-200">
-             <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
+             {/* Updated: Semi-bold label */}
+             <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
           </div>
 
           <div className="space-y-3 w-full">
@@ -264,8 +265,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Subject Name"
                     value={course.name}
                     onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    // Added: Visible border and font styles for Subject input
-                    className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-semibold text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
+                    // Updated: bg-white, font-normal inside box
+                    className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
                   />
                 </div>
                 <div className="col-span-2 md:col-span-2">
@@ -274,14 +275,14 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Cr"
                     value={course.credits}
                     onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    // Added: Visible border for Credit input
-                    className="text-center h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans font-semibold placeholder:text-gray-400"
+                    // Updated: bg-white, font-normal inside box
+                    className="text-center h-11 text-sm bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans font-normal placeholder:text-gray-400"
                   />
                 </div>
                 <div className="col-span-3 md:col-span-2">
                   <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    {/* Added: Visible border for Grade Select */}
-                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-semibold">
+                    {/* Updated: bg-white */}
+                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal">
                       <SelectValue placeholder="Grade" />
                     </SelectTrigger>
                     <SelectContent>
@@ -289,7 +290,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-1 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="col-span-1 flex justify-center">
+                   {/* Updated: Always visible (removed opacity group-hover) */}
                    <button
                     onClick={() => removeCourse(index)}
                     className="text-gray-300 hover:text-red-500 transition-colors"
@@ -308,7 +310,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             </Button>
             <Button 
               onClick={handleCalculate} 
-              className="flex-1 h-12 bg-black hover:bg-gray-800 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
+              // Updated: Light Blue Background
+              className="flex-1 h-12 bg-blue-500 hover:bg-blue-600 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
             </Button>
