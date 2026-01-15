@@ -190,20 +190,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             max-width: none !important;
         }
 
-        .watermark {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(-45deg);
-          font-size: 8rem;
-          color: rgba(0,0,0,0.03);
-          font-weight: 900;
-          text-transform: uppercase;
-          pointer-events: none;
-          z-index: 0;
-          white-space: nowrap;
-        }
-
         .print-footer {
           margin-top: 50px;
           border-top: 1px solid #000;
@@ -428,9 +414,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
              
              <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
              
-                 {/* Watermark */}
-                 <div className="hidden print:block watermark">EXPECTED</div>
-
                  {/* PRINT HEADER */}
                  <div className="hidden print-header flex-row justify-between items-center w-full">
                     <div className="flex items-center">
@@ -484,15 +467,15 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  )}
 
                  {/* Stats Row */}
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-12 px-8 py-4 print:py-4 print:mb-4">
+                 <div className="flex flex-row justify-between items-center gap-4 md:gap-12 px-4 md:px-8 py-4 print:py-4 print:mb-4">
                    <div className="text-center flex-1">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Semester GPA</h3>
-                      <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
+                      <div className="text-4xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
                    </div>
-                   <div className="hidden md:block w-px h-16 bg-gray-200 print:bg-black"></div>
+                   <div className="block w-px h-12 md:h-16 bg-gray-200 print:bg-black"></div>
                    <div className="text-center flex-1">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Cumulative CGPA</h3>
-                      <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
+                      <div className="text-4xl md:text-6xl font-semibold text-black tracking-tight leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
                    </div>
                  </div>
 
