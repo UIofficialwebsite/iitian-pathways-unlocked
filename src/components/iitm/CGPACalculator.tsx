@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, Calculator, Share2 } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 
 type Grade = "10" | "9" | "8" | "7" | "6" | "5" | "4" | "0";
@@ -155,34 +155,34 @@ const CGPACalculator = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900 pb-20">
+    <div className="bg-white font-sans text-gray-900 pb-10">
       
       {/* INPUT SECTION */}
-      <div className="max-w-4xl mx-auto p-6 md:p-10 space-y-12">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-8">
         
         {/* Academic Status */}
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="space-y-3">
-              <Label htmlFor="current-cgpa" className="text-sm font-semibold uppercase tracking-wide text-gray-500">Current CGPA</Label>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="current-cgpa" className="text-xs font-bold uppercase tracking-wide text-gray-500">Current CGPA</Label>
               <Input
                 id="current-cgpa"
                 type="number"
                 placeholder="e.g. 8.5"
                 value={currentCGPA}
                 onChange={(e) => setCurrentCGPA(e.target.value)}
-                className="h-14 text-lg bg-gray-50 border-gray-200 focus:border-black focus:ring-0 transition-all"
+                className="h-10 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
               />
             </div>
-            <div className="space-y-3">
-              <Label htmlFor="credits-completed" className="text-sm font-semibold uppercase tracking-wide text-gray-500">Credits Completed</Label>
+            <div className="space-y-2">
+              <Label htmlFor="credits-completed" className="text-xs font-bold uppercase tracking-wide text-gray-500">Credits Completed</Label>
               <Input
                 id="credits-completed"
                 type="number"
                 placeholder="e.g. 40"
                 value={creditsCompleted}
                 onChange={(e) => setCreditsCompleted(e.target.value)}
-                className="h-14 text-lg bg-gray-50 border-gray-200 focus:border-black focus:ring-0 transition-all"
+                className="h-10 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
               />
             </div>
           </div>
@@ -190,38 +190,38 @@ const CGPACalculator = () => {
 
         {/* Course Inputs */}
         <div className="space-y-4">
-          <div className="flex justify-between items-end border-b pb-2 border-gray-100">
-             <Label className="text-sm font-semibold uppercase tracking-wide text-gray-500">Semester Courses</Label>
-             <span className="text-xs text-gray-400">{courses.length} courses added</span>
+          <div className="flex justify-between items-end border-b border-gray-100 pb-2">
+             <Label className="text-xs font-bold uppercase tracking-wide text-gray-500">Semester Courses</Label>
+             <span className="text-[10px] text-gray-400 font-medium">{courses.length} courses added</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {courses.map((course, index) => (
-              <div key={course.id} className="flex flex-col md:flex-row gap-4 items-start md:items-center bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div key={course.id} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-white p-3 rounded-sm border border-gray-200 shadow-sm">
                 <div className="flex-grow w-full md:w-auto">
                   <Input
                     placeholder="Course Name"
                     value={course.name}
                     onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    className="border-transparent bg-transparent hover:bg-gray-50 focus:bg-white focus:border-black focus:ring-0 font-medium text-base h-10 px-2"
+                    className="border-transparent bg-transparent hover:bg-gray-50 focus:bg-white focus:border-black focus:ring-0 font-medium text-sm h-9 px-2 rounded-sm"
                   />
                 </div>
-                <div className="w-full md:w-28">
+                <div className="w-full md:w-24">
                     <Input
                     type="number"
                     placeholder="Credits"
                     value={course.credits}
                     onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    className="border-gray-200 focus:border-black focus:ring-0 text-center h-10"
+                    className="border-gray-200 focus:border-black focus:ring-0 text-center h-9 text-sm rounded-sm"
                   />
                 </div>
-                <div className="w-full md:w-40">
+                <div className="w-full md:w-36">
                   <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    <SelectTrigger className="border-gray-200 focus:border-black focus:ring-0 bg-white h-10">
+                    <SelectTrigger className="border-gray-200 focus:border-black focus:ring-0 bg-white h-9 text-sm rounded-sm">
                       <SelectValue placeholder="Grade" />
                     </SelectTrigger>
                     <SelectContent>
-                      {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}
+                      {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-sm">{opt.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -229,7 +229,7 @@ const CGPACalculator = () => {
                   variant="ghost"
                   size="icon"
                   onClick={() => removeCourse(index)}
-                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0"
+                  className="text-gray-400 hover:text-red-500 hover:bg-red-50 shrink-0 h-9 w-9 rounded-sm"
                   disabled={courses.length <= 1}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -238,15 +238,15 @@ const CGPACalculator = () => {
             ))}
           </div>
 
-          <div className="pt-4 flex flex-col sm:flex-row gap-4">
-             <Button onClick={addCourse} variant="outline" className="flex-1 h-12 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-semibold">
-              <Plus className="mr-2 h-4 w-4" /> Add Course
+          <div className="pt-2 flex flex-col sm:flex-row gap-3">
+             <Button onClick={addCourse} variant="outline" className="flex-1 h-10 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-[11px] tracking-wider font-bold rounded-sm">
+              <Plus className="mr-2 h-3.5 w-3.5" /> Add Course
             </Button>
             <Button 
               onClick={() => setShowReport(true)} 
-              className="flex-1 h-12 bg-black hover:bg-gray-800 text-white shadow-lg uppercase text-xs tracking-wider font-bold transition-all transform hover:-translate-y-1"
+              className="flex-1 h-10 bg-black hover:bg-gray-800 text-white uppercase text-[11px] tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99]"
             >
-              <Calculator className="mr-2 h-4 w-4" /> Calculate Result
+              Calculate Result
             </Button>
           </div>
         </div>
@@ -254,99 +254,95 @@ const CGPACalculator = () => {
 
       {/* REPORT SECTION - Shown conditionally */}
       {showReport && (
-        <div className="animate-in slide-in-from-bottom-10 fade-in duration-500">
-           <div className="max-w-4xl mx-auto mt-8 border-t-4 border-black pt-12 px-6 md:px-10" ref={componentRef}>
+        <div className="animate-in slide-in-from-bottom-5 fade-in duration-300">
+           <div className="max-w-4xl mx-auto mt-6 border-t border-black pt-8 px-4 md:px-6" ref={componentRef}>
              
              {/* Report Header */}
-             <div className="text-center mb-12">
-               <h2 className="text-3xl font-black tracking-tighter uppercase text-black mb-2">Calculation Report</h2>
-               <p className="text-gray-500 text-sm font-medium">Generated on {new Date().toLocaleDateString()}</p>
+             <div className="text-center mb-8">
+               <h2 className="text-2xl font-black tracking-tight uppercase text-black mb-1">Performance Report</h2>
+               <p className="text-gray-400 text-xs font-semibold tracking-wide uppercase">{new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</p>
              </div>
 
              {/* Top Stats */}
-             <div className="flex flex-col md:flex-row justify-center items-stretch mb-16 divide-y md:divide-y-0 md:divide-x divide-gray-200">
-               <div className="flex-1 text-center py-6 md:px-8">
-                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Current Semester</h3>
-                 <div className="text-6xl md:text-7xl font-black text-black tracking-tight">{semesterGPA.toFixed(2)}</div>
-                 <p className="text-sm font-medium text-gray-500 mt-2">GPA</p>
+             <div className="flex flex-col md:flex-row justify-center items-stretch mb-10 divide-y md:divide-y-0 md:divide-x divide-gray-200">
+               <div className="flex-1 text-center py-4 md:px-6">
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Current Semester</h3>
+                 <div className="text-5xl md:text-6xl font-black text-black tracking-tighter leading-none">{semesterGPA.toFixed(2)}</div>
+                 <p className="text-xs font-bold text-gray-500 mt-2 uppercase">GPA</p>
                </div>
-               <div className="flex-1 text-center py-6 md:px-8">
-                 <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4">Cumulative</h3>
-                 <div className="text-6xl md:text-7xl font-black text-black tracking-tight">{cumulativeCGPA.toFixed(2)}</div>
-                 <p className="text-sm font-medium text-gray-500 mt-2">CGPA</p>
+               <div className="flex-1 text-center py-4 md:px-6">
+                 <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Cumulative</h3>
+                 <div className="text-5xl md:text-6xl font-black text-black tracking-tighter leading-none">{cumulativeCGPA.toFixed(2)}</div>
+                 <p className="text-xs font-bold text-gray-500 mt-2 uppercase">CGPA</p>
                </div>
              </div>
 
-             <div className="w-full h-px bg-gray-100 my-10"></div>
-
              {/* Grade Breakdown (Donut + Legend) */}
-             <div className="mb-16">
-               <h3 className="text-xl font-bold text-center mb-10 text-black">Grade Analysis</h3>
-               <div className="flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24">
+             <div className="mb-10 bg-gray-50 rounded-sm p-6 border border-gray-100">
+               <h3 className="text-xs font-bold text-center mb-6 text-gray-500 uppercase tracking-widest">Grade Analysis</h3>
+               <div className="flex flex-col md:flex-row justify-center items-center gap-10 md:gap-20">
                  
                  {/* CSS Conic Gradient Donut */}
                  <div className="relative">
                    <div 
-                      className="w-56 h-56 rounded-full flex items-center justify-center shadow-xl border-4 border-white ring-1 ring-gray-100"
+                      className="w-40 h-40 rounded-full flex items-center justify-center shadow-sm border-[3px] border-white"
                       style={{ background: getConicGradient() }}
                    >
-                     <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                        <span className="text-3xl font-bold text-black">{courses.length}</span>
-                        <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Courses</span>
+                     <div className="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                        <span className="text-2xl font-black text-black leading-none">{courses.length}</span>
+                        <span className="text-[9px] uppercase font-bold text-gray-400 tracking-wider mt-1">Courses</span>
                      </div>
                    </div>
                  </div>
 
                  {/* Custom Legend */}
-                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-black rounded-sm shadow-sm"></div>
-                      <span className="font-medium text-sm text-gray-700">S Grade <span className="text-gray-400 text-xs ml-1">({gradeDistribution.S || 0})</span></span>
+                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 bg-black rounded-[1px]"></div>
+                      <span className="font-semibold text-xs text-gray-700">S Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.S || 0})</span></span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-gray-600 rounded-sm shadow-sm"></div>
-                      <span className="font-medium text-sm text-gray-700">A Grade <span className="text-gray-400 text-xs ml-1">({gradeDistribution.A || 0})</span></span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 bg-gray-600 rounded-[1px]"></div>
+                      <span className="font-semibold text-xs text-gray-700">A Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.A || 0})</span></span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-gray-400 rounded-sm shadow-sm"></div>
-                      <span className="font-medium text-sm text-gray-700">B Grade <span className="text-gray-400 text-xs ml-1">({gradeDistribution.B || 0})</span></span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 bg-gray-400 rounded-[1px]"></div>
+                      <span className="font-semibold text-xs text-gray-700">B Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.B || 0})</span></span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-gray-300 rounded-sm shadow-sm"></div>
-                      <span className="font-medium text-sm text-gray-700">C Grade <span className="text-gray-400 text-xs ml-1">({gradeDistribution.C || 0})</span></span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 bg-gray-300 rounded-[1px]"></div>
+                      <span className="font-semibold text-xs text-gray-700">C Grade <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.C || 0})</span></span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="w-4 h-4 bg-gray-100 rounded-sm shadow-sm border border-gray-200"></div>
-                      <span className="font-medium text-sm text-gray-700">Others <span className="text-gray-400 text-xs ml-1">({gradeDistribution.Others || 0})</span></span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 bg-gray-100 rounded-[1px] border border-gray-200"></div>
+                      <span className="font-semibold text-xs text-gray-700">Others <span className="text-gray-400 text-[10px] ml-1">({gradeDistribution.Others || 0})</span></span>
                     </div>
                  </div>
                </div>
              </div>
 
-             <div className="w-full h-px bg-gray-100 my-10"></div>
-
              {/* Summary Table */}
-             <div className="mb-16">
-               <div className="flex justify-between items-center mb-6">
-                 <h3 className="text-xl font-bold text-black">Course Summary</h3>
-                 <span className="text-xs font-bold bg-gray-100 text-gray-600 px-3 py-1 rounded-full uppercase tracking-wider">{totalCredits} Total Credits</span>
+             <div className="mb-10">
+               <div className="flex justify-between items-center mb-4 border-b border-black pb-2">
+                 <h3 className="text-sm font-black text-black uppercase tracking-tight">Course Summary</h3>
+                 <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-sm uppercase tracking-wider">{totalCredits} Total Credits</span>
                </div>
                
-               <div className="overflow-hidden border border-gray-200 rounded-lg">
+               <div className="rounded-sm border border-gray-200 overflow-hidden">
                  <table className="w-full text-left border-collapse">
                    <thead>
                      <tr className="bg-gray-50 border-b border-gray-200">
-                       <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500">Course</th>
-                       <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 text-center">Credits</th>
-                       <th className="py-4 px-6 text-xs font-bold uppercase tracking-wider text-gray-500 text-right">Grade Point</th>
+                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">Course</th>
+                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-center">Credits</th>
+                       <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-gray-500 text-right">Grade Point</th>
                      </tr>
                    </thead>
-                   <tbody className="divide-y divide-gray-100">
+                   <tbody className="divide-y divide-gray-100 text-sm">
                      {courses.map((c) => (
                        <tr key={c.id} className="hover:bg-gray-50/50 transition-colors">
-                         <td className="py-4 px-6 text-sm font-semibold text-gray-800">{c.name}</td>
-                         <td className="py-4 px-6 text-sm text-gray-600 text-center">{c.credits}</td>
-                         <td className="py-4 px-6 text-sm font-bold text-black text-right">{getPoint(c.grade)}</td>
+                         <td className="py-2.5 px-4 font-semibold text-gray-800">{c.name}</td>
+                         <td className="py-2.5 px-4 text-gray-600 text-center">{c.credits}</td>
+                         <td className="py-2.5 px-4 font-bold text-black text-right">{getPoint(c.grade)}</td>
                        </tr>
                      ))}
                    </tbody>
@@ -355,19 +351,19 @@ const CGPACalculator = () => {
              </div>
 
              {/* Report Footer Actions */}
-             <div className="flex flex-col md:flex-row gap-4 print:hidden">
+             <div className="flex flex-col md:flex-row gap-3 print:hidden">
                <Button 
                  onClick={handlePrint} 
-                 className="flex-1 h-14 bg-black text-white hover:bg-gray-800 font-bold uppercase tracking-widest text-xs rounded-md shadow-xl transition-all"
+                 className="flex-1 h-11 bg-black text-white hover:bg-gray-800 font-bold uppercase tracking-wider text-[11px] rounded-sm transition-colors"
                >
-                 <Download className="mr-2 h-4 w-4" /> Download PDF Report
+                 <Download className="mr-2 h-3.5 w-3.5" /> Download PDF
                </Button>
                <Button 
                  onClick={handleReset} 
                  variant="outline" 
-                 className="flex-1 h-14 border-2 border-gray-200 text-gray-600 hover:border-black hover:text-black font-bold uppercase tracking-widest text-xs rounded-md transition-all"
+                 className="flex-1 h-11 border border-gray-300 text-gray-600 hover:border-black hover:text-black font-bold uppercase tracking-wider text-[11px] rounded-sm transition-colors"
                >
-                 <RefreshCw className="mr-2 h-4 w-4" /> Start New Calculation
+                 <RefreshCw className="mr-2 h-3.5 w-3.5" /> Start New
                </Button>
              </div>
            </div>
