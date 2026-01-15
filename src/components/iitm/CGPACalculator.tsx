@@ -159,25 +159,34 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
           background-color: white;
+          margin: 0;
+          padding: 0;
         }
         
-        /* Main Container for the Border */
+        /* The exact A4 container */
         .print-page-wrapper {
-          padding: 10mm;
-          min-height: 297mm;
+          width: 210mm;
+          height: 297mm;
+          padding: 10mm; /* 10mm Margin around the page */
           box-sizing: border-box;
           position: relative;
+          overflow: hidden;
         }
 
+        /* The bordered content box */
         .print-border-container {
+          width: 100%;
+          height: 100%;
           border: 3px double #1a1a1a;
-          padding: 15mm;
-          min-height: 275mm;
+          padding: 10mm 15mm;
+          box-sizing: border-box;
           position: relative;
           background: white;
+          display: flex;
+          flex-direction: column;
         }
 
-        /* Hide the original card styling in print to avoid double borders */
+        /* Hide screen-specific styles in print */
         .report-card {
             border: none !important;
             box-shadow: none !important;
@@ -186,27 +195,32 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             max-width: none !important;
         }
 
-        /* Corner decorations */
+        /* Corrected Corner Alignments for double border */
         .corner-tl, .corner-tr, .corner-bl, .corner-br {
           position: absolute;
-          width: 20px;
-          height: 20px;
+          width: 25px;
+          height: 25px;
           border-color: #000;
           border-style: solid;
+          z-index: 10;
         }
-        .corner-tl { top: -1px; left: -1px; border-width: 4px 0 0 4px; }
-        .corner-tr { top: -1px; right: -1px; border-width: 4px 4px 0 0; }
-        .corner-bl { bottom: -1px; left: -1px; border-width: 0 0 4px 4px; }
-        .corner-br { bottom: -1px; right: -1px; border-width: 0 4px 4px 0; }
+        /* Top Left */
+        .corner-tl { top: -5px; left: -5px; border-width: 5px 0 0 5px; }
+        /* Top Right */
+        .corner-tr { top: -5px; right: -5px; border-width: 5px 5px 0 0; }
+        /* Bottom Left */
+        .corner-bl { bottom: -5px; left: -5px; border-width: 0 0 5px 5px; }
+        /* Bottom Right */
+        .corner-br { bottom: -5px; right: -5px; border-width: 0 5px 5px 0; }
 
         /* Watermark */
         .watermark {
           position: absolute;
-          top: 50%;
+          top: 45%;
           left: 50%;
           transform: translate(-50%, -50%) rotate(-45deg);
           font-size: 8rem;
-          color: rgba(0,0,0,0.04);
+          color: rgba(0,0,0,0.03);
           font-weight: 900;
           text-transform: uppercase;
           pointer-events: none;
@@ -214,21 +228,22 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           white-space: nowrap;
         }
 
+        /* Sticky Footer at bottom of border container */
         .print-footer {
-          position: absolute;
-          bottom: 15mm;
-          left: 15mm;
-          right: 15mm;
-          border-top: 1px solid #ccc;
+          margin-top: auto;
+          border-top: 1px solid #000;
           padding-top: 10px;
           display: flex !important;
+          width: 100%;
+          justify-content: space-between;
+          align-items: center;
         }
 
         .print-header {
           display: flex !important;
           border-bottom: 2px solid #000;
           padding-bottom: 15px;
-          margin-bottom: 30px;
+          margin-bottom: 25px;
         }
 
         .screen-only {
@@ -429,13 +444,13 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
            {/* Wrap content for ReactToPrint to grab */}
            <div ref={reportRef} className="print-page-wrapper">
              
-             {/* Structure:
-                - .print-border-container: Applies the professional border ONLY in print media via CSS.
-                - .report-card: The original styling for screen view.
+             {/* .print-border-container: 
+                - On screen: Standard card styling
+                - On print: Professional border with specific dimensions
              */}
              <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
              
-                 {/* Decorative Corners for Print */}
+                 {/* Decorative Corners for Print (Correctly positioned) */}
                  <div className="hidden print:block corner-tl"></div>
                  <div className="hidden print:block corner-tr"></div>
                  <div className="hidden print:block corner-bl"></div>
@@ -447,11 +462,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  {/* PRINT HEADER: Visible only in Print Mode via CSS */}
                  <div className="hidden print-header flex-row justify-between items-center w-full">
                     <div className="flex items-center">
-                       <img src="https://i.ibb.co/RT8FMKst/UI-Logo.png" alt="UI Logo" className="h-12 w-auto object-contain" />
+                       <img src="https://i.ibb.co/RT8FMKst/UI-Logo.png" alt="UI Logo" className="h-14 w-auto object-contain" />
                     </div>
                     <div className="text-right">
-                       <h1 className="text-xl font-bold uppercase text-black font-sans">Expected Performance Report</h1>
-                       <p className="text-xs text-gray-500 font-sans">{new Date().toLocaleDateString()}</p>
+                       <h1 className="text-xl font-bold uppercase text-black font-sans tracking-wide">Performance Report</h1>
+                       <p className="text-xs text-gray-500 font-sans tracking-widest">{new Date().toLocaleDateString()}</p>
                     </div>
                  </div>
 
@@ -477,7 +492,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
                  {/* PREVIOUS RECORD SUMMARY */}
                  {(currentCGPA || creditsCompleted) && (
-                    <div className="bg-gray-50 p-4 border border-black rounded-none print:border print:border-black">
+                    <div className="bg-gray-50 p-4 border border-black rounded-none print:border print:border-black print:mb-6">
                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 font-sans">Previous Academic Record</h4>
                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-gray-300">
                           <div>
@@ -497,7 +512,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  )}
 
                  {/* Stats Row */}
-                 <div className="flex flex-col md:flex-row justify-between items-center gap-12 px-8 py-4 print:py-6">
+                 <div className="flex flex-col md:flex-row justify-between items-center gap-12 px-8 py-4 print:py-4 print:mb-4">
                    <div className="text-center flex-1">
                       <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 font-sans">Semester GPA</h3>
                       <div className="text-6xl font-semibold text-black tracking-tight leading-none font-sans">{semesterGPA.toFixed(2)}</div>
@@ -510,7 +525,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  </div>
 
                  {/* Chart Section */}
-                 <div className="flex flex-col items-center py-6 bg-gray-50/50 border border-black rounded-none print:border print:bg-white print:border-black">
+                 <div className="flex flex-col items-center py-6 bg-gray-50/50 border border-black rounded-none print:border print:bg-white print:border-black print:mb-6">
                      <div className="mb-8 relative">
                         <div 
                            className="w-48 h-48 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-200 print:border-black print:ring-0"
@@ -536,7 +551,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  </div>
 
                  {/* Transcript Table */}
-                 <div className="print:mb-10">
+                 <div className="print:flex-grow">
                     <div className="flex justify-between items-end mb-3 border-b-2 border-black pb-2">
                        <h3 className="text-xs font-bold text-black uppercase tracking-wide font-sans">Subject Transcript</h3>
                        <div className="flex gap-4 text-[10px] uppercase font-medium font-sans text-gray-500">
@@ -556,9 +571,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                          <tbody className="divide-y divide-black">
                             {courses.map((c, i) => (
                                <tr key={i} className="hover:bg-gray-50 print:hover:bg-transparent">
-                                  <td className="py-3 px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
-                                  <td className="py-3 px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
-                                  <td className="py-3 px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
+                                  <td className="py-2 px-4 text-xs font-normal text-black font-sans border-r border-black">{c.name || `Subject ${i+1}`}</td>
+                                  <td className="py-2 px-4 text-xs font-normal text-black text-center font-sans border-r border-black">{c.credits}</td>
+                                  <td className="py-2 px-4 text-xs font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
                                </tr>
                             ))}
                          </tbody>
@@ -566,8 +581,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </div>
                  </div>
 
-                 {/* PRINT FOOTER: Fixed at bottom of every page */}
-                 <div className="hidden print-footer w-full flex-row justify-between items-center pt-2">
+                 {/* PRINT FOOTER: Fixed at bottom of the container */}
+                 <div className="hidden print-footer">
                     <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
                        Calculated by UI Calculator
                     </span>
