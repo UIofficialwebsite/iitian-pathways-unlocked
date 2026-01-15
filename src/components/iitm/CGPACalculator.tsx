@@ -163,7 +163,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           padding: 0;
         }
         
-        /* The Wrapper allows content to flow across pages */
         .print-page-wrapper {
           width: 100%;
           min-height: 100vh;
@@ -171,10 +170,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           position: relative;
         }
 
-        /* The bordered content box - wraps EVERYTHING */
         .print-border-container {
           width: 100%;
-          min-height: 275mm; /* Minimum height for 1 page, but allows growth */
+          min-height: 275mm;
           border: 3px double #1a1a1a;
           padding: 10mm 15mm;
           box-sizing: border-box;
@@ -184,7 +182,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           flex-direction: column;
         }
 
-        /* Hide screen-specific styles in print */
         .report-card {
             border: none !important;
             box-shadow: none !important;
@@ -193,7 +190,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             max-width: none !important;
         }
 
-        /* Watermark - Fixed position to center on page */
         .watermark {
           position: fixed;
           top: 50%;
@@ -208,7 +204,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           white-space: nowrap;
         }
 
-        /* Footer at the end of the content flow */
         .print-footer {
           margin-top: 50px;
           border-top: 1px solid #000;
@@ -227,19 +222,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
           margin-bottom: 25px;
         }
 
-        table {
-           page-break-inside: auto;
-        }
-        tr {
-           page-break-inside: avoid;
-           page-break-after: auto;
-        }
-        thead {
-           display: table-header-group;
-        }
-        tfoot {
-           display: table-footer-group;
-        }
+        /* Ensure page breaks behave nicely */
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
 
         .screen-only {
           display: none !important;
@@ -277,7 +264,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* 1. TOP ROW: JOB TICKER */}
+      {/* 1. TOP ROW: JOB TICKER (Screen Only) */}
       {!jobsLoading && jobs && jobs.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
           <Carousel
@@ -436,19 +423,15 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {showReport && (
         <div className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500 relative min-h-screen">
            
-           {/* Wrap content for ReactToPrint to grab */}
+           {/* Wrap content for ReactToPrint */}
            <div ref={reportRef} className="print-page-wrapper">
              
-             {/* .print-border-container: 
-                - On screen: Standard card styling
-                - On print: Professional border, grows with content
-             */}
              <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
              
-                 {/* Watermark - Fixed on Page */}
+                 {/* Watermark */}
                  <div className="hidden print:block watermark">EXPECTED</div>
 
-                 {/* PRINT HEADER: Visible only in Print Mode via CSS */}
+                 {/* PRINT HEADER */}
                  <div className="hidden print-header flex-row justify-between items-center w-full">
                     <div className="flex items-center">
                        <img src="https://i.ibb.co/RT8FMKst/UI-Logo.png" alt="UI Logo" className="h-14 w-auto object-contain" />
@@ -569,6 +552,35 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       </table>
                     </div>
                  </div>
+
+                 {/* NEW: CAREER OPPORTUNITIES SECTION (Print Only - "Job Ticker" content for PDF) */}
+                 {!jobsLoading && jobs && jobs.length > 0 && (
+                    <div className="hidden print:block mt-8 pt-8 border-t-2 border-dashed border-gray-300 break-inside-avoid">
+                      <div className="flex items-center gap-2 mb-4">
+                         <div className="h-2 w-2 bg-black rounded-full"></div>
+                         <h3 className="text-sm font-bold uppercase tracking-widest text-black font-sans">
+                            Career Pathways & Opportunities
+                         </h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {jobs.slice(0, 6).map((job) => (
+                          <div key={job.id} className="border border-gray-200 p-3 flex flex-col justify-between">
+                             <div>
+                               <h4 className="font-bold text-xs text-black uppercase">{job.title}</h4>
+                               <p className="text-[10px] text-gray-500 mt-1 line-clamp-2">{job.description || "Exciting opportunity available."}</p>
+                             </div>
+                             <div className="mt-2 pt-2 border-t border-gray-100 flex justify-between items-center">
+                               <span className="text-[9px] font-semibold text-green-700 uppercase tracking-wider">Open Now</span>
+                               <span className="text-[9px] text-gray-400">Apply via Portal</span>
+                             </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[9px] text-gray-400 mt-4 text-center italic">
+                        * Scan QR code on portal or visit career section for full details.
+                      </p>
+                    </div>
+                 )}
 
                  {/* PRINT FOOTER: At the end of document flow */}
                  <div className="hidden print-footer">
