@@ -73,8 +73,6 @@ const IITMBSPrep = () => {
   const [selectedCourseLevels, setSelectedCourseLevels] = useState<string[]>([]);
   const [selectedCourseSubjects, setSelectedCourseSubjects] = useState<string[]>([]);
   const [coursePriceRange, setCoursePriceRange] = useState<string | null>(null);
-  
-  // NEW: Additional Course Filters
   const [newlyLaunched, setNewlyLaunched] = useState(false);
   const [fastrackOnly, setFastrackOnly] = useState(false);
   const [bestSellerOnly, setBestSellerOnly] = useState(false);
@@ -168,8 +166,6 @@ const IITMBSPrep = () => {
   const [tempCourseLevels, setTempCourseLevels] = useState<string[]>([]);
   const [tempCourseSubjects, setTempCourseSubjects] = useState<string[]>([]);
   const [tempCoursePrice, setTempCoursePrice] = useState<string | null>(null);
-  // Tool Temps
-  const [tempSelectedTool, setTempSelectedTool] = useState(selectedTool);
 
   const handleOpenDropdown = (type: string, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -198,7 +194,6 @@ const IITMBSPrep = () => {
         setTempCourseLevels(selectedCourseLevels); setTempCourseSubjects(selectedCourseSubjects); setTempCoursePrice(coursePriceRange);
     } else if (activeTab === 'tools') {
         setTempBranch(toolsBranch); setTempLevel(toolsLevel);
-        setTempSelectedTool(selectedTool);
     }
     
     setOpenDropdown(openDropdown === type ? null : type);
@@ -267,7 +262,6 @@ const IITMBSPrep = () => {
     } else if (activeTab === 'tools') {
         if (type === 'branch') setToolsBranch(tempBranch);
         if (type === 'level') setToolsLevel(tempLevel);
-        if (type === 'tool') setSelectedTool(tempSelectedTool);
     }
     setOpenDropdown(null);
   };
@@ -374,16 +368,6 @@ const IITMBSPrep = () => {
     else if (type === 'courseLevel') { items = availableCourseLevels; currentSelection = tempCourseLevels; setSelection = setTempCourseLevels; }
     else if (type === 'courseSubject') { items = availableCourseSubjects; currentSelection = tempCourseSubjects; setSelection = setTempCourseSubjects; }
     else if (type === 'coursePricing') { items = ['free', 'paid']; isCheckbox = false; currentSelection = tempCoursePrice; setSelection = setTempCoursePrice; }
-    else if (type === 'tool') {
-        items = [
-            { id: 'cgpa-calculator', name: 'CGPA Calculator' },
-            { id: 'grade-calculator', name: 'Grade Calculator' },
-            { id: 'marks-predictor', name: 'Marks Predictor' }
-        ];
-        isCheckbox = false; 
-        currentSelection = tempSelectedTool; 
-        setSelection = setTempSelectedTool; 
-    }
 
     const selectionArray = Array.isArray(currentSelection) ? currentSelection : [];
 
@@ -484,11 +468,6 @@ const IITMBSPrep = () => {
                 {activeTab === 'tools' && (
                   <>
                     <div className="flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('tool', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Tool <FilledArrow isOpen={openDropdown === 'tool'} />
-                        </button>
-                    </div>
-                    <div className="flex-shrink-0">
                         <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
                         Branch <FilledArrow isOpen={openDropdown === 'branch'} />
                         </button>
@@ -498,6 +477,26 @@ const IITMBSPrep = () => {
                         Level <FilledArrow isOpen={openDropdown === 'level'} />
                         </button>
                     </div>
+                    
+                    {/* Direct Tool Selection Buttons */}
+                     <button 
+                      onClick={() => setSelectedTool('cgpa-calculator')} 
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'cgpa-calculator' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      CGPA Calculator
+                    </button>
+                    <button 
+                      onClick={() => setSelectedTool('grade-calculator')} 
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'grade-calculator' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Grade Calculator
+                    </button>
+                    <button 
+                      onClick={() => setSelectedTool('marks-predictor')} 
+                      className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'marks-predictor' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
+                    >
+                      Marks Predictor
+                    </button>
                   </>
                 )}
 
