@@ -393,7 +393,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                variant="outline" 
                className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-normal rounded-sm font-sans"
              >
-              <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
+              <Plus className="mr-2 h-3.5 w-3.5" /> 
+              <span>Add <span className="hidden md:inline">Row</span></span>
             </Button>
             <Button 
               onClick={handleCalculate} 
