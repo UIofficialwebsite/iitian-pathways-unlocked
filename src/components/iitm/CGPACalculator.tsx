@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, Briefcase, TrendingUp, ArrowRight, ExternalLink } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import {
@@ -173,12 +173,12 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* 1. TOP ROW: JOB TICKER (Less Height, Full Width) */}
+      {/* 1. TOP ROW: JOB TICKER (Banner Style) */}
       {!jobsLoading && jobs && jobs.length > 0 && (
-        <div className="w-full bg-black text-white py-2 px-4 mb-6">
+        <div className="w-full bg-black text-white py-2 px-6 mb-8">
           <Carousel
             plugins={[plugin.current]}
-            className="w-full max-w-5xl mx-auto"
+            className="w-full"
             onMouseEnter={plugin.current.stop}
             onMouseLeave={plugin.current.reset}
             opts={{
@@ -186,23 +186,17 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               loop: true,
             }}
           >
-            <CarouselContent className="-ml-2 md:-ml-4">
+            <CarouselContent>
               {jobs.map((job) => (
-                <CarouselItem key={job.id} className="pl-2 md:pl-4 basis-full">
-                  <div className="flex items-center justify-between gap-4 h-8">
-                    <div className="flex items-center gap-2 overflow-hidden">
-                      <Briefcase className="w-4 h-4 text-green-400 shrink-0" />
-                      <span className="text-xs md:text-sm font-medium whitespace-nowrap text-gray-300">
+                <CarouselItem key={job.id} className="basis-full">
+                  <div className="flex items-center justify-between gap-4 h-8 w-full max-w-[1600px] mx-auto">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className="text-xs md:text-sm font-medium whitespace-nowrap text-gray-300 font-sans tracking-wide">
                         POSITIONS OPEN:
                       </span>
-                      <span className="text-xs md:text-sm font-bold truncate">
+                      <span className="text-xs md:text-sm font-bold truncate font-sans tracking-wide">
                         {job.title} <span className="font-normal text-gray-400">at</span> {job.company}
                       </span>
-                      {job.stipend && (
-                        <span className="hidden md:inline-flex text-[10px] bg-white/20 px-2 py-0.5 rounded text-white ml-2">
-                          {job.stipend}
-                        </span>
-                      )}
                     </div>
                     
                     <a 
@@ -214,9 +208,9 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="secondary" 
-                        className="h-7 text-[10px] uppercase font-bold tracking-wider px-3 bg-white text-black hover:bg-gray-200"
+                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-white text-black hover:bg-gray-200 border-none rounded-sm"
                       >
-                        Apply Now <ExternalLink className="ml-1 w-3 h-3" />
+                        Apply Now
                       </Button>
                     </a>
                   </div>
@@ -227,50 +221,50 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         </div>
       )}
 
-      {/* 2. MAIN INPUTS (Centered, No Sidebar) */}
-      <div className="max-w-4xl mx-auto px-4 md:px-8 mb-16">
+      {/* 2. MAIN INPUTS (Full Width) */}
+      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20">
         
-        {/* Academic Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="space-y-2">
-            <Label htmlFor="current-cgpa" className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Current CGPA</Label>
+        {/* Academic Status - Using full grid width */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10 w-full">
+          <div className="space-y-3 w-full">
+            <Label htmlFor="current-cgpa" className="text-xs font-bold uppercase tracking-wide text-gray-500 font-sans">Current CGPA</Label>
             <Input
               id="current-cgpa"
               type="number"
               placeholder="0.00"
               value={currentCGPA}
               onChange={(e) => setCurrentCGPA(e.target.value)}
-              className="h-11 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
+              className="h-12 w-full text-lg bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm font-sans"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="credits-completed" className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Credits Earned</Label>
+          <div className="space-y-3 w-full">
+            <Label htmlFor="credits-completed" className="text-xs font-bold uppercase tracking-wide text-gray-500 font-sans">Credits Earned</Label>
             <Input
               id="credits-completed"
               type="number"
               placeholder="0"
               value={creditsCompleted}
               onChange={(e) => setCreditsCompleted(e.target.value)}
-              className="h-11 text-base bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm"
+              className="h-12 w-full text-lg bg-gray-50 border-gray-200 focus:border-black focus:ring-0 rounded-sm font-sans"
             />
           </div>
         </div>
 
-        {/* Course Inputs */}
-        <div className="space-y-4">
+        {/* Course Inputs - Full Width */}
+        <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-100">
-             <Label className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Semester Subjects</Label>
+             <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 w-full">
             {courses.map((course, index) => (
-              <div key={course.id} className="grid grid-cols-12 gap-3 items-center group">
+              <div key={course.id} className="grid grid-cols-12 gap-4 items-center group w-full">
                 <div className="col-span-6 md:col-span-7">
                   <Input
                     placeholder="Subject Name"
                     value={course.name}
                     onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    className="bg-transparent border-transparent hover:bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 font-medium text-sm h-10 px-3 rounded-sm transition-colors"
+                    className="bg-transparent border-transparent hover:bg-gray-50 focus:bg-white focus:border-gray-300 focus:ring-0 font-medium text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans"
                   />
                 </div>
                 <div className="col-span-2 md:col-span-2">
@@ -279,16 +273,16 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Cr"
                     value={course.credits}
                     onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    className="text-center h-10 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm"
+                    className="text-center h-11 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm w-full font-sans"
                   />
                 </div>
                 <div className="col-span-3 md:col-span-2">
                   <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    <SelectTrigger className="h-10 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm bg-white">
+                    <SelectTrigger className="h-11 text-sm border-gray-200 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans">
                       <SelectValue placeholder="Grade" />
                     </SelectTrigger>
                     <SelectContent>
-                      {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs">{opt.label}</SelectItem>)}
+                      {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs font-sans">{opt.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -305,13 +299,13 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             ))}
           </div>
 
-          <div className="pt-6 flex gap-4">
-             <Button onClick={addCourse} variant="outline" className="h-11 px-5 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-[10px] tracking-wider font-bold rounded-sm">
+          <div className="pt-8 flex gap-4 w-full">
+             <Button onClick={addCourse} variant="outline" className="h-12 px-6 border-dashed border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-bold rounded-sm font-sans">
               <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
             </Button>
             <Button 
               onClick={handleCalculate} 
-              className="flex-1 h-11 bg-black hover:bg-gray-800 text-white uppercase text-[11px] tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99]"
+              className="flex-1 h-12 bg-black hover:bg-gray-800 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
             </Button>
@@ -322,52 +316,52 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 3. REPORT SECTION (Bottom, Full Width, Vertical) */}
       {showReport && (
         <div ref={reportRef} className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500">
-           <div className="max-w-4xl mx-auto p-6 md:p-12 space-y-12">
+           <div className="max-w-[1600px] mx-auto p-6 md:p-12 space-y-16">
              
              {/* Report Header */}
              <div className="text-center">
-                <h2 className="text-3xl font-black tracking-tight uppercase text-black mb-2">Performance Report</h2>
+                <h2 className="text-3xl font-black tracking-tight uppercase text-black mb-2 font-sans">Performance Report</h2>
                 <div className="flex justify-center gap-4 print:hidden">
-                   <Button onClick={handlePrint} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100">
+                   <Button onClick={handlePrint} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100 font-sans">
                       <Download className="w-3 h-3 mr-2" /> Download PDF
                    </Button>
-                   <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100">
+                   <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-bold tracking-wider text-gray-500 hover:text-black hover:bg-gray-100 font-sans">
                       <RefreshCw className="w-3 h-3 mr-2" /> Reset
                    </Button>
                 </div>
              </div>
 
              {/* Stats Row */}
-             <div className="flex flex-col md:flex-row justify-center items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100 border-y border-gray-100 py-10">
+             <div className="flex flex-col md:flex-row justify-center items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100 border-y border-gray-100 py-12">
                <div className="flex-1 text-center px-6 py-4">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Semester GPA</h3>
-                  <div className="text-7xl font-black text-black tracking-tighter leading-none">{semesterGPA.toFixed(2)}</div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 font-sans">Semester GPA</h3>
+                  <div className="text-8xl font-black text-black tracking-tighter leading-none font-sans">{semesterGPA.toFixed(2)}</div>
                </div>
                <div className="flex-1 text-center px-6 py-4">
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Cumulative CGPA</h3>
-                  <div className="text-7xl font-black text-black tracking-tighter leading-none">{cumulativeCGPA.toFixed(2)}</div>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-4 font-sans">Cumulative CGPA</h3>
+                  <div className="text-8xl font-black text-black tracking-tighter leading-none font-sans">{cumulativeCGPA.toFixed(2)}</div>
                </div>
              </div>
 
              {/* Chart Section */}
              <div className="flex flex-col items-center">
-                 <div className="mb-8">
+                 <div className="mb-10">
                     <div 
-                       className="w-56 h-56 rounded-full flex items-center justify-center shadow-sm border-[4px] border-white ring-1 ring-gray-100"
+                       className="w-64 h-64 rounded-full flex items-center justify-center shadow-sm border-[6px] border-white ring-1 ring-gray-100"
                        style={{ background: getConicGradient() }}
                     >
-                       <div className="w-32 h-32 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                          <span className="text-4xl font-black text-black leading-none">{courses.length}</span>
-                          <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider mt-1">Subjects</span>
+                       <div className="w-36 h-36 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                          <span className="text-5xl font-black text-black leading-none font-sans">{courses.length}</span>
+                          <span className="text-xs uppercase font-bold text-gray-400 tracking-wider mt-2 font-sans">Subjects</span>
                        </div>
                     </div>
                  </div>
-                 <div className="flex flex-wrap justify-center gap-6 md:gap-10">
+                 <div className="flex flex-wrap justify-center gap-8 md:gap-12">
                     {Object.entries(gradeDistribution).map(([grade, count]) => (
                        count > 0 && (
-                          <div key={grade} className="flex items-center gap-2">
-                             <div className={`w-2.5 h-2.5 rounded-full ${grade === 'S' ? 'bg-black' : 'bg-gray-300'}`}></div>
-                             <span className="text-sm font-bold text-gray-700">{grade} Grade: {count}</span>
+                          <div key={grade} className="flex items-center gap-3">
+                             <div className={`w-3 h-3 rounded-full ${grade === 'S' ? 'bg-black' : 'bg-gray-300'}`}></div>
+                             <span className="text-sm font-bold text-gray-700 font-sans">{grade} Grade: {count}</span>
                           </div>
                        )
                     ))}
@@ -375,25 +369,25 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
              </div>
 
              {/* Detailed Table */}
-             <div className="border border-gray-200 rounded-sm overflow-hidden mt-8">
-                <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                   <h3 className="text-xs font-black text-black uppercase tracking-wide">Transcript</h3>
-                   <span className="text-[10px] font-bold bg-black text-white px-2 py-0.5 rounded-sm uppercase">{totalCredits} Credits</span>
+             <div className="border border-gray-200 rounded-sm overflow-hidden mt-10">
+                <div className="bg-gray-50 px-8 py-5 border-b border-gray-200 flex justify-between items-center">
+                   <h3 className="text-sm font-black text-black uppercase tracking-wide font-sans">Transcript</h3>
+                   <span className="text-xs font-bold bg-black text-white px-3 py-1 rounded-sm uppercase font-sans">{totalCredits} Credits</span>
                 </div>
                 <table className="w-full text-left border-collapse">
                    <thead>
                       <tr className="border-b border-gray-100">
-                         <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-wider text-gray-400">Subject</th>
-                         <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-wider text-gray-400 text-center">Cr</th>
-                         <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-wider text-gray-400 text-right">GP</th>
+                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 font-sans">Subject</th>
+                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 text-center font-sans">Cr</th>
+                         <th className="py-5 px-8 text-xs font-bold uppercase tracking-wider text-gray-400 text-right font-sans">GP</th>
                       </tr>
                    </thead>
                    <tbody className="divide-y divide-gray-50">
                       {courses.map((c, i) => (
                          <tr key={i} className="hover:bg-gray-50/50">
-                            <td className="py-3 px-6 text-sm font-semibold text-gray-800">{c.name || `Subject ${i+1}`}</td>
-                            <td className="py-3 px-6 text-sm text-gray-600 text-center">{c.credits}</td>
-                            <td className="py-3 px-6 text-sm font-bold text-black text-right">{getPoint(c.grade)}</td>
+                            <td className="py-4 px-8 text-sm font-semibold text-gray-800 font-sans">{c.name || `Subject ${i+1}`}</td>
+                            <td className="py-4 px-8 text-sm text-gray-600 text-center font-sans">{c.credits}</td>
+                            <td className="py-4 px-8 text-sm font-bold text-black text-right font-sans">{getPoint(c.grade)}</td>
                          </tr>
                       ))}
                    </tbody>
