@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, ExternalLink } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
 import {
@@ -191,8 +191,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                 <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-8 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      {/* OPEN NOW Tag - Big Screen Only, Grey BG, Green Text */}
-                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
+                      {/* OPEN NOW Tag - Non-bold */}
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-2 py-0.5 rounded-sm text-[10px] font-normal uppercase tracking-wider whitespace-nowrap font-sans">
                         OPEN NOW
                       </span>
                       {/* Job Title - Looping Text */}
@@ -210,8 +210,8 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                       <Button 
                         size="sm" 
                         variant="default" 
-                        // Apply Now Button - Deep Blue, Reduced Opacity
-                        className="h-7 text-[11px] font-sans font-bold tracking-wider px-4 bg-blue-700/90 text-white hover:bg-blue-800 border-none rounded-sm"
+                        // Apply Now Button - Black & White, Non-bold, Inter
+                        className="h-7 text-[11px] font-sans font-normal tracking-wider px-4 bg-white text-black hover:bg-gray-200 border-none rounded-sm"
                       >
                         Apply Now
                       </Button>
@@ -237,7 +237,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0.00"
               value={currentCGPA}
               onChange={(e) => setCurrentCGPA(e.target.value)}
-              // bg-white, font-normal inside
               className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
             />
           </div>
@@ -249,7 +248,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
               placeholder="0"
               value={creditsCompleted}
               onChange={(e) => setCreditsCompleted(e.target.value)}
-              // bg-white, font-normal inside
               className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
             />
           </div>
@@ -269,7 +267,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Subject Name"
                     value={course.name}
                     onChange={(e) => updateCourse(index, "name", e.target.value)}
-                    // bg-white, font-normal text inside
                     className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
                   />
                 </div>
@@ -279,7 +276,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     placeholder="Cr"
                     value={course.credits}
                     onChange={(e) => updateCourse(index, "credits", e.target.value)}
-                    // bg-white, font-normal text inside
                     className="text-center h-11 text-sm bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans font-normal placeholder:text-gray-400"
                   />
                 </div>
@@ -294,7 +290,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                   </Select>
                 </div>
                 <div className="col-span-1 flex justify-center">
-                   {/* Delete Icon Always Visible */}
                    <button
                     onClick={() => removeCourse(index)}
                     className="text-gray-400 hover:text-red-500 transition-colors"
@@ -307,14 +302,20 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
             ))}
           </div>
 
-          <div className="pt-8 flex gap-4 w-full">
-             <Button onClick={addCourse} variant="outline" className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-bold rounded-sm font-sans">
+          {/* Action Buttons: Moved to RIGHT side */}
+          <div className="pt-8 flex justify-end gap-4 w-full">
+             <Button 
+               onClick={addCourse} 
+               variant="outline" 
+               // Add Row: Matches Calculate style but outline/lighter? Or keeping consistent structure.
+               className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-normal rounded-sm font-sans"
+             >
               <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
             </Button>
             <Button 
               onClick={handleCalculate} 
-              // Calculate Button: Light Blue
-              className="flex-1 h-12 bg-blue-400 hover:bg-blue-500 text-white uppercase text-xs tracking-wider font-bold rounded-sm transition-transform active:scale-[0.99] font-sans"
+              // Calculate: Deep Blue, Non-bold, White Text
+              className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white uppercase text-xs tracking-wider font-normal rounded-sm transition-transform active:scale-[0.99] font-sans"
             >
               Calculate Result
             </Button>
