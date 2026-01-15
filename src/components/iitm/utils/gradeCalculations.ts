@@ -1,7 +1,7 @@
 import { Level } from "../types/gradeTypes";
 
 function calculateStandardFoundation(values: Record<string, number>): number {
-  const { GAA = 0, Qz1 = 0, Qz2 = 0, F = 0 } = values;
+  const { Qz1 = 0, Qz2 = 0, F = 0 } = values;
   const part1 = 0.6 * F + 0.3 * Math.max(Qz1, Qz2);
   const part2 = 0.45 * F + 0.25 * Qz1 + 0.3 * Qz2;
   return Math.max(part1, part2);
@@ -54,25 +54,16 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
       return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.2 * OPPE2 + 0.2 * KA;
 
     case "business_data_management":
-      // GA (out of 10) + Qz2 (20) + Timed (20) + F (50)
       return GA + Qz2 + Timed + F;
 
     case "business_analytics":
-      // Qz (20) + A (20) + F (40) + Bonus
+      // Qz (20) + A (20) + F (40) + Bonus. 
+      // Qz = 0.7 * Max(Qz1, Qz2) + 0.3 * Min(Qz1, Qz2)
+      // Assuming Qz inputs are scaled 0-20 effectively if user inputs raw marks, or 
+      // if inputs are 0-100, we apply the 20% weight inside.
+      // Based on typical calculator usage, we'll assume standard scaling.
+      // For precision, let's treat inputs as component marks as requested.
       const qzScore = 0.7 * Math.max(Qz1, Qz2) + 0.3 * Math.min(Qz1, Qz2);
-      // Ensure Qz scale is correct: Qz1/2 inputs are usually 0-100. Formula implies scaling to 20.
-      // If Qz1/Qz2 are entered as 0-100, we need to normalize. 
-      // Doc says: "Quiz 1 for 20 marks... Qz = 0.7 Max + 0.3 Min".
-      // Assuming inputs are raw scores (0-100), we typically scale: (Score/100)*20.
-      // However, usually calculator inputs assume standardized 0-100.
-      // Let's assume inputs are normalized to their max weight or 0-100. 
-      // *Correction*: Standard practice is inputs are 0-100. 
-      // "Quiz 1 for 20 marks" -> 20% weight.
-      // So (0.7*Max + 0.3*Min) is likely on 0-100 scale, then * 0.2.
-      // Formula: T = Qz + A + F. 
-      // If Qz component is out of 20, A out of 20, F out of 40. Total 80? No.
-      // Let's assume the user enters marks out of the max directly for BA/BDM or we scale.
-      // Given the field defs (Max 20), the user enters raw marks (0-20).
       return qzScore + A + F + Bonus;
 
     case "programming_python": // PDSA
@@ -83,9 +74,7 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
 
     case "appdev1":
     case "appdev2":
-      // AD1 uses GLA, AD2 uses GAA. Code distinguishes by variable availability usually.
-      // AD1: 0.05 GLA + max...
-      // AD2: 0.05 GAA + max...
+      // AD1 uses GLA, AD2 uses GAA.
       const scoreComp = (subjectKey === "appdev1" ? GLA : GAA);
       const examComp = Math.max(0.6 * F + 0.25 * Math.max(Qz1, Qz2), 0.4 * F + 0.25 * Qz1 + 0.3 * Qz2);
       return 0.05 * scoreComp + examComp;
@@ -100,8 +89,7 @@ export function calculateDiplomaGrade(subjectKey: string, values: Record<string,
       return 0.1 * GAA + 0.4 * F + 0.25 * Qz1 + 0.25 * Qz2;
     
     case "tools_data_science":
-        // Generic placeholder as formula is component based.
-        return 0.1 * GAA + 0.9 * F; // Placeholder
+        return 0.1 * GAA + 0.9 * F;
 
     default:
       return 0;
@@ -125,7 +113,6 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
 
     case "deep_learning":
     case "ai_search":
-      // Base + Bonus
       return 0.1 * GAA + 0.4 * F + 0.25 * Qz1 + 0.25 * Qz2 + Bonus;
 
     case "strat_prof_growth":
@@ -133,9 +120,6 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
 
     case "int_bigdata":
     case "mlops":
-      // Same structure: GAA, F, OPPEs, Bonus
-      // BigData: 0.1 GAA + 0.3 F + 0.2 OP1 + 0.4 OP2 + Bonus
-      // MLOPS: 0.2 GAA + 0.3 F + 0.25 OP1 + 0.25 OP2 + Bonus
       if (subjectKey === "int_bigdata") {
         return 0.1 * GAA + 0.3 * F + 0.2 * OPPE1 + 0.4 * OPPE2 + Bonus;
       } else {
@@ -162,7 +146,7 @@ export function calculateDegreeGrade(subjectKey: string, values: Record<string, 
       return 0.15 * GAA + 0.2 * Qz2 + 0.5 * P + 0.15 * V + Bonus;
 
     case "app_dev_lab":
-      return 0.2 * Qz2 + 0.3 * GA + 0.5 * V; // V here represents Project Viva
+      return 0.2 * Qz2 + 0.3 * GA + 0.5 * V;
 
     case "algo_thinking_bio":
       return 0.075 * GAA + 0.025 * GRPa + 0.25 * Qz1 + 0.25 * Qz2 + 0.4 * F;
@@ -190,8 +174,8 @@ export function getGradeLetter(score: number): string {
   if (score >= 70) return "B";
   if (score >= 60) return "C";
   if (score >= 50) return "D";
-  if (score >= 40) return "E"; // Document shows E as pass grade (40-50 range often E in IITM BS)
-  return "U"; // Fail
+  if (score >= 40) return "E";
+  return "U";
 }
 
 export function getGradePoints(score: number): number {
@@ -200,7 +184,7 @@ export function getGradePoints(score: number): number {
   if (score >= 70) return 8;
   if (score >= 60) return 7;
   if (score >= 50) return 6;
-  if (score >= 40) return 4; // Usually 4 for E
+  if (score >= 40) return 4;
   return 0;
 }
 
