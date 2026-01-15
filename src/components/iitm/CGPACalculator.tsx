@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Download, RefreshCw, Target, TrendingUp } from "lucide-react";
+import { Trash2, Plus, Download, RefreshCw } from "lucide-react";
 import { useReactToPrint } from "react-to-print";
 import { useJobsManager } from "@/hooks/useJobsManager";
-import { Progress } from "@/components/ui/progress";
 import {
   Carousel,
   CarouselContent,
@@ -32,7 +31,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   branch = "Data Science", 
   level = "Foundation" 
 }) => {
-  // --- Input States ---
+  // Input States
   const [currentCGPA, setCurrentCGPA] = useState("");
   const [creditsCompleted, setCreditsCompleted] = useState("");
   const [subjectsCompleted, setSubjectsCompleted] = useState("");
@@ -41,11 +40,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   ]);
   const [showReport, setShowReport] = useState(false);
 
-  // --- Prediction States (New Feature) ---
-  const [targetCGPA, setTargetCGPA] = useState("");
-  const [futureCredits, setFutureCredits] = useState("20");
-
-  // --- Result States ---
+  // Result States
   const [semesterGPA, setSemesterGPA] = useState(0);
   const [cumulativeCGPA, setCumulativeCGPA] = useState(0);
   const [totalCredits, setTotalCredits] = useState(0);
@@ -56,7 +51,11 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const { jobs, isLoading: jobsLoading } = useJobsManager();
   
   const reportRef = useRef<HTMLDivElement>(null);
-  const plugin = useRef(Autoplay({ delay: 3500, stopOnInteraction: false }));
+  
+  // Autoplay plugin
+  const plugin = useRef(
+    Autoplay({ delay: 3500, stopOnInteraction: false })
+  );
 
   const gradeOptions: { value: Grade; label: string; point: number }[] = [
     { value: "10", label: "S (10)", point: 10 },
@@ -110,34 +109,6 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
     setGradeDistribution(dist);
   }, [courses, currentCGPA, creditsCompleted, subjectsCompleted]);
 
-  // --- Prediction & Conclusion Logic (New Feature) ---
-  const prediction = useMemo(() => {
-    if (!targetCGPA || !futureCredits || totalCredits === 0) return null;
-    const t = parseFloat(targetCGPA);
-    const f = parseFloat(futureCredits);
-    if (isNaN(t) || isNaN(f)) return null;
-
-    const currentPoints = cumulativeCGPA * totalCredits;
-    const requiredTotalPoints = t * (totalCredits + f);
-    const pointsNeeded = requiredTotalPoints - currentPoints;
-    const requiredGPA = pointsNeeded / f;
-
-    return {
-      requiredGPA,
-      possible: requiredGPA <= 10 && requiredGPA >= 0
-    };
-  }, [targetCGPA, futureCredits, cumulativeCGPA, totalCredits]);
-
-  const getConclusion = (cgpa: number) => {
-    if (cgpa >= 9.0) return { title: "Outstanding", color: "text-emerald-700", text: "Exceptional academic standing. You are in the top tier." };
-    if (cgpa >= 8.0) return { title: "Very Good", color: "text-blue-700", text: "Solid record opening most career & higher ed opportunities." };
-    if (cgpa >= 7.0) return { title: "Good", color: "text-indigo-700", text: "Consistent performance. Push harder to cross the 8.0 barrier." };
-    if (cgpa >= 6.0) return { title: "Satisfactory", color: "text-amber-700", text: "Clearing requirements, but improvement needed for top roles." };
-    return { title: "Action Required", color: "text-red-700", text: "Immediate focus required to improve academic standing." };
-  };
-
-  const conclusion = getConclusion(cumulativeCGPA);
-
   // --- Handlers ---
   const addCourse = () => {
     setCourses([...courses, { id: Date.now().toString(), name: "", credits: "4", grade: "10" }]);
@@ -166,32 +137,100 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
   const handleReset = () => {
     if (window.confirm("Start over?")) {
-      setCurrentCGPA(""); setCreditsCompleted(""); setSubjectsCompleted("");
+      setCurrentCGPA("");
+      setCreditsCompleted("");
+      setSubjectsCompleted("");
       setCourses([{ id: "1", name: "", credits: "4", grade: "10" }]);
-      setTargetCGPA(""); setFutureCredits("20");
       setShowReport(false);
     }
   };
   
-  // --- Original Print Styles (Preserved) ---
   const handlePrint = useReactToPrint({
     contentRef: reportRef,
     documentTitle: "Expected_Performance_Report",
+    // Custom Page Style for Print
     pageStyle: `
-      @page { size: A4; margin: 10mm; }
+      @page {
+        size: A4;
+        margin: 10mm;
+      }
       @media print {
-        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background-color: white; margin: 0; padding: 0; }
-        .print-page-wrapper { width: 100%; min-height: 100vh; box-sizing: border-box; position: relative; }
-        .print-border-container { width: 100%; min-height: 275mm; border: 3px double #1a1a1a; padding: 10mm 15mm; box-sizing: border-box; position: relative; background: white; display: flex; flex-direction: column; }
-        .report-card { border: none !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: none !important; }
-        .watermark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); font-size: 8rem; color: rgba(0,0,0,0.03); font-weight: 900; text-transform: uppercase; pointer-events: none; z-index: 0; white-space: nowrap; }
-        .print-footer { margin-top: 50px; border-top: 1px solid #000; padding-top: 10px; display: flex !important; width: 100%; justify-content: space-between; align-items: center; page-break-inside: avoid; }
-        .print-header { display: flex !important; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 25px; }
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+          background-color: white;
+          margin: 0;
+          padding: 0;
+        }
+        
+        .print-page-wrapper {
+          width: 100%;
+          min-height: 100vh;
+          box-sizing: border-box;
+          position: relative;
+        }
+
+        .print-border-container {
+          width: 100%;
+          min-height: 275mm;
+          border: 3px double #1a1a1a;
+          padding: 10mm 15mm;
+          box-sizing: border-box;
+          position: relative;
+          background: white;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .report-card {
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: none !important;
+        }
+
+        .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-45deg);
+          font-size: 8rem;
+          color: rgba(0,0,0,0.03);
+          font-weight: 900;
+          text-transform: uppercase;
+          pointer-events: none;
+          z-index: 0;
+          white-space: nowrap;
+        }
+
+        .print-footer {
+          margin-top: 50px;
+          border-top: 1px solid #000;
+          padding-top: 10px;
+          display: flex !important;
+          width: 100%;
+          justify-content: space-between;
+          align-items: center;
+          page-break-inside: avoid;
+        }
+
+        .print-header {
+          display: flex !important;
+          border-bottom: 2px solid #000;
+          padding-bottom: 15px;
+          margin-bottom: 25px;
+        }
+
+        /* Ensure page breaks behave nicely */
         table { page-break-inside: auto; }
         tr { page-break-inside: avoid; page-break-after: auto; }
         thead { display: table-header-group; }
         tfoot { display: table-footer-group; }
-        .screen-only { display: none !important; }
+
+        .screen-only {
+          display: none !important;
+        }
       }
     `
   });
@@ -199,6 +238,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
   const getConicGradient = () => {
     const total = courses.length;
     if (total === 0) return "conic-gradient(#f3f4f6 0deg 360deg)";
+
     const colors = { S: "#000000", A: "#4b5563", B: "#9ca3af", C: "#d1d5db", Others: "#f3f4f6" };
     let currentDeg = 0;
     const segments: string[] = [];
@@ -209,6 +249,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       { key: "C", count: gradeDistribution.C, color: colors.C },
       { key: "Others", count: gradeDistribution.Others, color: colors.Others },
     ];
+
     entries.forEach((item) => {
       if (item.count > 0) {
         const deg = (item.count / total) * 360;
@@ -216,26 +257,52 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
         currentDeg += deg;
       }
     });
+
     return `conic-gradient(${segments.join(", ")})`;
   };
 
   return (
     <div className="w-full bg-white font-sans text-gray-900">
       
-      {/* 1. TOP TICKER (Screen Only) */}
+      {/* 1. TOP ROW: JOB TICKER (Screen Only) */}
       {!jobsLoading && jobs && jobs.length > 0 && (
         <div className="w-full bg-black text-white py-3 px-6 mb-8 screen-only">
-          <Carousel plugins={[plugin.current]} className="w-full" onMouseEnter={plugin.current.stop} onMouseLeave={plugin.current.reset} opts={{ align: "start", loop: true }}>
+          <Carousel
+            plugins={[plugin.current]}
+            className="w-full"
+            onMouseEnter={plugin.current.stop}
+            onMouseLeave={plugin.current.reset}
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+          >
             <CarouselContent>
               {jobs.map((job) => (
                 <CarouselItem key={job.id} className="basis-full">
                   <div className="flex items-center justify-between gap-4 h-9 w-full max-w-[1600px] mx-auto">
                     <div className="flex items-center gap-4 overflow-hidden">
-                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">OPEN NOW</span>
-                      <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">{job.title} applications are live</span>
+                      <span className="hidden md:inline-flex bg-gray-100 text-green-600 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-wider whitespace-nowrap font-sans">
+                        OPEN NOW
+                      </span>
+                      <span className="text-xs md:text-sm font-semibold truncate font-sans tracking-wide">
+                        {job.title} applications are live
+                      </span>
                     </div>
-                    <a href={job.application_url || "#"} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                      <Button size="sm" variant="default" className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans">Apply Now</Button>
+                    
+                    <a 
+                      href={job.application_url || "#"} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="shrink-0"
+                    >
+                      <Button 
+                        size="sm" 
+                        variant="default" 
+                        className="h-9 text-sm font-semibold tracking-wide px-6 bg-white text-black hover:bg-gray-200 border-none rounded-sm font-sans"
+                      >
+                        Apply Now
+                      </Button>
                     </a>
                   </div>
                 </CarouselItem>
@@ -248,80 +315,115 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
       {/* 2. MAIN INPUTS */}
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 mb-20 screen-only">
         
-        {/* Past Records */}
+        {/* Academic Status */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10 w-full">
           <div className="space-y-3 w-full">
             <Label htmlFor="current-cgpa" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Current CGPA</Label>
-            <Input id="current-cgpa" type="number" placeholder="0.00" value={currentCGPA} onChange={(e) => setCurrentCGPA(e.target.value)} className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal" />
+            <Input
+              id="current-cgpa"
+              type="number"
+              placeholder="0.00"
+              value={currentCGPA}
+              onChange={(e) => setCurrentCGPA(e.target.value)}
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
+            />
           </div>
           <div className="space-y-3 w-full">
             <Label htmlFor="credits-completed" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Credits Earned</Label>
-            <Input id="credits-completed" type="number" placeholder="0" value={creditsCompleted} onChange={(e) => setCreditsCompleted(e.target.value)} className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal" />
+            <Input
+              id="credits-completed"
+              type="number"
+              placeholder="0"
+              value={creditsCompleted}
+              onChange={(e) => setCreditsCompleted(e.target.value)}
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
+            />
           </div>
           <div className="space-y-3 w-full">
             <Label htmlFor="subjects-completed" className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">Subjects Completed</Label>
-            <Input id="subjects-completed" type="number" placeholder="0" value={subjectsCompleted} onChange={(e) => setSubjectsCompleted(e.target.value)} className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal" />
+            <Input
+              id="subjects-completed"
+              type="number"
+              placeholder="0"
+              value={subjectsCompleted}
+              onChange={(e) => setSubjectsCompleted(e.target.value)}
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300"
+            />
           </div>
         </div>
 
-        {/* Course Rows */}
+        {/* Course Inputs */}
         <div className="space-y-5 w-full">
           <div className="flex justify-between items-end pb-2 border-b border-gray-200">
              <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">Semester Subjects</Label>
           </div>
+
           <div className="space-y-3 w-full">
             {courses.map((course, index) => (
               <div key={course.id} className="grid grid-cols-12 gap-4 items-center group w-full">
                 <div className="col-span-6 md:col-span-7">
-                  <Input placeholder="Subject Name" value={course.name} onChange={(e) => updateCourse(index, "name", e.target.value)} className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm w-full font-sans" />
+                  <Input
+                    placeholder="Subject Name"
+                    value={course.name}
+                    onChange={(e) => updateCourse(index, "name", e.target.value)}
+                    className="bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 font-normal text-sm h-11 px-3 rounded-sm transition-colors w-full font-sans placeholder:text-gray-400"
+                  />
                 </div>
                 <div className="col-span-2 md:col-span-2">
-                    <Input type="number" placeholder="Cr" value={course.credits} onChange={(e) => updateCourse(index, "credits", e.target.value)} className="text-center h-11 text-sm bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans" />
+                    <Input
+                    type="number"
+                    placeholder="Cr"
+                    value={course.credits}
+                    onChange={(e) => updateCourse(index, "credits", e.target.value)}
+                    className="text-center h-11 text-sm bg-white border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm w-full font-sans font-normal placeholder:text-gray-400"
+                  />
                 </div>
                 <div className="col-span-3 md:col-span-2">
                   <Select value={course.grade} onValueChange={(val) => updateCourse(index, "grade", val as Grade)}>
-                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans"><SelectValue placeholder="Grade" /></SelectTrigger>
+                    <SelectTrigger className="h-11 text-sm border-2 border-gray-200 hover:border-gray-300 focus:border-black focus:ring-0 rounded-sm bg-white w-full font-sans font-normal">
+                      <SelectValue placeholder="Grade" />
+                    </SelectTrigger>
                     <SelectContent>
                       {gradeOptions.map(opt => <SelectItem key={opt.value} value={opt.value} className="text-xs font-sans font-medium">{opt.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="col-span-1 flex justify-center">
-                   <button onClick={() => removeCourse(index)} className="text-gray-400 hover:text-red-500 transition-colors" disabled={courses.length <= 1}><Trash2 className="h-4 w-4" /></button>
+                   <button
+                    onClick={() => removeCourse(index)}
+                    className="text-gray-400 hover:text-red-500 transition-colors"
+                    disabled={courses.length <= 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* NEW: Prediction Inputs (Added Above Buttons) */}
-          <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6 w-full border-t border-gray-100 mt-8">
-             <div className="w-full md:w-auto flex flex-col sm:flex-row gap-4 items-center">
-                <div className="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
-                    <Target className="w-4 h-4 text-gray-500" />
-                    <div className="flex flex-col">
-                        <Label className="text-[10px] uppercase text-gray-400 font-bold font-sans">Target CGPA</Label>
-                        <Input placeholder="e.g. 8.5" value={targetCGPA} onChange={(e) => setTargetCGPA(e.target.value)} className="h-6 w-20 bg-transparent border-none p-0 text-sm focus-visible:ring-0 placeholder:text-gray-300 font-sans" />
-                    </div>
-                    <div className="w-px h-8 bg-gray-300 mx-2"></div>
-                    <div className="flex flex-col">
-                        <Label className="text-[10px] uppercase text-gray-400 font-bold font-sans">Future Credits</Label>
-                        <Input placeholder="e.g. 20" value={futureCredits} onChange={(e) => setFutureCredits(e.target.value)} className="h-6 w-20 bg-transparent border-none p-0 text-sm focus-visible:ring-0 placeholder:text-gray-300 font-sans" />
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex gap-4 w-full md:w-auto">
-                <Button onClick={addCourse} variant="outline" className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-normal rounded-sm font-sans"><Plus className="mr-2 h-3.5 w-3.5" /> Add Row</Button>
-                <Button onClick={handleCalculate} className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white uppercase text-xs tracking-wider font-normal rounded-sm transition-transform active:scale-[0.99] font-sans">Calculate Result</Button>
-            </div>
+          <div className="pt-8 flex justify-end gap-4 w-full">
+             <Button 
+               onClick={addCourse} 
+               variant="outline" 
+               className="h-12 px-6 border-dashed border-2 border-gray-300 text-gray-500 hover:text-black hover:border-black hover:bg-gray-50 uppercase text-xs tracking-wider font-normal rounded-sm font-sans"
+             >
+              <Plus className="mr-2 h-3.5 w-3.5" /> Add Row
+            </Button>
+            <Button 
+              onClick={handleCalculate} 
+              className="h-12 px-8 bg-blue-700 hover:bg-blue-800 text-white uppercase text-xs tracking-wider font-normal rounded-sm transition-transform active:scale-[0.99] font-sans"
+            >
+              Calculate Result
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* 3. PRINTABLE REPORT */}
+      {/* 3. REPORT SECTION */}
       {showReport && (
         <div className="w-full bg-white border-t border-gray-200 animate-in fade-in duration-500 relative min-h-screen">
            
+           {/* Wrap content for ReactToPrint */}
            <div ref={reportRef} className="print-page-wrapper">
              
              <div className="print-border-container report-card max-w-[1000px] mx-auto my-12 p-8 md:p-14 space-y-8 border-2 border-black rounded-none shadow-sm print:shadow-none print:my-0">
@@ -329,7 +431,7 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                  {/* Watermark */}
                  <div className="hidden print:block watermark">EXPECTED</div>
 
-                 {/* Print Header */}
+                 {/* PRINT HEADER */}
                  <div className="hidden print-header flex-row justify-between items-center w-full">
                     <div className="flex items-center">
                        <img src="https://i.ibb.co/RT8FMKst/UI-Logo.png" alt="UI Logo" className="h-14 w-auto object-contain" />
@@ -342,24 +444,41 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
 
                  {/* Screen Header */}
                  <div className="flex flex-col items-center justify-center text-center space-y-3 screen-only">
-                    <h2 className="text-3xl font-semibold tracking-tight text-black font-sans uppercase">Expected Performance Report</h2>
-                    <p className="text-xs text-gray-500 font-medium font-sans uppercase tracking-widest">Academic Projection</p>
+                    <h2 className="text-3xl font-semibold tracking-tight text-black font-sans uppercase">
+                      Expected Performance Report
+                    </h2>
+                    <p className="text-xs text-gray-500 font-medium font-sans uppercase tracking-widest">
+                      Academic Projection
+                    </p>
                     <div className="flex justify-center gap-4 pt-2">
-                       <Button onClick={handlePrint} variant="outline" className="h-8 text-[10px] uppercase font-medium tracking-wide text-black border-black hover:bg-gray-50 rounded-none font-sans"><Download className="w-3 h-3 mr-2" /> Download</Button>
-                       <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-none font-sans"><RefreshCw className="w-3 h-3 mr-2" /> Reset</Button>
+                       <Button onClick={handlePrint} variant="outline" className="h-8 text-[10px] uppercase font-medium tracking-wide text-black border-black hover:bg-gray-50 rounded-none font-sans">
+                          <Download className="w-3 h-3 mr-2" /> Download
+                       </Button>
+                       <Button onClick={handleReset} variant="ghost" className="h-8 text-[10px] uppercase font-medium tracking-wide text-gray-500 hover:text-black rounded-none font-sans">
+                          <RefreshCw className="w-3 h-3 mr-2" /> Reset
+                       </Button>
                     </div>
                  </div>
 
                  <div className="w-full h-px bg-black screen-only"></div>
 
-                 {/* Previous Record */}
+                 {/* PREVIOUS RECORD SUMMARY */}
                  {(currentCGPA || creditsCompleted) && (
                     <div className="bg-gray-50 p-4 border border-black rounded-none print:border print:border-black print:mb-6">
                        <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-600 mb-3 font-sans">Previous Academic Record</h4>
                        <div className="grid grid-cols-3 gap-4 text-center divide-x divide-gray-300">
-                          <div><span className="block text-xl font-bold text-black font-sans">{currentCGPA || "-"}</span><span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Current CGPA</span></div>
-                          <div><span className="block text-xl font-bold text-black font-sans">{creditsCompleted || "0"}</span><span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Credits Earned</span></div>
-                          <div><span className="block text-xl font-bold text-black font-sans">{subjectsCompleted || "0"}</span><span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Subjects Completed</span></div>
+                          <div>
+                             <span className="block text-xl font-bold text-black font-sans">{currentCGPA || "-"}</span>
+                             <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Current CGPA</span>
+                          </div>
+                          <div>
+                             <span className="block text-xl font-bold text-black font-sans">{creditsCompleted || "0"}</span>
+                             <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Credits Earned</span>
+                          </div>
+                          <div>
+                             <span className="block text-xl font-bold text-black font-sans">{subjectsCompleted || "0"}</span>
+                             <span className="text-[9px] uppercase text-gray-500 font-sans tracking-wide">Subjects Completed</span>
+                          </div>
                        </div>
                     </div>
                  )}
@@ -377,50 +496,29 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                    </div>
                  </div>
 
-                 {/* Analytics Section (Original Chart + New Conclusions & Predictions) */}
-                 <div className="flex flex-col md:flex-row gap-8 items-start py-6 bg-gray-50/50 border border-black rounded-none print:border print:bg-white print:border-black print:mb-6 p-6">
-                     {/* Original Chart Visual */}
-                     <div className="flex-1 flex flex-col items-center justify-center border-r border-gray-200 pr-6 w-full">
-                         <div className="mb-6 relative">
-                            <div className="w-40 h-40 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-200 print:border-black print:ring-0" style={{ background: getConicGradient() }}>
-                               <div className="w-24 h-24 bg-white rounded-full flex flex-col items-center justify-center shadow-inner print:shadow-none">
-                                  <span className="text-2xl font-semibold text-black leading-none font-sans">{courses.length}</span>
-                                  <span className="text-[8px] uppercase font-medium text-gray-400 tracking-wider mt-1 font-sans">Subjects</span>
-                               </div>
-                            </div>
-                         </div>
-                         <div className="flex flex-wrap justify-center gap-4">
-                            {Object.entries(gradeDistribution).map(([grade, count]) => (
-                               count > 0 && <div key={grade} className="flex items-center gap-1.5"><div className={`w-2.5 h-2.5 rounded-none border border-black ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div><span className="text-[10px] font-medium text-gray-600 font-sans">{grade}: <span className="text-black font-bold">{count}</span></span></div>
-                            ))}
-                         </div>
-                     </div>
-
-                     {/* New: Conclusions & Predictions Section */}
-                     <div className="flex-1 flex flex-col justify-center space-y-5 w-full">
-                        {/* Conclusion */}
-                        <div className={`border-l-2 ${conclusion.color.replace('text', 'border')} pl-4`}>
-                           <h4 className={`text-sm font-bold uppercase tracking-wider ${conclusion.color} mb-1 font-sans`}>{conclusion.title}</h4>
-                           <p className="text-[10px] text-gray-600 leading-relaxed font-sans">{conclusion.text}</p>
+                 {/* Chart Section */}
+                 <div className="flex flex-col items-center py-6 bg-gray-50/50 border border-black rounded-none print:border print:bg-white print:border-black print:mb-6">
+                     <div className="mb-8 relative">
+                        <div 
+                           className="w-48 h-48 rounded-full flex items-center justify-center shadow-sm border-4 border-white ring-1 ring-gray-200 print:border-black print:ring-0"
+                           style={{ background: getConicGradient() }}
+                        >
+                           <div className="w-28 h-28 bg-white rounded-full flex flex-col items-center justify-center shadow-inner print:shadow-none">
+                              <span className="text-3xl font-semibold text-black leading-none font-sans">{courses.length}</span>
+                              <span className="text-[9px] uppercase font-medium text-gray-400 tracking-wider mt-1 font-sans">New Subjects</span>
+                           </div>
                         </div>
-                        
-                        {/* Prediction Bar */}
-                        {prediction && (
-                            <div className="bg-white p-3 border border-gray-200 shadow-sm">
-                                <h4 className="text-[9px] uppercase font-bold text-gray-500 mb-2 flex items-center gap-2 font-sans"><TrendingUp className="w-3 h-3" /> Target: {targetCGPA}</h4>
-                                {prediction.possible ? (
-                                    <>
-                                        <div className="flex items-end gap-2 mb-2">
-                                            <span className="text-xl font-bold text-black font-sans">{prediction.requiredGPA.toFixed(2)}</span>
-                                            <span className="text-[9px] text-gray-500 mb-1 font-sans">GPA needed next {futureCredits} credits</span>
-                                        </div>
-                                        <Progress value={(prediction.requiredGPA / 10) * 100} className="h-1.5 bg-gray-100" />
-                                    </>
-                                ) : (
-                                    <p className="text-[9px] text-red-500 font-medium font-sans">Target not mathematically possible.</p>
-                                )}
-                            </div>
-                        )}
+                     </div>
+                     
+                     <div className="flex flex-wrap justify-center gap-6">
+                        {Object.entries(gradeDistribution).map(([grade, count]) => (
+                           count > 0 && (
+                              <div key={grade} className="flex items-center gap-2">
+                                 <div className={`w-3 h-3 rounded-none border border-black ${grade === 'S' ? 'bg-black' : 'bg-gray-400'}`}></div>
+                                 <span className="text-xs font-medium text-gray-600 font-sans">{grade} Grade: <span className="text-black font-bold">{count}</span></span>
+                              </div>
+                           )
+                        ))}
                      </div>
                  </div>
 
@@ -455,42 +553,50 @@ const CGPACalculator: React.FC<CGPACalculatorProps> = ({
                     </div>
                  </div>
 
-                 {/* NEW: "Work With Us" Section with QR CODES (Print Only) */}
+                 {/* UPDATED: "WORK WITH US" SECTION (Print Only) WITH QR CODE INSIDE CARD */}
                  {!jobsLoading && jobs && jobs.length > 0 && (
                     <div className="hidden print:block mt-8 pt-8 border-t-2 border-dashed border-gray-300 break-inside-avoid">
                         <div className="flex items-center gap-2 mb-4">
                            <div className="h-2 w-2 bg-black rounded-full"></div>
-                           <h3 className="text-sm font-bold uppercase tracking-widest text-black font-sans">Work With Us</h3>
+                           <h3 className="text-sm font-bold uppercase tracking-widest text-black font-sans">
+                              Work With Us
+                           </h3>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           {jobs.slice(0, 4).map((job) => (
-                            <div key={job.id} className="border border-gray-200 p-2 flex flex-row justify-between items-center gap-3 bg-gray-50/30">
-                               <div className="flex-1 min-w-0">
-                                 <h4 className="font-bold text-[10px] text-black uppercase leading-tight mb-1 truncate font-sans">{job.title}</h4>
-                                 <p className="text-[8px] text-gray-500 line-clamp-2 leading-tight font-sans">{job.description || "Join our team to build the future of education."}</p>
-                                 <div className="mt-2 text-[7px] font-bold text-green-700 uppercase tracking-wider border border-green-200 bg-green-50 px-1 py-0.5 w-fit rounded-none font-sans">Open Now</div>
+                            <div key={job.id} className="border border-gray-200 p-2 flex flex-row justify-between items-center gap-2">
+                               <div className="flex-1">
+                                 <h4 className="font-bold text-[10px] text-black uppercase leading-tight mb-1">{job.title}</h4>
+                                 <p className="text-[8px] text-gray-500 line-clamp-2 leading-tight">{job.description || "Join our team."}</p>
+                                 <div className="mt-1 text-[8px] font-semibold text-green-700 uppercase tracking-wider">Open Now</div>
                                </div>
                                <div className="shrink-0 flex flex-col items-center">
-                                 {/* QR CODE GENERATION */}
                                  <img 
-                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(window.location.origin + '/career/job/' + job.id)}&color=000000`} 
-                                    alt="Scan" 
-                                    className="w-14 h-14 object-contain border border-black p-0.5 bg-white" 
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(window.location.origin + '/career/job/' + job.id)}&color=000000`} 
+                                    alt="Scan to Apply" 
+                                    className="w-12 h-12 object-contain border border-black p-0.5"
                                   />
-                                 <span className="text-[6px] font-bold uppercase mt-1 tracking-wider text-gray-500 font-sans">Scan to Apply</span>
                                </div>
                             </div>
                           ))}
                         </div>
+                        <p className="text-[9px] text-gray-400 mt-4 italic text-center">
+                          * Scan the QR code on a job card to view details and apply.
+                        </p>
                     </div>
                  )}
 
-                 {/* Footer */}
+                 {/* PRINT FOOTER: At the end of document flow */}
                  <div className="hidden print-footer">
-                    <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">Calculated by UI Calculator</span>
-                    <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">Foundation & Diploma Batches available • Study now from UI</span>
+                    <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
+                       Calculated by UI Calculator
+                    </span>
+                    <span className="text-[9px] font-bold text-black uppercase tracking-wider font-sans">
+                       Foundation & Diploma Batches available • Study now from UI
+                    </span>
                  </div>
 
+                 {/* Screen Footer */}
                  <div className="flex justify-between items-center pt-6 border-t border-gray-200 screen-only">
                     <span className="text-[9px] text-gray-400 font-sans uppercase tracking-wider">Generated on {new Date().toLocaleDateString()}</span>
                     <span className="text-[10px] font-bold text-black font-sans uppercase tracking-wider">Calculated by UI Calculator</span>
