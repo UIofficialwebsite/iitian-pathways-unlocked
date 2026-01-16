@@ -33,23 +33,20 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
   return (
     <div className="w-full animate-in zoom-in-95 duration-500 ease-out mt-8 font-sans">
       
-      {/* 1. The Result Card (Black Block) */}
-      <div className="bg-black text-white rounded-2xl p-8 py-12 text-center shadow-xl mb-6 relative overflow-hidden">
+      {/* Black Result Card */}
+      <div className="bg-black text-white rounded-2xl p-8 py-12 text-center shadow-xl mb-6 relative overflow-hidden max-w-[500px] mx-auto">
         
-        {/* Subtle decorative gradient at top */}
+        {/* Subtle decorative gradient */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-800 via-gray-500 to-gray-800 opacity-20"></div>
 
-        {/* Label */}
         <span className="block text-[13px] font-semibold uppercase tracking-[0.2em] opacity-60 mb-4 text-gray-300">
           Expected Grade
         </span>
         
-        {/* Big Grade Letter */}
         <div className="text-[110px] font-semibold leading-none tracking-tighter mb-8 text-white">
           {result.letter}
         </div>
 
-        {/* Stats Row (Bordered Top) */}
         <div className="flex justify-center gap-12 pt-8 border-t border-white/15">
           <div className="flex flex-col items-center">
             <span className="block text-[28px] font-semibold">{result.score}</span>
@@ -62,8 +59,8 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
         </div>
       </div>
 
-      {/* 2. Actions (Outside the card) */}
-      <div className="flex flex-col gap-3">
+      {/* Actions */}
+      <div className="flex flex-col gap-3 max-w-[500px] mx-auto">
         <button 
           onClick={handleShare}
           className="w-full h-[54px] bg-white border-2 border-black text-black font-bold text-[15px] rounded-xl flex items-center justify-center gap-2.5 transition-all hover:bg-gray-200 active:scale-[0.98]"
