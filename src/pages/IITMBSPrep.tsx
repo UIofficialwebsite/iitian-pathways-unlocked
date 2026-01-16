@@ -211,10 +211,11 @@ const IITMBSPrep = () => {
     setOpenDropdown(openDropdown === type ? null : type);
   };
 
+  // --- FIX: Reset filters when Branch OR Level changes ---
   useEffect(() => {
     setPyqYears([]); setExamTypes([]); setPyqSubjects([]);
     setSelectedNotesSubjects([]);
-  }, [pyqLevel, notesLevel]);
+  }, [pyqLevel, notesLevel, pyqBranch, notesBranch]); // Added branches here
 
   const handleSyllabusLevelChange = (newLevel: CourseLevel) => {
     setSyllabusLevel(newLevel);
@@ -388,6 +389,8 @@ const IITMBSPrep = () => {
         items.push(toolsBranch === "electronic-systems" ? "Electronic Systems" : "Data Science");
         const toolName = selectedTool.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         items.push(toolName);
+    } else if (['dates', 'news'].includes(activeTab)) {
+        // No extra breadcrumbs for dates/news
     } else {
         items.push(activeBranch); 
         if (['notes', 'pyqs'].includes(activeTab)) items.push(activeLevel); 
@@ -536,20 +539,20 @@ const IITMBSPrep = () => {
               {/* SCROLLABLE FILTER ROW */}
               <div className="flex flex-nowrap gap-3 items-center whitespace-nowrap overflow-x-auto no-scrollbar w-full pb-1 pr-4">
                 
-                {/* 1. Branch & Level (Standard Tabs) */}
-                {activeTab !== 'syllabus' && activeTab !== 'courses' && activeTab !== 'tools' && (
-                    <div className="flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Branch <FilledArrow isOpen={openDropdown === 'branch'} />
-                        </button>
-                    </div>
-                )}
-                {activeTab !== 'syllabus' && activeTab !== 'courses' && activeTab !== 'tools' && (
-                    <div className="flex-shrink-0">
-                        <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
-                        Level <FilledArrow isOpen={openDropdown === 'level'} />
-                        </button>
-                    </div>
+                {/* 1. Branch & Level (Standard Tabs: Only for Notes and PYQs) */}
+                {(activeTab === 'notes' || activeTab === 'pyqs') && (
+                    <>
+                      <div className="flex-shrink-0">
+                          <button onClick={(e) => handleOpenDropdown('branch', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                          Branch <FilledArrow isOpen={openDropdown === 'branch'} />
+                          </button>
+                      </div>
+                      <div className="flex-shrink-0">
+                          <button onClick={(e) => handleOpenDropdown('level', e)} className="px-4 py-1.5 border border-[#e5e7eb] rounded-[30px] text-[12px] flex items-center gap-2 bg-white font-sans text-[#374151]">
+                          Level <FilledArrow isOpen={openDropdown === 'level'} />
+                          </button>
+                      </div>
+                    </>
                 )}
 
                 {/* 1.5. Tools Tab Filters */}
@@ -737,7 +740,7 @@ const IITMBSPrep = () => {
                 bestSellerOnly={bestSellerOnly}
             />}
             {activeTab === "news" && <NewsTab sortOrder={sortOrder} />}
-            {activeTab === "dates" && <ImportantDatesTab sortOrder={sortOrder} />}
+            {activeTab === "dates" && <ImportantDatesTab />}
           </div>
         </section>
       </main>
