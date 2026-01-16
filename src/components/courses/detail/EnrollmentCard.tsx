@@ -5,6 +5,7 @@ import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, BookOpen, Share2, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import EnrollButton from '@/components/EnrollButton'; // Import the EnrollButton
 
 interface EnrollmentCardProps {
     course: Course;
@@ -122,9 +123,16 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                         <Separator className="my-4" />
 
                         <div className="flex gap-2">
-                            <a href={course.enroll_now_link || '#'} target="_blank" rel="noopener noreferrer" className="flex-1">
-                                <Button size="lg" className="w-full text-lg">Continue with the Enrollment</Button>
-                            </a>
+                            {/* Replaced generic Button with EnrollButton logic */}
+                            <EnrollButton
+                                courseId={course.id}
+                                coursePrice={course.discounted_price || course.price}
+                                enrollmentLink={course.enroll_now_link || undefined}
+                                className="flex-1 text-lg w-full"
+                            >
+                                Continue with the Enrollment
+                            </EnrollButton>
+
                             <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
                             </Button>
