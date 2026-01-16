@@ -3,8 +3,9 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // --- IMPORTANT: SET THESE IN YOUR SUPABASE EDGE FUNCTION SECRETS ---
 // To get your keys, go to your Cashfree Dashboard -> Developers -> API Keys
-const cashfreeKey = Deno.env.get("CASHFREE_KEY"); // This is your 'Client ID'
-const cashfreeSecret = Deno.env.get("CASHFREE_SECRET"); // This is your 'Client Secret'
+// We use the provided Client ID as a fallback if the environment variable is not set.
+const cashfreeKey = Deno.env.get("CASHFREE_KEY") ?? "118228236139ff95e4f553565c32822811"; 
+const cashfreeSecret = Deno.env.get("CASHFREE_SECRET"); // YOU MUST SET THIS IN SUPABASE SECRETS
 
 // Set this to 'production' in your secrets when you are ready to go live.
 // If it's anything else (or not set), it will use the sandbox URL.
@@ -32,8 +33,9 @@ serve(async (req: Request) => {
   try {
     // 1. Check for valid credentials
     if (!cashfreeKey || !cashfreeSecret) {
-      console.error("Cashfree API Key or Secret is not configured in environment variables.");
-      throw new Error("Payment provider credentials are not configured.");
+      console.error("Cashfree API Key or Secret is not configured.");
+      console.error("Key present:", !!cashfreeKey, "Secret present:", !!cashfreeSecret);
+      throw new Error("Payment provider credentials are not configured. Please set CASHFREE_SECRET in Supabase secrets.");
     }
 
     const { courseId, amount, userId, customerPhone, customerEmail }: OrderRequest = await req.json();
@@ -53,8 +55,8 @@ serve(async (req: Request) => {
       order_currency: "INR",
       customer_details: {
         customer_id: userId,
-        customer_phone: customerPhone,
-        customer_email: customerEmail,
+        customer_phone: customerPhone || "9999999999", // Fallback for sandbox testing
+        customer_email: customerEmail || "test@example.com", // Fallback for sandbox testing
       },
       order_meta: {
         // This is where Cashfree will redirect the user after payment
@@ -64,8 +66,7 @@ serve(async (req: Request) => {
 
     // --- DEBUGGING: Log the exact data being sent to Cashfree ---
     console.log("Attempting to create Cashfree order with URL:", cashfreeApiUrl);
-    console.log("Order Payload:", JSON.stringify(orderPayload, null, 2));
-
+    
     // 5. Make the API call to Cashfree
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
@@ -73,15 +74,13 @@ serve(async (req: Request) => {
         "Content-Type": "application/json",
         "x-client-id": cashfreeKey,
         "x-client-secret": cashfreeSecret,
-        "x-api-version": "2023-08-01", // Verify this is the latest version in Cashfree docs
+        "x-api-version": "2023-08-01", 
       },
       body: JSON.stringify(orderPayload),
     });
 
     // 6. Handle the response from Cashfree
     if (!cashfreeResponse.ok) {
-      // --- THIS IS THE MOST IMPORTANT PART FOR DEBUGGING ---
-      // It captures the exact error message from Cashfree's server.
       const errorBody = await cashfreeResponse.text();
       console.error("Cashfree API responded with a non-2xx status:", cashfreeResponse.status);
       console.error("Cashfree API Error Body:", errorBody);
