@@ -45,30 +45,22 @@ const NewsDetail = () => {
       </div>
       
       {/* Main Container */}
-      <main className="w-full max-w-[1200px] mx-auto pt-[100px] pb-[60px] px-6 lg:px-10 print:p-0 print:max-w-none print:mx-0">
+      <main className="w-full max-w-[1200px] mx-auto pt-[100px] pb-[60px] px-6 lg:px-10 print:p-0 print:max-w-none print:mx-0 print:pt-0">
         
-        {/* --- PRINT ONLY HEADER WITH LOGO --- */}
-        <div className="hidden print:flex items-center justify-between mb-8 pb-4 border-b border-black">
-          <div className="flex items-center gap-4">
+        {/* --- PRINT ONLY HEADER (Logo Only) --- */}
+        <div className="hidden print:flex items-center justify-between mb-6 pb-4 border-b border-black">
+          <div className="flex items-center">
             <img 
               src="/lovable-uploads/logo_ui_new.png" 
               alt="IITM Logo" 
-              className="h-16 w-auto object-contain" 
+              className="h-24 w-auto object-contain" 
             />
-            <div>
-              <h1 className="text-xl font-extrabold uppercase tracking-wide text-black">
-                IIT Madras BS Degree
-              </h1>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-widest">
-                Official Circular
-              </p>
-            </div>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest">
               Generated Report
             </p>
-            <p className="text-xs text-black mt-1">
+            <p className="text-xs font-bold text-black mt-1">
               {new Date().toLocaleDateString()}
             </p>
           </div>
@@ -90,19 +82,19 @@ const NewsDetail = () => {
             <h1 className="text-[32px] md:text-[42px] font-[800] leading-[1.1] text-black mb-6 tracking-[-0.02em]">
               {newsItem.title}
               {newsItem.is_important && (
-                <span className="inline-block align-middle ml-3 text-[11px] font-bold px-3 py-1 border border-[#991b1b] bg-[#fee2e2] text-[#991b1b] uppercase tracking-wide print:border-black print:text-black print:bg-transparent">
+                <span className="inline-block align-middle ml-3 text-[11px] font-bold px-3 py-1 border border-[#991b1b] bg-[#fee2e2] text-[#991b1b] uppercase tracking-wide print:hidden">
                   Urgent
                 </span>
               )}
             </h1>
           </header>
 
-          {/* Meta Data Strip */}
-          <div className="flex flex-wrap border-y border-black mb-10 print:border-black print:mb-8">
+          {/* Meta Data Strip - Blue Part (Preserved in Print) */}
+          <div className="flex flex-wrap border-y border-black mb-10 bg-[#e6f7f7] print:bg-[#e6f7f7] [print-color-adjust:exact] print:border-black print:mb-8">
             
             {/* Publication Date */}
-            <div className="flex-1 py-4 pr-8 min-w-[200px] border-r border-transparent md:border-black/10 print:border-none">
-              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1 print:text-black">
+            <div className="flex-1 py-4 px-6 min-w-[200px] border-r border-black/10 print:border-black/20">
+              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1">
                 Date
               </span>
               <span className="block text-[14px] font-medium text-black">
@@ -115,20 +107,18 @@ const NewsDetail = () => {
             </div>
             
             {/* Document Level */}
-            <div className="flex-1 py-4 px-0 md:px-8 min-w-[200px]">
-              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1 print:text-black">
+            <div className="flex-1 py-4 px-6 min-w-[200px]">
+              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1">
                 Level / Branch
               </span>
               <span className="block text-[14px] font-medium text-black">
                 {[newsItem.level, newsItem.branch].filter(Boolean).join(" & ") || "General"}
               </span>
             </div>
-
-            {/* Removed Classification Block as requested */}
           </div>
 
           {/* Article Content */}
-          <article className="max-w-none text-[16px] leading-[1.8] text-[#334155] print:text-black print:text-[14px] mb-12">
+          <article className="max-w-none text-[16px] leading-[1.8] text-[#334155] print:text-black print:text-[12pt] mb-12 print:leading-[1.6]">
             <div className="whitespace-pre-wrap font-['Inter'] text-justify">
               {newsItem.content || newsItem.description}
             </div>
@@ -158,11 +148,18 @@ const NewsDetail = () => {
             </div>
           </div>
 
-          {/* Print Only Footer */}
-          <div className="hidden print:block mt-16 pt-4 border-t border-black">
-            <p className="text-[10px] text-center font-bold uppercase tracking-widest text-gray-500">
-              IITM Pathways Unlocked • Academic Announcements
-            </p>
+          {/* Print Only Footer - Professional & Minimal */}
+          <div className="hidden print:block mt-auto pt-8 border-t border-black w-full">
+            <div className="flex justify-between items-end">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-widest text-gray-500">
+                  IITM Pathways Unlocked
+                </p>
+              </div>
+              <div className="text-right">
+                 <p className="text-[9px] text-gray-400">Page 1 of 1</p>
+              </div>
+            </div>
           </div>
 
         </div>
