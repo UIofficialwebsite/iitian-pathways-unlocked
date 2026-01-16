@@ -114,7 +114,7 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
 
         {/* BRAND WATERMARK */}
         <div className="mt-10 text-right text-[10px] font-bold text-[#bbb] uppercase tracking-wider">
-          IITM Pathways Unlocked
+          predicted by Unknown IITians
         </div>
       </div>
 
