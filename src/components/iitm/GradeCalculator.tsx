@@ -30,7 +30,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
         if (level === "diploma") return "diploma-electronic-systems";
         if (level === "degree") return "degree-electronic-systems";
       }
-      return level;
+      return level; // Defaults to Data Science keys (foundation, diploma, degree)
     };
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
@@ -110,7 +110,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
                 <SelectItem 
                   key={subject.key} 
                   value={subject.key} 
-                  /* Added border-b and border-gray-100 for separator lines */
                   className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0"
                 >
                   {subject.name}
