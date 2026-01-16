@@ -16,13 +16,11 @@ interface GradeCalculatorProps {
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize from URL (e.g. ?subject=maths1)
-  const initialSubject = searchParams.get("subject") || "";
-  
-  const [selectedSubject, setSelectedSubject] = useState(initialSubject);
+  // Local state for input values and calculation result only
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
+  // 1. Get the list of subjects for the current Level/Branch
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
       if (branch === "electronic-systems") {
@@ -30,35 +28,46 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
         if (level === "diploma") return "diploma-electronic-systems";
         if (level === "degree") return "degree-electronic-systems";
       }
-      return level; // Defaults to Data Science keys (foundation, diploma, degree)
+      return level;
     };
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
-  // Validate URL subject against current filter
+  // 2. Derive the current subject strictly from the URL parameter
+  const urlSubjectKey = searchParams.get("subject");
+  const currentSubject = useMemo(() => 
+    filteredSubjects.find(s => s.key === urlSubjectKey),
+    [filteredSubjects, urlSubjectKey]
+  );
+
+  // 3. Effect: Handle tab switching or invalid URLs
+  // If the URL has a subject that doesn't exist in the current tab/branch, clear it.
   useEffect(() => {
-    const validSubject = filteredSubjects.find(s => s.key === selectedSubject);
-    if (!validSubject && selectedSubject !== "") {
-      setSelectedSubject("");
+    if (urlSubjectKey && !currentSubject) {
+      setSearchParams(prev => {
+        const newParams = new URLSearchParams(prev);
+        newParams.delete("subject");
+        return newParams;
+      }, { replace: true });
     }
-  }, [filteredSubjects, selectedSubject]);
+  }, [urlSubjectKey, currentSubject, setSearchParams]);
 
-  const currentSubject = filteredSubjects.find(s => s.key === selectedSubject);
-
-  const handleSubjectChange = (val: string) => {
-    setSelectedSubject(val);
+  // 4. Effect: Clean up inputs when the subject changes
+  useEffect(() => {
     setInputValues({});
     setResult(null);
-    
-    // Sync with URL
+  }, [currentSubject?.key]);
+
+  const handleSubjectChange = (val: string) => {
     setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
       if (val) {
-        prev.set("subject", val);
+        newParams.set("subject", val);
       } else {
-        prev.delete("subject");
+        newParams.delete("subject");
       }
-      return prev;
-    }, { replace: true });
+      return newParams;
+    });
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
@@ -68,14 +77,14 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   const calculateGrade = () => {
-    if (!selectedSubject || !currentSubject) return;
+    if (!currentSubject) return;
 
     const numericValues: Record<string, number> = {};
     Object.keys(inputValues).forEach(key => {
       numericValues[key] = parseFloat(inputValues[key]) || 0;
     });
 
-    const score = calculateGradeByLevel(level, selectedSubject, numericValues);
+    const score = calculateGradeByLevel(level, currentSubject.key, numericValues);
     
     setResult({
       score: Math.round(score * 100) / 100,
@@ -94,17 +103,20 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
         {/* 01. Select Course */}
-        <div className="mb-10 w-full max-w-3xl relative">
+        <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
             01. Select Course
           </Label>
           
-          <Select value={selectedSubject} onValueChange={handleSubjectChange}>
+          <Select 
+            value={currentSubject?.key || ""} 
+            onValueChange={handleSubjectChange}
+          >
             <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal relative z-10">
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
             
-            {/* z-[9999] ensures it floats above everything */}
+            {/* z-[9999] ensures dropdown is always on top */}
             <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
               {filteredSubjects.map((subject) => (
                 <SelectItem 
