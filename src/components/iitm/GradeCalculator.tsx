@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ALL_SUBJECTS } from "./data/subjectsData";
 import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/gradeCalculations";
 import { Level } from "./types/gradeTypes";
@@ -13,7 +14,12 @@ interface GradeCalculatorProps {
 }
 
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
-  const [selectedSubject, setSelectedSubject] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize subject from URL if available
+  const initialSubject = searchParams.get("subject") || "";
+  
+  const [selectedSubject, setSelectedSubject] = useState(initialSubject);
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
@@ -29,12 +35,31 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
+  // Validate and sync subject with filtered list
+  useEffect(() => {
+    const validSubject = filteredSubjects.find(s => s.key === selectedSubject);
+    if (!validSubject && selectedSubject !== "") {
+      // If the URL subject doesn't belong to this level/branch, clear it
+      setSelectedSubject("");
+    }
+  }, [filteredSubjects, selectedSubject]);
+
   const currentSubject = filteredSubjects.find(s => s.key === selectedSubject);
 
   const handleSubjectChange = (val: string) => {
     setSelectedSubject(val);
     setInputValues({});
     setResult(null);
+    
+    // Update URL path/query when filter changes
+    setSearchParams(prev => {
+      if (val) {
+        prev.set("subject", val);
+      } else {
+        prev.delete("subject");
+      }
+      return prev;
+    }, { replace: true });
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
