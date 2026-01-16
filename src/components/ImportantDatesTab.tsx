@@ -1,13 +1,13 @@
 import React from "react";
 
 const ImportantDatesTab = () => {
-  // Data extracted from "BS-DS_Jan 2026 Grading document (STUDENT).pdf" (hh.pdf) 
+  // Data derived from Jan 2026 Grading Document (hh.pdf) and standard IITM Schedules
   const importantDates = [
     {
       id: 1,
       title: "Term Start & Week 1 Content Release",
       date: "2026-02-06",
-      description: "Official start of the Jan 2026 Term. Content for Week 1 is released.",
+      description: "Official start of the Jan 2026 Term. Content for Week 1 is released on the portal.",
       type: "Academic",
       is_important: true,
     },
@@ -23,7 +23,7 @@ const ImportantDatesTab = () => {
       id: 3,
       title: "OPPE 1 Eligibility Closes",
       date: "2026-03-08",
-      description: "Deadline to meet eligibility criteria for OPPE 1 (based on Week 1-4 assignments).",
+      description: "Strict deadline to meet eligibility criteria for OPPE 1 (based on Week 1-4 assignments).",
       type: "Deadline",
       is_important: true,
     },
@@ -37,17 +37,17 @@ const ImportantDatesTab = () => {
     },
     {
       id: 5,
-      title: "Qualifier 1-2 Re-attempt Registration Opens",
+      title: "Qualifier Re-attempt (1-2) Registration Opens",
       date: "2026-03-19",
-      description: "Application form opens for students re-attempting the Qualifier Exam (1-2 attempt).",
+      description: "Application opens for students re-attempting the Qualifier Exam (Attempt 1 of 2 for this cycle).",
       type: "Registration",
       is_important: false,
     },
     {
       id: 6,
-      title: "Qualifier 1-2 Re-attempt Registration Closes",
+      title: "Qualifier Re-attempt (1-2) Registration Closes",
       date: "2026-03-20",
-      description: "Deadline to apply for the Qualifier Re-attempt exam. Late applications are usually not accepted.",
+      description: "Deadline to register for the Qualifier Re-attempt (1-2). Late applications not accepted.",
       type: "Deadline",
       is_important: false,
     },
@@ -77,25 +77,25 @@ const ImportantDatesTab = () => {
     },
     {
       id: 10,
-      title: "Quiz 2 & Qualifier Re-attempt (1-2)",
+      title: "Quiz 2 & Qualifier Re-attempt Exam (1-2)",
       date: "2026-04-12",
-      description: "Quiz 2 for current students and Qualifier Re-attempt Exam (1-2) for re-applicants. In-person.",
+      description: "Quiz 2 for current students. Qualifier Re-attempt Exam (1-2) for re-applicants. In-person.",
       type: "Exam",
       is_important: true,
     },
     {
       id: 11,
-      title: "Qualifier 2-2 Re-attempt Registration Opens",
+      title: "Qualifier Re-attempt (2-2) Registration Opens",
       date: "2026-04-16",
-      description: "Application form opens for the second re-attempt (2-2) of the Qualifier Exam.",
+      description: "Application opens for the second re-attempt (2-2) of the Qualifier Exam.",
       type: "Registration",
       is_important: false,
     },
     {
       id: 12,
-      title: "Qualifier 2-2 Re-attempt Registration Closes",
+      title: "Qualifier Re-attempt (2-2) Registration Closes",
       date: "2026-04-17",
-      description: "Strict deadline to register for the final re-attempt opportunity for this cycle.",
+      description: "Strict deadline to register for the final re-attempt opportunity for this term.",
       type: "Deadline",
       is_important: false,
     },
@@ -133,15 +133,15 @@ const ImportantDatesTab = () => {
     },
     {
       id: 17,
-      title: "End Term Exam & Qualifier (2-2)",
+      title: "End Term Exam & Qualifier Re-attempt (2-2)",
       date: "2026-05-10",
-      description: "Final End Term Exam for all levels and Qualifier Re-attempt Exam (2-2). In-person at centers.",
+      description: "Final End Term Exam for all levels. Qualifier Re-attempt Exam (2-2). In-person at centers.",
       type: "Exam",
       is_important: true,
     },
   ];
 
-  // Sort by date (ascending)
+  // Sort by date (ascending) to show upcoming events first
   const sortedDates = importantDates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
@@ -222,4 +222,3 @@ const ImportantDatesTab = () => {
 };
 
 export default ImportantDatesTab;
-
