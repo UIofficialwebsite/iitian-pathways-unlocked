@@ -34,10 +34,10 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
   return (
     <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
       
-      {/* CAPTURE AREA */}
+      {/* CAPTURE AREA - Full Width */}
       <div 
         ref={resultRef} 
-        className="bg-white p-4 sm:p-8 w-full max-w-[850px] border border-gray-200 rounded-lg shadow-sm"
+        className="bg-white p-4 sm:p-8 w-full border border-gray-200 rounded-lg shadow-sm"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         
@@ -119,7 +119,7 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
       </div>
 
       {/* ACTIONS */}
-      <div className="flex justify-between items-center mt-8 px-2 w-full max-w-[850px] font-['Inter']">
+      <div className="flex justify-between items-center mt-8 px-2 w-full font-['Inter']">
         <button onClick={onReset} className="text-[13px] text-gray-500 underline font-medium hover:text-black transition-colors">
           Start Over
         </button>
