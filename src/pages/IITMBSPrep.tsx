@@ -10,7 +10,7 @@ import ImportantDatesTab from "@/components/iitm/ImportantDatesTab";
 import SyllabusTab, { SYLLABUS_DATA, CourseLevel } from "@/components/iitm/SyllabusTab";
 import IITMToolsTab from "@/components/iitm/IITMToolsTab";
 import PaidCoursesTab from "@/components/iitm/PaidCoursesTab";
-import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
+import { buildExamUrl, getTabFromUrl, parseIITMBSUrl, slugify } from "@/utils/urlHelpers";
 import { X, Home, ChevronRight, RotateCcw } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import {
@@ -49,26 +49,29 @@ const IITMBSPrep = () => {
   const [isSticky, setIsSticky] = useState(false);
   const [filterOffset, setFilterOffset] = useState(0);
   
+  // Parse initial URL params
+  const initialUrlState = parseIITMBSUrl(location.pathname);
+  
   // Tab State
-  const [activeTab, setActiveTab] = useState(() => getTabFromUrl(location.pathname));
+  const [activeTab, setActiveTab] = useState(() => initialUrlState.tab);
 
   // --- ISOLATED STATES PER TAB ---
   
   // PYQ Tab State
-  const [pyqBranch, setPyqBranch] = useState("Data Science");
-  const [pyqLevel, setPyqLevel] = useState("Foundation");
+  const [pyqBranch, setPyqBranch] = useState(initialUrlState.branch || "Data Science");
+  const [pyqLevel, setPyqLevel] = useState(initialUrlState.level || "Foundation");
   const [pyqYears, setPyqYears] = useState<string[]>([]);
   const [examTypes, setExamTypes] = useState<string[]>([]);
   const [pyqSubjects, setPyqSubjects] = useState<string[]>([]);
 
   // Notes Tab State
-  const [notesBranch, setNotesBranch] = useState("Data Science");
-  const [notesLevel, setNotesLevel] = useState("Foundation");
+  const [notesBranch, setNotesBranch] = useState(initialUrlState.branch || "Data Science");
+  const [notesLevel, setNotesLevel] = useState(initialUrlState.level || "Foundation");
   const [selectedNotesSubjects, setSelectedNotesSubjects] = useState<string[]>([]);
   const [availableNotesSubjects, setAvailableNotesSubjects] = useState<string[]>([]);
 
   // Courses Tab State
-  const [courseBranch, setCourseBranch] = useState("Data Science");
+  const [courseBranch, setCourseBranch] = useState(initialUrlState.branch || "Data Science");
   const [courseLevel, setCourseLevel] = useState("Foundation");
   const [selectedCourseLevels, setSelectedCourseLevels] = useState<string[]>([]);
   const [selectedCourseSubjects, setSelectedCourseSubjects] = useState<string[]>([]);
@@ -78,14 +81,14 @@ const IITMBSPrep = () => {
   const [bestSellerOnly, setBestSellerOnly] = useState(false);
 
   // Syllabus Tab State
-  const [syllabusLevel, setSyllabusLevel] = useState<CourseLevel>("Qualifier");
-  const [syllabusBranch, setSyllabusBranch] = useState<string>("Data Science");
+  const [syllabusLevel, setSyllabusLevel] = useState<CourseLevel>((initialUrlState.level as CourseLevel) || "Qualifier");
+  const [syllabusBranch, setSyllabusBranch] = useState<string>(initialUrlState.branch || "Data Science");
   const [syllabusSubjectIds, setSyllabusSubjectIds] = useState<string[]>([]);
 
   // Tools State
-  const [toolsBranch, setToolsBranch] = useState("Data Science");
-  const [toolsLevel, setToolsLevel] = useState("Foundation");
-  const [selectedTool, setSelectedTool] = useState("cgpa-calculator");
+  const [toolsBranch, setToolsBranch] = useState(initialUrlState.branch || "Data Science");
+  const [toolsLevel, setToolsLevel] = useState(initialUrlState.level || "Foundation");
+  const [selectedTool, setSelectedTool] = useState(initialUrlState.tool || "cgpa-calculator");
 
   const [sortOrder, setSortOrder] = useState<'recent' | 'oldest'>('recent');
 
@@ -226,42 +229,97 @@ const IITMBSPrep = () => {
   }, [filterOffset]);
 
   useEffect(() => {
-    const tabFromUrl = getTabFromUrl(location.pathname);
-    setActiveTab(tabFromUrl);
+    const urlState = parseIITMBSUrl(location.pathname);
+    setActiveTab(urlState.tab);
+    
+    // Sync state for the current tab from URL
+    if (urlState.tab === 'notes') {
+      if (urlState.branch) setNotesBranch(urlState.branch);
+      if (urlState.level) setNotesLevel(urlState.level);
+    } else if (urlState.tab === 'pyqs') {
+      if (urlState.branch) setPyqBranch(urlState.branch);
+      if (urlState.level) setPyqLevel(urlState.level);
+    } else if (urlState.tab === 'syllabus') {
+      if (urlState.branch) setSyllabusBranch(urlState.branch);
+      if (urlState.level) setSyllabusLevel(urlState.level as CourseLevel);
+    } else if (urlState.tab === 'tools') {
+      if (urlState.branch) setToolsBranch(urlState.branch);
+      if (urlState.level) setToolsLevel(urlState.level);
+      if (urlState.tool) setSelectedTool(urlState.tool);
+    } else if (urlState.tab === 'courses') {
+      if (urlState.branch) setCourseBranch(urlState.branch);
+    }
+    
     setOpenDropdown(null);
   }, [location.pathname]);
 
+  // Helper to build URL with current tab's filters
+  const buildCurrentUrl = (tab: string, params: Record<string, string | undefined>) => {
+    return buildExamUrl('iitm-bs', tab, params);
+  };
+
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
-    navigate(buildExamUrl('iitm-bs', newTab, {}), { replace: true });
+    // Get the appropriate branch/level for the new tab
+    let params: Record<string, string | undefined> = {};
+    
+    if (newTab === 'notes') {
+      params = { branch: notesBranch, level: notesLevel };
+    } else if (newTab === 'pyqs') {
+      params = { branch: pyqBranch, level: pyqLevel };
+    } else if (newTab === 'syllabus') {
+      params = { branch: syllabusBranch, level: syllabusLevel };
+    } else if (newTab === 'tools') {
+      params = { branch: toolsBranch, level: toolsLevel, tool: selectedTool };
+    } else if (newTab === 'courses') {
+      params = { branch: courseBranch };
+    }
+    // news and dates don't have params
+    
+    navigate(buildCurrentUrl(newTab, params), { replace: true });
+  };
+
+  const handleToolSelect = (tool: string) => {
+    setSelectedTool(tool);
+    navigate(buildCurrentUrl('tools', { branch: toolsBranch, level: toolsLevel, tool }), { replace: true });
   };
 
   const applyFilters = (type: string) => {
+    let newBranch = activeBranch;
+    let newLevel = activeLevel;
+    let newTool = selectedTool;
+    
     if (activeTab === 'pyqs') {
-        if (type === 'branch') setPyqBranch(tempBranch);
-        if (type === 'level') setPyqLevel(tempLevel);
+        if (type === 'branch') { setPyqBranch(tempBranch); newBranch = tempBranch; }
+        if (type === 'level') { setPyqLevel(tempLevel); newLevel = tempLevel; }
         if (type === 'year') setPyqYears(tempPyqYears);
         if (type === 'examType') setExamTypes(tempExamTypes);
         if (type === 'pyqSubject') setPyqSubjects(tempPyqSubjects);
+        navigate(buildCurrentUrl('pyqs', { branch: type === 'branch' ? tempBranch : pyqBranch, level: type === 'level' ? tempLevel : pyqLevel }), { replace: true });
     } else if (activeTab === 'notes') {
-        if (type === 'branch') setNotesBranch(tempBranch);
-        if (type === 'level') setNotesLevel(tempLevel);
+        if (type === 'branch') { setNotesBranch(tempBranch); newBranch = tempBranch; }
+        if (type === 'level') { setNotesLevel(tempLevel); newLevel = tempLevel; }
         if (type === 'notesSubject') setSelectedNotesSubjects(tempNotesSubjects);
+        navigate(buildCurrentUrl('notes', { branch: type === 'branch' ? tempBranch : notesBranch, level: type === 'level' ? tempLevel : notesLevel }), { replace: true });
     } else if (activeTab === 'syllabus') {
-        if (type === 'level') handleSyllabusLevelChange(tempLevel as CourseLevel);
+        if (type === 'level') { handleSyllabusLevelChange(tempLevel as CourseLevel); newLevel = tempLevel; }
         if (type === 'branch') {
             setSyllabusBranch(tempBranch);
             setSyllabusSubjectIds([]); 
+            newBranch = tempBranch;
         } 
         if (type === 'subject') setSyllabusSubjectIds(tempSyllabusSubjectIds);
+        navigate(buildCurrentUrl('syllabus', { branch: type === 'branch' ? tempBranch : syllabusBranch, level: type === 'level' ? tempLevel : syllabusLevel }), { replace: true });
     } else if (activeTab === 'courses') {
-        if (type === 'branch') setCourseBranch(tempBranch);
+        if (type === 'branch') { setCourseBranch(tempBranch); newBranch = tempBranch; }
         if (type === 'courseLevel') setSelectedCourseLevels(tempCourseLevels);
         if (type === 'courseSubject') setSelectedCourseSubjects(tempCourseSubjects);
         if (type === 'coursePricing') setCoursePriceRange(tempCoursePrice);
+        navigate(buildCurrentUrl('courses', { branch: type === 'branch' ? tempBranch : courseBranch }), { replace: true });
     } else if (activeTab === 'tools') {
-        if (type === 'branch') setToolsBranch(tempBranch);
-        if (type === 'level') setToolsLevel(tempLevel);
+        if (type === 'branch') { setToolsBranch(tempBranch); newBranch = tempBranch; }
+        if (type === 'level') { setToolsLevel(tempLevel); newLevel = tempLevel; }
+        navigate(buildCurrentUrl('tools', { branch: type === 'branch' ? tempBranch : toolsBranch, level: type === 'level' ? tempLevel : toolsLevel, tool: selectedTool }), { replace: true });
     }
     setOpenDropdown(null);
   };
@@ -480,19 +538,19 @@ const IITMBSPrep = () => {
                     
                     {/* Direct Tool Selection Buttons */}
                      <button 
-                      onClick={() => setSelectedTool('cgpa-calculator')} 
+                      onClick={() => handleToolSelect('cgpa-calculator')} 
                       className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'cgpa-calculator' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                     >
                       CGPA Calculator
                     </button>
                     <button 
-                      onClick={() => setSelectedTool('grade-calculator')} 
+                      onClick={() => handleToolSelect('grade-calculator')} 
                       className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'grade-calculator' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Grade Calculator
                     </button>
                     <button 
-                      onClick={() => setSelectedTool('marks-predictor')} 
+                      onClick={() => handleToolSelect('marks-predictor')} 
                       className={`px-4 py-1.5 border rounded-[30px] text-[12px] transition-all whitespace-nowrap flex items-center gap-2 ${selectedTool === 'marks-predictor' ? 'bg-[#6366f1] text-white border-[#6366f1]' : 'bg-white border-[#e5e7eb] text-[#374151]'}`}
                     >
                       Marks Predictor
