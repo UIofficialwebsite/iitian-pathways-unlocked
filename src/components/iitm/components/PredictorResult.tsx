@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import { Share } from "lucide-react";
+import { Share, CheckCircle, XCircle } from "lucide-react";
 
 interface PredictorResultProps {
   results: Record<string, { required: number | null; possible: boolean; finalGrade: number }>;
@@ -32,47 +32,56 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
   const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
 
   return (
-    <div className="w-full mt-12 font-['Inter'] text-[#000000]">
+    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
       
       {/* CAPTURE AREA */}
-      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full pb-16">
+      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm relative w-full pb-16 font-['Inter']">
         
         {/* SECTION: PREDICTION TABLE */}
         <div className="mb-6 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Required End Term Scores</span>
+          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-4 border-b border-gray-100 pb-2 uppercase tracking-wide font-['Inter']">
+            Required End Term Scores
+          </span>
           
-          <div className="overflow-hidden border border-gray-200 rounded-sm">
-            <table className="w-full text-sm text-left">
+          <div className="overflow-hidden border border-gray-200 rounded-lg">
+            <table className="w-full text-sm text-left font-['Inter']">
               <thead className="bg-gray-50 text-gray-700 font-semibold uppercase text-xs">
                 <tr>
-                  <th className="px-6 py-3 border-b">Target Grade</th>
-                  <th className="px-6 py-3 border-b text-center">Required Exam Score</th>
-                  <th className="px-6 py-3 border-b text-right">Status</th>
+                  <th className="px-6 py-4 border-b border-gray-200 w-1/3">Target Grade</th>
+                  <th className="px-6 py-4 border-b border-gray-200 text-center w-1/3">Required Score</th>
+                  <th className="px-6 py-4 border-b border-gray-200 text-right w-1/3">Status</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-gray-100">
                 {grades.map(grade => {
                   const data = results[grade];
                   const isPossible = data.possible && data.required !== null;
                   
                   return (
-                    <tr key={grade} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-bold text-base">{grade}</td>
+                    <tr key={grade} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-800 font-bold text-base border border-slate-200">
+                          {grade}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-center">
                         {isPossible ? (
-                          <span className="text-lg font-bold text-gray-900">{data.required}<span className="text-xs text-gray-400 font-normal ml-1">/100</span></span>
+                          <div className="flex flex-col items-center">
+                            <span className="text-xl font-bold text-gray-900">{data.required}</span>
+                            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">out of 100</span>
+                          </div>
                         ) : (
-                          <span className="text-gray-400">-</span>
+                          <span className="text-gray-300 font-medium text-lg">-</span>
                         )}
                       </td>
                       <td className="px-6 py-4 text-right">
                         {isPossible ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            Possible
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            <CheckCircle className="w-3.5 h-3.5" /> Possible
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                            Impossible
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
+                            <XCircle className="w-3.5 h-3.5" /> Impossible
                           </span>
                         )}
                       </td>
@@ -85,24 +94,24 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
         </div>
 
         {/* SECTION 2: NOTE */}
-        <div className="mb-2 w-full">
-           <p className="text-xs text-gray-500 italic">
-             * "Impossible" means you cannot achieve this grade even with 100/100 in the final exam based on current internal scores.
+        <div className="mb-2 w-full px-1">
+           <p className="text-xs text-gray-500 italic font-['Inter'] leading-relaxed">
+             <span className="font-semibold text-gray-700">* Impossible</span> indicates that mathematically, the target grade cannot be achieved even with a perfect score (100/100) in the End Term Exam based on current internal marks.
            </p>
         </div>
 
         {/* Watermark */}
-        <div className="absolute bottom-4 right-6 text-[10px] font-sans font-semibold text-black uppercase tracking-widest pointer-events-none opacity-90">
+        <div className="absolute bottom-4 right-6 text-[10px] font-['Inter'] font-semibold text-gray-300 uppercase tracking-widest pointer-events-none">
           IITM Pathways Unlocked
         </div>
       </div>
 
       {/* ACTIONS */}
-      <div className="flex justify-between items-center mt-8 px-2">
-        <button onClick={onReset} className="text-[13px] text-[#999999] underline font-medium hover:text-black transition-colors">
-          Clear everything
+      <div className="flex justify-between items-center mt-8 px-2 font-['Inter']">
+        <button onClick={onReset} className="text-[13px] text-gray-500 underline font-medium hover:text-black transition-colors">
+          Start Over
         </button>
-        <button onClick={handleShareImage} className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-[#333333] transition-colors flex items-center gap-2 rounded-sm">
+        <button onClick={handleShareImage} className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-gray-800 transition-colors flex items-center gap-2 rounded-md shadow-sm">
           <Share className="w-4 h-4" />
           Share Results
         </button>
