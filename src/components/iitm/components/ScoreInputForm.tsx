@@ -7,7 +7,7 @@ import { Subject } from "../types/gradeTypes";
 
 interface ScoreInputFormProps {
   subject: Subject;
-  inputValues: Record<string, string>; // Changed to string to support better input handling
+  inputValues: Record<string, number>;
   onInputChange: (fieldId: string, value: string) => void;
   onCalculate: () => void;
   onReset: () => void;
@@ -32,11 +32,13 @@ export default function ScoreInputForm({
               <Label htmlFor={field.id}>{field.label}</Label>
               <Input
                 id={field.id}
-                type="text"
-                inputMode="decimal"
+                type="number"
+                min={field.min}
+                max={field.max}
                 value={inputValues[field.id] || ""}
                 onChange={(e) => onInputChange(field.id, e.target.value)}
-                placeholder={`Enter ${field.label.toLowerCase()} (Max ${field.max})`}
+                // Updated placeholder format to use <= notation
+                placeholder={`Enter ${field.label.toLowerCase()} (<= ${field.max})`}
               />
             </div>
           ))}
