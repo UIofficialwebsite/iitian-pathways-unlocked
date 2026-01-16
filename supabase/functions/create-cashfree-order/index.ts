@@ -7,28 +7,36 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
+    // 1. Load Environment Variables
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
-    
-    // 1. Capture the environment variable
-    const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
+    const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox"; // Defaults to sandbox if missing
 
-    if (!envSecret) {
-      throw new Error("CRITICAL: CASHFREE_SECRET is missing from Environment Variables!");
+    // Debugging logs (optional, remove in production if preferred)
+    console.log("DEBUG CHECK:");
+    console.log("- CASHFREE_KEY exists?", !!envKey);
+    console.log("- CASHFREE_SECRET exists?", !!envSecret);
+    console.log("- Environment:", cashfreeEnv);
+
+    if (!envSecret || !envKey) {
+      throw new Error("CRITICAL: Cashfree API Keys are missing from Environment Variables!");
     }
 
-    const cashfreeKey = envKey ?? "118228236139ff95e4f553565c32822811";
-    const cashfreeSecret = envSecret; 
-    
+    // 2. Parse Request Body
     const { courseId, amount, userId, customerPhone, customerEmail } = await req.json();
 
+    // 3. Set API URL based on Environment
     const cashfreeApiUrl = cashfreeEnv === "production"
       ? "https://api.cashfree.com/pg/orders"
       : "https://sandbox.cashfree.com/pg/orders";
 
+    // 4. Prepare Order Payload
     const orderId = `order_${Date.now()}_${userId}`;
     const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
     const validEmail = customerEmail || "test@example.com";
@@ -49,12 +57,13 @@ serve(async (req: Request) => {
 
     console.log("Sending to Cashfree:", JSON.stringify(orderPayload));
 
+    // 5. Call Cashfree API
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-client-id": cashfreeKey,
-        "x-client-secret": cashfreeSecret,
+        "x-client-id": envKey,
+        "x-client-secret": envSecret,
         "x-api-version": "2023-08-01",
       },
       body: JSON.stringify(orderPayload),
@@ -68,6 +77,7 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
+    // 6. Save Enrollment to Database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -81,7 +91,8 @@ serve(async (req: Request) => {
       status: "pending",
     });
 
-    // 2. Return 'environment' in the JSON response
+    // 7. Return Response with Environment
+    // CRITICAL: We return 'environment' so the frontend knows which mode to use.
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
