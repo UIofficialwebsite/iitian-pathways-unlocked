@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShareButton } from "@/components/ShareButton";
 import CGPACalculator from "@/components/iitm/CGPACalculator";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
-import MarksPredictor from "@/components/iitm/MarksPredictor"; // Import the unified component
+import MarksPredictor from "@/components/iitm/MarksPredictor"; // Using the new unified component
 import { Level } from "@/components/iitm/types/gradeTypes";
 
 const IITMCalculators = () => {
@@ -158,7 +158,7 @@ const IITMCalculators = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Added Branch Selection for Marks Predictor */}
+                    {/* ADDED Branch Selection for Marks Predictor */}
                     <div className="flex gap-4 mb-6">
                       <button
                         onClick={() => handleBranchChange("data-science")}
