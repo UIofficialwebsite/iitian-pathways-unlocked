@@ -21,15 +21,27 @@ export const buildExamUrl = (
 ): string => {
   const baseUrl = `/exam-preparation/${exam.toLowerCase()}`;
   
-  // Define parameter order for different tabs
-  const paramOrder: Record<string, string[]> = {
-    'notes': ['subject', 'class', 'branch', 'level'],
-    'syllabus': ['subject', 'class', 'branch', 'level'],
-    'pyqs': ['subject', 'class', 'year', 'session', 'branch', 'level']
+  // Define parameter order for different tabs and exams
+  const paramOrder: Record<string, Record<string, string[]>> = {
+    'iitm-bs': {
+      'notes': ['branch', 'level'],
+      'pyqs': ['branch', 'level'],
+      'syllabus': ['branch', 'level'],
+      'tools': ['branch', 'level', 'tool'],
+      'courses': ['branch'],
+      'news': [],
+      'dates': []
+    },
+    'default': {
+      'notes': ['subject', 'class', 'branch', 'level'],
+      'syllabus': ['subject', 'class', 'branch', 'level'],
+      'pyqs': ['subject', 'class', 'year', 'session', 'branch', 'level']
+    }
   };
   
-  // Get the order for this tab, or use all params if not defined
-  const order = paramOrder[tab] || Object.keys(params);
+  // Get the order for this exam and tab
+  const examConfig = paramOrder[exam.toLowerCase()] || paramOrder['default'];
+  const order = examConfig[tab] || Object.keys(params);
   
   // Build params array in the correct order
   const cleanParams = order
@@ -41,6 +53,62 @@ export const buildExamUrl = (
   }
   
   return `${baseUrl}/${slugify(tab)}/${cleanParams.join('/')}`;
+};
+
+export const parseIITMBSUrl = (pathname: string): {
+  tab: string;
+  branch?: string;
+  level?: string;
+  tool?: string;
+} => {
+  const parts = pathname.split('/').filter(Boolean);
+  
+  if (parts.length < 3 || parts[0] !== 'exam-preparation' || parts[1] !== 'iitm-bs') {
+    return { tab: 'notes' };
+  }
+  
+  const tab = parts[2] || 'notes';
+  const urlParams = parts.slice(3);
+  
+  // Map slugs back to display values
+  const branchMap: Record<string, string> = {
+    'data-science': 'Data Science',
+    'electronic-systems': 'Electronic Systems'
+  };
+  
+  const levelMap: Record<string, string> = {
+    'qualifier': 'Qualifier',
+    'foundation': 'Foundation',
+    'diploma': 'Diploma',
+    'degree': 'Degree'
+  };
+  
+  const toolMap: Record<string, string> = {
+    'cgpa-calculator': 'cgpa-calculator',
+    'grade-calculator': 'grade-calculator',
+    'marks-predictor': 'marks-predictor'
+  };
+  
+  let branch: string | undefined;
+  let level: string | undefined;
+  let tool: string | undefined;
+  
+  // Parse params based on tab
+  if (tab === 'tools') {
+    // tools: /branch/level/tool
+    if (urlParams[0]) branch = branchMap[urlParams[0]];
+    if (urlParams[1]) level = levelMap[urlParams[1]];
+    if (urlParams[2]) tool = toolMap[urlParams[2]];
+  } else if (tab === 'courses') {
+    // courses: /branch
+    if (urlParams[0]) branch = branchMap[urlParams[0]];
+  } else {
+    // notes, pyqs, syllabus: /branch/level
+    if (urlParams[0]) branch = branchMap[urlParams[0]];
+    if (urlParams[1]) level = levelMap[urlParams[1]];
+  }
+  
+  return { tab, branch, level, tool };
 };
 
 export const parseExamUrl = (pathname: string) => {
