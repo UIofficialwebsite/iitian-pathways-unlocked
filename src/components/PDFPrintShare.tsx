@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Share2, Loader2, Link, Download } from "lucide-react";
+import { Share2, Loader2, Link } from "lucide-react";
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { toast } from "sonner";
@@ -11,7 +11,7 @@ interface PDFPrintShareProps {
   fileName?: string;
   shareTitle?: string;
   shareText?: string;
-  headerId?: string; // Optional: ID of a header to show ONLY in the PDF
+  headerId?: string; 
   buttonLabel?: string;
   className?: string;
 }
@@ -25,7 +25,7 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
   className,
 }) => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const isMobile = useIsMobile(); // Detect if mobile or desktop
+  const isMobile = useIsMobile(); 
 
   const handleShare = async () => {
     // --- DESKTOP BEHAVIOR: Share Link Only ---
@@ -43,7 +43,6 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
            console.log("Share cancelled or not supported");
         }
       } else {
-        // Fallback for browsers without Web Share API (copy to clipboard)
         try {
           await navigator.clipboard.writeText(url);
           toast.success("Link copied to clipboard!");
@@ -66,7 +65,7 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
       }
       
       const canvas = await html2canvas(element, {
-        scale: 2, // Better resolution
+        scale: 2, 
         useCORS: true,
         logging: false,
         windowWidth: element.scrollWidth,
@@ -75,7 +74,6 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
           if (headerId) {
             const clonedHeader = clonedDoc.getElementById(headerId);
             if (clonedHeader) {
-              // Make the header visible in the PDF (clone) only
               clonedHeader.classList.remove('hidden');
               clonedHeader.classList.add('flex');
             }
@@ -114,11 +112,18 @@ const PDFPrintShare: React.FC<PDFPrintShareProps> = ({
 
       // Share the file
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: shareTitle,
-          text: shareText,
-        });
+        try {
+          await navigator.share({
+            files: [file],
+            title: shareTitle,
+            text: shareText,
+          });
+        } catch (shareError) {
+          // If share fails (e.g. timeout due to long generation time), fallback to download
+          console.warn("Share API failed or timed out, falling back to download:", shareError);
+          pdf.save(fileName);
+          toast.success("PDF downloaded (Share timed out)");
+        }
       } else {
         // Fallback if file sharing isn't supported on this mobile device
         pdf.save(fileName);
