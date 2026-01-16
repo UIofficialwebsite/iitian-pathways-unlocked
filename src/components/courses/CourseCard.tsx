@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Clock, Tag } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
+import EnrollButton from "@/components/EnrollButton"; // Import EnrollButton
 
 interface CourseCardProps {
   course: Course;
@@ -120,8 +121,23 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
       {/* Buttons */}
       <div className="flex gap-[10px]">
-        <button className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[42px] text-[13px] font-normal uppercase" style={{ borderRadius: '8px' }} onClick={() => navigate(`/course/${course.id}`)}>EXPLORE</button>
-        <button className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase" style={{ borderRadius: '8px' }} onClick={() => navigate(`/course/${course.id}`)}>BUY NOW</button>
+        <button 
+          className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[42px] text-[13px] font-normal uppercase" 
+          style={{ borderRadius: '8px' }} 
+          onClick={() => navigate(`/course/${course.id}`)}
+        >
+          EXPLORE
+        </button>
+        
+        {/* Replaced generic Button with EnrollButton */}
+        <EnrollButton
+          courseId={course.id}
+          enrollmentLink={course.enroll_now_link || undefined}
+          coursePrice={course.discounted_price || course.price}
+          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
+        >
+          BUY NOW
+        </EnrollButton>
       </div>
     </div>
   );
