@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -7,20 +7,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShareButton } from "@/components/ShareButton";
 import CGPACalculator from "@/components/iitm/CGPACalculator";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
-import MarksPredictor from "@/components/iitm/MarksPredictor"; // Using the new unified component
+import MarksPredictor from "@/components/iitm/MarksPredictor"; 
 import { Level } from "@/components/iitm/types/gradeTypes";
 
 const IITMCalculators = () => {
   const navigate = useNavigate();
   const { tool, branch, level } = useParams<{ tool?: string; branch?: string; level?: string }>();
   
+  // Normalize params to lowercase to prevent issues with "Foundation" vs "foundation"
+  const safeBranch = (branch?.toLowerCase() === "electronic-systems" || branch?.toLowerCase() === "electronic systems") 
+    ? "electronic-systems" 
+    : "data-science";
+    
+  const safeLevel = (level?.toLowerCase() as Level) || "foundation";
+
   const [activeTab, setActiveTab] = useState(tool || "grade-calculator");
-  const [selectedBranch, setSelectedBranch] = useState<"data-science" | "electronic-systems">(
-    branch === "electronic-systems" ? "electronic-systems" : "data-science"
-  );
-  const [selectedLevel, setSelectedLevel] = useState<Level>(
-    (level as Level) || "foundation"
-  );
+  const [selectedBranch, setSelectedBranch] = useState(safeBranch);
+  const [selectedLevel, setSelectedLevel] = useState<Level>(safeLevel);
+
+  // Sync state if URL changes externally
+  useEffect(() => {
+    setSelectedBranch(safeBranch);
+    setSelectedLevel(safeLevel);
+  }, [branch, level]);
 
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
@@ -158,7 +167,7 @@ const IITMCalculators = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* ADDED Branch Selection for Marks Predictor */}
+                    {/* Branch Selection for Marks Predictor */}
                     <div className="flex gap-4 mb-6">
                       <button
                         onClick={() => handleBranchChange("data-science")}
@@ -216,7 +225,6 @@ const IITMCalculators = () => {
                       </button>
                     </div>
 
-                    {/* Use the unified MarksPredictor component */}
                     <MarksPredictor branch={selectedBranch} level={selectedLevel} />
                   </div>
                 </CardContent>
