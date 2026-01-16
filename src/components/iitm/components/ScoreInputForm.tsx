@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Subject } from "../types/gradeTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Calculator } from "lucide-react";
 
 interface ScoreInputFormProps {
   subject: Subject;
@@ -17,11 +19,6 @@ export default function ScoreInputForm({
   onCalculate
 }: ScoreInputFormProps) {
   
-  // Auto-trigger calculation when inputs change
-  useEffect(() => {
-    onCalculate();
-  }, [inputValues]);
-
   return (
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
@@ -30,7 +27,7 @@ export default function ScoreInputForm({
          </Label>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
         {subject.fields.map((field) => (
           <div key={field.id} className="space-y-3">
             <Label htmlFor={field.id} className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">
@@ -47,6 +44,17 @@ export default function ScoreInputForm({
             />
           </div>
         ))}
+      </div>
+
+      {/* Calculate Button */}
+      <div className="flex justify-start">
+        <Button 
+          onClick={onCalculate}
+          className="h-12 px-8 bg-black text-white hover:bg-gray-800 rounded-sm font-semibold text-base font-sans transition-all flex items-center gap-2"
+        >
+          <Calculator className="w-4 h-4" />
+          Calculate Grade
+        </Button>
       </div>
     </div>
   );
