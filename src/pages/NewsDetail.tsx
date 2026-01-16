@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import NavBar from "@/components/NavBar";
