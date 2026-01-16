@@ -1,11 +1,9 @@
 import React, { useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, Tag, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 const NewsDetail = () => {
   const { newsId } = useParams<{ newsId: string }>();
@@ -19,101 +17,123 @@ const NewsDetail = () => {
 
   if (contentLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center font-['Inter']">
+        <Loader2 className="h-8 w-8 animate-spin text-black" />
       </div>
     );
   }
 
   if (!newsItem) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
-        <h1 className="text-2xl font-bold mb-4 font-['Inter']">News Item Not Found</h1>
-        <Button onClick={() => navigate(-1)} className="bg-black text-white font-['Inter']">Go Back</Button>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center font-['Inter']">
+        <h1 className="text-2xl font-bold mb-4">Announcement Not Found</h1>
+        <button 
+          onClick={() => navigate(-1)}
+          className="bg-black text-white px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em]"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white font-['Inter']">
+    <div className="min-h-screen bg-white font-['Inter'] text-[#1a1a1a]">
       <NavBar />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16">
-        {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
-          className="mb-8 pl-0 hover:bg-transparent hover:text-gray-600 transition-colors"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Announcements
-        </Button>
+      {/* Main Container - Adjusted padding to match design */}
+      <main className="flex justify-center pt-[100px] pb-[60px] px-5">
+        <div className="w-full max-w-[800px]">
+          
+          {/* Breadcrumb Navigation */}
+          <nav className="flex gap-2 mb-6 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#888]">
+            <Link to="/exam-preparation/iitm-bs" className="text-black no-underline hover:underline">
+              Announcements
+            </Link>
+            <span>/</span>
+            <span className="text-[#666]">{newsItem.tag || "General"}</span>
+          </nav>
 
-        {/* Header Section */}
-        <header className="mb-10 border-b border-gray-100 pb-10">
-          <div className="flex flex-wrap gap-2 mb-6">
-            {newsItem.is_important && (
-              <Badge className="bg-[#fef2f2] text-[#991b1b] border border-[#991b1b] rounded-none hover:bg-[#fef2f2] px-3 py-1 text-[11px] uppercase tracking-wider">
-                Important
-              </Badge>
-            )}
-            {newsItem.is_featured && (
-              <Badge className="bg-[#fefce8] text-[#854d0e] border border-[#854d0e] rounded-none hover:bg-[#fefce8] px-3 py-1 text-[11px] uppercase tracking-wider">
-                Featured
-              </Badge>
-            )}
-            {newsItem.tag && (
-              <Badge variant="outline" className="border-gray-900 text-gray-900 rounded-none px-3 py-1 text-[11px] uppercase tracking-wider">
-                {newsItem.tag}
-              </Badge>
-            )}
-          </div>
-
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight mb-6">
+          {/* Article Header */}
+          <h1 className="text-[36px] font-[800] leading-[1.1] text-black mb-[30px] tracking-[-0.02em]">
             {newsItem.title}
+            {newsItem.is_important && (
+              <span className="inline-block align-middle ml-2 text-[10px] font-bold px-2 py-[2px] border border-[#991b1b] bg-[#fee2e2] text-[#991b1b] uppercase">
+                Urgent
+              </span>
+            )}
+            {newsItem.is_featured && !newsItem.is_important && (
+              <span className="inline-block align-middle ml-2 text-[10px] font-bold px-2 py-[2px] border border-[#854d0e] bg-[#fefce8] text-[#854d0e] uppercase">
+                Featured
+              </span>
+            )}
           </h1>
 
-          <div className="flex items-center gap-6 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>
+          {/* Meta Data Strip - Light Teal */}
+          <div className="flex justify-between items-center bg-[#e6f7f7] px-5 py-[15px] border-y border-black mb-10">
+            <div className="flex flex-col">
+              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
+                Publication Date
+              </span>
+              <span className="block text-[13px] font-normal text-black mt-0.5">
                 {new Date(newsItem.date_time || newsItem.created_at).toLocaleDateString("en-US", {
                   year: 'numeric',
-                  month: 'long',
+                  month: 'short',
                   day: 'numeric'
                 })}
               </span>
             </div>
-            {(newsItem.branch || newsItem.level) && (
-              <div className="flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                <span>
-                  {[newsItem.branch, newsItem.level].filter(Boolean).join(" • ")}
-                </span>
-              </div>
+            
+            <div className="flex flex-col text-center">
+              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
+                Document Level
+              </span>
+              <span className="block text-[13px] font-normal text-black mt-0.5">
+                {[newsItem.level, newsItem.branch].filter(Boolean).join(" & ") || "All Levels"}
+              </span>
+            </div>
+
+            <div className="flex flex-col text-right">
+              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
+                Classification
+              </span>
+              <span className="block text-[13px] font-normal text-black mt-0.5">
+                Official Circular
+              </span>
+            </div>
+          </div>
+
+          {/* Article Content */}
+          <article className="text-[16px] leading-[1.75] text-[#334155] mb-10">
+            <div className="whitespace-pre-wrap font-['Inter']">
+              {newsItem.content || newsItem.description}
+            </div>
+          </article>
+
+          <hr className="h-px bg-[#e5e7eb] border-0 my-10" />
+
+          {/* Footer Actions */}
+          <div className="flex justify-between items-center mt-5">
+            <button 
+              onClick={() => window.print()}
+              className="bg-white text-black border border-black px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-gray-50 transition-colors"
+            >
+              Print Circular
+            </button>
+            
+            {newsItem.button_url && newsItem.button_text && (
+              <a 
+                href={newsItem.button_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="bg-black text-white px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-[#333] transition-colors inline-flex items-center gap-1"
+              >
+                {newsItem.button_text} ↗
+              </a>
             )}
           </div>
-        </header>
 
-        {/* Content Section */}
-        <article className="prose prose-slate max-w-none prose-headings:font-['Inter'] prose-p:font-['Inter']">
-          <div className="whitespace-pre-wrap text-lg text-gray-700 leading-8">
-            {newsItem.content || newsItem.description}
-          </div>
-        </article>
-
-        {/* Action Button (if exists) */}
-        {newsItem.button_url && newsItem.button_text && (
-          <div className="mt-12 pt-8 border-t border-gray-100">
-            <a 
-              href={newsItem.button_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-8 py-4 bg-black text-white text-sm font-bold uppercase tracking-wider hover:bg-gray-800 transition-all rounded-sm"
-            >
-              {newsItem.button_text} <ExternalLink className="ml-2 h-4 w-4" />
-            </a>
-          </div>
-        )}
+        </div>
       </main>
 
       <Footer />
