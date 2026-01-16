@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, Clock, Tag } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
-import EnrollButton from "@/components/EnrollButton"; // Import EnrollButton
+import EnrollButton from "@/components/EnrollButton";
 
 interface CourseCardProps {
   course: Course;
@@ -35,7 +35,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const handleWhatsappShare = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const courseUrl = `${window.location.origin}/course/${course.id}`;
+    // FIXED: Updated URL to use plural '/courses/'
+    const courseUrl = `${window.location.origin}/courses/${course.id}`;
     const message = `Check out this course: ${course.title}\n${courseUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
@@ -121,15 +122,16 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
       {/* Buttons */}
       <div className="flex gap-[10px]">
+        {/* FIXED: Updated path to plural '/courses/' */}
         <button 
           className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[42px] text-[13px] font-normal uppercase" 
           style={{ borderRadius: '8px' }} 
-          onClick={() => navigate(`/course/${course.id}`)}
+          onClick={() => navigate(`/courses/${course.id}`)}
         >
           EXPLORE
         </button>
         
-        {/* Replaced generic Button with EnrollButton */}
+        {/* EnrollButton (Already correct, but ensuring it's included) */}
         <EnrollButton
           courseId={course.id}
           enrollmentLink={course.enroll_now_link || undefined}
