@@ -30,12 +30,10 @@ interface BatchScheduleItem {
   subject_name: string;
   file_link: string;
 }
-
 interface CourseFaq {
   question: string;
   answer: string;
 }
-
 interface CourseDetailProps {
   customCourseId?: string; 
   isDashboardView?: boolean;
@@ -47,7 +45,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
-  const [subCourses, setSubCourses] = useState<Course[]>([]);
+  const [subCourses, setSubCourses] = useState<Course[]>([]); // State for sub-courses
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -55,7 +53,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
-    subCourses: useRef<HTMLDivElement>(null),
+    subCourses: useRef<HTMLDivElement>(null), // Ref for new section
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
@@ -76,12 +74,12 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
         setLoading(true);
         setError(null);
         
-        // Fetch Course, Schedule, FAQs, and Sub-Courses (Children) in parallel
-        const [courseResult, scheduleResult, faqResult, subCoursesResult] = await Promise.all([
+        // Fetch Main Course, Sub Courses, Schedule, and FAQs in parallel
+        const [courseResult, subCoursesResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
+          supabase.from('courses').select('*').eq('parent_course_id', courseId).order('created_at', { ascending: true }),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
           supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
-          supabase.from('courses').select('*').eq('parent_course_id', courseId).order('created_at', { ascending: true })
         ]);
 
         if (courseResult.error) throw new Error(courseResult.error.message);
@@ -90,12 +88,15 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           setError(`Course with ID ${courseId} not found.`);
         } else {
           setCourse(courseResult.data as any);
+          
+          // Handle Sub Courses
+          if (subCoursesResult.data) {
+            setSubCourses(subCoursesResult.data as any);
+          }
+
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
           if (faqResult.data && faqResult.data.length > 0) {
             setFaqs(faqResult.data as any);
-          }
-          if (subCoursesResult.data) {
-            setSubCourses(subCoursesResult.data as any);
           }
         }
       } catch (err: any) {
@@ -162,7 +163,6 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       {!isDashboardView && <NavBar />}
       
       <main className="w-full">
-        {/* Header: Max-width increased to prevent card clipping */}
         <div className="border-b border-slate-200 bg-white shadow-sm">
           <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
             <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
@@ -194,38 +194,49 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           isDashboardView={isDashboardView} 
         />
 
-        {/* Main Content Area: Width increased to 1440px */}
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          {/* Grid Split updated to 7/12 (Details) and 5/12 (Card) for more room */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
             
-            {/* Left Column: Course Details */}
+            {/* Left Column */}
             <div className="lg:col-span-7 space-y-8">
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
               </div>
 
-              {/* --- NEW SUB-COURSES SECTION --- */}
+              {/* --- SUB COURSES SECTION --- */}
               {subCourses.length > 0 && (
                 <div ref={sectionRefs.subCourses} className={scrollMarginClass}>
                   <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
-                     <h2 className="text-2xl font-bold mb-6 text-slate-900 flex items-center gap-2">
-                        <PlayCircle className="h-6 w-6 text-royal" /> Included Courses & Modules
-                     </h2>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="flex items-center gap-3 mb-6">
+                        <div className="p-2 bg-blue-50 rounded-lg">
+                           <PlayCircle className="h-6 w-6 text-royal" />
+                        </div>
+                        <h2 className="text-2xl font-bold text-slate-900">Included Courses & Modules</h2>
+                     </div>
+                     
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {subCourses.map((sub) => (
-                           <Card key={sub.id} className="hover:shadow-md transition-shadow cursor-pointer group border-slate-200" onClick={() => navigate(`/courses/${sub.id}`)}>
-                              <CardContent className="p-4">
-                                 <div className="flex justify-between items-start mb-2">
-                                    <Badge variant="outline" className="text-xs">{sub.subject || 'Module'}</Badge>
-                                    <Badge variant={sub.price > 0 ? "secondary" : "default"} className={sub.price > 0 ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-100 text-green-700 hover:bg-green-200"}>
+                           <Card key={sub.id} className="hover:shadow-lg transition-all duration-300 border-slate-200 bg-white group cursor-pointer" onClick={() => navigate(`/courses/${sub.id}`)}>
+                              <CardContent className="p-5 flex flex-col h-full">
+                                 <div className="flex justify-between items-start mb-3">
+                                    <Badge variant="outline" className="text-xs font-medium text-slate-500 border-slate-300">
+                                       {sub.subject || 'Module'}
+                                    </Badge>
+                                    <Badge className={cn(
+                                       "font-bold px-2 py-0.5",
+                                       sub.price > 0 ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-100 text-green-700 hover:bg-green-200"
+                                    )}>
                                        {sub.price > 0 ? `₹${sub.price}` : "FREE"}
                                     </Badge>
                                  </div>
-                                 <h3 className="font-semibold text-lg leading-tight mb-2 group-hover:text-royal transition-colors">{sub.title}</h3>
-                                 <p className="text-sm text-slate-500 line-clamp-2 mb-3">{sub.description}</p>
-                                 <div className="flex items-center text-xs text-royal font-medium group-hover:underline">
-                                    View Details <ArrowRight className="w-3 h-3 ml-1" />
+                                 <h3 className="font-bold text-lg text-slate-900 leading-tight mb-2 group-hover:text-royal transition-colors">
+                                    {sub.title}
+                                 </h3>
+                                 <p className="text-sm text-slate-500 line-clamp-2 mb-4 flex-grow">
+                                    {sub.description}
+                                 </p>
+                                 <div className="flex items-center text-sm font-semibold text-royal mt-auto group-hover:underline">
+                                    View Content <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover:translate-x-1" />
                                  </div>
                               </CardContent>
                            </Card>
@@ -260,9 +271,8 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               </div>
             </div>
 
-            {/* Right Column: Enrollment Card (STAYS FIXED ON SCROLL) */}
+            {/* Right Column: Enrollment Card */}
             <aside className="lg:col-span-5 relative">
-              {/* This wrapper ensures the card stays fixed below the sticky navigation */}
               <div className={cn(
                 "sticky z-20 transition-all duration-300",
                 isDashboardView ? "top-32" : "top-32" 
