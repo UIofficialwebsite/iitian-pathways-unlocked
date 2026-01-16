@@ -10,23 +10,15 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // --- DEBUGGING BLOCK ---
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     
-    console.log("DEBUG CHECK:");
-    console.log("- CASHFREE_KEY exists?", !!envKey);
-    console.log("- CASHFREE_SECRET exists?", !!envSecret);
-    
-    if (!envSecret) {
-      throw new Error("CRITICAL: CASHFREE_SECRET is missing from Environment Variables!");
-    }
-    // -----------------------
-
-    // Use Env Key or Fallback to the one you provided
-    const cashfreeKey = envKey ?? "118228236139ff95e4f553565c32822811";
-    const cashfreeSecret = envSecret; 
+    // Default to sandbox if not set
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
+
+    if (!envSecret || !envKey) {
+      throw new Error("CRITICAL: Cashfree API Keys are missing from Environment Variables!");
+    }
 
     const { courseId, amount, userId, customerPhone, customerEmail } = await req.json();
 
@@ -35,8 +27,6 @@ serve(async (req: Request) => {
       : "https://sandbox.cashfree.com/pg/orders";
 
     const orderId = `order_${Date.now()}_${userId}`;
-
-    // 1. Fallback for Phone/Email if missing (Required for Cashfree)
     const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
     const validEmail = customerEmail || "test@example.com";
 
@@ -60,8 +50,8 @@ serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-client-id": cashfreeKey,
-        "x-client-secret": cashfreeSecret,
+        "x-client-id": envKey,
+        "x-client-secret": envSecret,
         "x-api-version": "2023-08-01",
       },
       body: JSON.stringify(orderPayload),
@@ -89,7 +79,8 @@ serve(async (req: Request) => {
       status: "pending",
     });
 
-    return new Response(JSON.stringify(orderData), {
+    // --- KEY CHANGE: Return the environment mode along with order data ---
+    return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
