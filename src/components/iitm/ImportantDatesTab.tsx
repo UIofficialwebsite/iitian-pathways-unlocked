@@ -29,7 +29,7 @@ const ImportantDatesTab = () => {
     },
     {
       id: 4,
-      title: "Quiz 1 (Jan 2026 Term)",
+      title: "Quiz 1/Qualifier (Jan 2026 Term)",
       date: "2026-03-15",
       description: "In-person quiz at designated centers. Syllabus: Weeks 1-4. Time: 2:00 PM - 6:00 PM.",
       type: "Exam",
