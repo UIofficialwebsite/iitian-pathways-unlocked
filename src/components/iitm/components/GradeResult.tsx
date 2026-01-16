@@ -3,7 +3,7 @@ import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
 import { getGradeFormula } from "../utils/gradeCalculations";
 import { ALL_SUBJECTS } from "../data/subjectsData";
-import { Subject } from "../../types/gradeTypes";
+import { Subject } from '../types/gradeTypes';
 
 interface GradeResultProps {
   result: {

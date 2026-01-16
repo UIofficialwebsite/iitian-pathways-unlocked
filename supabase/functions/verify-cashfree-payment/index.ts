@@ -1,10 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Use provided Client ID fallback
-const cashfreeKey = Deno.env.get("CASHFREE_KEY") ?? "118228236139ff95e4f553565c32822811";
-const cashfreeSecret = Deno.env.get("CASHFREE_SECRET"); // Ensure this is set in secrets
+const cashfreeKey = Deno.env.get("CASHFREE_KEY");
+const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
 const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
+
+// Frontend URL to redirect after payment verification
+const frontendUrl = "https://id-preview--dca5d5ef-a639-4298-9504-2bbd9c207634.lovable.app";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,7 +15,7 @@ const corsHeaders = {
 
 serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -21,14 +23,21 @@ serve(async (req: Request) => {
     const orderId = url.searchParams.get("order_id");
 
     if (!orderId) {
-      throw new Error("Order ID not found in the return URL.");
+      console.error("Order ID not found in the return URL.");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=missing_order_id` },
+      });
     }
 
     console.log(`Verifying payment for order: ${orderId}`);
 
     if (!cashfreeKey || !cashfreeSecret) {
       console.error("Cashfree API Key or Secret is not configured.");
-      throw new Error("Payment provider credentials are not configured.");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=config_error` },
+      });
     }
 
     const cashfreeApiUrl = cashfreeEnv === "production"
@@ -48,7 +57,10 @@ serve(async (req: Request) => {
       const errorBody = await verifyResponse.text();
       console.error("Cashfree verification failed with status:", verifyResponse.status);
       console.error("Cashfree Verification Error Body:", errorBody);
-      throw new Error("Failed to verify payment with Cashfree.");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=verification_failed` },
+      });
     }
 
     const paymentData = await verifyResponse.json();
@@ -71,22 +83,30 @@ serve(async (req: Request) => {
 
     if (updateError) {
       console.error("Database update error:", updateError);
-      throw new Error("Failed to update enrollment status in the database.");
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=db_error` },
+      });
     }
 
     console.log(`Successfully updated order ${orderId} to status: ${finalStatus}`);
 
-    return new Response(JSON.stringify({ status: finalStatus }), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Redirect to dashboard with success or failure status
+    const redirectUrl = finalStatus === "completed"
+      ? `${frontendUrl}/dashboard?payment=success`
+      : `${frontendUrl}/dashboard?payment=failed`;
+
+    return new Response(null, {
+      status: 302,
+      headers: { Location: redirectUrl },
     });
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     console.error("Error in verify-cashfree-payment function:", errorMessage);
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return new Response(null, {
+      status: 302,
+      headers: { Location: `${frontendUrl}/dashboard?payment=error&message=unknown_error` },
     });
   }
 });
