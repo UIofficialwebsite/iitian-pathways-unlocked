@@ -13,13 +13,16 @@ serve(async (req: Request) => {
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     
-    // Default to sandbox if not set
+    // 1. Capture the environment variable
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
 
-    if (!envSecret || !envKey) {
-      throw new Error("CRITICAL: Cashfree API Keys are missing from Environment Variables!");
+    if (!envSecret) {
+      throw new Error("CRITICAL: CASHFREE_SECRET is missing from Environment Variables!");
     }
 
+    const cashfreeKey = envKey ?? "118228236139ff95e4f553565c32822811";
+    const cashfreeSecret = envSecret; 
+    
     const { courseId, amount, userId, customerPhone, customerEmail } = await req.json();
 
     const cashfreeApiUrl = cashfreeEnv === "production"
@@ -50,8 +53,8 @@ serve(async (req: Request) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-client-id": envKey,
-        "x-client-secret": envSecret,
+        "x-client-id": cashfreeKey,
+        "x-client-secret": cashfreeSecret,
         "x-api-version": "2023-08-01",
       },
       body: JSON.stringify(orderPayload),
@@ -65,7 +68,6 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // Database Insert
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -79,7 +81,7 @@ serve(async (req: Request) => {
       status: "pending",
     });
 
-    // --- KEY CHANGE: Return the environment mode along with order data ---
+    // 2. Return 'environment' in the JSON response
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
