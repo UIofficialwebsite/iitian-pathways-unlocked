@@ -35,7 +35,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
-  // Validate URL subject matches current level/branch
+  // Validate URL subject against current filter
   useEffect(() => {
     const validSubject = filteredSubjects.find(s => s.key === selectedSubject);
     if (!validSubject && selectedSubject !== "") {
@@ -104,10 +104,15 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
             
-            {/* FIX: z-[9999] forces the dropdown to stay on top of all other layers */}
+            {/* z-[9999] ensures it floats above everything */}
             <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
               {filteredSubjects.map((subject) => (
-                <SelectItem key={subject.key} value={subject.key} className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100">
+                <SelectItem 
+                  key={subject.key} 
+                  value={subject.key} 
+                  /* Added border-b and border-gray-100 for separator lines */
+                  className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0"
+                >
                   {subject.name}
                 </SelectItem>
               ))}
