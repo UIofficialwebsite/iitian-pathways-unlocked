@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// --- IMPORTANT: ENSURE THESE SECRETS MATCH THE create-cashfree-order FUNCTION ---
-const cashfreeKey = Deno.env.get("CASHFREE_KEY");
-const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
+// Use provided Client ID fallback
+const cashfreeKey = Deno.env.get("CASHFREE_KEY") ?? "118228236139ff95e4f553565c32822811";
+const cashfreeSecret = Deno.env.get("CASHFREE_SECRET"); // Ensure this is set in secrets
 const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
 
 const corsHeaders = {
@@ -17,7 +17,6 @@ serve(async (req: Request) => {
   }
 
   try {
-    // 1. Get the order_id from the URL query parameter
     const url = new URL(req.url);
     const orderId = url.searchParams.get("order_id");
 
@@ -27,13 +26,11 @@ serve(async (req: Request) => {
 
     console.log(`Verifying payment for order: ${orderId}`);
 
-    // 2. Check for valid credentials
     if (!cashfreeKey || !cashfreeSecret) {
       console.error("Cashfree API Key or Secret is not configured.");
       throw new Error("Payment provider credentials are not configured.");
     }
 
-    // 3. Determine API endpoint and make the verification call
     const cashfreeApiUrl = cashfreeEnv === "production"
       ? "https://api.cashfree.com/pg/orders"
       : "https://sandbox.cashfree.com/pg/orders";
@@ -57,11 +54,8 @@ serve(async (req: Request) => {
     const paymentData = await verifyResponse.json();
     console.log("Cashfree Payment Data:", JSON.stringify(paymentData, null, 2));
 
-
-    // 4. Determine the final status of the payment
     const finalStatus = paymentData.order_status === "PAID" ? "completed" : "failed";
 
-    // 5. Update the order status in your database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
@@ -71,7 +65,7 @@ serve(async (req: Request) => {
       .from("enrollments")
       .update({
         status: finalStatus,
-        payment_id: paymentData.cf_order_id, // Store the Cashfree transaction ID
+        payment_id: paymentData.cf_order_id,
       })
       .eq("order_id", orderId);
 
@@ -82,9 +76,6 @@ serve(async (req: Request) => {
 
     console.log(`Successfully updated order ${orderId} to status: ${finalStatus}`);
 
-    // 6. Respond with the final status
-    // In a real app, you would likely redirect the user to a success or failure page.
-    // For an API, returning the status is appropriate.
     return new Response(JSON.stringify({ status: finalStatus }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
