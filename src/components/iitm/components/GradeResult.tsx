@@ -95,7 +95,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         
         {/* Branding Watermark - Sans Serif, SemiBold */}
         <div className="absolute top-4 right-6 text-[10px] font-sans font-semibold text-gray-300 uppercase tracking-widest pointer-events-none">
-          IITM Pathways Unlocked
+          predicted by Unknown IITians
         </div>
 
         {/* SECTION 1: OVERVIEW */}
