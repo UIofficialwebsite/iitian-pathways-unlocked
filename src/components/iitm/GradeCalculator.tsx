@@ -9,27 +9,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 
 interface GradeCalculatorProps {
-  level: Level;
-  branch: "data-science" | "electronic-systems";
+  level: string; // Changed to string to safely accept "Foundation" etc.
+  branch: "data-science" | "electronic-systems" | string;
 }
 
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
   
-  // Local state for calculation results
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
   const filteredSubjects = useMemo(() => {
+    // FIX: Normalize inputs to lowercase to ensure they match data keys
+    const safeLevel = level?.toLowerCase() || "foundation";
+    const safeBranch = branch?.toLowerCase().replace(" ", "-") || "data-science";
+
     const getSubjectsKey = () => {
-      if (branch === "electronic-systems") {
-        if (level === "foundation") return "foundation-electronic-systems";
-        if (level === "diploma") return "diploma-electronic-systems";
-        if (level === "degree") return "degree-electronic-systems";
+      if (safeBranch === "electronic-systems") {
+        if (safeLevel === "foundation") return "foundation-electronic-systems";
+        if (safeLevel === "diploma") return "diploma-electronic-systems";
+        if (safeLevel === "degree") return "degree-electronic-systems";
       }
-      return level;
+      return safeLevel;
     };
+    
+    // Debugging log if needed
+    // console.log("Looking for subjects with key:", getSubjectsKey());
+    
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
@@ -80,7 +87,9 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
       numericValues[key] = parseFloat(inputValues[key]) || 0;
     });
 
-    const score = calculateGradeByLevel(level, currentSubject.key, numericValues);
+    // Pass safe level to calculation function
+    const safeLevel = (level?.toLowerCase() || "foundation") as Level;
+    const score = calculateGradeByLevel(safeLevel, currentSubject.key, numericValues);
     
     setResult({
       score: Math.round(score * 100) / 100,
@@ -112,15 +121,21 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
             </SelectTrigger>
             
             <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
-              {filteredSubjects.map((subject) => (
-                <SelectItem 
-                  key={subject.key} 
-                  value={subject.key} 
-                  className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0"
-                >
-                  {subject.name}
-                </SelectItem>
-              ))}
+              {filteredSubjects.length > 0 ? (
+                filteredSubjects.map((subject) => (
+                  <SelectItem 
+                    key={subject.key} 
+                    value={subject.key} 
+                    className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0"
+                  >
+                    {subject.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-4 text-sm text-gray-500 text-center font-sans">
+                  No subjects found for {level} ({branch})
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
