@@ -3,7 +3,6 @@ import { Subject } from "../types/gradeTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calculator } from "lucide-react";
 
 interface ScoreInputFormProps {
   subject: Subject;
@@ -15,7 +14,7 @@ interface ScoreInputFormProps {
 export default function ScoreInputForm({ 
   subject, 
   inputValues, 
-  onInputChange,
+  onInputChange, 
   onCalculate
 }: ScoreInputFormProps) {
   
@@ -46,13 +45,12 @@ export default function ScoreInputForm({
         ))}
       </div>
 
-      {/* Calculate Button */}
+      {/* Calculate Button - Blue, No Icon */}
       <div className="flex justify-start">
         <Button 
           onClick={onCalculate}
-          className="h-12 px-8 bg-black text-white hover:bg-gray-800 rounded-sm font-semibold text-base font-sans transition-all flex items-center gap-2"
+          className="h-12 px-8 bg-blue-600 text-white hover:bg-blue-700 rounded-sm font-semibold text-base font-sans transition-all shadow-sm"
         >
-          <Calculator className="w-4 h-4" />
           Calculate Grade
         </Button>
       </div>
