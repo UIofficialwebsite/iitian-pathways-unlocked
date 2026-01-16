@@ -3,16 +3,145 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+// Injecting the user's specific CSS styles
+const customStyles = `
+  /* Modal Container Overrides */
+  .custom-modal-wrapper {
+    font-family: 'Inter', sans-serif !important;
+    background: #ffffff;
+    width: 100%;
+    max-width: 440px;
+    border: 1px solid #000000;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    margin: 0 auto;
+  }
+
+  /* THREE DOTS HORIZONTAL LOADING ANIMATION */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background-color: #000000;
+    border-radius: 50%;
+    animation: dot-pulse 1.4s infinite ease-in-out both;
+  }
+
+  .dot:nth-child(1) { animation-delay: -0.32s; }
+  .dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Modal Content */
+  .modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+    text-align: left;
+  }
+
+  .modal-description {
+    font-size: 14px;
+    color: #555555;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  /* Form Styling */
+  .form-group {
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #000000;
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    border: 1px solid #000000;
+    outline: none;
+    color: #000000;
+    background: white;
+  }
+
+  .form-input::placeholder {
+    color: #aaaaaa;
+  }
+
+  /* Modal Footer Buttons */
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: 1px solid #000000;
+    transition: all 0.2s;
+    border-radius: 0;
+  }
+
+  .btn-secondary {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .btn-secondary:hover {
+    background: #f5f5f5;
+  }
+
+  .btn-primary {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background: #222222;
+  }
+
+  .close-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+`;
 
 interface EnrollButtonProps {
   courseId?: string;
@@ -52,7 +181,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   }, []);
 
   const handleEnrollClick = async () => {
-    // 1. Check Auth
     if (isAuthenticated === false) {
       localStorage.setItem('authRedirectUrl', window.location.pathname);
       window.location.href = '/auth';
@@ -64,151 +192,141 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       return;
     }
 
-    if (!courseId) {
-      toast({
-        title: "Error",
-        description: "Course information is missing",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsProcessing(true);
-
+    // Check if user already has a phone number in their profile
     try {
+      setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("User not authenticated");
+      if (!user) {
+        window.location.href = '/auth';
+        return;
+      }
 
-      // 2. Check if we have a phone number in 'profiles' table or 'auth'
-      // We check the profiles table specifically as requested
-      const { data: profile } = await supabase
+      // Fetch profile to see if phone exists
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('phone')
         .eq('id', user.id)
         .single();
 
-      const existingPhone = profile?.phone || user.phone;
-
-      if (existingPhone) {
-        // If number exists, proceed directly
-        await processPayment(existingPhone, user.id, user.email);
+      if (profile?.phone) {
+        // Phone exists, proceed directly
+        processPayment(profile.phone);
       } else {
-        // If not, show dialog to ask for it
-        setIsProcessing(false); // Pause processing to show dialog
+        // Phone missing, show custom modal
+        setIsProcessing(false);
         setShowPhoneDialog(true);
       }
-    } catch (error: any) {
-      console.error("Pre-check error:", error);
+    } catch (error) {
+      console.error("Error checking profile:", error);
       setIsProcessing(false);
-      toast({
-        title: "Error",
-        description: "Could not verify user details. Please try again.",
-        variant: "destructive",
-      });
+      // Fallback: show dialog just in case
+      setShowPhoneDialog(true);
     }
   };
 
-  const processPayment = async (phoneNumber: string, userId: string, userEmail?: string) => {
-    // Ensure processing state is true (in case called from dialog)
+  const handlePhoneSubmit = async () => {
+    if (manualPhone.length < 10) {
+      toast({ 
+        title: "Invalid Phone", 
+        description: "Please enter a valid 10-digit number", 
+        variant: "destructive" 
+      });
+      return;
+    }
+
     setIsProcessing(true);
     
     try {
-        console.log("Processing payment with phone:", phoneNumber);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        // CRITICAL: Save phone number to profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ phone: manualPhone })
+          .eq('id', user.id);
 
-        // 3. Invoke Edge Function
-        const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
-            body: {
-            courseId,
-            amount: coursePrice,
-            userId: userId,
-            customerEmail: userEmail, 
-            customerPhone: phoneNumber, 
-            },
-        });
-
-        if (error) {
-            let errorMessage = "Payment initialization failed";
-            try {
-                const body = JSON.parse(error.message);
-                errorMessage = body.error || errorMessage;
-            } catch (e) { /* ignore parse error */ }
-            throw new Error(errorMessage);
+        if (updateError) {
+          console.error("Failed to update profile phone:", updateError);
+          // We don't block payment if update fails, but we log it.
+          // Optionally show a toast warning.
         }
-
-        if (!data || !data.payment_session_id) {
-            throw new Error("Invalid response from payment server");
-        }
-
-        // 4. Initialize Cashfree SDK
-        const script = document.createElement('script');
-        script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-        script.onload = () => {
-            const cashfreeMode = data.environment || 'sandbox'; 
-            const cashfree = (window as any).Cashfree({ mode: cashfreeMode });
-            cashfree.checkout({
-            paymentSessionId: data.payment_session_id, 
-            returnUrl: `${window.location.origin}/dashboard`,
-            });
-        };
-        document.body.appendChild(script);
-        
-    } catch (error: any) {
-        console.error("Enrollment error:", error);
-        toast({
-            title: "Enrollment Failed",
-            description: error.message,
-            variant: "destructive",
-        });
-        setIsProcessing(false);
+      }
+      
+      setShowPhoneDialog(false);
+      await processPayment(manualPhone);
+    } catch (error) {
+      setIsProcessing(false);
+      console.error(error);
     }
   };
 
-  const handleManualPhoneSubmit = async () => {
-    if (manualPhone.length < 10) {
-        toast({ title: "Invalid Phone", description: "Please enter a valid 10-digit number", variant: "destructive" });
-        return;
-    }
-
+  const processPayment = async (phoneNumber: string) => {
     setIsProcessing(true);
-    setShowPhoneDialog(false);
-
     try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error("User session expired");
+      if (!courseId) throw new Error("Course information is missing");
 
-        // CRITICAL: Save the number to the profile table as requested
-        const { error: updateError } = await supabase
-            .from('profiles')
-            .update({ phone: manualPhone })
-            .eq('id', user.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("User not authenticated");
 
-        if (updateError) {
-            console.error("Error saving phone to profile:", updateError);
-            // We continue anyway so the user can still buy the course, 
-            // but you could verify this if strictness is required.
-        }
+      console.log("Creating order for user:", user.email);
 
-        // Proceed with payment using the manual number
-        await processPayment(manualPhone, user.id, user.email);
+      const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
+        body: {
+          courseId,
+          amount: coursePrice,
+          userId: user.id,
+          customerEmail: user.email, 
+          customerPhone: phoneNumber, 
+        },
+      });
+
+      if (error) {
+        let errorMessage = "Payment initialization failed";
+        try {
+           const body = JSON.parse(error.message);
+           errorMessage = body.error || errorMessage;
+        } catch (e) { /* ignore parse error */ }
+        throw new Error(errorMessage);
+      }
+
+      if (!data || !data.payment_session_id) {
+        throw new Error("Invalid response from payment server");
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+      script.onload = () => {
+        const cashfreeMode = data.environment || 'sandbox'; 
+        const cashfree = (window as any).Cashfree({ mode: cashfreeMode });
+        cashfree.checkout({
+          paymentSessionId: data.payment_session_id, 
+          returnUrl: `${window.location.origin}/dashboard`,
+        });
+      };
+      document.body.appendChild(script);
 
     } catch (error: any) {
-        toast({
-            title: "Error",
-            description: error.message || "Failed to update profile",
-            variant: "destructive"
-        });
-        setIsProcessing(false);
+      console.error("Enrollment error:", error);
+      toast({
+        title: "Enrollment Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      setIsProcessing(false);
     }
   };
 
   return (
     <>
+      {/* Inject Styles */}
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+
       <Button 
         onClick={handleEnrollClick}
         className={className}
         disabled={isProcessing}
       >
-        {isProcessing ? (
+        {isProcessing && !showPhoneDialog ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             Processing...
@@ -218,33 +336,57 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         )}
       </Button>
 
-      {/* Dialog to ask for Phone Number if missing */}
+      {/* Custom Dialog Implementation */}
       <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Contact Details Required</DialogTitle>
-            <DialogDescription>
-              We need your phone number to generate the payment receipt and secure your enrollment.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="phone" className="">Phone Number</Label>
-              <Input
-                id="phone"
+        {/* We use a transparent, borderless DialogContent to let the user's CSS take full control */}
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
+          
+          <div className="custom-modal-wrapper">
+            <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>
+              &times;
+            </button>
+
+            {/* Horizontal Loading Dots */}
+            <div className="loading-container">
+              <div className="dot"></div>
+              <div className="dot"></div>
+              <div className="dot"></div>
+            </div>
+
+            <h2 className="modal-title">Contact Details Required</h2>
+            
+            <p className="modal-description">
+              Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+            </p>
+
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input 
+                type="tel" 
+                className="form-input" 
                 placeholder="e.g., 9876543210"
                 value={manualPhone}
                 onChange={(e) => setManualPhone(e.target.value)}
-                type="tel"
               />
             </div>
+
+            <div className="modal-actions">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowPhoneDialog(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="btn btn-primary"
+                onClick={handlePhoneSubmit}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Saving..." : "Continue to Enroll"}
+              </button>
+            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPhoneDialog(false)}>Cancel</Button>
-            <Button onClick={handleManualPhoneSubmit}>
-              Continue to Payment
-            </Button>
-          </DialogFooter>
+
         </DialogContent>
       </Dialog>
     </>
