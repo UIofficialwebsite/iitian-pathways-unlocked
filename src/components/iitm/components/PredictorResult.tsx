@@ -3,17 +3,11 @@ import html2canvas from "html2canvas";
 import { Share } from "lucide-react";
 
 interface PredictorResultProps {
-  result: {
-    required: number | null;
-    possible: boolean;
-    finalGrade: number;
-  };
-  targetGrade: string;
-  subjectKey: string;
+  results: Record<string, { required: number | null; possible: boolean; finalGrade: number }>;
   onReset: () => void;
 }
 
-export default function PredictorResult({ result, targetGrade, subjectKey, onReset }: PredictorResultProps) {
+export default function PredictorResult({ results, onReset }: PredictorResultProps) {
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleShareImage = async () => {
@@ -25,7 +19,7 @@ export default function PredictorResult({ result, targetGrade, subjectKey, onRes
       const file = new File([imageBlob], "grade-prediction.png", { type: "image/png" });
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Grade Prediction", text: `I need ${result.required} marks to get Grade ${targetGrade}!` });
+        await navigator.share({ files: [file], title: "Grade Prediction", text: `Here are my required marks for each grade!` });
       } else {
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
@@ -35,8 +29,7 @@ export default function PredictorResult({ result, targetGrade, subjectKey, onRes
     } catch (err) { console.error(err); alert("Share failed."); }
   };
 
-  const isPossible = result.possible && result.required !== null;
-  const gradeColor = isPossible ? '#16a34a' : '#d32f2f'; // Green or Red
+  const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
 
   return (
     <div className="w-full mt-12 font-['Inter'] text-[#000000]">
@@ -44,57 +37,58 @@ export default function PredictorResult({ result, targetGrade, subjectKey, onRes
       {/* CAPTURE AREA */}
       <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full pb-16">
         
-        {/* SECTION 1: PREDICTION */}
-        <div className="mb-10 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Prediction Result</span>
+        {/* SECTION: PREDICTION TABLE */}
+        <div className="mb-6 w-full">
+          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Required End Term Scores</span>
           
-          <table className="w-full border-collapse border border-black table-fixed">
-            <tbody>
-              <tr>
-                <td className="border border-black p-6 text-center w-1/2">
-                  <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">Target Grade</span>
-                  <span className="text-[40px] font-extrabold text-black">
-                    {targetGrade}
-                  </span>
-                </td>
-                <td className="border border-black p-6 text-center w-1/2 bg-gray-50">
-                  <span className="block text-[11px] font-semibold text-[#666666] uppercase mb-2">
-                    Required Exam Score
-                  </span>
-                  {isPossible ? (
-                    <div className="flex flex-col items-center">
-                      <span className="text-[40px] font-extrabold" style={{ color: gradeColor }}>
-                        {result.required}
-                        <span className="text-[16px] text-gray-400 font-bold ml-1">/ 100</span>
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-[24px] font-bold text-red-600 uppercase">
-                      Not Possible
-                    </span>
-                  )}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+          <div className="overflow-hidden border border-gray-200 rounded-sm">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-gray-50 text-gray-700 font-semibold uppercase text-xs">
+                <tr>
+                  <th className="px-6 py-3 border-b">Target Grade</th>
+                  <th className="px-6 py-3 border-b text-center">Required Exam Score</th>
+                  <th className="px-6 py-3 border-b text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {grades.map(grade => {
+                  const data = results[grade];
+                  const isPossible = data.possible && data.required !== null;
+                  
+                  return (
+                    <tr key={grade} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 font-bold text-base">{grade}</td>
+                      <td className="px-6 py-4 text-center">
+                        {isPossible ? (
+                          <span className="text-lg font-bold text-gray-900">{data.required}<span className="text-xs text-gray-400 font-normal ml-1">/100</span></span>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        {isPossible ? (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            Possible
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            Impossible
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        {/* SECTION 2: DETAILS */}
-        <div className="mb-6 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Analysis</span>
-          <div className="border border-black p-5 bg-white text-[14px] leading-relaxed">
-            {isPossible ? (
-              <p>
-                To achieve <strong>Grade {targetGrade}</strong>, you must score at least <strong>{result.required}</strong> marks in the End Term Exam. 
-                This will bring your total course score to <strong>{Math.round(result.finalGrade * 100) / 100}</strong>.
-              </p>
-            ) : (
-              <p>
-                Based on your current internal scores, it is mathematically <strong>impossible</strong> to achieve Grade {targetGrade} 
-                even if you score 100/100 in the End Term Exam. Please try calculating for a lower grade.
-              </p>
-            )}
-          </div>
+        {/* SECTION 2: NOTE */}
+        <div className="mb-2 w-full">
+           <p className="text-xs text-gray-500 italic">
+             * "Impossible" means you cannot achieve this grade even with 100/100 in the final exam based on current internal scores.
+           </p>
         </div>
 
         {/* Watermark */}
@@ -110,7 +104,7 @@ export default function PredictorResult({ result, targetGrade, subjectKey, onRes
         </button>
         <button onClick={handleShareImage} className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-[#333333] transition-colors flex items-center gap-2 rounded-sm">
           <Share className="w-4 h-4" />
-          Share Prediction
+          Share Results
         </button>
       </div>
 
