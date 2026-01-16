@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -33,13 +32,10 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         setIsAuthenticated(false);
       }
     };
-
     checkAuth();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -52,13 +48,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
     if (isProcessing) return;
 
-    // If external enrollment link exists, use it
     if (enrollmentLink) {
       window.open(enrollmentLink, '_blank');
       return;
     }
 
-    // Otherwise, use Cashfree payment integration
     if (!courseId) {
       toast({
         title: "Error",
@@ -73,31 +67,40 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) {
-        throw new Error("User not authenticated");
-      }
+      if (!user) throw new Error("User not authenticated");
 
-      // Create Cashfree order
+      console.log("Creating order for user:", user.email);
+
+      // --- UPDATED: Sending email and phone ---
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
           amount: coursePrice,
           userId: user.id,
+          customerEmail: user.email, // Send email
+          customerPhone: user.phone, // Send phone if available
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase Invoke Error:", error);
+        // If the function returned a JSON error message, try to display it
+        try {
+            const errorBody = JSON.parse(error.message); 
+            throw new Error(errorBody.error || "Payment initialization failed");
+        } catch (e) {
+            throw error; 
+        }
+      }
 
-      // Load Cashfree SDK and initiate payment
       const script = document.createElement('script');
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
       script.onload = () => {
         const cashfree = (window as any).Cashfree({
-          mode: 'sandbox', // Change to 'production' for live
+          mode: 'sandbox', 
         });
-
         cashfree.checkout({
-          paymentSessionId: data.paymentSessionId,
+          paymentSessionId: data.payment_session_id, // Note: Cashfree returns payment_session_id (snake_case) usually
           returnUrl: `${window.location.origin}/dashboard`,
         });
       };
