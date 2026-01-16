@@ -93,7 +93,6 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
                 
                 <td className="p-5 align-top">
                   <div className="flex flex-col gap-2.5 items-end">
-                    {/* Primary Button: Open Portal / External Link */}
                     {newsItem.button_url && newsItem.button_text && (
                       <a 
                         href={newsItem.button_url} 
@@ -105,7 +104,6 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
                       </a>
                     )}
                     
-                    {/* Secondary Button: View Details */}
                     <Link 
                       to={`/news/${newsItem.id}`}
                       className="inline-flex items-center justify-center px-4 py-2.5 text-[11px] font-bold text-black bg-white border border-black uppercase tracking-[0.05em] hover:bg-[#f8f9fa] transition-all w-[140px] text-center no-underline"
