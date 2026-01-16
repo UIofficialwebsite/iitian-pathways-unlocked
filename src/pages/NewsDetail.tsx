@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Loader2 } from "lucide-react";
+import { Loader2, Printer } from "lucide-react";
 
 const NewsDetail = () => {
   const { newsId } = useParams<{ newsId: string }>();
@@ -39,14 +39,45 @@ const NewsDetail = () => {
 
   return (
     <div className="min-h-screen bg-white font-['Inter'] text-[#1a1a1a]">
-      <NavBar />
+      {/* Hide Navbar on Print */}
+      <div className="print:hidden">
+        <NavBar />
+      </div>
       
-      {/* Main Container - Adjusted padding to match design */}
-      <main className="flex justify-center pt-[100px] pb-[60px] px-5">
-        <div className="w-full max-w-[800px]">
+      {/* Main Container */}
+      <main className="w-full max-w-[1200px] mx-auto pt-[100px] pb-[60px] px-6 lg:px-10 print:p-0 print:max-w-none print:mx-0">
+        
+        {/* --- PRINT ONLY HEADER WITH LOGO --- */}
+        <div className="hidden print:flex items-center justify-between mb-8 pb-4 border-b border-black">
+          <div className="flex items-center gap-4">
+            <img 
+              src="/lovable-uploads/logo_ui_new.png" 
+              alt="IITM Logo" 
+              className="h-16 w-auto object-contain" 
+            />
+            <div>
+              <h1 className="text-xl font-extrabold uppercase tracking-wide text-black">
+                IIT Madras BS Degree
+              </h1>
+              <p className="text-sm font-medium text-gray-600 uppercase tracking-widest">
+                Official Circular
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+              Generated Report
+            </p>
+            <p className="text-xs text-black mt-1">
+              {new Date().toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="w-full">
           
-          {/* Breadcrumb Navigation */}
-          <nav className="flex gap-2 mb-6 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#888]">
+          {/* Breadcrumb - Hide on Print */}
+          <nav className="flex gap-2 mb-8 text-[12px] font-semibold uppercase tracking-[0.05em] text-[#888] print:hidden">
             <Link to="/exam-preparation/iitm-bs" className="text-black no-underline hover:underline">
               Announcements
             </Link>
@@ -55,88 +86,91 @@ const NewsDetail = () => {
           </nav>
 
           {/* Article Header */}
-          <h1 className="text-[36px] font-[800] leading-[1.1] text-black mb-[30px] tracking-[-0.02em]">
-            {newsItem.title}
-            {newsItem.is_important && (
-              <span className="inline-block align-middle ml-2 text-[10px] font-bold px-2 py-[2px] border border-[#991b1b] bg-[#fee2e2] text-[#991b1b] uppercase">
-                Urgent
-              </span>
-            )}
-            {newsItem.is_featured && !newsItem.is_important && (
-              <span className="inline-block align-middle ml-2 text-[10px] font-bold px-2 py-[2px] border border-[#854d0e] bg-[#fefce8] text-[#854d0e] uppercase">
-                Featured
-              </span>
-            )}
-          </h1>
+          <header className="mb-8">
+            <h1 className="text-[32px] md:text-[42px] font-[800] leading-[1.1] text-black mb-6 tracking-[-0.02em]">
+              {newsItem.title}
+              {newsItem.is_important && (
+                <span className="inline-block align-middle ml-3 text-[11px] font-bold px-3 py-1 border border-[#991b1b] bg-[#fee2e2] text-[#991b1b] uppercase tracking-wide print:border-black print:text-black print:bg-transparent">
+                  Urgent
+                </span>
+              )}
+            </h1>
+          </header>
 
-          {/* Meta Data Strip - Light Teal */}
-          <div className="flex justify-between items-center bg-[#e6f7f7] px-5 py-[15px] border-y border-black mb-10">
-            <div className="flex flex-col">
-              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
-                Publication Date
+          {/* Meta Data Strip */}
+          <div className="flex flex-wrap border-y border-black mb-10 print:border-black print:mb-8">
+            
+            {/* Publication Date */}
+            <div className="flex-1 py-4 pr-8 min-w-[200px] border-r border-transparent md:border-black/10 print:border-none">
+              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1 print:text-black">
+                Date
               </span>
-              <span className="block text-[13px] font-normal text-black mt-0.5">
+              <span className="block text-[14px] font-medium text-black">
                 {new Date(newsItem.date_time || newsItem.created_at).toLocaleDateString("en-US", {
                   year: 'numeric',
-                  month: 'short',
+                  month: 'long',
                   day: 'numeric'
                 })}
               </span>
             </div>
             
-            <div className="flex flex-col text-center">
-              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
-                Document Level
+            {/* Document Level */}
+            <div className="flex-1 py-4 px-0 md:px-8 min-w-[200px]">
+              <span className="block text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.05em] mb-1 print:text-black">
+                Level / Branch
               </span>
-              <span className="block text-[13px] font-normal text-black mt-0.5">
-                {[newsItem.level, newsItem.branch].filter(Boolean).join(" & ") || "All Levels"}
+              <span className="block text-[14px] font-medium text-black">
+                {[newsItem.level, newsItem.branch].filter(Boolean).join(" & ") || "General"}
               </span>
             </div>
 
-            <div className="flex flex-col text-right">
-              <span className="text-[11px] uppercase font-bold text-[#2c4a4a] tracking-[0.03em]">
-                Classification
-              </span>
-              <span className="block text-[13px] font-normal text-black mt-0.5">
-                Official Circular
-              </span>
-            </div>
+            {/* Removed Classification Block as requested */}
           </div>
 
           {/* Article Content */}
-          <article className="text-[16px] leading-[1.75] text-[#334155] mb-10">
-            <div className="whitespace-pre-wrap font-['Inter']">
+          <article className="max-w-none text-[16px] leading-[1.8] text-[#334155] print:text-black print:text-[14px] mb-12">
+            <div className="whitespace-pre-wrap font-['Inter'] text-justify">
               {newsItem.content || newsItem.description}
             </div>
           </article>
 
-          <hr className="h-px bg-[#e5e7eb] border-0 my-10" />
-
-          {/* Footer Actions */}
-          <div className="flex justify-between items-center mt-5">
-            <button 
-              onClick={() => window.print()}
-              className="bg-white text-black border border-black px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-gray-50 transition-colors"
-            >
-              Print Circular
-            </button>
-            
-            {newsItem.button_url && newsItem.button_text && (
-              <a 
-                href={newsItem.button_url} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="bg-black text-white px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-[#333] transition-colors inline-flex items-center gap-1"
+          {/* Footer Actions - Hide on Print */}
+          <div className="print:hidden mt-12 pt-8 border-t border-gray-200">
+            <div className="flex flex-wrap gap-4">
+              <button 
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 bg-white text-black border border-black px-6 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-gray-50 transition-colors"
               >
-                {newsItem.button_text} ↗
-              </a>
-            )}
+                <Printer className="w-4 h-4" />
+                Print Circular
+              </button>
+              
+              {newsItem.button_url && newsItem.button_text && (
+                <a 
+                  href={newsItem.button_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="bg-black text-white px-8 py-3 text-[12px] font-bold uppercase tracking-[0.05em] hover:bg-[#333] transition-colors inline-flex items-center gap-2"
+                >
+                  {newsItem.button_text} ↗
+                </a>
+              )}
+            </div>
+          </div>
+
+          {/* Print Only Footer */}
+          <div className="hidden print:block mt-16 pt-4 border-t border-black">
+            <p className="text-[10px] text-center font-bold uppercase tracking-widest text-gray-500">
+              IITM Pathways Unlocked • Academic Announcements
+            </p>
           </div>
 
         </div>
       </main>
 
-      <Footer />
+      <div className="print:hidden">
+        <Footer />
+      </div>
     </div>
   );
 };
