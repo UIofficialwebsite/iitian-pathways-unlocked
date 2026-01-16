@@ -37,7 +37,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
 import IITMCalculators from "./pages/IITMCalculators";
-import NewsDetail from "./pages/NewsDetail"; // IMPORT THE NEW PAGE
+import NewsDetail from "./pages/NewsDetail"; // Import the new Detail Page
 
 const queryClient = new QueryClient();
 
@@ -65,7 +65,7 @@ const App = () => (
               {/* IITM BS ROUTES */}
               <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
-              <Route path="/news/:newsId" element={<NewsDetail />} /> {/* NEW ROUTE */}
+              <Route path="/news/:newsId" element={<NewsDetail />} /> {/* Route for News Detail */}
               
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               
