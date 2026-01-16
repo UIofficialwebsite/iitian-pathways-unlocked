@@ -37,7 +37,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
-    // Allows empty string or decimal numbers
     if (value === "" || /^\d*\.?\d*$/.test(value)) {
       setInputValues(prev => ({ ...prev, [fieldId]: value }));
     }
@@ -66,14 +65,14 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   return (
-    <div className="w-full max-w-[500px] mx-auto p-5 font-sans text-black">
+    <div className="w-full p-6 font-sans text-black">
       
       {/* 01. Select Course */}
-      <div className="mb-10">
+      <div className="mb-10 w-full">
         <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#999999] mb-4">
           01. Select Course
         </span>
-        <div className="relative">
+        <div className="relative w-full">
           <select 
             value={selectedSubject} 
             onChange={handleSubjectChange}
@@ -86,6 +85,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
               </option>
             ))}
           </select>
+          
           {/* Custom Chevron Icon */}
           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
