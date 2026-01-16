@@ -7,9 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShareButton } from "@/components/ShareButton";
 import CGPACalculator from "@/components/iitm/CGPACalculator";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
-import FoundationMarksPredictor from "@/components/iitm/FoundationMarksPredictor";
-import DiplomaMarksPredictor from "@/components/iitm/DiplomaMarksPredictor";
-import DegreeMarksPredictor from "@/components/iitm/DegreeMarksPredictor";
+import MarksPredictor from "@/components/iitm/MarksPredictor"; // Import the unified component
 import { Level } from "@/components/iitm/types/gradeTypes";
 
 const IITMCalculators = () => {
@@ -160,6 +158,30 @@ const IITMCalculators = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {/* Added Branch Selection for Marks Predictor */}
+                    <div className="flex gap-4 mb-6">
+                      <button
+                        onClick={() => handleBranchChange("data-science")}
+                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                          selectedBranch === "data-science"
+                            ? "bg-royal text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
+                      >
+                        Data Science
+                      </button>
+                      <button
+                        onClick={() => handleBranchChange("electronic-systems")}
+                        className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+                          selectedBranch === "electronic-systems"
+                            ? "bg-royal text-white"
+                            : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                        }`}
+                      >
+                        Electronic Systems
+                      </button>
+                    </div>
+
                     {/* Level Selection for Predictor */}
                     <div className="flex gap-4 mb-6">
                       <button
@@ -194,9 +216,8 @@ const IITMCalculators = () => {
                       </button>
                     </div>
 
-                    {selectedLevel === "foundation" && <FoundationMarksPredictor branch={selectedBranch} level={selectedLevel} />}
-                    {selectedLevel === "diploma" && <DiplomaMarksPredictor branch={selectedBranch} level={selectedLevel} />}
-                    {selectedLevel === "degree" && <DegreeMarksPredictor branch={selectedBranch} level={selectedLevel} />}
+                    {/* Use the unified MarksPredictor component */}
+                    <MarksPredictor branch={selectedBranch} level={selectedLevel} />
                   </div>
                 </CardContent>
               </Card>
