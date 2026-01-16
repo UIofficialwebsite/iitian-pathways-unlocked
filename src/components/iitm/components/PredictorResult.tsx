@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import { Share, CheckCircle, XCircle } from "lucide-react";
+import { Share } from "lucide-react";
 
 interface PredictorResultProps {
   results: Record<string, { required: number | null; possible: boolean; finalGrade: number }>;
@@ -32,86 +32,98 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
   const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
 
   return (
-    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col items-center">
       
       {/* CAPTURE AREA */}
-      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-200 shadow-sm relative w-full pb-16 font-['Inter']">
+      <div 
+        ref={resultRef} 
+        className="bg-white p-4 sm:p-8 w-full max-w-[850px]"
+        style={{ fontFamily: "'Inter', sans-serif" }}
+      >
         
-        {/* SECTION: PREDICTION TABLE */}
-        <div className="mb-6 w-full">
-          <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-4 border-b border-gray-100 pb-2 uppercase tracking-wide font-['Inter']">
-            Required End Term Scores
-          </span>
-          
-          <div className="overflow-hidden border border-gray-200 rounded-lg">
-            <table className="w-full text-sm text-left font-['Inter']">
-              <thead className="bg-gray-50 text-gray-700 font-semibold uppercase text-xs">
-                <tr>
-                  <th className="px-6 py-4 border-b border-gray-200 w-1/3">Target Grade</th>
-                  <th className="px-6 py-4 border-b border-gray-200 text-center w-1/3">Required Score</th>
-                  <th className="px-6 py-4 border-b border-gray-200 text-right w-1/3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {grades.map(grade => {
-                  const data = results[grade];
-                  const isPossible = data.possible && data.required !== null;
-                  
-                  return (
-                    <tr key={grade} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-800 font-bold text-base border border-slate-200">
-                          {grade}
+        {/* SECTION HEADING */}
+        <h2 className="text-[15px] font-semibold text-black uppercase tracking-[0.03em] mb-[15px]">
+          Required End Term Scores
+        </h2>
+        
+        {/* TABLE */}
+        <div className="w-full overflow-x-auto">
+          <table className="w-full border-collapse border border-black mb-[25px]">
+            <thead>
+              <tr>
+                <th className="bg-[#e6f7f7] text-[#2c4a4a] border border-black px-5 py-4 text-left font-bold text-[11px] uppercase tracking-[0.05em] w-[20%]">
+                  Target Grade
+                </th>
+                <th className="bg-[#e6f7f7] text-[#2c4a4a] border border-black px-5 py-4 text-left font-bold text-[11px] uppercase tracking-[0.05em] w-[50%]">
+                  Score Needed
+                </th>
+                <th className="bg-[#e6f7f7] text-[#2c4a4a] border border-black px-5 py-4 text-center font-bold text-[11px] uppercase tracking-[0.05em] w-[30%]">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {grades.map(grade => {
+                const data = results[grade];
+                const isPossible = data.possible && data.required !== null;
+                
+                return (
+                  <tr key={grade}>
+                    {/* Grade Column */}
+                    <td className="border border-black px-5 py-4 text-left text-[14px]">
+                      <span className="inline-flex items-center justify-center w-[30px] h-[30px] border border-black rounded-full font-bold bg-white text-black">
+                        {grade}
+                      </span>
+                    </td>
+
+                    {/* Score Needed Column */}
+                    <td className="border border-black px-5 py-4 text-left text-[14px]">
+                      {isPossible ? (
+                        <div>
+                          <span className="font-bold text-[18px] text-black">{data.required}</span>
+                          <span className="block text-[10px] text-[#777] font-normal mt-[3px] uppercase">OUT OF 100</span>
+                        </div>
+                      ) : (
+                        <span className="text-[#bbb] text-lg">—</span>
+                      )}
+                    </td>
+
+                    {/* Status Column */}
+                    <td className="border border-black px-5 py-4 text-center text-[14px]">
+                      {isPossible ? (
+                        <span className="font-bold text-[11px] uppercase px-[10px] py-[5px] inline-block border border-[#2e7d32] bg-[#e8f5e9] text-[#2e7d32]">
+                          Possible
                         </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {isPossible ? (
-                          <div className="flex flex-col items-center">
-                            <span className="text-xl font-bold text-gray-900">{data.required}</span>
-                            <span className="text-[10px] text-gray-400 uppercase tracking-wider font-medium">out of 100</span>
-                          </div>
-                        ) : (
-                          <span className="text-gray-300 font-medium text-lg">-</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        {isPossible ? (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            <CheckCircle className="w-3.5 h-3.5" /> Possible
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-100">
-                            <XCircle className="w-3.5 h-3.5" /> Impossible
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      ) : (
+                        <span className="font-bold text-[11px] uppercase px-[10px] py-[5px] inline-block border border-[#c62828] bg-[#ffebee] text-[#c62828]">
+                          Not Possible
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        {/* SECTION 2: NOTE */}
-        <div className="mb-2 w-full px-1">
-           <p className="text-xs text-gray-500 italic font-['Inter'] leading-relaxed">
-             <span className="font-semibold text-gray-700">* Impossible</span> indicates that mathematically, the target grade cannot be achieved even with a perfect score (100/100) in the End Term Exam based on current internal marks.
-           </p>
+        {/* FOOTER NOTE */}
+        <div className="text-[13px] text-[#444] leading-[1.5] p-[15px] bg-[#fafafa] border border-[#ddd]">
+           <strong>* Not Possible</strong> means that even if you score a perfect 100/100 in the final exam, you cannot reach this grade based on your current marks.
         </div>
 
-        {/* Watermark */}
-        <div className="absolute bottom-4 right-6 text-[10px] font-['Inter'] font-semibold text-gray-300 uppercase tracking-widest pointer-events-none">
+        {/* BRAND WATERMARK */}
+        <div className="mt-10 text-right text-[10px] font-bold text-[#bbb] uppercase tracking-wider">
           IITM Pathways Unlocked
         </div>
       </div>
 
       {/* ACTIONS */}
-      <div className="flex justify-between items-center mt-8 px-2 font-['Inter']">
+      <div className="flex justify-between items-center mt-8 px-2 w-full max-w-[850px] font-['Inter']">
         <button onClick={onReset} className="text-[13px] text-gray-500 underline font-medium hover:text-black transition-colors">
           Start Over
         </button>
-        <button onClick={handleShareImage} className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-gray-800 transition-colors flex items-center gap-2 rounded-md shadow-sm">
+        <button onClick={handleShareImage} className="bg-black text-white px-6 py-3 text-[13px] font-semibold uppercase hover:bg-gray-800 transition-colors flex items-center gap-2 rounded-sm shadow-sm">
           <Share className="w-4 h-4" />
           Share Results
         </button>
