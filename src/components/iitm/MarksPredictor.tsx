@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 
 interface MarksPredictorProps {
-  level: Level;
-  branch: "data-science" | "electronic-systems";
+  level: string; // Changed from Level to string to accept any casing safely
+  branch: "data-science" | "electronic-systems" | string;
 }
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
@@ -22,15 +22,21 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [result, setResult] = useState<{ required: number | null; possible: boolean; finalGrade: number } | null>(null);
 
   const filteredSubjects = useMemo(() => {
+    // Robustly generate the key by forcing lowercase
     const getSubjectsKey = () => {
-      if (branch === "electronic-systems") {
-        if (level === "foundation") return "foundation-electronic-systems";
-        if (level === "diploma") return "diploma-electronic-systems";
-        if (level === "degree") return "degree-electronic-systems";
+      const normalizedLevel = level?.toLowerCase() || "foundation";
+      const normalizedBranch = branch?.toLowerCase().replace(" ", "-") || "data-science";
+
+      if (normalizedBranch === "electronic-systems") {
+        if (normalizedLevel === "foundation") return "foundation-electronic-systems";
+        if (normalizedLevel === "diploma") return "diploma-electronic-systems";
+        if (normalizedLevel === "degree") return "degree-electronic-systems";
       }
-      return level;
+      return normalizedLevel;
     };
-    return ALL_SUBJECTS[getSubjectsKey()] || [];
+
+    const key = getSubjectsKey();
+    return ALL_SUBJECTS[key] || [];
   }, [branch, level]);
 
   const currentSubject = useMemo(() => 
@@ -63,7 +69,9 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       numericValues[key] = parseFloat(inputValues[key]) || 0;
     });
 
-    const prediction = predictRequiredScore(level, currentSubject.key, numericValues, targetGrade);
+    // Cast level to Level type for the logic function
+    const safeLevel = (level?.toLowerCase() || "foundation") as Level;
+    const prediction = predictRequiredScore(safeLevel, currentSubject.key, numericValues, targetGrade);
     setResult(prediction);
   };
 
@@ -87,11 +95,17 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
             <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
-              {filteredSubjects.map((subject) => (
-                <SelectItem key={subject.key} value={subject.key} className="font-['Inter'] cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0">
-                  {subject.name}
-                </SelectItem>
-              ))}
+              {filteredSubjects.length > 0 ? (
+                filteredSubjects.map((subject) => (
+                  <SelectItem key={subject.key} value={subject.key} className="font-['Inter'] cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0">
+                    {subject.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <div className="p-4 text-sm text-gray-500 text-center">
+                  No subjects found for {level} ({branch})
+                </div>
+              )}
             </SelectContent>
           </Select>
         </div>
