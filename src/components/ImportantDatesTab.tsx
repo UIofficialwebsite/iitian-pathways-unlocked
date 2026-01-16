@@ -1,7 +1,7 @@
 import React from "react";
 
 const ImportantDatesTab = () => {
-  // Data extracted from "BS-DS_Jan 2026 Grading document (STUDENT).pdf" (hh.pdf)
+  // Data extracted from "BS-DS_Jan 2026 Grading document (STUDENT).pdf" (hh.pdf) 
   const importantDates = [
     {
       id: 1,
@@ -15,7 +15,7 @@ const ImportantDatesTab = () => {
       id: 2,
       title: "NPPE 1 Registration Opens",
       date: "2026-03-06",
-      description: "Registration portal opens for National Programming Proctored Exam (NPPE) 1 at 5:00 PM.",
+      description: "Registration portal opens for Network Proctored Program Evaluation (NPPE) 1 at 5:00 PM.",
       type: "Registration",
       is_important: true,
     },
@@ -37,6 +37,22 @@ const ImportantDatesTab = () => {
     },
     {
       id: 5,
+      title: "Qualifier 1-2 Re-attempt Registration Opens",
+      date: "2026-03-19",
+      description: "Application form opens for students re-attempting the Qualifier Exam (1-2 attempt).",
+      type: "Registration",
+      is_important: false,
+    },
+    {
+      id: 6,
+      title: "Qualifier 1-2 Re-attempt Registration Closes",
+      date: "2026-03-20",
+      description: "Deadline to apply for the Qualifier Re-attempt exam. Late applications are usually not accepted.",
+      type: "Deadline",
+      is_important: false,
+    },
+    {
+      id: 7,
       title: "OPPE 1 - Day 1",
       date: "2026-04-04",
       description: "Online Proctored Programming Exam. Courses: Diploma (Python, MLP), Degree (C Prog, Intro to Big Data).",
@@ -44,7 +60,7 @@ const ImportantDatesTab = () => {
       is_important: true,
     },
     {
-      id: 6,
+      id: 8,
       title: "OPPE 1 - Day 2",
       date: "2026-04-05",
       description: "Online Proctored Programming Exam. Courses: Foundation (Python), Diploma (Java, MLOPS), TDS (ROE).",
@@ -52,7 +68,7 @@ const ImportantDatesTab = () => {
       is_important: true,
     },
     {
-      id: 7,
+      id: 9,
       title: "End Term & OPPE 2 Eligibility Closes",
       date: "2026-04-08",
       description: "Strict deadline to meet eligibility for End Term Exams and OPPE 2 (Week 9 Assignment Deadline).",
@@ -60,15 +76,31 @@ const ImportantDatesTab = () => {
       is_important: true,
     },
     {
-      id: 8,
-      title: "Quiz 2 (Jan 2026 Term)",
+      id: 10,
+      title: "Quiz 2 & Qualifier Re-attempt (1-2)",
       date: "2026-04-12",
-      description: "In-person quiz at designated centers. Syllabus: Weeks 5-8. Time: 2:00 PM - 6:00 PM.",
+      description: "Quiz 2 for current students and Qualifier Re-attempt Exam (1-2) for re-applicants. In-person.",
       type: "Exam",
       is_important: true,
     },
     {
-      id: 9,
+      id: 11,
+      title: "Qualifier 2-2 Re-attempt Registration Opens",
+      date: "2026-04-16",
+      description: "Application form opens for the second re-attempt (2-2) of the Qualifier Exam.",
+      type: "Registration",
+      is_important: false,
+    },
+    {
+      id: 12,
+      title: "Qualifier 2-2 Re-attempt Registration Closes",
+      date: "2026-04-17",
+      description: "Strict deadline to register for the final re-attempt opportunity for this cycle.",
+      type: "Deadline",
+      is_important: false,
+    },
+    {
+      id: 13,
       title: "OPPE 2 - Day 1",
       date: "2026-04-25",
       description: "Online Proctored Programming Exam. Courses: Diploma (System Commands).",
@@ -76,7 +108,7 @@ const ImportantDatesTab = () => {
       is_important: false,
     },
     {
-      id: 10,
+      id: 14,
       title: "OPPE 2 - Day 2",
       date: "2026-04-26",
       description: "Online Proctored Programming Exam. Courses: Diploma (DBMS, PDSA, Java, MLP), Degree (C Prog, Intro to Big Data).",
@@ -84,7 +116,7 @@ const ImportantDatesTab = () => {
       is_important: true,
     },
     {
-      id: 11,
+      id: 15,
       title: "OPPE 2 - Day 3",
       date: "2026-05-02",
       description: "Online Proctored Programming Exam. Courses: Diploma (System Commands, Python).",
@@ -92,7 +124,7 @@ const ImportantDatesTab = () => {
       is_important: false,
     },
     {
-      id: 12,
+      id: 16,
       title: "OPPE 2 - Day 4",
       date: "2026-05-03",
       description: "Online Proctored Programming Exam. Courses: Foundation (Python), Diploma (Exceptions), Degree (MLOPS).",
@@ -100,16 +132,16 @@ const ImportantDatesTab = () => {
       is_important: true,
     },
     {
-      id: 13,
-      title: "End Term Exam (Jan 2026 Term)",
+      id: 17,
+      title: "End Term Exam & Qualifier (2-2)",
       date: "2026-05-10",
-      description: "Final End Term Examination held in-person at designated centers. Sessions: 9am-12pm & 2pm-5pm.",
+      description: "Final End Term Exam for all levels and Qualifier Re-attempt Exam (2-2). In-person at centers.",
       type: "Exam",
       is_important: true,
     },
   ];
 
-  // Sort by date (ascending) to show upcoming events first
+  // Sort by date (ascending)
   const sortedDates = importantDates.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
