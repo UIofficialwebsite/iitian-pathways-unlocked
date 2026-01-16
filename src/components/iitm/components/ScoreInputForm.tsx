@@ -20,12 +20,15 @@ export default function ScoreInputForm({
   
   return (
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
+      
+      {/* Section Header */}
       <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
          <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-['Inter']">
            02. Enter Scores
          </Label>
       </div>
       
+      {/* Input Fields Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full mb-8">
         {subject.fields.map((field) => (
           <div key={field.id} className="space-y-3">
@@ -35,6 +38,7 @@ export default function ScoreInputForm({
             >
               {field.label}
             </Label>
+            
             <Input
               id={field.id}
               type="text"
@@ -48,6 +52,7 @@ export default function ScoreInputForm({
         ))}
       </div>
 
+      {/* Calculate Button */}
       <div className="flex justify-start">
         <Button 
           onClick={onCalculate}
@@ -56,6 +61,7 @@ export default function ScoreInputForm({
           Calculate Grade
         </Button>
       </div>
+      
     </div>
   );
 }
