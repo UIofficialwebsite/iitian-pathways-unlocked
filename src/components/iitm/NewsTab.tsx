@@ -1,11 +1,6 @@
-
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { Link } from "react-router-dom";
 
 interface NewsTabProps {
   sortOrder?: 'recent' | 'oldest';
@@ -13,7 +8,6 @@ interface NewsTabProps {
 
 const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
   const { newsUpdates, contentLoading } = useBackend();
-  const [expandedItems, setExpandedItems] = React.useState<Set<string>>(new Set());
 
   // Filter news for IITM BS and sort
   const iitmNews = newsUpdates
@@ -26,95 +20,109 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
       return sortOrder === 'recent' ? dateB - dateA : dateA - dateB;
     });
 
-  const toggleExpanded = (id: string) => {
-    const newExpanded = new Set(expandedItems);
-    if (newExpanded.has(id)) {
-      newExpanded.delete(id);
-    } else {
-      newExpanded.add(id);
-    }
-    setExpandedItems(newExpanded);
-  };
-
   if (contentLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-royal"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
       </div>
     );
   }
   
+  if (iitmNews.length === 0) {
+    return (
+      <div className="text-center py-12 font-['Inter']">
+        <p className="text-gray-500">No official announcements at this time.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
-      {iitmNews.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-gray-600">No news updates available for IITM BS at the moment.</p>
-        </div>
-      ) : (
-        iitmNews.map((newsItem) => (
-          <Card key={newsItem.id}>
-            <Collapsible onOpenChange={() => toggleExpanded(newsItem.id)}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="flex flex-wrap items-center gap-2 text-lg">
-                      {newsItem.title}
-                      {newsItem.tag && <Badge variant="secondary">{newsItem.tag}</Badge>}
-                      {newsItem.branch && <Badge variant="outline">{newsItem.branch}</Badge>}
-                      {newsItem.level && <Badge variant="outline">{newsItem.level}</Badge>}
-                      {newsItem.is_featured && <Badge className="bg-yellow-500 text-white">Featured</Badge>}
-                      {newsItem.is_important && <Badge className="bg-red-500 text-white">Important</Badge>}
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {newsItem.description}
-                      {newsItem.date_time && (
-                        <span className="ml-2 text-xs text-gray-500">
-                          {new Date(newsItem.date_time).toLocaleString()}
-                        </span>
-                      )}
-                    </CardDescription>
-                    {newsItem.button_text && newsItem.button_url && (
-                      <div className="mt-3">
-                        <Button 
-                          asChild 
-                          className="bg-royal hover:bg-royal-dark text-white"
-                          size="sm"
-                        >
-                          <a 
-                            href={newsItem.button_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2"
-                          >
-                            {newsItem.button_text}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </Button>
-                      </div>
+    <div className="w-full font-['Inter'] bg-white">
+      <h2 className="text-[14px] font-semibold text-black uppercase tracking-[0.05em] mb-5">
+        Official Announcements
+      </h2>
+
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-black min-w-[600px]">
+          <thead>
+            <tr className="bg-[#e6f7f7]">
+              <th className="border border-black px-5 py-4 text-left font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[75%]">
+                Announcement Detail
+              </th>
+              <th className="border border-black px-5 py-4 text-right font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[25%]">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {iitmNews.map((newsItem) => (
+              <tr key={newsItem.id} className="hover:bg-gray-50 transition-colors">
+                <td className="border border-black p-5 align-top">
+                  <div className="text-[18px] font-bold text-black mb-2 leading-tight">
+                    {newsItem.title}
+                  </div>
+                  <p className="text-[14px] text-[#4b5563] leading-[1.6] mb-4 line-clamp-2">
+                    {newsItem.description}
+                  </p>
+                  
+                  {/* Tags Row */}
+                  <div className="flex flex-wrap gap-2">
+                    {newsItem.is_important && (
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-[#991b1b] bg-[#fef2f2] text-[#991b1b]">
+                        Important
+                      </span>
+                    )}
+                    {newsItem.is_featured && (
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-[#854d0e] bg-[#fefce8] text-[#854d0e]">
+                        Featured
+                      </span>
+                    )}
+                    {newsItem.tag && (
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-black bg-white text-black">
+                        {newsItem.tag}
+                      </span>
+                    )}
+                    {(newsItem.level || newsItem.branch) && (
+                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-black bg-white text-black">
+                        {[newsItem.level, newsItem.branch].filter(Boolean).join(' - ')}
+                      </span>
+                    )}
+                    {newsItem.date_time && (
+                      <span className="text-[10px] font-medium uppercase px-2.5 py-1 border border-gray-200 text-gray-500">
+                        {new Date(newsItem.date_time).toLocaleDateString("en-US", { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </span>
                     )}
                   </div>
-                  <CollapsibleTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      {expandedItems.has(newsItem.id) ? 
-                        <ChevronDown className="h-4 w-4" /> : 
-                        <ChevronRight className="h-4 w-4" />
-                      }
-                      <span className="sr-only">Toggle content</span>
-                    </Button>
-                  </CollapsibleTrigger>
-                </div>
-              </CardHeader>
-              <CollapsibleContent>
-                <CardContent>
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap">
-                    {newsItem.content}
+                </td>
+                
+                <td className="border border-black p-5 align-top">
+                  <div className="flex flex-col gap-2.5 items-end">
+                    {/* Primary Button: Open Portal / External Link */}
+                    {newsItem.button_url && newsItem.button_text && (
+                      <a 
+                        href={newsItem.button_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center px-4 py-2.5 text-[11px] font-bold text-white bg-black border border-black uppercase tracking-[0.05em] hover:bg-[#333333] transition-all w-[140px] text-center no-underline"
+                      >
+                        {newsItem.button_text} ↗
+                      </a>
+                    )}
+                    
+                    {/* Secondary Button: View Details */}
+                    <Link 
+                      to={`/news/${newsItem.id}`}
+                      className="inline-flex items-center justify-center px-4 py-2.5 text-[11px] font-bold text-black bg-white border border-black uppercase tracking-[0.05em] hover:bg-[#f8f9fa] transition-all w-[140px] text-center no-underline"
+                    >
+                      View Details
+                    </Link>
                   </div>
-                </CardContent>
-              </CollapsibleContent>
-            </Collapsible>
-          </Card>
-        ))
-      )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
