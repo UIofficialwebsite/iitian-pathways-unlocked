@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, AlertCircle, Star, Users, Calendar, PlayCircle, ArrowRight } from 'lucide-react';
 
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
@@ -29,10 +30,12 @@ interface BatchScheduleItem {
   subject_name: string;
   file_link: string;
 }
+
 interface CourseFaq {
   question: string;
   answer: string;
 }
+
 interface CourseDetailProps {
   customCourseId?: string; 
   isDashboardView?: boolean;
@@ -44,6 +47,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
   const navigate = useNavigate();
 
   const [course, setCourse] = useState<Course | null>(null);
+  const [subCourses, setSubCourses] = useState<Course[]>([]);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -51,6 +55,7 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
+    subCourses: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
@@ -70,10 +75,13 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
       try {
         setLoading(true);
         setError(null);
-        const [courseResult, scheduleResult, faqResult] = await Promise.all([
+        
+        // Fetch Course, Schedule, FAQs, and Sub-Courses (Children) in parallel
+        const [courseResult, scheduleResult, faqResult, subCoursesResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
           supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+          supabase.from('courses').select('*').eq('parent_course_id', courseId).order('created_at', { ascending: true })
         ]);
 
         if (courseResult.error) throw new Error(courseResult.error.message);
@@ -85,6 +93,9 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
           if (faqResult.data && faqResult.data.length > 0) {
             setFaqs(faqResult.data as any);
+          }
+          if (subCoursesResult.data) {
+            setSubCourses(subCoursesResult.data as any);
           }
         }
       } catch (err: any) {
@@ -134,6 +145,8 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
 
   const tabs = [
     { id: 'features', label: 'Features' },
+    // Conditionally add Included Courses tab
+    ...(subCourses.length > 0 ? [{ id: 'subCourses', label: 'Included Courses' }] : []),
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
@@ -191,6 +204,36 @@ const CourseDetail: React.FC<CourseDetailProps> = ({ customCourseId, isDashboard
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.features} className={scrollMarginClass}><FeaturesSection course={course} /></div>
               </div>
+
+              {/* --- NEW SUB-COURSES SECTION --- */}
+              {subCourses.length > 0 && (
+                <div ref={sectionRefs.subCourses} className={scrollMarginClass}>
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
+                     <h2 className="text-2xl font-bold mb-6 text-slate-900 flex items-center gap-2">
+                        <PlayCircle className="h-6 w-6 text-royal" /> Included Courses & Modules
+                     </h2>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {subCourses.map((sub) => (
+                           <Card key={sub.id} className="hover:shadow-md transition-shadow cursor-pointer group border-slate-200" onClick={() => navigate(`/courses/${sub.id}`)}>
+                              <CardContent className="p-4">
+                                 <div className="flex justify-between items-start mb-2">
+                                    <Badge variant="outline" className="text-xs">{sub.subject || 'Module'}</Badge>
+                                    <Badge variant={sub.price > 0 ? "secondary" : "default"} className={sub.price > 0 ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-green-100 text-green-700 hover:bg-green-200"}>
+                                       {sub.price > 0 ? `₹${sub.price}` : "FREE"}
+                                    </Badge>
+                                 </div>
+                                 <h3 className="font-semibold text-lg leading-tight mb-2 group-hover:text-royal transition-colors">{sub.title}</h3>
+                                 <p className="text-sm text-slate-500 line-clamp-2 mb-3">{sub.description}</p>
+                                 <div className="flex items-center text-xs text-royal font-medium group-hover:underline">
+                                    View Details <ArrowRight className="w-3 h-3 ml-1" />
+                                 </div>
+                              </CardContent>
+                           </Card>
+                        ))}
+                     </div>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden p-6 md:p-8">
                 <div ref={sectionRefs.about} className={scrollMarginClass}><AboutSection course={course} /></div>
