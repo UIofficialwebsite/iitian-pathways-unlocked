@@ -4,6 +4,8 @@ import { calculateGradeByLevel, getGradeLetter, getGradePoints } from "./utils/g
 import { Level } from "./types/gradeTypes";
 import ScoreInputForm from "./components/ScoreInputForm";
 import GradeResult from "./components/GradeResult";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 interface GradeCalculatorProps {
   level: Level;
@@ -15,7 +17,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
-  // Filter subjects based on branch/level
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
       if (branch === "electronic-systems") {
@@ -30,8 +31,8 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
 
   const currentSubject = filteredSubjects.find(s => s.key === selectedSubject);
 
-  const handleSubjectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedSubject(e.target.value);
+  const handleSubjectChange = (val: string) => {
+    setSelectedSubject(val);
     setInputValues({});
     setResult(null);
   };
@@ -65,53 +66,46 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
   };
 
   return (
-    <div className="w-full p-6 font-sans text-black">
-      
-      {/* 01. Select Course */}
-      <div className="mb-10 w-full">
-        <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#999999] mb-4">
-          01. Select Course
-        </span>
-        <div className="relative w-full">
-          <select 
-            value={selectedSubject} 
-            onChange={handleSubjectChange}
-            className="w-full h-[54px] px-4 bg-[#f4f4f5] border-2 border-[#f4f4f5] rounded-lg text-base font-medium text-black appearance-none outline-none focus:bg-white focus:border-black transition-all cursor-pointer"
-          >
-            <option value="">Choose a course...</option>
-            {filteredSubjects.map((subject) => (
-              <option key={subject.key} value={subject.key}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
-          
-          {/* Custom Chevron Icon */}
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </div>
+    <div className="w-full bg-white font-sans text-gray-900">
+      <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
+        
+        {/* 01. Select Course */}
+        <div className="mb-10 w-full max-w-3xl">
+          <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
+            01. Select Course
+          </Label>
+          <Select value={selectedSubject} onValueChange={handleSubjectChange}>
+            <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal">
+              <SelectValue placeholder="Choose a subject..." />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredSubjects.map((subject) => (
+                <SelectItem key={subject.key} value={subject.key} className="font-sans">
+                  {subject.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
+
+        {/* 02. Enter Scores */}
+        {currentSubject && (
+          <ScoreInputForm 
+            subject={currentSubject}
+            inputValues={inputValues}
+            onInputChange={handleInputChange}
+            onCalculate={calculateGrade}
+          />
+        )}
+
+        {/* Result Card */}
+        {result && (
+          <GradeResult 
+            result={result} 
+            onReset={resetCalculator} 
+          />
+        )}
       </div>
-
-      {/* 02. Enter Scores */}
-      {currentSubject && (
-        <ScoreInputForm 
-          subject={currentSubject}
-          inputValues={inputValues}
-          onInputChange={handleInputChange}
-          onCalculate={calculateGrade}
-        />
-      )}
-
-      {/* Result Card */}
-      {result && (
-        <GradeResult 
-          result={result} 
-          onReset={resetCalculator} 
-        />
-      )}
     </div>
   );
 }
