@@ -1,4 +1,5 @@
 import React from "react";
+import { Share } from "lucide-react";
 
 interface GradeResultProps {
   result: {
@@ -38,12 +39,12 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
         {/* Subtle decorative gradient at top */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-800 via-gray-500 to-gray-800 opacity-20"></div>
 
-        {/* Label - Updated to "Expected Grade", slightly larger, semi-bold */}
+        {/* Label */}
         <span className="block text-[13px] font-semibold uppercase tracking-[0.2em] opacity-60 mb-4 text-gray-300">
           Expected Grade
         </span>
         
-        {/* Big Grade Letter - Updated to SemiBold to match request */}
+        {/* Big Grade Letter */}
         <div className="text-[110px] font-semibold leading-none tracking-tighter mb-8 text-white">
           {result.letter}
         </div>
@@ -65,12 +66,9 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
       <div className="flex flex-col gap-3">
         <button 
           onClick={handleShare}
-          className="w-full h-[54px] bg-white border-2 border-black text-black font-bold text-[15px] rounded-xl flex items-center justify-center gap-2.5 transition-all hover:bg-black hover:text-white active:scale-[0.98]"
+          className="w-full h-[54px] bg-white border-2 border-black text-black font-bold text-[15px] rounded-xl flex items-center justify-center gap-2.5 transition-all hover:bg-gray-200 active:scale-[0.98]"
         >
-          <svg className="w-[18px] h-[18px] stroke-current stroke-[2.5] fill-none" viewBox="0 0 24 24">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
+          <Share className="w-[18px] h-[18px] stroke-[2.5]" />
           Share Results
         </button>
 
