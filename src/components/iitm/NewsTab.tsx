@@ -1,6 +1,7 @@
 import React from "react";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 interface NewsTabProps {
   sortOrder?: 'recent' | 'oldest';
@@ -22,16 +23,16 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
 
   if (contentLoading) {
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+      <div className="flex justify-center items-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-black" />
       </div>
     );
   }
   
   if (iitmNews.length === 0) {
     return (
-      <div className="text-center py-12 font-['Inter']">
-        <p className="text-gray-500">No official announcements at this time.</p>
+      <div className="text-center py-12 font-['Inter'] border border-dashed border-gray-300 rounded-lg">
+        <p className="text-gray-500 text-sm uppercase tracking-wide">No official announcements at this time.</p>
       </div>
     );
   }
@@ -42,22 +43,22 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
         Official Announcements
       </h2>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse border border-black min-w-[600px]">
+      <div className="overflow-x-auto border border-black rounded-none">
+        <table className="w-full border-collapse min-w-[600px]">
           <thead>
             <tr className="bg-[#e6f7f7]">
-              <th className="border border-black px-5 py-4 text-left font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[75%]">
+              <th className="border-b border-r border-black px-5 py-4 text-left font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[75%]">
                 Announcement Detail
               </th>
-              <th className="border border-black px-5 py-4 text-right font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[25%]">
+              <th className="border-b border-black px-5 py-4 text-right font-bold text-[11px] uppercase tracking-[0.05em] text-[#2c4a4a] w-[25%]">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody>
             {iitmNews.map((newsItem) => (
-              <tr key={newsItem.id} className="hover:bg-gray-50 transition-colors">
-                <td className="border border-black p-5 align-top">
+              <tr key={newsItem.id} className="hover:bg-gray-50 transition-colors border-b border-black last:border-b-0">
+                <td className="border-r border-black p-5 align-top">
                   <div className="text-[18px] font-bold text-black mb-2 leading-tight">
                     {newsItem.title}
                   </div>
@@ -72,14 +73,9 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
                         Important
                       </span>
                     )}
-                    {newsItem.is_featured && (
+                    {newsItem.is_featured && !newsItem.is_important && (
                       <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-[#854d0e] bg-[#fefce8] text-[#854d0e]">
                         Featured
-                      </span>
-                    )}
-                    {newsItem.tag && (
-                      <span className="text-[10px] font-bold uppercase px-2.5 py-1 border border-black bg-white text-black">
-                        {newsItem.tag}
                       </span>
                     )}
                     {(newsItem.level || newsItem.branch) && (
@@ -95,7 +91,7 @@ const NewsTab = ({ sortOrder = 'recent' }: NewsTabProps) => {
                   </div>
                 </td>
                 
-                <td className="border border-black p-5 align-top">
+                <td className="p-5 align-top">
                   <div className="flex flex-col gap-2.5 items-end">
                     {/* Primary Button: Open Portal / External Link */}
                     {newsItem.button_url && newsItem.button_text && (
