@@ -1,5 +1,5 @@
 import React from "react";
-import { Subject } from "../../types/gradeTypes";
+import { Subject } from '../types/gradeTypes';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";

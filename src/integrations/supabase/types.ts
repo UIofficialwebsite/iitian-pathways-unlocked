@@ -368,23 +368,35 @@ export type Database = {
       }
       enrollments: {
         Row: {
+          amount: number | null
           course_id: string
           created_at: string | null
           id: string
+          order_id: string | null
+          payment_id: string | null
+          status: string | null
           subject_name: string | null
           user_id: string
         }
         Insert: {
+          amount?: number | null
           course_id: string
           created_at?: string | null
           id?: string
+          order_id?: string | null
+          payment_id?: string | null
+          status?: string | null
           subject_name?: string | null
           user_id: string
         }
         Update: {
+          amount?: number | null
           course_id?: string
           created_at?: string | null
           id?: string
+          order_id?: string | null
+          payment_id?: string | null
+          status?: string | null
           subject_name?: string | null
           user_id?: string
         }
