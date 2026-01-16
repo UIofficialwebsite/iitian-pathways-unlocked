@@ -1,6 +1,9 @@
 import { Subject } from "../types/gradeTypes";
 
 export const ALL_SUBJECTS: Record<string, Subject[]> = {
+  // ==========================================
+  // DATA SCIENCE (DS)
+  // ==========================================
   foundation: [
     {
       key: "maths1",
@@ -46,7 +49,7 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
         { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
         { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
         { id: "F", label: "End Term Exam", min: 0, max: 100 },
-        { id: "Bonus", label: "Course Specific Activity (Max 100)", min: 0, max: 100 }
+        { id: "Bonus", label: "Activity Bonus (Max 100)", min: 0, max: 100 }
       ]
     },
     {
@@ -479,7 +482,326 @@ export const ALL_SUBJECTS: Record<string, Subject[]> = {
       ]
     }
   ],
-  "foundation-electronic-systems": [],
-  "diploma-electronic-systems": [],
-  "degree-electronic-systems": []
+
+  // ==========================================
+  // ELECTRONIC SYSTEMS (ES) - NEW
+  // ==========================================
+  "foundation-electronic-systems": [
+    {
+      key: "es_english1",
+      name: "English 1",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_math1",
+      name: "Math for Electronics 1",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_estc",
+      name: "Electronic Systems Thinking & Circuits",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_estc_lab",
+      name: "ESTC Lab",
+      fields: [
+        { id: "EXP", label: "Experiment Score", min: 0, max: 100 },
+        { id: "RPT", label: "Report Score", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_intro_c",
+      name: "Intro to C Programming",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "OPPE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "OPPE2", label: "OPPE 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_intro_c_lab",
+      name: "Intro to C Lab",
+      fields: [
+        { id: "TLA", label: "Timed Lab Assign. Avg", min: 0, max: 100 },
+        { id: "IL", label: "In-Campus Lab", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_english2",
+      name: "English 2",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_linux",
+      name: "Intro to Linux Programming",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "NPPE", label: "NPPE Avg", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "OPE", label: "OPE Score", min: 0, max: 100 },
+        { id: "BPTA", label: "BPT Avg", min: 0, max: 100 },
+        { id: "VMT", label: "VM Tasks", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_linux_lab",
+      name: "Intro to Linux Lab",
+      fields: [
+        { id: "OL", label: "Online Lab Avg", min: 0, max: 100 },
+        { id: "IL", label: "In-Campus Lab", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_digital",
+      name: "Digital Systems",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_eec",
+      name: "Electrical & Electronic Circuits",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 },
+        { id: "Bonus", label: "Tutorial Bonus (Max 3)", min: 0, max: 3 }
+      ]
+    },
+    {
+      key: "es_electronics_lab",
+      name: "Electronics Lab",
+      fields: [
+        { id: "WE", label: "Weekly Experiments", min: 0, max: 100 },
+        { id: "ID", label: "In-person Demo", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_embedded_c",
+      name: "Embedded C Programming",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "GRPA", label: "GRPA Avg", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_embedded_c_lab",
+      name: "Embedded C Lab",
+      fields: [
+        { id: "Viva", label: "Lab Experiment & Viva", min: 0, max: 100 }
+      ]
+    }
+  ],
+  "diploma-electronic-systems": [
+    {
+      key: "es_math2",
+      name: "Math for Electronics 2",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_signals",
+      name: "Signals and Systems",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "GrPA", label: "Programming Avg (GrPA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_python_diploma",
+      name: "Python Programming (Diploma)",
+      fields: [
+        { id: "GAA1", label: "Objective Avg (GAA1)", min: 0, max: 100 },
+        { id: "GAA2", label: "Programming Avg (GAA2)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "PE1", label: "OPPE 1", min: 0, max: 100 },
+        { id: "PE2", label: "OPPE 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_analog",
+      name: "Analog Electronic Systems",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_analog_lab",
+      name: "Analog Electronics Lab",
+      fields: [
+        { id: "WE", label: "Weekly Experiments", min: 0, max: 100 },
+        { id: "ID", label: "In-person Demo", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_dsp",
+      name: "Digital Signal Processing",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "LE", label: "Lab Avg (LE)", min: 0, max: 100 },
+        { id: "LV", label: "Lab Viva (LV)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_sensors",
+      name: "Sensors and Application",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_sensors_lab",
+      name: "Sensors Lab",
+      fields: [
+        { id: "WE", label: "Weekly Experiments", min: 0, max: 100 },
+        { id: "ID", label: "In-person Demo", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_dsd",
+      name: "Digital System Design",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "GRPA", label: "Programming Avg", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_dsd_lab",
+      name: "DSD Lab",
+      fields: [
+        { id: "WE", label: "Weekly Experiments", min: 0, max: 100 },
+        { id: "ID", label: "In-person Demo", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_control",
+      name: "Control Engineering",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    }
+  ],
+  "degree-electronic-systems": [
+    {
+      key: "es_comp_org",
+      name: "Computer Organization",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_em_fields",
+      name: "EM Fields & Transmission Lines",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_epd",
+      name: "Electronic Product Design",
+      fields: [
+        { id: "GAA", label: "Assignments (Max 10)", min: 0, max: 10 },
+        { id: "Qz1", label: "Quiz 1 (Max 40)", min: 0, max: 40 },
+        { id: "Qz2", label: "Quiz 2 (Max 40)", min: 0, max: 40 },
+        { id: "F", label: "End Term Exam (Max 100)", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_strategies",
+      name: "Strategies for Professional Growth",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "GP", label: "Group Project", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_embedded_linux",
+      name: "Embedded Linux and FPGAs",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_embedded_linux_lab",
+      name: "Embedded Linux Lab",
+      fields: [
+        { id: "Viva", label: "Lab Experiment & Viva", min: 0, max: 100 }
+      ]
+    },
+    {
+      key: "es_testing",
+      name: "Electronic Testing & Measurement",
+      fields: [
+        { id: "GAA", label: "Assignment Avg (GAA)", min: 0, max: 100 },
+        { id: "Qz1", label: "Quiz 1", min: 0, max: 100 },
+        { id: "Qz2", label: "Quiz 2", min: 0, max: 100 },
+        { id: "F", label: "End Term Exam", min: 0, max: 100 }
+      ]
+    }
+  ]
 };
