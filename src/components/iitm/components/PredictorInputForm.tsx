@@ -19,14 +19,14 @@ export default function PredictorInputForm({
 }: PredictorInputFormProps) {
   
   // Filter out 'F' (End Term) AND 'Bonus' fields to show only required inputs
-  const inputFields = subject.fields.filter(f => f.id !== 'F' && f.id !== 'Bonus');
+  const inputFields = subject.fields.filter(f => f.id !== 'F' && !f.label.toLowerCase().includes('bonus'));
 
   const handleValueChange = (fieldId: string, value: string, max: number) => {
     if (value === "") { onInputChange(fieldId, value); return; }
     const num = parseFloat(value);
     if (/^\d*\.?\d*$/.test(value)) {
       if (!isNaN(num) && num <= max) onInputChange(fieldId, value);
-      // Allow intermediate invalid states like "10." handled by regex
+      else if (isNaN(num)) onInputChange(fieldId, value);
     }
   };
 
