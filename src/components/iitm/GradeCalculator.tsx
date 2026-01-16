@@ -16,7 +16,7 @@ interface GradeCalculatorProps {
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // 1. Initialize from URL
+  // Initialize from URL (e.g. ?subject=maths1)
   const initialSubject = searchParams.get("subject") || "";
   
   const [selectedSubject, setSelectedSubject] = useState(initialSubject);
@@ -35,7 +35,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
-  // 2. Validate URL subject against current filter
+  // Validate URL subject matches current level/branch
   useEffect(() => {
     const validSubject = filteredSubjects.find(s => s.key === selectedSubject);
     if (!validSubject && selectedSubject !== "") {
@@ -50,7 +50,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     setInputValues({});
     setResult(null);
     
-    // 3. Update URL on change
+    // Sync with URL
     setSearchParams(prev => {
       if (val) {
         prev.set("subject", val);
@@ -94,20 +94,20 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
         {/* 01. Select Course */}
-        {/* Added relative and z-index to ensure dropdown stays on top */}
-        <div className="mb-10 w-full max-w-3xl relative z-50">
+        <div className="mb-10 w-full max-w-3xl relative">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
             01. Select Course
           </Label>
+          
           <Select value={selectedSubject} onValueChange={handleSubjectChange}>
-            <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal">
+            <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal relative z-10">
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
             
-            {/* Added high z-index to content to prevent clipping */}
-            <SelectContent className="z-[200] max-h-[300px] bg-white">
+            {/* FIX: z-[9999] forces the dropdown to stay on top of all other layers */}
+            <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
               {filteredSubjects.map((subject) => (
-                <SelectItem key={subject.key} value={subject.key} className="font-sans cursor-pointer py-3 text-base">
+                <SelectItem key={subject.key} value={subject.key} className="font-sans cursor-pointer py-3 text-base focus:bg-gray-100">
                   {subject.name}
                 </SelectItem>
               ))}
