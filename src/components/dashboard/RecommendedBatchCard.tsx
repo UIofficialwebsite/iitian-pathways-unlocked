@@ -5,15 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, Share2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Tables } from '@/integrations/supabase/types';
+import EnrollButton from '@/components/EnrollButton'; // Updated import
 
-// --- HELPER FUNCTIONS (MOVED TO TOP & UPDATED) ---
+// --- HELPER FUNCTIONS ---
 
 /**
  * Helper function (outside component)
  * Formats a date string (YYYY-MM-DD) to a more readable format (DD Month YYYY)
  */
 const formatDate = (dateStr: string | null | undefined): string => {
-  // --- THIS IS THE REQUESTED CHANGE ---
   if (!dateStr) return 'To be announced'; 
   try {
     return new Date(dateStr).toLocaleDateString('en-GB', {
@@ -22,7 +22,6 @@ const formatDate = (dateStr: string | null | undefined): string => {
       year: 'numeric',
     });
   } catch (error) {
-    // --- THIS IS THE REQUESTED CHANGE ---
     return 'To be announced'; 
   }
 };
@@ -118,7 +117,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
   const finalPriceValue = (salePrice !== null && salePrice < originalPrice) ? salePrice : originalPrice;
   const finalPriceString = finalPriceValue === 0 ? 'Free' : `₹${Math.round(finalPriceValue)}`;
   
-  // Use the helper functions (now defined at the top)
+  // Use the helper functions
   const startDate = formatDate(start_date);
   const endDate = formatDate(end_date);
   const audienceText = getAudienceText(course);
@@ -143,6 +142,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
       <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
         
         <div className="flex justify-between items-start gap-3">
+          {/* This line-clamp-2 class reduces the title to 2 lines max */}
           <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem] flex-1">
             {title || 'Unnamed Batch'}
           </h3>
@@ -218,11 +218,16 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
               Explore
             </Button>
           </Link>
-          <Link to={`/courses/${id}`}>
-            <Button className="w-full font-bold bg-royal hover:bg-royal/90">
-              Buy Now
-            </Button>
-          </Link>
+          
+          {/* Replaced the old Buy Now button with EnrollButton */}
+          <EnrollButton
+            courseId={id}
+            enrollmentLink={course.enroll_now_link || undefined}
+            coursePrice={finalPriceValue}
+            className="w-full font-bold bg-royal hover:bg-royal/90"
+          >
+            Buy Now
+          </EnrollButton>
         </div>
 
       </CardContent>
