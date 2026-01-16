@@ -18,26 +18,8 @@ export default function ScoreInputForm({
   onCalculate
 }: ScoreInputFormProps) {
   
-  const handleChange = (fieldId: string, value: string, max: number) => {
-    // Allow empty string to clear input
-    if (value === "") {
-      onInputChange(fieldId, value);
-      return;
-    }
-
-    // Check if it's a valid number
-    if (/^\d*\.?\d*$/.test(value)) {
-      const numVal = parseFloat(value);
-      // STRICT CAP: Only allow update if value <= max
-      if (numVal <= max) {
-        onInputChange(fieldId, value);
-      }
-      // If > max, we do nothing (reject the input)
-    }
-  };
-
   return (
-    <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
       <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
          <Label className="text-xs font-bold uppercase tracking-wide text-gray-500 font-['Inter']">
            02. Enter Scores
@@ -59,14 +41,13 @@ export default function ScoreInputForm({
               inputMode="decimal"
               placeholder={`Enter score (<= ${field.max})`}
               value={inputValues[field.id] || ""}
-              onChange={(e) => handleChange(field.id, e.target.value, field.max)}
+              onChange={(e) => onInputChange(field.id, e.target.value)}
               className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-['Inter'] font-normal placeholder:font-normal placeholder:text-gray-300 transition-colors"
             />
           </div>
         ))}
       </div>
 
-      {/* Calculate Button - Deep Blue */}
       <div className="flex justify-start">
         <Button 
           onClick={onCalculate}
