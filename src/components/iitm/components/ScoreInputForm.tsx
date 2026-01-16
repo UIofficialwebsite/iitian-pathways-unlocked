@@ -18,6 +18,29 @@ export default function ScoreInputForm({
   onCalculate
 }: ScoreInputFormProps) {
   
+  // Custom handler to enforce max limit
+  const handleValueChange = (fieldId: string, value: string, max: number) => {
+    // Allow empty string to let user clear input
+    if (value === "") {
+      onInputChange(fieldId, value);
+      return;
+    }
+
+    const numericValue = parseFloat(value);
+    
+    // Valid if it matches numeric pattern
+    if (/^\d*\.?\d*$/.test(value)) {
+      // Check Max Cap: Only update if value is <= Max
+      if (!isNaN(numericValue) && numericValue <= max) {
+        onInputChange(fieldId, value);
+      } else if (isNaN(numericValue)) {
+        // Handle edge case like "." being typed first
+        onInputChange(fieldId, value);
+      }
+      // If > max, we do nothing (ignore the input), effectively capping it
+    }
+  };
+
   return (
     <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500 font-['Inter']">
       
@@ -45,14 +68,14 @@ export default function ScoreInputForm({
               inputMode="decimal"
               placeholder={`Enter score (<= ${field.max})`}
               value={inputValues[field.id] || ""}
-              onChange={(e) => onInputChange(field.id, e.target.value)}
+              onChange={(e) => handleValueChange(field.id, e.target.value, field.max)}
               className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-['Inter'] font-normal placeholder:font-normal placeholder:text-gray-300 transition-colors"
             />
           </div>
         ))}
       </div>
 
-      {/* Calculate Button */}
+      {/* Calculate Button - Deep Blue, Semi-Bold */}
       <div className="flex justify-start">
         <Button 
           onClick={onCalculate}
