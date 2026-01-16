@@ -40,7 +40,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   }, []);
 
   const handleEnroll = async () => {
-    // 1. Check Authentication
+    // 1. Check Auth
     if (isAuthenticated === false) {
       localStorage.setItem('authRedirectUrl', window.location.pathname);
       window.location.href = '/auth';
@@ -49,7 +49,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
     if (isProcessing) return;
 
-    // 2. External Link Handling
+    // 2. Handle External Links
     if (enrollmentLink) {
       window.open(enrollmentLink, '_blank');
       return;
@@ -67,25 +67,24 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     setIsProcessing(true);
 
     try {
-      // 3. Get User Details
+      // 3. Get User Info
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) throw new Error("User not authenticated");
 
       console.log("Creating order for user:", user.email);
 
-      // 4. Call Backend to Create Order
+      // 4. Invoke Edge Function
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
           amount: coursePrice,
           userId: user.id,
           customerEmail: user.email, 
-          customerPhone: user.phone, 
+          customerPhone: user.phone,
         },
       });
 
-      // 5. Handle Backend Errors
       if (error) {
         console.error("Supabase Invoke Error:", error);
         try {
@@ -100,11 +99,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         throw new Error("Invalid response from payment server: missing session ID");
       }
 
-      // 6. Load Cashfree SDK and Checkout
+      // 5. Initialize Cashfree SDK
       const script = document.createElement('script');
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
       script.onload = () => {
-        // CRITICAL FIX: Use the environment returned by the backend
+        // CRITICAL: Use the environment returned from the backend
         const cashfreeMode = data.environment || 'sandbox'; 
         
         console.log(`Initializing Cashfree in ${cashfreeMode} mode`);
