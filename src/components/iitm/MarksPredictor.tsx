@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { ALL_SUBJECTS } from "./data/subjectsData";
 import { predictRequiredScore } from "./utils/predictorLogic";
@@ -9,20 +9,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 
 interface MarksPredictorProps {
-  level: string; // Changed from Level to string to accept any casing safely
+  level: string; 
   branch: "data-science" | "electronic-systems" | string;
 }
+
+export type PredictionResultData = { 
+  required: number | null; 
+  possible: boolean; 
+  finalGrade: number 
+};
 
 export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialSubject = searchParams.get("subject") || "";
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  const [targetGrade, setTargetGrade] = useState<string>("S");
-  const [result, setResult] = useState<{ required: number | null; possible: boolean; finalGrade: number } | null>(null);
+  // Stores the calculation result for ALL grades (S, A, B...)
+  const [results, setResults] = useState<Record<string, PredictionResultData> | null>(null);
 
   const filteredSubjects = useMemo(() => {
-    // Robustly generate the key by forcing lowercase
     const getSubjectsKey = () => {
       const normalizedLevel = level?.toLowerCase() || "foundation";
       const normalizedBranch = branch?.toLowerCase().replace(" ", "-") || "data-science";
@@ -34,9 +39,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       }
       return normalizedLevel;
     };
-
-    const key = getSubjectsKey();
-    return ALL_SUBJECTS[key] || [];
+    return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
   const currentSubject = useMemo(() => 
@@ -52,7 +55,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       return newParams;
     });
     setInputValues({});
-    setResult(null);
+    setResults(null);
   };
 
   const handleInputChange = (fieldId: string, value: string) => {
@@ -69,15 +72,21 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
       numericValues[key] = parseFloat(inputValues[key]) || 0;
     });
 
-    // Cast level to Level type for the logic function
     const safeLevel = (level?.toLowerCase() || "foundation") as Level;
-    const prediction = predictRequiredScore(safeLevel, currentSubject.key, numericValues, targetGrade);
-    setResult(prediction);
+    const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
+    const newResults: Record<string, PredictionResultData> = {};
+
+    // Calculate requirements for ALL grades
+    grades.forEach(grade => {
+      newResults[grade] = predictRequiredScore(safeLevel, currentSubject.key, numericValues, grade);
+    });
+
+    setResults(newResults);
   };
 
   const handleReset = () => {
     setInputValues({});
-    setResult(null);
+    setResults(null);
   };
 
   return (
@@ -110,26 +119,22 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
           </Select>
         </div>
 
-        {/* 02. Enter Scores & Target */}
+        {/* 02. Enter Scores */}
         <div className="relative z-0">
           {currentSubject && (
             <PredictorInputForm 
               subject={currentSubject}
               inputValues={inputValues}
-              targetGrade={targetGrade}
               onInputChange={handleInputChange}
-              onTargetChange={setTargetGrade}
               onCalculate={handleCalculate}
             />
           )}
         </div>
 
         {/* Result Card */}
-        {result && currentSubject && (
+        {results && currentSubject && (
           <PredictorResult 
-            result={result}
-            targetGrade={targetGrade}
-            subjectKey={currentSubject.key}
+            results={results}
             onReset={handleReset}
           />
         )}
