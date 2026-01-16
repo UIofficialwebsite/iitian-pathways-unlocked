@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import html2canvas from "html2canvas";
-import { Share, Download } from "lucide-react";
+import { Share } from "lucide-react";
 import { getGradeFormula } from "../utils/gradeCalculations";
 import { ALL_SUBJECTS } from "../data/subjectsData";
 import { Subject } from "../../types/gradeTypes";
@@ -20,7 +20,6 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   const resultRef = useRef<HTMLDivElement>(null);
   const formula = getGradeFormula(subjectKey);
 
-  // Helper to find the subject object to get real labels
   const getSubjectDetails = (): Subject | undefined => {
     for (const level in ALL_SUBJECTS) {
       const found = ALL_SUBJECTS[level].find((s) => s.key === subjectKey);
@@ -31,13 +30,11 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
 
   const subjectDetails = getSubjectDetails();
 
-  // Helper to map input keys (e.g., "Qz1") to Labels (e.g., "Quiz 1")
   const getLabelForKey = (key: string) => {
     const field = subjectDetails?.fields.find((f) => f.id === key);
     return field ? field.label : key;
   };
 
-  // Helper to generate Legend based on formula keys
   const getFormulaLegend = (formula: string) => {
     const legendItems = [];
     if (formula.includes("F")) legendItems.push("F = End Term Exam");
@@ -54,10 +51,9 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
     if (!resultRef.current) return;
 
     try {
-      // Capture the element as a canvas
       const canvas = await html2canvas(resultRef.current, {
-        backgroundColor: "#ffffff", // Ensure white background for image
-        scale: 2, // Higher resolution
+        backgroundColor: "#ffffff",
+        scale: 2,
         useCORS: true,
       });
 
@@ -69,7 +65,6 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
 
       const file = new File([imageBlob], "grade-result.png", { type: "image/png" });
 
-      // Check if native sharing is supported (Mobile/Modern Browsers)
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
           files: [file],
@@ -77,7 +72,6 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
           text: `I calculated my expected grade for ${subjectDetails?.name || 'Course'}!`,
         });
       } else {
-        // Fallback: Download the image
         const link = document.createElement("a");
         link.href = canvas.toDataURL("image/png");
         link.download = `Grade_Result_${subjectDetails?.name || "Report"}.png`;
@@ -90,22 +84,22 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
     }
   };
 
-  // Conditional Color Logic
   const gradeColor = result.letter === 'U' ? '#d32f2f' : '#16a34a';
 
   return (
-    <div className="w-full max-w-[800px] mx-auto mt-12 font-['Inter'] text-[#000000]">
+    // Removed max-w constraints to ensure full width alignment with the page
+    <div className="w-full mt-12 font-['Inter'] text-[#000000]">
       
       {/* CAPTURE AREA START */}
-      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative">
+      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full">
         
-        {/* Branding Watermark */}
-        <div className="absolute top-4 right-6 text-[10px] font-bold text-gray-300 uppercase tracking-widest pointer-events-none">
-          predicted by Unknown IITians
+        {/* Branding Watermark - Sans Serif, SemiBold */}
+        <div className="absolute top-4 right-6 text-[10px] font-sans font-semibold text-gray-300 uppercase tracking-widest pointer-events-none">
+          IITM Pathways Unlocked
         </div>
 
         {/* SECTION 1: OVERVIEW */}
-        <div className="mb-10">
+        <div className="mb-10 w-full">
           <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Overview</span>
           <table className="w-full border-collapse border border-black table-fixed">
             <tbody>
@@ -130,7 +124,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         </div>
 
         {/* SECTION 2: SCORE BREAKDOWN */}
-        <div className="mb-10">
+        <div className="mb-10 w-full">
           <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Score Breakdown</span>
           <table className="w-full border-collapse border border-black text-[14px]">
             <thead>
@@ -163,7 +157,7 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
         </div>
 
         {/* SECTION 3: CALCULATION LOGIC */}
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Calculation Logic</span>
           <table className="w-full border-collapse border border-black text-[14px]">
             <thead>
@@ -179,9 +173,9 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
                   <div className="font-mono text-[13px] leading-relaxed text-[#333333] mb-3">
                     {formula}
                   </div>
-                  {/* Legend Section */}
+                  {/* Legend Section Updated to Ref: */}
                   <div className="text-[11px] text-gray-500 border-t pt-2 mt-1">
-                    <span className="font-bold">Legend: </span>
+                    <span className="font-bold">Ref: </span>
                     {getFormulaLegend(formula)}
                   </div>
                 </td>
