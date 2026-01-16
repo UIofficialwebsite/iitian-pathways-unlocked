@@ -12,7 +12,7 @@ interface GradeResultProps {
 export default function GradeResult({ result, onReset }: GradeResultProps) {
   
   const handleShare = async () => {
-    const text = `My projected grade is ${result.letter} (${result.score}%)! Checked with UI Grade Planner.`;
+    const text = `My expected grade is ${result.letter} (${result.score}%)! Checked with UI Grade Planner.`;
     if (navigator.share) {
       try {
         await navigator.share({
@@ -30,7 +30,7 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
   };
 
   return (
-    <div className="w-full max-w-[500px] mx-auto animate-in zoom-in-95 duration-500 ease-out mt-8">
+    <div className="w-full animate-in zoom-in-95 duration-500 ease-out mt-8 font-sans">
       
       {/* 1. The Result Card (Black Block) */}
       <div className="bg-black text-white rounded-2xl p-8 py-12 text-center shadow-xl mb-6 relative overflow-hidden">
@@ -38,25 +38,25 @@ export default function GradeResult({ result, onReset }: GradeResultProps) {
         {/* Subtle decorative gradient at top */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-gray-800 via-gray-500 to-gray-800 opacity-20"></div>
 
-        {/* Label */}
-        <span className="block text-[11px] font-bold uppercase tracking-[0.2em] opacity-50 mb-4 font-sans text-gray-300">
-          Projected Grade
+        {/* Label - Updated to "Expected Grade", slightly larger, semi-bold */}
+        <span className="block text-[13px] font-semibold uppercase tracking-[0.2em] opacity-60 mb-4 text-gray-300">
+          Expected Grade
         </span>
         
-        {/* Big Grade Letter */}
-        <div className="text-[110px] font-black leading-none tracking-tighter mb-8 font-sans text-white">
+        {/* Big Grade Letter - Updated to SemiBold to match request */}
+        <div className="text-[110px] font-semibold leading-none tracking-tighter mb-8 text-white">
           {result.letter}
         </div>
 
         {/* Stats Row (Bordered Top) */}
-        <div className="flex justify-center gap-10 pt-8 border-t border-white/15">
+        <div className="flex justify-center gap-12 pt-8 border-t border-white/15">
           <div className="flex flex-col items-center">
-            <span className="block text-[22px] font-bold font-sans">{result.score}</span>
-            <span className="text-[10px] font-bold uppercase opacity-40 mt-1 font-sans tracking-wider">Total Marks</span>
+            <span className="block text-[28px] font-semibold">{result.score}</span>
+            <span className="text-[11px] font-semibold uppercase opacity-50 mt-1 tracking-wider">Total Marks</span>
           </div>
           <div className="flex flex-col items-center">
-            <span className="block text-[22px] font-bold font-sans">{result.points}</span>
-            <span className="text-[10px] font-bold uppercase opacity-40 mt-1 font-sans tracking-wider">Grade Value</span>
+            <span className="block text-[28px] font-semibold">{result.points}</span>
+            <span className="text-[11px] font-semibold uppercase opacity-50 mt-1 tracking-wider">Grade Point</span>
           </div>
         </div>
       </div>
