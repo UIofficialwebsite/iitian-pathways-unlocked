@@ -16,7 +16,7 @@ interface GradeCalculatorProps {
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Initialize subject from URL if available
+  // 1. Initialize from URL
   const initialSubject = searchParams.get("subject") || "";
   
   const [selectedSubject, setSelectedSubject] = useState(initialSubject);
@@ -35,11 +35,10 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
-  // Validate and sync subject with filtered list
+  // 2. Validate URL subject against current filter
   useEffect(() => {
     const validSubject = filteredSubjects.find(s => s.key === selectedSubject);
     if (!validSubject && selectedSubject !== "") {
-      // If the URL subject doesn't belong to this level/branch, clear it
       setSelectedSubject("");
     }
   }, [filteredSubjects, selectedSubject]);
@@ -51,7 +50,7 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     setInputValues({});
     setResult(null);
     
-    // Update URL path/query when filter changes
+    // 3. Update URL on change
     setSearchParams(prev => {
       if (val) {
         prev.set("subject", val);
@@ -95,7 +94,8 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
         {/* 01. Select Course */}
-        <div className="mb-10 w-full max-w-3xl">
+        {/* Added relative and z-index to ensure dropdown stays on top */}
+        <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
             01. Select Course
           </Label>
@@ -103,9 +103,11 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
             <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal">
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
-            <SelectContent>
+            
+            {/* Added high z-index to content to prevent clipping */}
+            <SelectContent className="z-[200] max-h-[300px] bg-white">
               {filteredSubjects.map((subject) => (
-                <SelectItem key={subject.key} value={subject.key} className="font-sans">
+                <SelectItem key={subject.key} value={subject.key} className="font-sans cursor-pointer py-3 text-base">
                   {subject.name}
                 </SelectItem>
               ))}
@@ -114,14 +116,16 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
         </div>
 
         {/* 02. Enter Scores */}
-        {currentSubject && (
-          <ScoreInputForm 
-            subject={currentSubject}
-            inputValues={inputValues}
-            onInputChange={handleInputChange}
-            onCalculate={calculateGrade}
-          />
-        )}
+        <div className="relative z-0">
+          {currentSubject && (
+            <ScoreInputForm 
+              subject={currentSubject}
+              inputValues={inputValues}
+              onInputChange={handleInputChange}
+              onCalculate={calculateGrade}
+            />
+          )}
+        </div>
 
         {/* Result Card */}
         {result && (
