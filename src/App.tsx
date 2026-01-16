@@ -7,7 +7,6 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
 import ScrollPersistence from "@/components/ScrollPersistence";
 
-
 // Page Imports
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -17,7 +16,7 @@ import ExamPreparation from "./pages/ExamPreparation";
 import JEEPrep from "./pages/JEEPrep";
 import NEETPrep from "./pages/NEETPrep";
 import IITMBSPrep from "./pages/IITMBSPrep";
-import IITMBSSubjectNotesPage from "./pages/IITMBSSubjectNotesPage"; // New Page Import
+import IITMBSSubjectNotesPage from "./pages/IITMBSSubjectNotesPage";
 import Career from "./pages/Career";
 import CareerOpportunities from "./pages/CareerOpportunities";
 import JobDetails from "./pages/JobDetails";
@@ -38,6 +37,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
 import IITMCalculators from "./pages/IITMCalculators";
+import NewsDetail from "./pages/NewsDetail"; // IMPORT THE NEW PAGE
 
 const queryClient = new QueryClient();
 
@@ -65,6 +65,7 @@ const App = () => (
               {/* IITM BS ROUTES */}
               <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
+              <Route path="/news/:newsId" element={<NewsDetail />} /> {/* NEW ROUTE */}
               
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               
