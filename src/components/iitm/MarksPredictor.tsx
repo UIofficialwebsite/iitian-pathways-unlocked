@@ -24,7 +24,6 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   const initialSubject = searchParams.get("subject") || "";
 
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  // Stores the calculation result for ALL grades (S, A, B...)
   const [results, setResults] = useState<Record<string, PredictionResultData> | null>(null);
 
   const filteredSubjects = useMemo(() => {
@@ -76,7 +75,6 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
     const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
     const newResults: Record<string, PredictionResultData> = {};
 
-    // Calculate requirements for ALL grades
     grades.forEach(grade => {
       newResults[grade] = predictRequiredScore(safeLevel, currentSubject.key, numericValues, grade);
     });
@@ -90,7 +88,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
   };
 
   return (
-    <div className="w-full bg-white font-sans text-gray-900">
+    <div className="w-full bg-white font-['Inter'] text-gray-900">
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
         {/* 01. Select Course */}
@@ -103,7 +101,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
             <SelectTrigger className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-['Inter'] font-normal relative z-10">
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
-            <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
+            <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl font-['Inter']">
               {filteredSubjects.length > 0 ? (
                 filteredSubjects.map((subject) => (
                   <SelectItem key={subject.key} value={subject.key} className="font-['Inter'] cursor-pointer py-3 text-base focus:bg-gray-100 border-b border-gray-100 last:border-0">
@@ -111,7 +109,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
                   </SelectItem>
                 ))
               ) : (
-                <div className="p-4 text-sm text-gray-500 text-center">
+                <div className="p-4 text-sm text-gray-500 text-center font-['Inter']">
                   No subjects found for {level} ({branch})
                 </div>
               )}
@@ -131,7 +129,7 @@ export default function MarksPredictor({ level, branch }: MarksPredictorProps) {
           )}
         </div>
 
-        {/* Result Card */}
+        {/* Result Table */}
         {results && currentSubject && (
           <PredictorResult 
             results={results}
