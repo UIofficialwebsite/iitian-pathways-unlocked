@@ -87,17 +87,11 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
   const gradeColor = result.letter === 'U' ? '#d32f2f' : '#16a34a';
 
   return (
-    // Removed max-w constraints to ensure full width alignment with the page
     <div className="w-full mt-12 font-['Inter'] text-[#000000]">
       
       {/* CAPTURE AREA START */}
-      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full">
+      <div ref={resultRef} className="bg-white p-8 rounded-lg border border-gray-100 shadow-sm relative w-full pb-16">
         
-        {/* Branding Watermark - Sans Serif, SemiBold */}
-        <div className="absolute top-4 right-6 text-[10px] font-sans font-semibold text-gray-300 uppercase tracking-widest pointer-events-none">
-          predicted by Unknown IITians
-        </div>
-
         {/* SECTION 1: OVERVIEW */}
         <div className="mb-10 w-full">
           <span className="block text-[14px] font-semibold text-[#1a1a1a] mb-3 border-b pb-2">Overview</span>
@@ -173,7 +167,6 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
                   <div className="font-mono text-[13px] leading-relaxed text-[#333333] mb-3">
                     {formula}
                   </div>
-                  {/* Legend Section Updated to Ref: */}
                   <div className="text-[11px] text-gray-500 border-t pt-2 mt-1">
                     <span className="font-bold">Ref: </span>
                     {getFormulaLegend(formula)}
@@ -183,6 +176,12 @@ export default function GradeResult({ result, inputValues, subjectKey, onReset }
             </tbody>
           </table>
         </div>
+
+        {/* Branding Watermark (Bottom Right) */}
+        <div className="absolute bottom-4 right-6 text-[10px] font-sans font-semibold text-black uppercase tracking-widest pointer-events-none opacity-90">
+          predicted by Unknown IITians
+        </div>
+
       </div>
       {/* CAPTURE AREA END */}
 
