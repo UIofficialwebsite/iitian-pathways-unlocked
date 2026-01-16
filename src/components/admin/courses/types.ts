@@ -22,5 +22,7 @@ export interface Course {
   level: string | null;
   enroll_now_link: string | null;
   language: string | null;
-  student_status?: string | null; // For compatibility with some components
+  student_status?: string | null;
+  // Add this field to match your SQL table
+  parent_course_id?: string | null;
 }
