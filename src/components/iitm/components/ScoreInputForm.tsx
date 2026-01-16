@@ -1,58 +1,53 @@
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import React, { useEffect } from "react";
+import { Subject } from "../types/gradeTypes";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Subject } from "../types/gradeTypes";
 
 interface ScoreInputFormProps {
   subject: Subject;
-  inputValues: Record<string, number>;
+  inputValues: Record<string, string>;
   onInputChange: (fieldId: string, value: string) => void;
   onCalculate: () => void;
-  onReset: () => void;
 }
 
 export default function ScoreInputForm({ 
   subject, 
   inputValues, 
-  onInputChange, 
-  onCalculate, 
-  onReset 
+  onInputChange,
+  onCalculate
 }: ScoreInputFormProps) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">{subject.name}</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {subject.fields.map((field) => (
-            <div key={field.id} className="space-y-2">
-              <Label htmlFor={field.id}>{field.label}</Label>
-              <Input
-                id={field.id}
-                type="number"
-                min={field.min}
-                max={field.max}
-                value={inputValues[field.id] || ""}
-                onChange={(e) => onInputChange(field.id, e.target.value)}
-                // Updated placeholder format to use <= notation
-                placeholder={`Enter ${field.label.toLowerCase()} (<= ${field.max})`}
-              />
-            </div>
-          ))}
-        </div>
+  
+  // Auto-trigger calculation when inputs change
+  useEffect(() => {
+    onCalculate();
+  }, [inputValues]);
 
-        <div className="flex gap-2">
-          <Button onClick={onCalculate} className="bg-royal hover:bg-royal-dark">
-            Calculate Grade
-          </Button>
-          <Button variant="outline" onClick={onReset}>
-            Reset
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+  return (
+    <div className="mb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="flex justify-between items-end pb-2 border-b border-gray-200 mb-6">
+         <Label className="text-xs font-semibold uppercase tracking-wide text-gray-500 font-sans">
+           02. Enter Scores
+         </Label>
+      </div>
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+        {subject.fields.map((field) => (
+          <div key={field.id} className="space-y-3">
+            <Label htmlFor={field.id} className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans">
+              {field.label}
+            </Label>
+            <Input
+              id={field.id}
+              type="text"
+              inputMode="decimal"
+              placeholder={`Enter score (<= ${field.max})`}
+              value={inputValues[field.id] || ""}
+              onChange={(e) => onInputChange(field.id, e.target.value)}
+              className="h-12 w-full text-lg bg-white border-2 border-gray-300 focus:border-black focus:ring-0 rounded-sm font-sans font-normal placeholder:font-normal placeholder:text-gray-300 transition-colors"
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
