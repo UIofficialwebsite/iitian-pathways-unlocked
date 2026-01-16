@@ -15,12 +15,12 @@ interface GradeCalculatorProps {
 
 export default function GradeCalculator({ level, branch }: GradeCalculatorProps) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const initialSubject = searchParams.get("subject") || "";
   
-  // Local state for input values and calculation result only
+  // Local state for calculation results
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ score: number; letter: string; points: number } | null>(null);
 
-  // 1. Get the list of subjects for the current Level/Branch
   const filteredSubjects = useMemo(() => {
     const getSubjectsKey = () => {
       if (branch === "electronic-systems") {
@@ -33,15 +33,12 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     return ALL_SUBJECTS[getSubjectsKey()] || [];
   }, [branch, level]);
 
-  // 2. Derive the current subject strictly from the URL parameter
   const urlSubjectKey = searchParams.get("subject");
   const currentSubject = useMemo(() => 
     filteredSubjects.find(s => s.key === urlSubjectKey),
     [filteredSubjects, urlSubjectKey]
   );
 
-  // 3. Effect: Handle tab switching or invalid URLs
-  // If the URL has a subject that doesn't exist in the current tab/branch, clear it.
   useEffect(() => {
     if (urlSubjectKey && !currentSubject) {
       setSearchParams(prev => {
@@ -52,7 +49,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     }
   }, [urlSubjectKey, currentSubject, setSearchParams]);
 
-  // 4. Effect: Clean up inputs when the subject changes
   useEffect(() => {
     setInputValues({});
     setResult(null);
@@ -102,7 +98,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
     <div className="w-full bg-white font-sans text-gray-900">
       <div className="w-full max-w-[1600px] mx-auto px-6 md:px-10 py-8">
         
-        {/* 01. Select Course */}
         <div className="mb-10 w-full max-w-3xl relative z-50">
           <Label className="text-xs font-semibold uppercase tracking-wide text-gray-600 font-sans mb-3 block">
             01. Select Course
@@ -116,7 +111,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
               <SelectValue placeholder="Choose a subject..." />
             </SelectTrigger>
             
-            {/* z-[9999] ensures dropdown is always on top */}
             <SelectContent className="z-[9999] max-h-[300px] bg-white border-2 border-gray-200 shadow-xl">
               {filteredSubjects.map((subject) => (
                 <SelectItem 
@@ -131,7 +125,6 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
           </Select>
         </div>
 
-        {/* 02. Enter Scores */}
         <div className="relative z-0">
           {currentSubject && (
             <ScoreInputForm 
@@ -143,10 +136,11 @@ export default function GradeCalculator({ level, branch }: GradeCalculatorProps)
           )}
         </div>
 
-        {/* Result Card */}
-        {result && (
+        {result && currentSubject && (
           <GradeResult 
             result={result} 
+            inputValues={inputValues}
+            subjectKey={currentSubject.key}
             onReset={resetCalculator} 
           />
         )}
