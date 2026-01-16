@@ -32,12 +32,12 @@ export default function PredictorResult({ results, onReset }: PredictorResultPro
   const grades = ['S', 'A', 'B', 'C', 'D', 'E'];
 
   return (
-    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700 flex flex-col items-center">
+    <div className="w-full mt-12 font-['Inter'] text-[#000000] animate-in fade-in slide-in-from-bottom-8 duration-700">
       
       {/* CAPTURE AREA */}
       <div 
         ref={resultRef} 
-        className="bg-white p-4 sm:p-8 w-full max-w-[850px]"
+        className="bg-white p-4 sm:p-8 w-full max-w-[850px] border border-gray-200 rounded-lg shadow-sm"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
         
