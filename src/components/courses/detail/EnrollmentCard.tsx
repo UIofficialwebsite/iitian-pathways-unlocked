@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Clock } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Clock, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
@@ -12,10 +12,11 @@ interface EnrollmentCardProps {
     course: Course;
     isDashboardView?: boolean;
     customEnrollHandler?: () => void;
-    // Restored props for robust status checking
     isMainCourseOwned?: boolean;
     ownedAddons?: string[];
     isPending?: boolean;
+    isFreeCourse?: boolean;
+    enrolling?: boolean;
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
@@ -24,7 +25,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     customEnrollHandler,
     isMainCourseOwned = false,
     ownedAddons = [],
-    isPending = false
+    isPending = false,
+    isFreeCourse = false,
+    enrolling = false
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -85,32 +88,20 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const renderMainButton = () => {
         // 1. Pending Payment State
         if (isPending) {
-            if (customEnrollHandler) {
-                 return (
-                    <Button 
-                        size="lg" 
-                        className="flex-1 text-lg w-full bg-amber-600 hover:bg-amber-700"
-                        onClick={customEnrollHandler}
-                    >
-                        <Clock className="w-4 h-4 mr-2" /> Complete Payment
-                    </Button>
-                 );
-            }
-            return (
-                <EnrollButton
-                    courseId={course.id}
-                    coursePrice={course.discounted_price || course.price}
-                    enrollmentLink={course.enroll_now_link || undefined}
+             return (
+                <Button 
+                    size="lg" 
                     className="flex-1 text-lg w-full bg-amber-600 hover:bg-amber-700"
+                    onClick={customEnrollHandler}
+                    disabled={!customEnrollHandler && !course.enroll_now_link}
                 >
                     <Clock className="w-4 h-4 mr-2" /> Complete Payment
-                </EnrollButton>
-            );
+                </Button>
+             );
         }
 
-        // 2. Already Enrolled & Active (No Upgrade Needed)
-        // If main course is owned AND no custom handler is passed (meaning no add-ons available or selected to upgrade), show Dashboard link.
-        if (isEnrolledAndActive && !customEnrollHandler) {
+        // 2. Already Enrolled & Active
+        if (isEnrolledAndActive) {
             return (
                 <Button 
                     size="lg" 
@@ -122,20 +113,25 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 3. Upgrade / Customize Case (Add-ons exist)
+        // 3. Free Enrollment (Direct) OR Upgrade/Configure (Add-ons)
         if (customEnrollHandler) {
+            const buttonText = isFreeCourse ? "Enroll Now" : "Upgrade Purchase";
+            const buttonBg = isFreeCourse ? "bg-black hover:bg-black/90" : "bg-royal hover:bg-royal/90";
+
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                    className={`flex-1 text-lg w-full ${buttonBg}`}
                     onClick={customEnrollHandler}
+                    disabled={enrolling}
                 >
-                    Upgrade Purchase
+                    {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    {buttonText}
                 </Button>
             );
         } 
         
-        // 4. Standard Enrollment (Direct Buy / Free)
+        // 4. Standard Paid Enrollment (Direct Buy)
         return (
             <EnrollButton
                 courseId={course.id}
