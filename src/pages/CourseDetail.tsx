@@ -22,10 +22,9 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
-// Import the new Section Component
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
-// Import the simplified Modal
 import BatchConfigurationModal, { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface BatchScheduleItem {
   id: string;
@@ -44,6 +43,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
+  const { user } = useAuth(); // Get current user
 
   const [course, setCourse] = useState<Course | null>(null);
   
@@ -51,6 +51,10 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const [addons, setAddons] = useState<SimpleAddon[]>([]); 
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
+  
+  // Enrollment States
+  const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
+  const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
   
   // Modal State
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
@@ -81,7 +85,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         setLoading(true);
         setError(null);
         
-        // Parallel Fetching
+        // 1. Fetch Course Details
         const [courseResult, addonsResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('course_addons').select('*').eq('course_id', courseId),
@@ -97,6 +101,34 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
+        // 2. Check Enrollment Status if User is Logged In
+        if (user) {
+          const { data: userEnrollments } = await supabase
+            .from('enrollments')
+            .select('subject_name, status')
+            .eq('user_id', user.id)
+            .eq('course_id', courseId)
+            // Filter for valid statuses (adjust based on your exact status strings)
+            .or('status.eq.success,status.eq.paid,status.eq.active');
+
+          if (userEnrollments) {
+            const ownedSubjects: string[] = [];
+            let mainOwned = false;
+
+            userEnrollments.forEach(enrollment => {
+              if (enrollment.subject_name) {
+                ownedSubjects.push(enrollment.subject_name);
+              } else {
+                // If subject_name is null, it's the main course
+                mainOwned = true;
+              }
+            });
+
+            setOwnedAddons(ownedSubjects);
+            setIsMainCourseOwned(mainOwned);
+          }
+        }
+
       } catch (err: any) {
         console.error("Fetch Error", err);
         setError(err.message || 'An unexpected error occurred.');
@@ -105,15 +137,23 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
       }
     };
     fetchCourseData();
-  }, [courseId]);
+  }, [courseId, user]);
 
-  // --- LOGIC: Direct Pay vs Config Modal ---
+  // --- LOGIC: Direct Pay vs Config Modal vs Already Enrolled ---
   const hasOptionalItems = addons.length > 0;
   
+  // Determine if the user has bought everything available
+  const allAddonsPurchased = addons.length > 0 && addons.every(addon => ownedAddons.includes(addon.subject_name));
+  const isFullyEnrolled = isMainCourseOwned && (!hasOptionalItems || allAddonsPurchased);
+
   const handleEnrollClick = () => {
-    if (hasOptionalItems) {
-      setIsConfigModalOpen(true);
-    } 
+    // If fully enrolled, just go to dashboard (handled in EnrollmentCard usually, but as fallback)
+    if (isFullyEnrolled) {
+      navigate('/dashboard');
+      return;
+    }
+    // Open modal to configure remaining items
+    setIsConfigModalOpen(true);
   };
 
   if (loading) {
@@ -146,7 +186,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const tabs = [
     { id: 'features', label: 'Features' },
-    // Only show "Subjects" tab if content exists
     ...((course.subject || addons.length > 0) ? [{ id: 'curriculum', label: 'Subjects' }] : []),
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
@@ -161,7 +200,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
        {!isDashboardView && <NavBar />}
        
        <main className="w-full">
-         {/* Header */}
          <div className="border-b border-slate-200 bg-white shadow-sm">
             <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <div className="max-w-4xl">
@@ -190,15 +228,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
              
-             {/* LEFT COLUMN */}
              <div className="lg:col-span-7 space-y-8">
                <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
-
-               {/* --- SUBJECTS & ADD-ONS SECTION (New Component) --- */}
                <div ref={sectionRefs.curriculum}>
                   <SubjectsSection course={course} addons={addons} />
                </div>
-
                <div ref={sectionRefs.about}><AboutSection course={course} /></div>
                <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
                <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
@@ -207,13 +241,16 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
              </div>
              
-             {/* RIGHT COLUMN */}
              <aside className="lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
                   <EnrollmentCard 
                       course={course} 
                       isDashboardView={isDashboardView}
-                      customEnrollHandler={hasOptionalItems ? handleEnrollClick : undefined} 
+                      // Pass enrollment status
+                      isMainCourseOwned={isMainCourseOwned}
+                      ownedAddons={ownedAddons}
+                      // If partial/optional items exist, use logic to open modal or direct enroll
+                      customEnrollHandler={hasOptionalItems || !isMainCourseOwned ? handleEnrollClick : undefined}
                   />
                 </div>
              </aside>
@@ -228,6 +265,9 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
             onClose={() => setIsConfigModalOpen(false)}
             mainCourse={course}
             addons={addons}
+            // Pass ownership info to modal
+            isMainCourseOwned={isMainCourseOwned}
+            ownedAddons={ownedAddons}
          />
        )}
     </div>
