@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,7 @@ interface EnrollmentCardProps {
     // Ownership props
     isMainCourseOwned?: boolean;
     ownedAddons?: string[];
+    isPending?: boolean; // New prop
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
@@ -22,7 +23,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     isDashboardView, 
     customEnrollHandler,
     isMainCourseOwned = false,
-    ownedAddons = []
+    ownedAddons = [],
+    isPending = false
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -33,16 +35,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
         
-    // Check for expiration
     const today = new Date();
     const endDate = course.end_date ? new Date(course.end_date) : null;
     const isExpired = endDate && today > endDate;
 
-    // Logic: If main course is owned AND user isn't upgrading, treat as enrolled
-    // Note: This simple logic assumes if customEnrollHandler is passed, there might be options.
-    // We rely on the parent (CourseDetail) to determine if there are remaining add-ons to buy.
-    
-    // Determine button state
     const isEnrolledAndActive = isMainCourseOwned && !isExpired;
 
     useEffect(() => {
@@ -87,15 +83,36 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     const renderMainButton = () => {
-        // Case 1: Already Enrolled & Active & No more upgrades (or handled by parent logic)
-        // If parent passed customEnrollHandler, it implies upgrades MIGHT be available.
-        // But if `isMainCourseOwned` is true, we should be careful about text.
-        
+        // 1. Pending State (Priority)
+        if (isPending) {
+            // If custom handler exists (for addons), use it. Otherwise use direct enroll button logic.
+            // But visually, we want to warn them.
+            if (customEnrollHandler) {
+                 return (
+                    <Button 
+                        size="lg" 
+                        className="flex-1 text-lg w-full bg-amber-600 hover:bg-amber-700"
+                        onClick={customEnrollHandler}
+                    >
+                        <Clock className="w-4 h-4 mr-2" /> Complete Payment
+                    </Button>
+                 );
+            }
+             // Direct Pay Button but styled for Pending
+            return (
+                <EnrollButton
+                    courseId={course.id}
+                    coursePrice={course.discounted_price || course.price}
+                    enrollmentLink={course.enroll_now_link || undefined}
+                    className="flex-1 text-lg w-full bg-amber-600 hover:bg-amber-700"
+                >
+                    <Clock className="w-4 h-4 mr-2" /> Complete Payment
+                </EnrollButton>
+            );
+        }
+
+        // 2. Active Enrollment
         if (isEnrolledAndActive) {
-            // If customEnrollHandler exists, it means there are optional items.
-            // But we need to check if we actually have anything left to buy?
-            // That logic resides in CourseDetail calculating 'isFullyEnrolled'. 
-            // For here, if customEnrollHandler is passed and main is owned, assume "Upgrade/Customize"
             if (customEnrollHandler) {
                  return (
                     <Button 
@@ -107,8 +124,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     </Button>
                  );
             }
-            
-            // Otherwise, purely enrolled
             return (
                 <Button 
                     size="lg" 
@@ -120,7 +135,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // Case 2: Not Enrolled or Expired -> Show Enroll/Pay Options
+        // 3. Not Enrolled / Expired / Standard Case
+        // If customEnrollHandler is provided (addons exist), use it.
         if (customEnrollHandler) {
             return (
                 <Button 
@@ -131,18 +147,19 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     Enroll Now
                 </Button>
             );
-        } else {
-            return (
-                <EnrollButton
-                    courseId={course.id}
-                    coursePrice={course.discounted_price || course.price}
-                    enrollmentLink={course.enroll_now_link || undefined}
-                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
-                >
-                    Enroll Now
-                </EnrollButton>
-            );
-        }
+        } 
+        
+        // 4. Default Direct Enrollment (No addons)
+        return (
+            <EnrollButton
+                courseId={course.id}
+                coursePrice={course.discounted_price || course.price}
+                enrollmentLink={course.enroll_now_link || undefined}
+                className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+            >
+                Enroll Now
+            </EnrollButton>
+        );
     };
 
     return (
