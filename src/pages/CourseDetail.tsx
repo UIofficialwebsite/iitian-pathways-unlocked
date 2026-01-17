@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
@@ -59,7 +59,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
-  const [isPending, setIsPending] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,12 +116,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
           if (userEnrollments && userEnrollments.length > 0) {
             const ownedSubjects: string[] = [];
             let mainOwned = false;
-            let pendingFound = false;
 
             userEnrollments.forEach(enrollment => {
               const status = enrollment.status?.toLowerCase() || '';
+              // Treat pending same as active for ownership check to avoid double buy? 
+              // User said "don't show pending anything", implies if they bought, they bought.
+              // We'll rely on Success/Paid/Active logic.
               const isSuccess = status === 'success' || status === 'paid' || status === 'active';
-              const isPendingStatus = status === 'pending';
 
               if (isSuccess) {
                 if (enrollment.subject_name) {
@@ -130,14 +130,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                 } else {
                   mainOwned = true;
                 }
-              } else if (isPendingStatus) {
-                pendingFound = true;
               }
             });
 
             setOwnedAddons(ownedSubjects);
             setIsMainCourseOwned(mainOwned);
-            setIsPending(pendingFound && !mainOwned); 
           }
         }
 
@@ -152,6 +149,15 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   }, [courseId, user]);
 
   const hasOptionalItems = addons.length > 0;
+
+  // Calculate if the user has bought EVERYTHING (Main + All Addons)
+  const isFullyEnrolled = useMemo(() => {
+    if (!isMainCourseOwned) return false;
+    if (!hasOptionalItems) return true; // Main owned, no addons exist -> Fully enrolled
+
+    // Check if every addon available is in the owned list
+    return addons.every(addon => ownedAddons.includes(addon.subject_name));
+  }, [isMainCourseOwned, addons, ownedAddons, hasOptionalItems]);
   
   const handleConfigClick = () => {
     navigate(`/courses/${courseId}/configure`);
@@ -170,7 +176,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     try {
       setEnrolling(true);
       
-      // FIX: Removed 'currency' field as it does not exist in the table schema
       const { error: enrollError } = await supabase
         .from('enrollments')
         .insert({
@@ -195,11 +200,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     }
   };
 
-  // Handler Logic:
-  // 1. If Addons Exist -> Go to Config
-  // 2. If Free & No Addons -> Direct Free Enroll
-  // 3. Else -> Undefined (EnrollmentCard uses default Payment Button)
-  
+  // Handler Logic
   let customEnrollHandler: (() => void) | undefined = undefined;
 
   if (hasOptionalItems) {
@@ -299,8 +300,8 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                       course={course} 
                       isDashboardView={isDashboardView}
                       isMainCourseOwned={isMainCourseOwned}
+                      isFullyEnrolled={isFullyEnrolled}
                       ownedAddons={ownedAddons}
-                      isPending={isPending}
                       customEnrollHandler={customEnrollHandler} 
                       isFreeCourse={course.price === 0 || course.price === null}
                       enrolling={enrolling}
