@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-// Injecting the user's specific CSS styles for the Phone Modal
+// Injecting the user's specific CSS styles
 const customStyles = `
   /* Modal Container Overrides */
   .custom-modal-wrapper {
@@ -184,20 +184,18 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   }, []);
 
   const handleEnrollClick = async () => {
-    // 1. Check Auth
     if (isAuthenticated === false) {
       localStorage.setItem('authRedirectUrl', window.location.pathname);
       window.location.href = '/auth';
       return;
     }
 
-    // 2. Check External Link
     if (enrollmentLink) {
       window.open(enrollmentLink, '_blank');
       return;
     }
 
-    // 3. Check Phone Number Requirement
+    // Check if user already has a phone number in their profile
     try {
       setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -206,6 +204,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         return;
       }
 
+      // Fetch profile to see if phone exists
       const { data: profile } = await supabase
         .from('profiles')
         .select('phone')
@@ -213,14 +212,17 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         .single();
 
       if (profile?.phone) {
+        // Phone exists, proceed directly
         processPayment(profile.phone);
       } else {
+        // Phone missing, show custom modal
         setIsProcessing(false);
         setShowPhoneDialog(true);
       }
     } catch (error) {
       console.error("Error checking profile:", error);
       setIsProcessing(false);
+      // Fallback: show dialog just in case
       setShowPhoneDialog(true);
     }
   };
@@ -236,11 +238,21 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     }
 
     setIsProcessing(true);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from('profiles').update({ phone: manualPhone }).eq('id', user.id);
+        // CRITICAL: Save phone number to profile
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ phone: manualPhone })
+          .eq('id', user.id);
+
+        if (updateError) {
+          console.error("Failed to update profile phone:", updateError);
+        }
       }
+      
       setShowPhoneDialog(false);
       await processPayment(manualPhone);
     } catch (error) {
@@ -259,8 +271,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
       console.log("Initiating Payment...");
       console.log("Course ID:", courseId);
-      console.log("Amount:", coursePrice);
-      console.log("Selected Optionals:", selectedSubjects);
+      console.log("Selected Subjects:", selectedSubjects);
 
       // Call Backend Function
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
@@ -270,7 +281,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
           userId: user.id,
           customerEmail: user.email, 
           customerPhone: phoneNumber,
-          // CRITICAL: Send the optional subject names to backend
+          // CRITICAL FIX: Pass the optional subjects to the backend
           selectedSubjects: selectedSubjects 
         },
       });
@@ -288,7 +299,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         throw new Error("Invalid response from payment server");
       }
 
-      // Initialize Cashfree SDK
       const script = document.createElement('script');
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
       script.onload = () => {
@@ -314,6 +324,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
   return (
     <>
+      {/* Inject Styles */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
 
       <Button 
@@ -331,7 +342,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         )}
       </Button>
 
-      {/* Phone Number Collection Dialog */}
+      {/* Custom Dialog Implementation */}
       <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
         <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
           
@@ -340,6 +351,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
               &times;
             </button>
 
+            {/* Horizontal Loading Dots */}
             <div className="loading-container">
               <div className="dot"></div>
               <div className="dot"></div>
