@@ -6,7 +6,6 @@ import {
   Card, 
   CardContent, 
   CardTitle, 
-  CardDescription
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,14 +18,14 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
-  status: string | null;
+  status: string | null; // Added status
+  amount: number | null; // Added amount
   courses: {
     id: string;
     title: string | null;
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
-    price: number | null; 
   } | null;
 };
 
@@ -38,19 +37,18 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Pending' | 'Unknown';
   subjects: string[]; 
   image_url: string | null;
-  price: number | null; 
+  total_paid: number; // Changed to total_paid
 };
 
-// --- Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: GroupedEnrollment; onSelectCourse?: (courseId: string) => void }) => {
   
   const StatusIndicator = () => {
     if (enrollment.status === 'Pending') {
-       return (
-         <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">
-           Payment Pending
-         </Badge>
-       );
+      return (
+        <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+          Payment Pending
+        </Badge>
+      );
     }
 
     if (enrollment.status === 'Ongoing') {
@@ -65,12 +63,8 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
       );
     }
     
-    // "Success" badge for completed/expired batches
     return (
-      <Badge 
-        className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium"
-        title="Completed"
-      >
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium">
         SUCCESS
       </Badge>
     );
@@ -81,13 +75,10 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
     : 'No end date';
 
   const PriceDisplay = () => {
-    if (enrollment.price === 0) {
+    if (enrollment.total_paid === 0) {
       return <span className="font-medium text-green-700">Free</span>;
     }
-    if (enrollment.price && enrollment.price > 0) {
-      return <span className="font-medium text-gray-800">{`₹${enrollment.price}`}</span>;
-    }
-    return null;
+    return <span className="font-medium text-gray-800">{`₹${enrollment.total_paid}`}</span>;
   };
 
   const handleClick = (e: React.MouseEvent) => {
@@ -143,29 +134,23 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   );
 };
 
-// --- No Enrollments Placeholder ---
 const NoEnrollmentsPlaceholder = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
       <Inbox className="h-32 w-32 text-gray-400 mb-6" strokeWidth={1.5} />
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">
-        No Enrollments Yet!
-      </h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">No Enrollments Yet!</h2>
       <p className="text-gray-600 max-w-md mx-auto mb-6">
         It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
       </p>
       <Link to="/courses">
         <Button size="lg" className="flex items-center">
-          Explore Courses
-          <ArrowRight className="ml-2 h-5 w-5" />
+          Explore Courses <ArrowRight className="ml-2 h-5 w-5" />
         </Button>
       </Link>
     </div>
   );
 };
 
-
-// --- Main Page Component ---
 interface MyEnrollmentsProps {
   onSelectCourse?: (courseId: string) => void;
 }
@@ -185,26 +170,25 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       
       try {
         setLoading(true);
-        // 1. Fetch raw enrollments
+        // 1. Fetch raw enrollments WITH amount and status
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
             id,
             course_id,
             subject_name,
+            amount,
             status,
             courses (
               id,
               title, 
               start_date,
               end_date,
-              image_url,
-              price
+              image_url
             )
           `)
           .eq('user_id', user.id)
-          // Hide FAILED transactions, but keep PENDING to show user status as requested
-          .neq('status', 'FAILED');
+          .neq('status', 'FAILED'); // Filter out failed attempts
 
         if (error) throw error;
 
@@ -213,7 +197,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           return;
         }
 
-        // 2. Process and group the raw data
+        // 2. Process and group
         const today = new Date();
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
@@ -221,47 +205,52 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           if (!enrollment.courses) continue; 
           const course_id = enrollment.course_id;
           
-          const endDate = enrollment.courses.end_date 
-            ? new Date(enrollment.courses.end_date) 
-            : null;
-
-          // Determine Status based on DB status column first
-          let status: GroupedEnrollment['status'] = 'Unknown';
-          const dbStatus = enrollment.status?.toUpperCase();
-
-          if (dbStatus === 'PENDING') {
-              status = 'Pending';
-          } else if (endDate && today > endDate) {
-              status = 'Batch Expired';
-          } else if (dbStatus === 'SUCCESS' || dbStatus === 'PAID' || dbStatus === 'ACTIVE') {
-              status = 'Ongoing'; 
-          } else {
-             // Fallback for nulls or other states
-             status = 'Ongoing';
+          const endDate = enrollment.courses.end_date ? new Date(enrollment.courses.end_date) : null;
+          const dbStatus = enrollment.status?.toLowerCase() || 'pending';
+          
+          // Determine Status Priority
+          // If we already have "Ongoing", we keep it. If we have "Pending", we can upgrade to "Ongoing".
+          let calculatedStatus: GroupedEnrollment['status'] = 'Pending';
+          
+          const isRowActive = ['success', 'paid', 'active'].includes(dbStatus);
+          
+          if (isRowActive) {
+             if (endDate && today > endDate) {
+               calculatedStatus = 'Batch Expired';
+             } else {
+               calculatedStatus = 'Ongoing';
+             }
           }
 
-          // If we already have this course in the map, we prioritize the "best" status
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
               title: enrollment.courses.title || 'Unnamed Batch',
               start_date: enrollment.courses.start_date,
               end_date: enrollment.courses.end_date,
-              status: status,
+              status: calculatedStatus,
               subjects: [],
               image_url: enrollment.courses.image_url,
-              price: enrollment.courses.price,
+              total_paid: 0,
             });
           }
 
           const groupedEntry = enrollmentsMap.get(course_id)!;
-          
+
+          // Update Status Priority: Ongoing > Batch Expired > Pending
+          if (calculatedStatus === 'Ongoing') {
+             groupedEntry.status = 'Ongoing';
+          } else if (calculatedStatus === 'Batch Expired' && groupedEntry.status !== 'Ongoing') {
+             groupedEntry.status = 'Batch Expired';
+          }
+
+          // Sum up the amount paid (Handle nulls as 0)
+          groupedEntry.total_paid += (enrollment.amount || 0);
+
+          // Add subject
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
           }
-          
-          // Logic: If any part of the course is 'Ongoing', the whole card shows as Ongoing.
-          if (status === 'Ongoing') groupedEntry.status = 'Ongoing';
         }
 
         const processedEnrollments = Array.from(enrollmentsMap.values());
@@ -270,7 +259,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       } catch (error: any) {
         toast({
           title: "Error",
-          description: "Could not fetch your enrollments. " + error.message,
+          description: "Could not fetch enrollments.",
           variant: "destructive",
         });
       } finally {
