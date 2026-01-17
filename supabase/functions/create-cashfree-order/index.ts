@@ -7,39 +7,32 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    if (!envSecret || !envKey) {
-      throw new Error("CRITICAL: Cashfree API Keys are missing!");
-    }
+    if (!envSecret || !envKey) throw new Error("CRITICAL: Cashfree API Keys are missing!");
 
-    // --- UPDATED: Accept courseIds (Array) OR courseId (Single) ---
-    const { courseIds, courseId, amount, userId, customerPhone, customerEmail } = await req.json();
+    // 1. Get Inputs from Frontend
+    const { 
+      courseId,             
+      selectedSubjects,     // <--- Array of STRINGS e.g. ["Python", "Stats"]
+      amount, 
+      userId, 
+      customerPhone,
+      customerEmail
+    } = await req.json();
 
-    // Normalize to an array: If courseIds exists, use it; otherwise wrap courseId
-    const targetCourseIds = courseIds && Array.isArray(courseIds) ? courseIds : [courseId];
-
-    if (targetCourseIds.length === 0 || !targetCourseIds[0]) {
-        throw new Error("No course IDs provided for enrollment");
-    }
-
-    const cashfreeApiUrl = cashfreeEnv === "production"
-      ? "https://api.cashfree.com/pg/orders"
-      : "https://sandbox.cashfree.com/pg/orders";
-
-    // Create a Unique Order ID
     const orderId = `order_${Date.now()}_${userId}`;
     const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
     const validEmail = customerEmail || "test@example.com";
 
-    // 1. Prepare Cashfree Payload
+    // 2. Prepare Cashfree Payload
     const orderPayload = {
       order_id: orderId,
       order_amount: amount,
@@ -50,13 +43,14 @@ serve(async (req: Request) => {
         customer_email: validEmail,
       },
       order_meta: {
-        return_url: `${Deno.env.get("SUPABASE_URL") ?? "http://localhost:54321"}/functions/v1/verify-cashfree-payment?order_id={order_id}`,
+        return_url: `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id={order_id}`,
       },
     };
 
     console.log("Sending to Cashfree:", JSON.stringify(orderPayload));
 
-    // 2. Call Cashfree API
+    // 3. Call Cashfree
+    const cashfreeApiUrl = cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders";
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
       headers: {
@@ -70,34 +64,27 @@ serve(async (req: Request) => {
 
     if (!cashfreeResponse.ok) {
       const errorBody = await cashfreeResponse.text();
-      console.error("Cashfree API Failure:", errorBody);
-      throw new Error(`Cashfree Rejected Request: ${errorBody}`);
+      throw new Error(`Cashfree Rejected: ${errorBody}`);
     }
 
     const orderData = await cashfreeResponse.json();
 
-    // 3. Save Multiple Enrollments to Database
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    // 4. Save to Database using the NEW simplified function
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Create an array of rows to insert
-    const enrollmentRows = targetCourseIds.map((id: string, index: number) => ({
-        user_id: userId,
-        course_id: id,
-        // We store the full amount on the first course (Main Course)
-        // and 0 on the add-ons to avoid inflating your revenue stats.
-        amount: index === 0 ? amount : 0, 
-        order_id: orderId,
-        status: "pending",
-    }));
+    const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
+      p_user_id: userId,
+      p_course_id: courseId,
+      p_addon_subjects: selectedSubjects || [], // Passing ["Python"]
+      p_order_id: orderId,
+      p_payment_id: null, 
+      p_total_amount: amount,
+      p_status: 'pending'
+    });
 
-    const { error: insertError } = await supabase.from("enrollments").insert(enrollmentRows);
-
-    if (insertError) {
-        console.error("DB Insert Error:", insertError);
-        throw new Error("Failed to create enrollment records");
+    if (dbError) {
+        console.error("DB Error:", dbError);
+        throw new Error("Enrollment Record Failed");
     }
 
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
@@ -106,7 +93,7 @@ serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    console.error("Function Error:", error.message);
+    console.error("Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
