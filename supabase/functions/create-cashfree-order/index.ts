@@ -7,7 +7,10 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
     const envKey = Deno.env.get("CASHFREE_KEY");
@@ -16,23 +19,28 @@ serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    if (!envSecret || !envKey) throw new Error("CRITICAL: Cashfree API Keys are missing!");
+    if (!envSecret || !envKey) {
+      throw new Error("CRITICAL: Cashfree API Keys are missing in Supabase Secrets!");
+    }
 
-    // 1. Get Inputs from Frontend
+    // 1. GET INPUTS (Updated to accept Subject Names)
     const { 
-      courseId,             
-      selectedSubjects,     // <--- Array of STRINGS e.g. ["Python", "Stats"]
+      courseId, 
+      selectedSubjects, // <--- Array of Strings e.g. ["Python", "Stats"]
       amount, 
       userId, 
-      customerPhone,
-      customerEmail
+      customerPhone, 
+      customerEmail 
     } = await req.json();
 
+    if (!courseId) throw new Error("Course ID is required");
+
+    // Generate Unique Order ID
     const orderId = `order_${Date.now()}_${userId}`;
     const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
     const validEmail = customerEmail || "test@example.com";
 
-    // 2. Prepare Cashfree Payload
+    // 2. PREPARE CASHFREE ORDER
     const orderPayload = {
       order_id: orderId,
       order_amount: amount,
@@ -49,8 +57,11 @@ serve(async (req: Request) => {
 
     console.log("Sending to Cashfree:", JSON.stringify(orderPayload));
 
-    // 3. Call Cashfree
-    const cashfreeApiUrl = cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders";
+    // 3. CALL CASHFREE API
+    const cashfreeApiUrl = cashfreeEnv === "production"
+      ? "https://api.cashfree.com/pg/orders"
+      : "https://sandbox.cashfree.com/pg/orders";
+
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
       headers: {
@@ -64,12 +75,13 @@ serve(async (req: Request) => {
 
     if (!cashfreeResponse.ok) {
       const errorBody = await cashfreeResponse.text();
-      throw new Error(`Cashfree Rejected: ${errorBody}`);
+      console.error("Cashfree API Failure:", errorBody);
+      throw new Error(`Cashfree Rejected Request: ${errorBody}`);
     }
 
     const orderData = await cashfreeResponse.json();
 
-    // 4. Save to Database using the NEW simplified function
+    // 4. SAVE TO DB (Using RPC to handle duplicates/add-ons safely)
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
@@ -83,8 +95,8 @@ serve(async (req: Request) => {
     });
 
     if (dbError) {
-        console.error("DB Error:", dbError);
-        throw new Error("Enrollment Record Failed");
+        console.error("DB Enrollment Failed:", dbError);
+        throw new Error("Database Enrollment Failed: " + dbError.message);
     }
 
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
@@ -93,7 +105,7 @@ serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    console.error("Error:", error.message);
+    console.error("Function Error:", error.message);
     return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
