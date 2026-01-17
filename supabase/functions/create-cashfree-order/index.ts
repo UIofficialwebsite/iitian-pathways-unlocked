@@ -7,20 +7,28 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  // 1. Handle CORS Pre-flight request
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
 
   try {
+    // 2. Initialize Environment Variables
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-    if (!envSecret || !envKey) throw new Error("Cashfree keys missing in Supabase Secrets");
+    if (!envSecret || !envKey) {
+      throw new Error("Cashfree keys missing in Supabase Secrets");
+    }
 
-    // Capture Origin to redirect back to the correct site (Localhost or Live)
+    // 3. Capture the Origin (Frontend URL)
+    // This ensures we redirect back to localhost or the live site dynamically
     const origin = req.headers.get("origin") || "https://preview.lovable.app";
 
+    // 4. Parse Request Body
     const { 
       courseId, 
       selectedSubjects, 
@@ -32,34 +40,37 @@ serve(async (req: Request) => {
 
     const orderId = `order_${Date.now()}_${userId}`;
     
-    // Construct the Verification URL (This is where Cashfree should send the user)
+    // 5. Construct the Verification URL
+    // This is the CRITICAL part: We point Cashfree to our Edge Function, NOT the dashboard directly.
     const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
 
-    const cashfreeResponse = await fetch(
-      cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-client-id": envKey,
-          "x-client-secret": envSecret,
-          "x-api-version": "2023-08-01",
+    // 6. Call Cashfree API to Create Order
+    const cashfreeApiUrl = cashfreeEnv === "production" 
+      ? "https://api.cashfree.com/pg/orders" 
+      : "https://sandbox.cashfree.com/pg/orders";
+
+    const cashfreeResponse = await fetch(cashfreeApiUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-client-id": envKey,
+        "x-client-secret": envSecret,
+        "x-api-version": "2023-08-01",
+      },
+      body: JSON.stringify({
+        order_id: orderId,
+        order_amount: amount,
+        order_currency: "INR",
+        customer_details: {
+          customer_id: userId,
+          customer_phone: customerPhone || "9999999999",
+          customer_email: customerEmail || "test@example.com",
         },
-        body: JSON.stringify({
-          order_id: orderId,
-          order_amount: amount,
-          order_currency: "INR",
-          customer_details: {
-            customer_id: userId,
-            customer_phone: customerPhone || "9999999999",
-            customer_email: customerEmail || "test@example.com",
-          },
-          order_meta: {
-            return_url: verifyUrl, // Fallback return URL
-          },
-        }),
-      }
-    );
+        order_meta: {
+          return_url: verifyUrl, // Fallback return URL
+        },
+      }),
+    });
 
     if (!cashfreeResponse.ok) {
       const errText = await cashfreeResponse.text();
@@ -68,8 +79,10 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // Database Insert (using the UPSERT logic you added previously)
+    // 7. Save Pending Enrollment to Database
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // We use the new 'enroll_student_with_addons' function that handles UPSERT/Upgrades
     const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
       p_user_id: userId,
       p_course_id: courseId,
@@ -80,13 +93,17 @@ serve(async (req: Request) => {
       p_status: 'pending'
     });
 
-    if (dbError) throw new Error(`DB Error: ${dbError.message}`);
+    if (dbError) {
+      // Pass the actual DB error message to the frontend for debugging
+      throw new Error(`DB Error: ${dbError.message}`);
+    }
 
-    // Return order data AND the verifyUrl to the frontend
+    // 8. Return Success Response
+    // We send 'verifyUrl' back so the Frontend can use it as the redirect target
     return new Response(JSON.stringify({ 
       ...orderData, 
       environment: cashfreeEnv,
-      verifyUrl: verifyUrl // <--- Sending this to frontend
+      verifyUrl: verifyUrl 
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -94,8 +111,13 @@ serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
+    
+    // Return a structured JSON error so the frontend can parse it
+    return new Response(JSON.stringify({ 
+      error: error.message, 
+      details: error.stack || "No stack trace available"
+    }), {
+      status: 400, 
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
