@@ -13,6 +13,7 @@ interface CourseCardProps {
 const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+  const [hasAddons, setHasAddons] = useState(false);
 
   // Logic for "NEW" tag based on updated_at (last 30 days)
   const isNewlyLaunched = useMemo(() => {
@@ -42,27 +43,38 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  // --- PRICE CHECK LOGIC ---
+  // --- CHECK ADD-ONS & LOWEST PRICE LOGIC ---
   useEffect(() => {
-    const fetchLowestAddonPrice = async () => {
-      // Only check for add-ons if the base course is effectively free (0 or null)
-      if (course.price === 0 || course.price === null) {
-        const { data, error } = await supabase
-          .from('course_addons')
-          .select('price')
-          .eq('course_id', course.id)
-          .gt('price', 0) // Only look for PAID add-ons
-          .order('price', { ascending: true })
-          .limit(1);
+    const checkAddonsAndPrice = async () => {
+      // Fetch all add-ons for this course
+      const { data, error } = await supabase
+        .from('course_addons')
+        .select('price')
+        .eq('course_id', course.id);
 
-        if (!error && data && data.length > 0) {
-          setMinAddonPrice(data[0].price);
-        } else {
-          setMinAddonPrice(null);
+      if (!error && data && data.length > 0) {
+        setHasAddons(true);
+
+        // Only calculate "Starts at" price if the Main Batch is FREE (0 or null)
+        if (course.price === 0 || course.price === null) {
+          // Filter for paid add-ons only
+          const paidAddons = data.filter(addon => addon.price > 0);
+          
+          if (paidAddons.length > 0) {
+            // Find the lowest price among add-ons
+            const lowest = Math.min(...paidAddons.map(p => p.price));
+            setMinAddonPrice(lowest);
+          } else {
+             setMinAddonPrice(null);
+          }
         }
+      } else {
+        setHasAddons(false);
+        setMinAddonPrice(null);
       }
     };
-    fetchLowestAddonPrice();
+    
+    checkAddonsAndPrice();
   }, [course.id, course.price]);
 
   // --- RENDER HELPERS ---
@@ -70,7 +82,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const hasPaidAddons = minAddonPrice !== null;
 
   const renderPrice = () => {
-    // Case 1: Base is Free + Paid Add-ons exist => "Starts @"
+    // Case 1: Base is Free + Paid Add-ons exist => "Starts at ₹..."
     if (isBaseFree && hasPaidAddons) {
       return (
         <div className="flex flex-col leading-tight">
@@ -97,6 +109,32 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
 
     // Case 4: Standard Price
     return <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.price?.toLocaleString()}</span>;
+  };
+
+  const renderBuyButton = () => {
+    // Logic: If Add-ons exist -> Go to Config Page
+    if (hasAddons) {
+      return (
+        <button
+          onClick={() => navigate(`/courses/${course.id}/configure`)}
+          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
+        >
+          BUY NOW
+        </button>
+      );
+    }
+
+    // Logic: If No Add-ons -> Direct Enroll (Payment Popup)
+    return (
+      <EnrollButton
+        courseId={course.id}
+        enrollmentLink={course.enroll_now_link || undefined}
+        coursePrice={course.discounted_price || course.price}
+        className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
+      >
+        BUY NOW
+      </EnrollButton>
+    );
   };
 
   return (
@@ -177,15 +215,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           EXPLORE
         </button>
         
-        {/* Always "BUY NOW" regardless of enrollment type */}
-        <EnrollButton
-          courseId={course.id}
-          enrollmentLink={course.enroll_now_link || undefined}
-          coursePrice={course.discounted_price || course.price}
-          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
-        >
-          BUY NOW
-        </EnrollButton>
+        {renderBuyButton()}
       </div>
     </div>
   );
