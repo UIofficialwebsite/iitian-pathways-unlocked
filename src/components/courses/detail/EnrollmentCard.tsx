@@ -108,7 +108,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     className="flex-1 text-lg w-full bg-green-600 hover:bg-green-700"
                     onClick={() => navigate('/dashboard')}
                 >
-                    Already Enrolled <ArrowRight className="ml-2 h-5 w-5" />
+                    Let's Study <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
             );
         }
