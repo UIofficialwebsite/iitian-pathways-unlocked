@@ -47,7 +47,7 @@ const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => 
   return (
     <div className="w-full font-['Inter',sans-serif]">
        <div className="bg-white rounded-[24px] p-6 md:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 max-w-[850px] mx-auto">
-         {/* Title: Max Semi-Bold as requested */}
+         {/* Title */}
          <h2 className="text-[22px] font-semibold text-black mb-8 tracking-tight">
            Available Subjects
          </h2>
@@ -60,7 +60,8 @@ const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => 
                <div 
                  key={`${subject}-${index}`}
                  className={cn(
-                   "group flex items-center justify-between px-6 py-5 rounded-[14px] cursor-pointer",
+                   // UPDATED: rounded-lg (8px) for less rounded corners
+                   "group flex items-center justify-between px-6 py-5 rounded-lg cursor-pointer",
                    "border-[1.2px] border-transparent transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
                    // Hover: White background, Black border
                    "hover:bg-white hover:border-black hover:shadow-sm",
