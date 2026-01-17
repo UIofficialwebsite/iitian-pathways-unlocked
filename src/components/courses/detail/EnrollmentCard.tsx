@@ -5,14 +5,20 @@ import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
 import { MapPin, Calendar, BookOpen, Share2, Check } from 'lucide-react';
 import { toast } from 'sonner';
-import EnrollButton from '@/components/EnrollButton'; // Import the EnrollButton
+import EnrollButton from '@/components/EnrollButton';
 
 interface EnrollmentCardProps {
     course: Course;
     isDashboardView?: boolean;
+    // New prop to hijack the click event
+    customEnrollHandler?: () => void;
 }
 
-const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView }) => {
+const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
+    course, 
+    isDashboardView, 
+    customEnrollHandler 
+}) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
@@ -22,7 +28,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
         : 0;
 
     useEffect(() => {
-        // Automatically find the closest scrollable container for the dashboard
         const scrollContainer = isDashboardView 
             ? cardRef.current?.closest('.overflow-y-auto') || window 
             : window;
@@ -32,16 +37,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            // Trigger details reveal after 80px scroll
-            if (currentScroll > 80) {
-                setDetailsVisible(true);
-            } else {
-                setDetailsVisible(false);
-            }
+            setDetailsVisible(currentScroll > 80);
         };
 
         scrollContainer.addEventListener('scroll', handleScroll);
-        handleScroll(); // Check immediately on mount
+        handleScroll();
 
         return () => scrollContainer.removeEventListener('scroll', handleScroll);
     }, [isDashboardView]);
@@ -71,7 +71,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
     return (
         <div ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
-                <Card className="overflow-hidden rounded-lg font-sans">
+                <Card className="overflow-hidden rounded-lg font-sans bg-white">
                     <CardHeader className="p-0">
                         <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
@@ -93,7 +93,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                             )}
                         </div>
 
-                        {/* Reveals details on scroll */}
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
@@ -109,8 +108,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                                 <div className="flex items-center text-gray-700">
                                     <Calendar className="w-5 h-5 mr-3 text-gray-500" />
                                     <div className="flex flex-col">
-                                        <span className="font-normal">Starts: {formatDate(course.start_date)}</span>
-                                        <span className="font-normal text-slate-400">Ends: {formatDate(course.end_date)}</span>
+                                        <span className="font-normal">Starts: {formatDate(course.start_date || '')}</span>
+                                        <span className="font-normal text-slate-400">Ends: {formatDate(course.end_date || '')}</span>
                                     </div>
                                 </div>
                                 <div className="flex items-center text-gray-700">
@@ -123,15 +122,26 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ course, isDashboardView
                         <Separator className="my-4" />
 
                         <div className="flex gap-2">
-                            {/* Replaced generic Button with EnrollButton logic */}
-                            <EnrollButton
-                                courseId={course.id}
-                                coursePrice={course.discounted_price || course.price}
-                                enrollmentLink={course.enroll_now_link || undefined}
-                                className="flex-1 text-lg w-full"
-                            >
-                                Continue with the Enrollment
-                            </EnrollButton>
+                            {customEnrollHandler ? (
+                                // OPTION A: If Optional Items Exist -> Show Button that opens Modal
+                                <Button 
+                                    size="lg" 
+                                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                                    onClick={customEnrollHandler}
+                                >
+                                    Enroll Now
+                                </Button>
+                            ) : (
+                                // OPTION B: No Optional Items -> Direct Payment (Default Behavior)
+                                <EnrollButton
+                                    courseId={course.id}
+                                    coursePrice={course.discounted_price || course.price}
+                                    enrollmentLink={course.enroll_now_link || undefined}
+                                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                                >
+                                    Enroll Now
+                                </EnrollButton>
+                            )}
 
                             <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
