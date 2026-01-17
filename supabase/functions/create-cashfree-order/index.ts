@@ -18,10 +18,9 @@ serve(async (req: Request) => {
 
     if (!envSecret || !envKey) throw new Error("Cashfree keys missing in Supabase Secrets");
 
-    // Get the origin (Frontend URL) from the request to ensure we redirect back correctly
+    // Capture Origin to redirect back to the correct site (Localhost or Live)
     const origin = req.headers.get("origin") || "https://preview.lovable.app";
 
-    // 1. Inputs
     const { 
       courseId, 
       selectedSubjects, 
@@ -33,7 +32,9 @@ serve(async (req: Request) => {
 
     const orderId = `order_${Date.now()}_${userId}`;
     
-    // 2. Call Cashfree
+    // Construct the Verification URL (This is where Cashfree should send the user)
+    const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
+
     const cashfreeResponse = await fetch(
       cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
       {
@@ -54,8 +55,7 @@ serve(async (req: Request) => {
             customer_email: customerEmail || "test@example.com",
           },
           order_meta: {
-            // Pass the origin as a query parameter 'redirect_url'
-            return_url: `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id={order_id}&redirect_url=${encodeURIComponent(origin)}`,
+            return_url: verifyUrl, // Fallback return URL
           },
         }),
       }
@@ -68,9 +68,8 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // 3. Save to DB
+    // Database Insert (using the UPSERT logic you added previously)
     const supabase = createClient(supabaseUrl, supabaseKey);
-
     const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
       p_user_id: userId,
       p_course_id: courseId,
@@ -81,23 +80,22 @@ serve(async (req: Request) => {
       p_status: 'pending'
     });
 
-    if (dbError) {
-        throw new Error(`DB Error: ${dbError.message}`);
-    }
+    if (dbError) throw new Error(`DB Error: ${dbError.message}`);
 
-    return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
+    // Return order data AND the verifyUrl to the frontend
+    return new Response(JSON.stringify({ 
+      ...orderData, 
+      environment: cashfreeEnv,
+      verifyUrl: verifyUrl // <--- Sending this to frontend
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
-    
-    return new Response(JSON.stringify({ 
-      error: error.message, 
-      details: error.stack 
-    }), {
-      status: 400, 
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
