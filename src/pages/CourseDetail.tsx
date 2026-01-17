@@ -23,8 +23,14 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
-import BatchConfigurationModal, { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
+
+// Simplified type for addons check
+interface SimpleAddon {
+  id: string;
+  subject_name: string;
+  price: number;
+}
 
 interface BatchScheduleItem {
   id: string;
@@ -43,11 +49,9 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get current user
+  const { user } = useAuth();
 
   const [course, setCourse] = useState<Course | null>(null);
-  
-  // Data States
   const [addons, setAddons] = useState<SimpleAddon[]>([]); 
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
@@ -55,9 +59,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
-  
-  // Modal State
-  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +86,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         setLoading(true);
         setError(null);
         
-        // 1. Fetch Course Details
         const [courseResult, addonsResult, scheduleResult, faqResult] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
           supabase.from('course_addons').select('*').eq('course_id', courseId),
@@ -101,14 +101,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // 2. Check Enrollment Status if User is Logged In
+        // Check Enrollment Status
         if (user) {
           const { data: userEnrollments } = await supabase
             .from('enrollments')
             .select('subject_name, status')
             .eq('user_id', user.id)
             .eq('course_id', courseId)
-            // Filter for valid statuses (adjust based on your exact status strings)
             .or('status.eq.success,status.eq.paid,status.eq.active');
 
           if (userEnrollments) {
@@ -119,7 +118,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
               if (enrollment.subject_name) {
                 ownedSubjects.push(enrollment.subject_name);
               } else {
-                // If subject_name is null, it's the main course
                 mainOwned = true;
               }
             });
@@ -139,21 +137,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     fetchCourseData();
   }, [courseId, user]);
 
-  // --- LOGIC: Direct Pay vs Config Modal vs Already Enrolled ---
   const hasOptionalItems = addons.length > 0;
   
-  // Determine if the user has bought everything available
-  const allAddonsPurchased = addons.length > 0 && addons.every(addon => ownedAddons.includes(addon.subject_name));
-  const isFullyEnrolled = isMainCourseOwned && (!hasOptionalItems || allAddonsPurchased);
-
+  // Logic: Direct to config page if partial upgrades exist or if it's a fresh enroll with options
   const handleEnrollClick = () => {
-    // If fully enrolled, just go to dashboard (handled in EnrollmentCard usually, but as fallback)
-    if (isFullyEnrolled) {
-      navigate('/dashboard');
-      return;
-    }
-    // Open modal to configure remaining items
-    setIsConfigModalOpen(true);
+    navigate(`/courses/${courseId}/configure`);
   };
 
   if (loading) {
@@ -246,10 +234,9 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                   <EnrollmentCard 
                       course={course} 
                       isDashboardView={isDashboardView}
-                      // Pass enrollment status
                       isMainCourseOwned={isMainCourseOwned}
                       ownedAddons={ownedAddons}
-                      // If partial/optional items exist, use logic to open modal or direct enroll
+                      // Always route through the config page if there are options or complex logic
                       customEnrollHandler={hasOptionalItems || !isMainCourseOwned ? handleEnrollClick : undefined}
                   />
                 </div>
@@ -257,19 +244,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
            </div>
          </div>
        </main>
-
-       {/* --- BATCH CONFIGURATION MODAL --- */}
-       {course && (
-         <BatchConfigurationModal 
-            isOpen={isConfigModalOpen}
-            onClose={() => setIsConfigModalOpen(false)}
-            mainCourse={course}
-            addons={addons}
-            // Pass ownership info to modal
-            isMainCourseOwned={isMainCourseOwned}
-            ownedAddons={ownedAddons}
-         />
-       )}
     </div>
   );
 };
