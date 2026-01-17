@@ -19,13 +19,14 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
+  status: string | null; // Added DB status column
   courses: {
     id: string;
     title: string | null;
     start_date: string | null; 
     end_date: string | null;   
     image_url: string | null;
-    price: number | null; // Added price
+    price: number | null; 
   } | null;
 };
 
@@ -34,21 +35,28 @@ type GroupedEnrollment = {
   title: string;
   start_date: string | null; 
   end_date: string | null;   
-  status: 'Ongoing' | 'Batch Expired' | 'Unknown';
-  subjects: string[]; // Still needed for grouping logic
+  status: 'Ongoing' | 'Batch Expired' | 'Pending' | 'Unknown';
+  subjects: string[]; 
   image_url: string | null;
-  price: number | null; // Added price
+  price: number | null; 
 };
 
-// --- NEW: Enrollment List Item (Larger and refined) ---
+// --- Enrollment List Item ---
 const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: GroupedEnrollment; onSelectCourse?: (courseId: string) => void }) => {
   
   const StatusIndicator = () => {
+    if (enrollment.status === 'Pending') {
+       return (
+         <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50">
+           Payment Pending
+         </Badge>
+       );
+    }
+
     if (enrollment.status === 'Ongoing') {
       return (
         <div className="flex items-center justify-end gap-2" title="Ongoing">
           <span className="text-sm font-medium text-green-600">Ongoing</span>
-          {/* This is the "beep" effect */}
           <span className="relative flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
@@ -72,21 +80,13 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
     ? new Date(enrollment.end_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }).replace(/ /g, ' ')
     : 'No end date';
 
-  // --- NEW: Price Display Logic ---
   const PriceDisplay = () => {
     if (enrollment.price === 0) {
-      return (
-        <span className="font-medium text-green-700">Free</span> // Dark green for Free
-      );
+      return <span className="font-medium text-green-700">Free</span>;
     }
-    
     if (enrollment.price && enrollment.price > 0) {
-      return (
-        <span className="font-medium text-gray-800">{`₹${enrollment.price}`}</span> // Show price
-      );
+      return <span className="font-medium text-gray-800">{`₹${enrollment.price}`}</span>;
     }
-    
-    // Fallback if price is null
     return null;
   };
 
@@ -98,18 +98,13 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   };
 
   return (
-    // The entire card is a link, with hover effect
     <Link 
       to={`/courses/${enrollment.course_id}`} 
       className="block group"
       onClick={handleClick}
     >
-      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg
-                     border border-gray-200 group-hover:border-black transition-all duration-200">
-        {/* Increased padding from p-4 to p-5 */}
+      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200">
         <CardContent className="flex items-center gap-5 p-5">
-          
-          {/* Image Container (16:9 Aspect Ratio) - Increased size */}
           <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
@@ -118,32 +113,26 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
             />
           </div>
 
-          {/* Middle Section: Title, Date - Increased spacing */}
           <div className="flex-grow space-y-1.5">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
               <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
                 {enrollment.title}
               </CardTitle>
-              {/* Status Indicator */}
               <div className="flex-shrink-0 mt-1 sm:mt-0">
                 <StatusIndicator />
               </div>
             </div>
             
-            {/* Date - Updated to show Free/Paid */}
             <p className="text-base text-gray-600 flex items-center gap-1.5">
               <span>{formattedEndDate}</span>
               <span>•</span>
               <PriceDisplay />
             </p>
-            
           </div>
 
-          {/* Right Arrow */}
           <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
         </CardContent>
         
-        {/* Expiry Date Banner (NO LINK) - Increased padding and font size */}
         {enrollment.status === 'Batch Expired' && (
           <div className="bg-red-50 text-red-700 text-base p-4 text-center">
             This batch got expired on {formattedEndDate}!
@@ -203,6 +192,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             id,
             course_id,
             subject_name,
+            status,
             courses (
               id,
               title, 
@@ -212,7 +202,9 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
               price
             )
           `)
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          // Hide FAILED transactions, but keep PENDING to show user status
+          .neq('status', 'FAILED');
 
         if (error) throw error;
 
@@ -232,13 +224,20 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           const endDate = enrollment.courses.end_date 
             ? new Date(enrollment.courses.end_date) 
             : null;
+
+          // Determine Status
           let status: GroupedEnrollment['status'] = 'Unknown';
-          if (endDate) {
-            status = today > endDate ? 'Batch Expired' : 'Ongoing';
+          
+          if (enrollment.status === 'PENDING') {
+              status = 'Pending';
+          } else if (endDate && today > endDate) {
+              status = 'Batch Expired';
           } else {
-            status = 'Ongoing'; 
+              status = 'Ongoing'; 
           }
 
+          // If we already have this course in the map, we prioritize the "best" status
+          // e.g., if one entry is 'Ongoing' (add-on) and another is 'Pending', we treat the course as Ongoing overall
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
@@ -248,15 +247,19 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
               status: status,
               subjects: [],
               image_url: enrollment.courses.image_url,
-              price: enrollment.courses.price, // Store the price
+              price: enrollment.courses.price,
             });
           }
 
-          // Add subject to the grouped list
           const groupedEntry = enrollmentsMap.get(course_id)!;
+          
+          // Add subject
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
           }
+          
+          // Status Priority Logic: Ongoing > Batch Expired > Pending
+          if (status === 'Ongoing') groupedEntry.status = 'Ongoing';
         }
 
         const processedEnrollments = Array.from(enrollmentsMap.values());
@@ -286,18 +289,14 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
         <p className="text-gray-600">All the courses you are currently enrolled in.</p>
       </div>
 
-      {/* Conditional Content */}
       {groupedEnrollments.length === 0 ? (
-        // --- Empty State ---
         <NoEnrollmentsPlaceholder />
       ) : (
-        // --- List of EnrollmentListItem components ---
         <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
             <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} onSelectCourse={onSelectCourse} />
