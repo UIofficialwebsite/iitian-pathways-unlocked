@@ -1,9 +1,7 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { PlayCircle, Plus } from 'lucide-react';
+import React, { useMemo } from 'react';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
+import { cn } from "@/lib/utils";
 
 interface SubjectsSectionProps {
   course: Course;
@@ -11,56 +9,76 @@ interface SubjectsSectionProps {
 }
 
 const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => {
-  // If no subjects text and no addons, don't render anything
-  if (!course.subject && addons.length === 0) return null;
+  // 1. Combine and Clean Subjects
+  // We take the course.subject string (splitting by comma if it's a list) 
+  // and combine it with the addon names into a single array.
+  const subjectList = useMemo(() => {
+    const list: string[] = [];
+
+    // Process Core Subjects (Split "Maths, Physics" into distinct items)
+    if (course.subject) {
+      const coreSubjects = course.subject.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      list.push(...coreSubjects);
+    }
+
+    // Process Add-ons
+    if (addons && addons.length > 0) {
+      addons.forEach(addon => {
+        if (addon.subject_name) {
+          list.push(addon.subject_name);
+        }
+      });
+    }
+
+    // Remove duplicates just in case
+    return Array.from(new Set(list));
+  }, [course.subject, addons]);
+
+  if (subjectList.length === 0) return null;
+
+  // 2. Define Gradient Styles (Cyclical)
+  const gradients = [
+    "bg-gradient-to-b from-[#f0f7ff] to-[#e0f2fe]", // Blue
+    "bg-gradient-to-b from-[#f5f3ff] to-[#ede9fe]", // Purple
+    "bg-gradient-to-b from-[#ecfdf5] to-[#d1fae5]", // Emerald
+    "bg-gradient-to-b from-[#fffbeb] to-[#fef3c7]", // Amber
+    "bg-gradient-to-b from-[#fff1f2] to-[#ffe4e6]", // Rose
+    "bg-gradient-to-b from-[#eef2ff] to-[#e0e7ff]", // Indigo
+  ];
 
   return (
-    <div className="space-y-6">
-       <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-         <PlayCircle className="h-6 w-6 text-royal" /> Subjects & Add-ons
-       </h2>
-       
-       <Card className="border-slate-200 overflow-hidden">
-         <CardContent className="p-0">
-           <div className="divide-y divide-slate-100">
-             
-             {/* 1. MANDATORY SUBJECTS (from course.subject) */}
-             {course.subject && (
-               <div className="p-4 bg-slate-50/50">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-semibold text-slate-900">Core Subjects (Included)</h3>
-                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-none">Compulsory</Badge>
-                  </div>
-                  <p className="text-slate-600 text-sm leading-relaxed">
-                    {course.subject}
-                  </p>
+    <div className="w-full">
+       <div className="bg-white rounded-[24px] p-6 md:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 max-w-[850px] mx-auto">
+         <h2 className="text-[22px] font-bold text-black mb-8 tracking-tight">
+           Available Subjects
+         </h2>
+         
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+           {subjectList.map((subject, index) => {
+             // Pick a gradient based on index
+             const gradientClass = gradients[index % gradients.length];
+
+             return (
+               <div 
+                 key={`${subject}-${index}`}
+                 className={cn(
+                   "group flex items-center justify-between px-6 py-5 rounded-[14px] cursor-default",
+                   "border-[1.2px] border-transparent transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                   "hover:bg-white hover:border-black hover:shadow-sm",
+                   gradientClass
+                 )}
+               >
+                 <span className="text-[15px] font-semibold text-black">
+                   {subject}
+                 </span>
+                 <span className="text-lg text-black/20 group-hover:text-black transition-colors duration-200 font-normal">
+                   ›
+                 </span>
                </div>
-             )}
-
-             {/* 2. OPTIONAL ADD-ONS (from addons table) */}
-             {addons.map((addon) => (
-                 <div key={addon.id} className="p-4 flex gap-4 items-center group hover:bg-slate-50 transition-colors">
-                   <div className="flex-shrink-0">
-                     <Plus className="w-5 h-5 text-royal" />
-                   </div>
-                   <div className="flex-grow">
-                     <div className="flex justify-between items-start">
-                       <h4 className="font-semibold text-slate-900">{addon.subject_name}</h4>
-                       <div className="text-right">
-                         <span className="font-bold text-slate-900">₹{addon.price}</span>
-                         <Badge variant="outline" className="ml-2 text-[10px] text-slate-500">Optional</Badge>
-                       </div>
-                     </div>
-                     <p className="text-xs text-slate-500 mt-1">
-                        Click 'Enroll Now' to add this subject to your batch.
-                     </p>
-                   </div>
-                 </div>
-             ))}
-
-           </div>
-         </CardContent>
-       </Card>
+             );
+           })}
+         </div>
+       </div>
     </div>
   );
 };
