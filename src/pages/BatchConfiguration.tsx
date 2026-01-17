@@ -1,19 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, ShoppingCart, Lock, ArrowLeft, Loader2 } from 'lucide-react';
-import EnrollButton from '@/components/EnrollButton';
-import NavBar from '@/components/NavBar';
 import { Course } from '@/components/admin/courses/types';
-
-interface SimpleAddon {
-  id: string;
-  subject_name: string;
-  price: number;
-}
+import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
+import { useAuth } from '@/hooks/useAuth';
+import NavBar from '@/components/NavBar';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Separator } from '@/components/ui/separator';
+import { Card } from '@/components/ui/card';
+import { Loader2, Check, ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
 const BatchConfiguration = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -22,249 +19,280 @@ const BatchConfiguration = () => {
 
   const [course, setCourse] = useState<Course | null>(null);
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
+  const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
+  
   const [loading, setLoading] = useState(true);
-  
-  // Ownership State
-  const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
-  const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
-  
-  // Selection State
-  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
+  const [processing, setProcessing] = useState(false);
 
+  // --- 1. Fetch Data ---
   useEffect(() => {
     const fetchData = async () => {
       if (!courseId) return;
       try {
-        setLoading(true);
-        
-        // 1. Fetch Course & Addons
         const [courseRes, addonsRes] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).single(),
           supabase.from('course_addons').select('*').eq('course_id', courseId)
         ]);
 
         if (courseRes.error) throw courseRes.error;
-        setCourse(courseRes.data as Course);
-        if (addonsRes.data) setAddons(addonsRes.data as SimpleAddon[]);
+        setCourse(courseRes.data);
 
-        // 2. Check Ownership if logged in
-        if (user) {
-          const { data: userEnrollments } = await supabase
-            .from('enrollments')
-            .select('subject_name, status')
-            .eq('user_id', user.id)
-            .eq('course_id', courseId)
-            .or('status.eq.success,status.eq.paid,status.eq.active'); // Ensure we only check valid enrollments
-
-          if (userEnrollments) {
-            const owned: string[] = [];
-            let mainOwned = false;
-
-            userEnrollments.forEach(enrollment => {
-              if (enrollment.subject_name) {
-                owned.push(enrollment.subject_name);
-              } else {
-                mainOwned = true;
-              }
-            });
-            setOwnedAddons(owned);
-            setIsMainCourseOwned(mainOwned);
-          }
+        if (addonsRes.data) {
+          setAddons(addonsRes.data);
+          // Optional: Pre-select all add-ons? Or none? 
+          // Let's start with none selected for "Choice Making"
+          setSelectedAddonIds([]);
         }
       } catch (error) {
-        console.error("Error fetching configuration data:", error);
+        console.error('Error fetching batch details:', error);
+        toast.error('Failed to load batch details');
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
-  }, [courseId, user]);
+  }, [courseId]);
 
-  const toggleSubject = (name: string, isOwned: boolean) => {
-    if (isOwned) return;
-    setSelectedSubjects(prev => 
-      prev.includes(name) 
-        ? prev.filter(s => s !== name) 
-        : [...prev, name]
+  // --- 2. Calculations ---
+  const basePrice = course?.discounted_price ?? course?.price ?? 0;
+  
+  const selectedAddonsList = useMemo(() => {
+    return addons.filter(addon => selectedAddonIds.includes(addon.id));
+  }, [addons, selectedAddonIds]);
+
+  const addonsTotal = selectedAddonsList.reduce((sum, addon) => sum + addon.price, 0);
+  const finalTotal = basePrice + addonsTotal;
+
+  // --- 3. Handlers ---
+  const toggleAddon = (addonId: string) => {
+    setSelectedAddonIds(prev => 
+      prev.includes(addonId) 
+        ? prev.filter(id => id !== addonId) 
+        : [...prev, addonId]
     );
+  };
+
+  const handlePayment = async () => {
+    if (!user) {
+      toast.error("Please login to continue");
+      return;
+    }
+    setProcessing(true);
+    
+    // Simulate processing or redirect to actual Payment Gateway logic
+    // In a real scenario, you'd create an order on your backend here
+    // For now, we simulate a delay and success
+    setTimeout(() => {
+        setProcessing(false);
+        toast.success("Proceeding to Payment Gateway...");
+        // Navigate to payment wrapper or trigger SDK
+        // navigate('/payment', { state: { courseId, addonIds: selectedAddonIds, amount: finalTotal } });
+    }, 1000);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <NavBar />
-        <div className="flex h-[80vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-royal" />
-        </div>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
-  if (!course) {
-    return (
-      <div className="min-h-screen bg-slate-50 pt-24 text-center">
-         <NavBar />
-         <h1 className="text-xl font-bold">Course not found</h1>
-         <Button onClick={() => navigate('/courses')} className="mt-4">Back to Courses</Button>
-      </div>
-    );
-  }
+  if (!course) return <div>Course not found</div>;
 
-  // --- Pricing Logic ---
-  const basePrice = isMainCourseOwned ? 0 : (course.discounted_price || course.price);
-  
-  const addonsTotal = addons.reduce((sum, item) => {
-    if (selectedSubjects.includes(item.subject_name) && !ownedAddons.includes(item.subject_name)) {
-      return sum + Number(item.price);
-    }
-    return sum;
-  }, 0);
-
-  const finalTotal = basePrice + addonsTotal;
+  // Core Subjects List (Parsed from string)
+  const coreSubjects = course.subject 
+    ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
+    : [];
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-20">
+    <div className="min-h-screen bg-[#f7f9fc] font-['Inter',sans-serif] text-slate-900">
       <NavBar />
       
-      <div className="max-w-3xl mx-auto px-4 py-8">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(`/courses/${courseId}`)}
-          className="mb-6 -ml-2 text-slate-500 hover:text-royal"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Course Details
-        </Button>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-28">
+        
+        {/* Header */}
+        <div className="mb-10">
+          <Button 
+            variant="ghost" 
+            className="pl-0 hover:bg-transparent text-slate-500 hover:text-slate-800 mb-2" 
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Course
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Configure Your Plan</h1>
+          <p className="text-slate-500 mt-2">Customize your learning journey by selecting the subjects you need.</p>
+        </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          {/* Header */}
-          <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-              <ShoppingCart className="w-6 h-6 text-royal" />
-              Configure Your Batch
-            </h1>
-            <p className="text-slate-600 mt-2">
-              {isMainCourseOwned 
-                ? "You already own the core batch. Select additional subjects to upgrade." 
-                : "Review the mandatory core subjects and select optional add-ons to customize your learning experience."}
-            </p>
-          </div>
-
-          <div className="p-6 space-y-8">
-            {/* 1. Mandatory Section */}
-            <div>
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Included (Mandatory)</h3>
-              <div className={`p-4 border rounded-xl flex items-center justify-between transition-colors ${isMainCourseOwned ? 'bg-green-50 border-green-200' : 'bg-white border-slate-200'}`}>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                     <h4 className="font-bold text-lg text-slate-900">{course.title}</h4>
-                     {isMainCourseOwned && (
-                       <Badge className="bg-green-600 hover:bg-green-700">Purchased</Badge>
-                     )}
-                  </div>
-                  <p className="text-sm text-slate-500">
-                    {course.subject ? `Subjects: ${course.subject}` : "All Core Subjects Included"}
-                  </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* --- LEFT COLUMN: Subject Selection --- */}
+          <div className="lg:col-span-7 space-y-8">
+            
+            {/* 1. Core Subjects (Included) */}
+            {coreSubjects.length > 0 && (
+              <section>
+                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Lock className="w-3 h-3 text-green-600" /> Core Batch (Included)
+                </h3>
+                <div className="space-y-3">
+                  {coreSubjects.map((subject, idx) => (
+                    <div 
+                      key={idx} 
+                      className="flex items-center p-4 bg-white border border-slate-200 rounded-lg shadow-sm opacity-80 cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center w-5 h-5 bg-green-100 border-green-200 rounded text-green-700 mr-4">
+                        <Check className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="font-medium text-slate-700">{subject}</span>
+                      <span className="ml-auto text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                        INCLUDED
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-right pl-4">
-                   {isMainCourseOwned ? (
-                     <div className="flex flex-col items-end">
-                       <CheckCircle2 className="w-6 h-6 text-green-600 mb-1" />
-                       <span className="text-xs font-medium text-green-700">Owned</span>
-                     </div>
-                   ) : (
-                     <span className="text-xl font-bold text-slate-900">₹{course.discounted_price || course.price}</span>
-                   )}
-                </div>
-              </div>
-            </div>
+              </section>
+            )}
 
-            {/* 2. Optional Add-ons Section */}
+            {/* 2. Optional Add-ons (Choice Making) */}
             {addons.length > 0 && (
-              <div>
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">Optional Add-ons</h3>
-                <div className="grid gap-3">
+              <section>
+                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 mt-8">
+                  Available Add-ons
+                </h3>
+                <div className="space-y-3">
                   {addons.map((addon) => {
-                    const isOwned = ownedAddons.includes(addon.subject_name);
-                    const isSelected = selectedSubjects.includes(addon.subject_name);
-
+                    const isSelected = selectedAddonIds.includes(addon.id);
                     return (
                       <div 
                         key={addon.id}
-                        onClick={() => toggleSubject(addon.subject_name, isOwned)}
+                        onClick={() => toggleAddon(addon.id)}
                         className={`
-                          relative flex items-center justify-between p-4 border rounded-xl transition-all duration-200
-                          ${isOwned 
-                            ? 'bg-slate-100 border-slate-200 cursor-not-allowed opacity-80' 
-                            : isSelected 
-                              ? 'bg-blue-50 border-royal shadow-sm cursor-pointer ring-1 ring-royal' 
-                              : 'bg-white border-slate-200 hover:border-slate-300 cursor-pointer hover:shadow-sm'
-                          }
+                          group flex items-center p-4 rounded-lg border cursor-pointer transition-all duration-200
+                          ${isSelected 
+                            ? 'bg-white border-black shadow-md' 
+                            : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'}
                         `}
                       >
-                        <div className="flex items-center gap-4">
-                          <div className={`
-                            w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors
-                            ${isOwned 
-                              ? 'bg-slate-300 border-slate-300' 
-                              : isSelected 
-                                ? 'bg-royal border-royal' 
-                                : 'bg-white border-slate-300'
-                            }
-                          `}>
-                            {isOwned ? (
-                              <Lock className="w-3 h-3 text-slate-500" />
-                            ) : isSelected && (
-                              <CheckCircle2 className="w-4 h-4 text-white" />
-                            )}
-                          </div>
-                          <div>
-                            <p className={`font-semibold ${isOwned ? 'text-slate-500' : 'text-slate-900'}`}>
-                              {addon.subject_name}
-                            </p>
-                            {isOwned && <p className="text-xs text-slate-500">Already included in your plan</p>}
-                          </div>
+                        <Checkbox 
+                          checked={isSelected}
+                          onCheckedChange={() => toggleAddon(addon.id)}
+                          className="mr-4 data-[state=checked]:bg-black data-[state=checked]:border-black"
+                        />
+                        <div className="flex-1">
+                          <span className={`font-medium transition-colors ${isSelected ? 'text-black' : 'text-slate-600'}`}>
+                            {addon.subject_name}
+                          </span>
                         </div>
-                        
-                        <div>
-                          {isOwned ? (
-                             <Badge variant="outline" className="text-slate-500 border-slate-300">Purchased</Badge>
-                          ) : (
-                             <span className={`font-bold ${isSelected ? 'text-royal' : 'text-slate-700'}`}>+ ₹{addon.price}</span>
-                          )}
-                        </div>
+                        {/* Price is HIDDEN here as per request */}
                       </div>
                     );
                   })}
                 </div>
-              </div>
+              </section>
             )}
+
+             {/* Value Props / Trust Signals */}
+             <div className="grid grid-cols-2 gap-4 mt-8">
+                <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <ShieldCheck className="w-5 h-5 text-slate-400" />
+                    <span>Secure Payment Processing</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <Check className="w-5 h-5 text-slate-400" />
+                    <span>Instant Access after Payment</span>
+                </div>
+             </div>
+
           </div>
 
-          {/* Footer Summary */}
-          <div className="bg-slate-50 p-6 border-t border-slate-200">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-               <div>
-                 <p className="text-sm text-slate-500 mb-1">Total Payable Amount</p>
-                 <div className="flex items-baseline gap-1">
-                   <span className="text-3xl font-bold text-royal">₹{finalTotal}</span>
-                   {isMainCourseOwned && <span className="text-xs text-green-600 font-medium">(Upgrade Only)</span>}
-                 </div>
-               </div>
 
-               <div className="w-full sm:w-auto min-w-[200px]">
-                 <EnrollButton
-                    courseId={course.id}
-                    coursePrice={finalTotal}
-                    selectedSubjects={selectedSubjects}
-                    className="w-full text-lg h-12 bg-royal hover:bg-royal/90 shadow-lg shadow-blue-900/10"
-                    disabled={finalTotal === 0 && selectedSubjects.length === 0}
-                 >
-                    {finalTotal === 0 ? "Select Items to Buy" : "Proceed to Payment"}
-                 </EnrollButton>
-               </div>
+          {/* --- RIGHT COLUMN: Bill Summary (Sticky) --- */}
+          <div className="lg:col-span-5 relative">
+            <div className="sticky top-32">
+              <Card className="border-0 shadow-xl bg-white overflow-hidden rounded-2xl ring-1 ring-slate-200">
+                <div className="p-6 md:p-8 space-y-6">
+                  
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-900">Bill Summary</h2>
+                    <p className="text-sm text-slate-500 mt-1">Review your plan details below.</p>
+                  </div>
+
+                  <Separator className="bg-slate-100" />
+
+                  {/* Bill Table */}
+                  <div className="space-y-4">
+                    
+                    {/* Base Plan Row */}
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-semibold text-slate-900">Base Plan</div>
+                        <div className="text-xs text-slate-500 mt-0.5">Core Batch Access</div>
+                      </div>
+                      <div className="font-semibold text-slate-900">
+                        {basePrice === 0 ? "FREE" : `₹${basePrice.toLocaleString()}`}
+                      </div>
+                    </div>
+
+                    {/* Selected Add-ons Rows */}
+                    {selectedAddonsList.map((addon) => (
+                      <div key={addon.id} className="flex justify-between items-start animate-in fade-in slide-in-from-left-2 duration-300">
+                        <div>
+                          <div className="font-medium text-slate-700">{addon.subject_name}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">Add-on Subject</div>
+                        </div>
+                        <div className="font-medium text-slate-700">
+                          ₹{addon.price.toLocaleString()}
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Empty State Hint if only Base is Free */}
+                    {basePrice === 0 && selectedAddonsList.length === 0 && (
+                      <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                        No paid items selected. You can enroll for free.
+                      </div>
+                    )}
+
+                  </div>
+
+                  <Separator className="bg-slate-100" />
+
+                  {/* Total Row */}
+                  <div className="flex justify-between items-end pt-2">
+                    <div className="text-sm font-medium text-slate-500">Total Due Today</div>
+                    <div className="text-3xl font-bold text-slate-900 tracking-tight">
+                      ₹{finalTotal.toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Action Button */}
+                  <Button 
+                    size="lg" 
+                    className="w-full text-base font-medium h-12 bg-black hover:bg-black/90 text-white shadow-lg shadow-black/10 transition-all hover:scale-[1.01]"
+                    onClick={handlePayment}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
+                      </>
+                    ) : (
+                      "Continue to Payment"
+                    )}
+                  </Button>
+                  
+                  <p className="text-center text-xs text-slate-400">
+                    By confirming, you agree to our Terms of Service.
+                  </p>
+                </div>
+                
+                {/* Stripe-like colored strip at bottom */}
+                <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
+              </Card>
             </div>
           </div>
+
         </div>
       </div>
     </div>
