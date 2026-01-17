@@ -149,8 +149,9 @@ interface EnrollButtonProps {
   coursePrice?: number;
   className?: string;
   children?: React.ReactNode;
-  // NEW: Accepts array of Subject Names (Strings) for optional add-ons
+  // Accepts array of Subject Names (Strings) for optional add-ons
   selectedSubjects?: string[];
+  disabled?: boolean;
 }
 
 const EnrollButton: React.FC<EnrollButtonProps> = ({ 
@@ -159,7 +160,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   coursePrice = 0,
   className = "", 
   children = "Enroll Now",
-  selectedSubjects = [] // Default to empty if not provided
+  selectedSubjects = [], // Default to empty if not provided
+  disabled = false
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -281,7 +283,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
           userId: user.id,
           customerEmail: user.email, 
           customerPhone: phoneNumber,
-          // CRITICAL FIX: Pass the optional subjects to the backend
           selectedSubjects: selectedSubjects 
         },
       });
@@ -304,9 +305,12 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       script.onload = () => {
         const cashfreeMode = data.environment || 'sandbox'; 
         const cashfree = (window as any).Cashfree({ mode: cashfreeMode });
+        
         cashfree.checkout({
-          paymentSessionId: data.payment_session_id, 
-          returnUrl: `${window.location.origin}/dashboard`,
+          paymentSessionId: data.payment_session_id,
+          // CRITICAL FIX: Use the verifyUrl returned by the backend
+          // This ensures the database gets updated before going to the dashboard
+          returnUrl: data.verifyUrl, 
         });
       };
       document.body.appendChild(script);
@@ -330,7 +334,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       <Button 
         onClick={handleEnrollClick}
         className={className}
-        disabled={isProcessing}
+        disabled={isProcessing || disabled}
       >
         {isProcessing && !showPhoneDialog ? (
           <>
