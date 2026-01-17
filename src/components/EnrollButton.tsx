@@ -288,11 +288,17 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       });
 
       if (error) {
+        // IMPROVED ERROR HANDLING: Try to parse the real error from the backend
         let errorMessage = "Payment initialization failed";
         try {
            const body = JSON.parse(error.message);
            errorMessage = body.error || errorMessage;
-        } catch (e) { /* ignore parse error */ }
+           if (body.details) console.error("Backend Error Details:", body.details);
+        } catch (e) { 
+            // If parsing fails, use the raw message
+            if (error.message) errorMessage = error.message;
+        }
+        console.error("Supabase Invoke Error:", error);
         throw new Error(errorMessage);
       }
 
