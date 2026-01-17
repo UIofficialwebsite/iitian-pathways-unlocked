@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Course } from '@/components/admin/courses/types';
+import { Course, CourseAddon } from '@/components/admin/courses/types';
 import { cn } from "@/lib/utils";
 
 import { Skeleton } from '@/components/ui/skeleton';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   ArrowLeft, AlertCircle, Star, Users, Calendar, 
-  PlayCircle, ArrowRight, Lock, Unlock 
+  PlayCircle, ArrowRight, Lock, Unlock, Plus 
 } from 'lucide-react';
 
 import NavBar from '@/components/NavBar';
@@ -25,14 +25,7 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
-// Import the new Modal
-import BatchConfigurationModal, { BundleItemWrapper } from '@/components/courses/detail/BatchConfigurationModal';
-
-// Type for Grouped display in Syllabus
-interface BundleSection {
-  title: string;
-  items: BundleItemWrapper[];
-}
+import BatchConfigurationModal from '@/components/courses/detail/BatchConfigurationModal';
 
 interface BatchScheduleItem {
   id: string;
@@ -55,8 +48,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const [course, setCourse] = useState<Course | null>(null);
   
   // Data States
-  const [bundleItems, setBundleItems] = useState<BundleItemWrapper[]>([]);
-  const [bundleSections, setBundleSections] = useState<BundleSection[]>([]);
+  const [addons, setAddons] = useState<CourseAddon[]>([]); // Optional Subjects
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   
@@ -68,7 +60,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
-    curriculum: useRef<HTMLDivElement>(null),
+    addons: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
@@ -89,55 +81,55 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         setLoading(true);
         setError(null);
         
-        // Parallel Fetching
-        const [courseResult, bundleResult, scheduleResult, faqResult] = await Promise.all([
-          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
-          supabase.from('course_bundles').select(`
+        // 1. Fetch Main Course
+        const { data: courseData, error: courseError } = await supabase
+          .from('courses')
+          .select('*')
+          .eq('id', courseId)
+          .maybeSingle();
+
+        if (courseError) throw courseError;
+        if (!courseData) { setError("Course not found"); return; }
+        
+        setCourse(courseData as any);
+
+        // 2. Fetch Optional Add-ons (using the NEW table)
+        // We join with the 'courses' table to get details of the child subject
+        const { data: addonsData, error: addonsError } = await supabase
+          .from('course_addons')
+          .select(`
             id,
-            is_mandatory,
-            section_title,
-            child_course:courses (*)
-          `).eq('parent_course_id', courseId).order('display_order', { ascending: true }),
+            price,
+            title_override,
+            display_order,
+            child_course:courses!course_addons_child_course_id_fkey (*)
+          `)
+          .eq('parent_course_id', courseId)
+          .order('display_order', { ascending: true });
+
+        if (addonsError) console.error("Error fetching addons:", addonsError);
+        
+        if (addonsData) {
+          // Map to ensure strict type safety
+          const formattedAddons: CourseAddon[] = addonsData.map((item: any) => ({
+            id: item.id,
+            price: item.price,
+            title_override: item.title_override,
+            display_order: item.display_order,
+            child_course: item.child_course
+          })).filter(item => item.child_course); // Ensure course exists
+          
+          setAddons(formattedAddons);
+        }
+
+        // 3. Fetch Schedule & FAQs
+        const [scheduleResult, faqResult] = await Promise.all([
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
-          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId)
         ]);
 
-        if (courseResult.error) throw courseResult.error;
-        if (!courseResult.data) { setError("Course not found"); return; }
-        
-        setCourse(courseResult.data as any);
         if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
         if (faqResult.data) setFaqs(faqResult.data as any);
-
-        // Process Bundle Data
-        if (bundleResult.data) {
-          const rawItems: BundleItemWrapper[] = [];
-          const sectionsMap = new Map<string, BundleItemWrapper[]>();
-
-          bundleResult.data.forEach((item: any) => {
-            if (!item.child_course) return;
-            
-            const wrapper = {
-                linkId: item.id,
-                isMandatory: item.is_mandatory,
-                sectionTitle: item.section_title || "Included Courses",
-                course: item.child_course
-            };
-
-            rawItems.push(wrapper);
-
-            // Grouping for Syllabus
-            if (!sectionsMap.has(wrapper.sectionTitle)) {
-              sectionsMap.set(wrapper.sectionTitle, []);
-            }
-            sectionsMap.get(wrapper.sectionTitle)?.push(wrapper);
-          });
-
-          setBundleItems(rawItems);
-          setBundleSections(
-            Array.from(sectionsMap.entries()).map(([title, items]) => ({ title, items }))
-          );
-        }
 
       } catch (err: any) {
         console.error("Fetch Error", err);
@@ -149,16 +141,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     fetchCourseData();
   }, [courseId]);
 
-  // --- LOGIC: Direct Pay vs Config Modal ---
-  // If there are ANY optional items, we must open the modal.
-  // If everything is mandatory (or no bundle), we just pay directly.
-  const hasOptionalItems = bundleItems.some(item => !item.isMandatory);
-  
+  // --- ENROLLMENT LOGIC ---
   const handleEnrollClick = () => {
-    if (hasOptionalItems) {
+    // If there are optional subjects, we MUST show the modal to let them choose
+    if (addons.length > 0) {
       setIsConfigModalOpen(true);
     } 
-    // If not optional, we do nothing here; the EnrollmentCard uses default behavior.
+    // If no add-ons, the EnrollmentCard handles the direct purchase logic automatically
   };
 
   if (loading) {
@@ -191,7 +180,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const tabs = [
     { id: 'features', label: 'Features' },
-    ...(bundleSections.length > 0 ? [{ id: 'curriculum', label: 'Syllabus' }] : []),
+    ...(addons.length > 0 ? [{ id: 'addons', label: 'Add-ons' }] : []),
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
@@ -238,40 +227,46 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
              <div className="lg:col-span-7 space-y-8">
                <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
 
-               {/* --- SYLLABUS LIST (Read Only) --- */}
-               {bundleSections.length > 0 && (
-                 <div ref={sectionRefs.curriculum} className="space-y-6">
-                   <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                     <PlayCircle className="h-6 w-6 text-royal" /> Course Syllabus & Subjects
-                   </h2>
-                   {bundleSections.map((section, idx) => (
-                     <Card key={idx} className="border-slate-200 overflow-hidden">
-                       <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-3 px-4">
-                           <CardTitle className="text-md font-bold text-slate-800">{section.title}</CardTitle>
-                       </CardHeader>
-                       <CardContent className="p-0">
-                         <div className="divide-y divide-slate-100">
-                           {section.items.map(({ course: subCourse, isMandatory }) => (
-                               <div key={subCourse.id} className="p-4 flex gap-4 items-center group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => navigate(`/courses/${subCourse.id}`)}>
-                                 <div className="flex-shrink-0">
-                                   {isMandatory ? <Lock className="w-5 h-5 text-slate-400" /> : <Unlock className="w-5 h-5 text-green-500" />}
-                                 </div>
-                                 <div className="flex-grow">
-                                   <div className="flex justify-between items-start">
-                                     <h4 className="font-semibold text-slate-900 group-hover:text-royal transition-colors">{subCourse.title}</h4>
-                                     <Badge variant="outline" className={isMandatory ? "bg-slate-100" : "bg-green-50 text-green-700 border-green-200"}>
-                                        {isMandatory ? "Compulsory" : "Optional Add-on"}
-                                     </Badge>
-                                   </div>
-                                   <p className="text-xs text-slate-500 line-clamp-1 mt-1">{subCourse.description}</p>
-                                 </div>
-                                 <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-royal" />
+               {/* --- OPTIONAL ADD-ONS LIST --- */}
+               {addons.length > 0 && (
+                 <div ref={sectionRefs.addons} className="space-y-6">
+                   <div className="flex items-center justify-between">
+                      <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                        <Plus className="h-6 w-6 text-royal" /> Optional Add-ons
+                      </h2>
+                      <Badge variant="outline" className="text-slate-500">Available with this batch</Badge>
+                   </div>
+
+                   <Card className="border-slate-200 overflow-hidden">
+                     <CardContent className="p-0">
+                       <div className="divide-y divide-slate-100">
+                         {addons.map((addon) => (
+                             <div 
+                               key={addon.id} 
+                               className="p-4 flex gap-4 items-center group hover:bg-slate-50 transition-colors cursor-pointer" 
+                               onClick={() => navigate(`/courses/${addon.child_course.id}`)}
+                             >
+                               <div className="flex-shrink-0">
+                                 <Unlock className="w-5 h-5 text-royal/60" />
                                </div>
-                           ))}
-                         </div>
-                       </CardContent>
-                     </Card>
-                   ))}
+                               <div className="flex-grow">
+                                 <div className="flex justify-between items-start">
+                                   <h4 className="font-semibold text-slate-900 group-hover:text-royal transition-colors">
+                                     {addon.title_override || addon.child_course.title}
+                                   </h4>
+                                   <div className="flex flex-col items-end">
+                                      <span className="font-bold text-slate-900">₹{addon.price}</span>
+                                      <span className="text-[10px] text-slate-400 uppercase tracking-wide">Add-on Price</span>
+                                   </div>
+                                 </div>
+                                 <p className="text-xs text-slate-500 line-clamp-1 mt-1">{addon.child_course.description}</p>
+                               </div>
+                               <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-royal" />
+                             </div>
+                         ))}
+                       </div>
+                     </CardContent>
+                   </Card>
                  </div>
                )}
 
@@ -283,15 +278,18 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
              </div>
              
-             {/* RIGHT COLUMN */}
+             {/* RIGHT COLUMN - ENROLLMENT CARD */}
              <aside className="lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
-                  {/* Logic: Pass the handler ONLY if there are optional items. Otherwise undefined (Direct Pay) */}
-                  <EnrollmentCard 
-                      course={course} 
-                      isDashboardView={isDashboardView}
-                      customEnrollHandler={hasOptionalItems ? handleEnrollClick : undefined} 
-                  />
+                  {/* We hijack the click ONLY if addons exist */}
+                  <div onClick={addons.length > 0 ? undefined : undefined}> 
+                      <EnrollmentCard 
+                          course={course} 
+                          isDashboardView={isDashboardView}
+                          // Pass handler only if we need the Modal
+                          customEnrollHandler={addons.length > 0 ? handleEnrollClick : undefined} 
+                      />
+                  </div>
                 </div>
              </aside>
            </div>
@@ -304,7 +302,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
             isOpen={isConfigModalOpen}
             onClose={() => setIsConfigModalOpen(false)}
             mainCourse={course}
-            bundleItems={bundleItems}
+            addons={addons}
          />
        )}
     </div>
