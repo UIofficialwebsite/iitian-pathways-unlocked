@@ -167,18 +167,16 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
     if (!course) return;
 
-    // Optional: Check for profile completeness (e.g. phone number) here if needed
-
     try {
       setEnrolling(true);
       
+      // FIX: Removed 'currency' field as it does not exist in the table schema
       const { error: enrollError } = await supabase
         .from('enrollments')
         .insert({
           user_id: user.id,
           course_id: course.id,
           amount: 0,
-          currency: 'INR',
           status: 'active', // Direct success for free
           payment_id: 'free_enrollment',
           subject_name: null // Main course
