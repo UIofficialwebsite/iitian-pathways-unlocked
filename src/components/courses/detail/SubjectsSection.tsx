@@ -10,8 +10,6 @@ interface SubjectsSectionProps {
 
 const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => {
   // 1. Combine and Clean Subjects
-  // We take the course.subject string (splitting by comma if it's a list) 
-  // and combine it with the addon names into a single array.
   const subjectList = useMemo(() => {
     const list: string[] = [];
 
@@ -30,7 +28,7 @@ const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => 
       });
     }
 
-    // Remove duplicates just in case
+    // Remove duplicates
     return Array.from(new Set(list));
   }, [course.subject, addons]);
 
@@ -47,30 +45,34 @@ const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => 
   ];
 
   return (
-    <div className="w-full">
+    <div className="w-full font-['Inter',sans-serif]">
        <div className="bg-white rounded-[24px] p-6 md:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 max-w-[850px] mx-auto">
-         <h2 className="text-[22px] font-bold text-black mb-8 tracking-tight">
+         {/* Title: Max Semi-Bold as requested */}
+         <h2 className="text-[22px] font-semibold text-black mb-8 tracking-tight">
            Available Subjects
          </h2>
          
          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
            {subjectList.map((subject, index) => {
-             // Pick a gradient based on index
              const gradientClass = gradients[index % gradients.length];
 
              return (
                <div 
                  key={`${subject}-${index}`}
                  className={cn(
-                   "group flex items-center justify-between px-6 py-5 rounded-[14px] cursor-default",
+                   "group flex items-center justify-between px-6 py-5 rounded-[14px] cursor-pointer",
                    "border-[1.2px] border-transparent transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                   // Hover: White background, Black border
                    "hover:bg-white hover:border-black hover:shadow-sm",
                    gradientClass
                  )}
                >
+                 {/* Subject Name: Medium to Semi-Bold */}
                  <span className="text-[15px] font-semibold text-black">
                    {subject}
                  </span>
+                 
+                 {/* Chevron Arrow */}
                  <span className="text-lg text-black/20 group-hover:text-black transition-colors duration-200 font-normal">
                    ›
                  </span>
