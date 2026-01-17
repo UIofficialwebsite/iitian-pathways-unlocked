@@ -1,21 +1,18 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Course, CourseAddon } from '@/components/admin/courses/types';
+import { Course } from '@/components/admin/courses/types';
 import { cn } from "@/lib/utils";
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
-  ArrowLeft, AlertCircle, Star, Users, Calendar, 
-  PlayCircle, ArrowRight, Lock, Unlock, Plus 
+  ArrowLeft, AlertCircle, Star, Users, Calendar 
 } from 'lucide-react';
 
 import NavBar from '@/components/NavBar';
-import Footer from '@/components/Footer';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
@@ -25,7 +22,10 @@ import ScheduleSection from '@/components/courses/detail/ScheduleSection';
 import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
-import BatchConfigurationModal from '@/components/courses/detail/BatchConfigurationModal';
+// Import the new Section Component
+import SubjectsSection from '@/components/courses/detail/SubjectsSection';
+// Import the simplified Modal
+import BatchConfigurationModal, { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 
 interface BatchScheduleItem {
   id: string;
@@ -48,7 +48,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const [course, setCourse] = useState<Course | null>(null);
   
   // Data States
-  const [addons, setAddons] = useState<CourseAddon[]>([]); // Optional Subjects
+  const [addons, setAddons] = useState<SimpleAddon[]>([]); 
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   
@@ -60,7 +60,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
-    addons: useRef<HTMLDivElement>(null),
+    curriculum: useRef<HTMLDivElement>(null),
     about: useRef<HTMLDivElement>(null),
     moreDetails: useRef<HTMLDivElement>(null),
     schedule: useRef<HTMLDivElement>(null),
@@ -81,55 +81,21 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         setLoading(true);
         setError(null);
         
-        // 1. Fetch Main Course
-        const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
-          .maybeSingle();
-
-        if (courseError) throw courseError;
-        if (!courseData) { setError("Course not found"); return; }
-        
-        setCourse(courseData as any);
-
-        // 2. Fetch Optional Add-ons (using the NEW table)
-        // We join with the 'courses' table to get details of the child subject
-        const { data: addonsData, error: addonsError } = await supabase
-          .from('course_addons')
-          .select(`
-            id,
-            price,
-            title_override,
-            display_order,
-            child_course:courses!course_addons_child_course_id_fkey (*)
-          `)
-          .eq('parent_course_id', courseId)
-          .order('display_order', { ascending: true });
-
-        if (addonsError) console.error("Error fetching addons:", addonsError);
-        
-        if (addonsData) {
-          // Map to ensure strict type safety
-          const formattedAddons: CourseAddon[] = addonsData.map((item: any) => ({
-            id: item.id,
-            price: item.price,
-            title_override: item.title_override,
-            display_order: item.display_order,
-            child_course: item.child_course
-          })).filter(item => item.child_course); // Ensure course exists
-          
-          setAddons(formattedAddons);
-        }
-
-        // 3. Fetch Schedule & FAQs
-        const [scheduleResult, faqResult] = await Promise.all([
+        // Parallel Fetching
+        const [courseResult, addonsResult, scheduleResult, faqResult] = await Promise.all([
+          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
+          supabase.from('course_addons').select('*').eq('course_id', courseId),
           supabase.from('batch_schedule').select('*').eq('course_id', courseId),
-          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId)
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
         ]);
 
+        if (courseResult.error) throw courseResult.error;
+        if (!courseResult.data) { setError("Course not found"); return; }
+        
+        setCourse(courseResult.data as any);
         if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
         if (faqResult.data) setFaqs(faqResult.data as any);
+        if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
       } catch (err: any) {
         console.error("Fetch Error", err);
@@ -141,13 +107,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     fetchCourseData();
   }, [courseId]);
 
-  // --- ENROLLMENT LOGIC ---
+  // --- LOGIC: Direct Pay vs Config Modal ---
+  const hasOptionalItems = addons.length > 0;
+  
   const handleEnrollClick = () => {
-    // If there are optional subjects, we MUST show the modal to let them choose
-    if (addons.length > 0) {
+    if (hasOptionalItems) {
       setIsConfigModalOpen(true);
     } 
-    // If no add-ons, the EnrollmentCard handles the direct purchase logic automatically
   };
 
   if (loading) {
@@ -180,7 +146,8 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const tabs = [
     { id: 'features', label: 'Features' },
-    ...(addons.length > 0 ? [{ id: 'addons', label: 'Add-ons' }] : []),
+    // Only show "Subjects" tab if content exists
+    ...((course.subject || addons.length > 0) ? [{ id: 'curriculum', label: 'Subjects' }] : []),
     { id: 'about', label: 'About' },
     { id: 'moreDetails', label: 'More Details' },
     { id: 'schedule', label: 'Schedule' },
@@ -227,48 +194,10 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
              <div className="lg:col-span-7 space-y-8">
                <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
 
-               {/* --- OPTIONAL ADD-ONS LIST --- */}
-               {addons.length > 0 && (
-                 <div ref={sectionRefs.addons} className="space-y-6">
-                   <div className="flex items-center justify-between">
-                      <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                        <Plus className="h-6 w-6 text-royal" /> Optional Add-ons
-                      </h2>
-                      <Badge variant="outline" className="text-slate-500">Available with this batch</Badge>
-                   </div>
-
-                   <Card className="border-slate-200 overflow-hidden">
-                     <CardContent className="p-0">
-                       <div className="divide-y divide-slate-100">
-                         {addons.map((addon) => (
-                             <div 
-                               key={addon.id} 
-                               className="p-4 flex gap-4 items-center group hover:bg-slate-50 transition-colors cursor-pointer" 
-                               onClick={() => navigate(`/courses/${addon.child_course.id}`)}
-                             >
-                               <div className="flex-shrink-0">
-                                 <Unlock className="w-5 h-5 text-royal/60" />
-                               </div>
-                               <div className="flex-grow">
-                                 <div className="flex justify-between items-start">
-                                   <h4 className="font-semibold text-slate-900 group-hover:text-royal transition-colors">
-                                     {addon.title_override || addon.child_course.title}
-                                   </h4>
-                                   <div className="flex flex-col items-end">
-                                      <span className="font-bold text-slate-900">₹{addon.price}</span>
-                                      <span className="text-[10px] text-slate-400 uppercase tracking-wide">Add-on Price</span>
-                                   </div>
-                                 </div>
-                                 <p className="text-xs text-slate-500 line-clamp-1 mt-1">{addon.child_course.description}</p>
-                               </div>
-                               <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-royal" />
-                             </div>
-                         ))}
-                       </div>
-                     </CardContent>
-                   </Card>
-                 </div>
-               )}
+               {/* --- SUBJECTS & ADD-ONS SECTION (New Component) --- */}
+               <div ref={sectionRefs.curriculum}>
+                  <SubjectsSection course={course} addons={addons} />
+               </div>
 
                <div ref={sectionRefs.about}><AboutSection course={course} /></div>
                <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
@@ -278,18 +207,14 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
              </div>
              
-             {/* RIGHT COLUMN - ENROLLMENT CARD */}
+             {/* RIGHT COLUMN */}
              <aside className="lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
-                  {/* We hijack the click ONLY if addons exist */}
-                  <div onClick={addons.length > 0 ? undefined : undefined}> 
-                      <EnrollmentCard 
-                          course={course} 
-                          isDashboardView={isDashboardView}
-                          // Pass handler only if we need the Modal
-                          customEnrollHandler={addons.length > 0 ? handleEnrollClick : undefined} 
-                      />
-                  </div>
+                  <EnrollmentCard 
+                      course={course} 
+                      isDashboardView={isDashboardView}
+                      customEnrollHandler={hasOptionalItems ? handleEnrollClick : undefined} 
+                  />
                 </div>
              </aside>
            </div>
