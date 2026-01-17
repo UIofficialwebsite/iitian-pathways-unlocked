@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Course } from '@/components/admin/courses/types';
-import { CheckCircle2, Circle, ShoppingCart, Plus, Loader2 } from 'lucide-react';
+import { CheckCircle2, ShoppingCart } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 
-interface BundleItemWrapper {
+// Wrapper type for bundle items
+export interface BundleItemWrapper {
   linkId: string;
   isMandatory: boolean;
   sectionTitle: string;
@@ -31,7 +30,7 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
 }) => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
-  // Initialize selection: Mandatory items are always selected
+  // Initialize selection: Mandatory items are always selected by default
   useEffect(() => {
     if (isOpen) {
       const mandatoryIds = bundleItems
@@ -53,7 +52,7 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
     });
   };
 
-  // --- Calculations ---
+  // --- Price Calculations ---
   const basePrice = mainCourse.discounted_price || mainCourse.price;
   
   // Calculate Add-on cost (Only optional items that are selected)
@@ -65,9 +64,9 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
   }, 0);
 
   const finalTotal = basePrice + addonsTotal;
-  const selectedCount = selectedIds.length;
+  const selectedCount = 1 + selectedIds.length; // 1 (Base) + Addons
 
-  // Group items for display
+  // Group items by section for display
   const sections: Record<string, BundleItemWrapper[]> = {};
   bundleItems.forEach(item => {
     const title = item.sectionTitle || "Other";
@@ -77,20 +76,20 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 bg-white">
         
         {/* Header */}
         <DialogHeader className="p-6 pb-4 border-b">
-          <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+          <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-slate-900">
             <ShoppingCart className="w-6 h-6 text-royal" />
             Configure Your Batch
           </DialogTitle>
           <DialogDescription>
-            Select the subjects you want to include in your enrollment.
+            Customize your learning path. Optional subjects can be added below.
           </DialogDescription>
         </DialogHeader>
 
-        {/* Scrollable Content */}
+        {/* Scrollable List of Subjects */}
         <ScrollArea className="flex-1 p-6">
           <div className="space-y-6">
             
@@ -99,11 +98,11 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
               <div className="flex justify-between items-start">
                 <div>
                   <h3 className="font-bold text-lg text-slate-900">{mainCourse.title}</h3>
-                  <Badge variant="secondary" className="mt-1 bg-green-100 text-green-700 hover:bg-green-100">
+                  <Badge variant="secondary" className="mt-1 bg-green-100 text-green-700 hover:bg-green-100 border-none">
                     Base Course (Included)
                   </Badge>
                 </div>
-                <span className="font-bold text-lg">₹{basePrice}</span>
+                <span className="font-bold text-lg text-slate-900">₹{basePrice}</span>
               </div>
             </div>
 
@@ -123,25 +122,28 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
                       key={item.course.id}
                       onClick={() => toggleSelection(item.course.id, item.isMandatory)}
                       className={`
-                        flex items-center gap-4 p-4 rounded-lg border transition-all cursor-pointer
-                        ${isSelected ? 'border-royal bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'}
-                        ${item.isMandatory ? 'opacity-80 cursor-default' : ''}
+                        flex items-center gap-4 p-4 rounded-lg border transition-all 
+                        ${!item.isMandatory ? 'cursor-pointer hover:border-slate-300' : 'cursor-default opacity-90'}
+                        ${isSelected ? 'border-royal bg-blue-50/30' : 'border-slate-200'}
                       `}
                     >
                       {/* Checkbox Icon */}
                       <div className={`
-                        w-6 h-6 rounded-full flex items-center justify-center border transition-colors
+                        w-6 h-6 rounded-full flex items-center justify-center border transition-colors flex-shrink-0
                         ${isSelected ? 'bg-royal border-royal text-white' : 'bg-white border-slate-300'}
                       `}>
                         {isSelected && <CheckCircle2 className="w-4 h-4" />}
                       </div>
 
-                      {/* Details */}
+                      {/* Item Details */}
                       <div className="flex-1">
                         <div className="flex justify-between items-center">
                           <span className="font-semibold text-slate-900">{item.course.title}</span>
                           <span className="font-medium text-slate-900">
-                            {item.isMandatory ? <span className="text-green-600 text-xs font-bold uppercase">Included</span> : `+ ₹${price}`}
+                            {item.isMandatory ? 
+                              <span className="text-green-600 text-xs font-bold uppercase">Included</span> 
+                              : `+ ₹${price}`
+                            }
                           </span>
                         </div>
                         <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">{item.course.description}</p>
@@ -169,10 +171,11 @@ const BatchConfigurationModal: React.FC<BatchConfigurationModalProps> = ({
                 Cancel
              </Button>
              
+             {/* The Actual Enroll Button Logic */}
              <EnrollButton
-                courseId={mainCourse.id} // You might need to update EnrollButton to accept a list of IDs or a 'bundle_ids' prop
+                courseId={mainCourse.id} 
                 coursePrice={finalTotal}
-                className="flex-[2]"
+                className="flex-[2] bg-royal hover:bg-royal/90"
              >
                 Confirm & Enroll
              </EnrollButton>
