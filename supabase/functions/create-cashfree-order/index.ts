@@ -10,7 +10,6 @@ serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // 1. Load Secrets
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
     const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
@@ -19,10 +18,10 @@ serve(async (req: Request) => {
 
     if (!envSecret || !envKey) throw new Error("Cashfree keys missing in Supabase Secrets");
 
-    // 2. Parse Input
+    // 1. Inputs
     const { 
       courseId, 
-      selectedSubjects, // Ensure this matches what Frontend sends
+      selectedSubjects, 
       amount, 
       userId, 
       customerPhone, 
@@ -30,9 +29,8 @@ serve(async (req: Request) => {
     } = await req.json();
 
     const orderId = `order_${Date.now()}_${userId}`;
-    const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
-
-    // 3. Create Cashfree Order
+    
+    // 2. Call Cashfree
     const cashfreeResponse = await fetch(
       cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
       {
@@ -49,7 +47,7 @@ serve(async (req: Request) => {
           order_currency: "INR",
           customer_details: {
             customer_id: userId,
-            customer_phone: validPhone,
+            customer_phone: customerPhone || "9999999999",
             customer_email: customerEmail || "test@example.com",
           },
           order_meta: {
@@ -61,13 +59,13 @@ serve(async (req: Request) => {
 
     if (!cashfreeResponse.ok) {
       const errText = await cashfreeResponse.text();
-      console.error("Cashfree Error:", errText);
+      // Throw actual Cashfree error
       throw new Error(`Cashfree API Error: ${errText}`);
     }
 
     const orderData = await cashfreeResponse.json();
 
-    // 4. Save to Database (USING RPC TO AVOID 500 ERRORS)
+    // 3. Save to DB
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
@@ -81,8 +79,8 @@ serve(async (req: Request) => {
     });
 
     if (dbError) {
-        console.error("DB Error:", dbError);
-        throw new Error("Database Save Failed: " + dbError.message);
+        // Throw actual DB error
+        throw new Error(`DB Error: ${dbError.message} (Hint: Check enroll_student_with_addons function)`);
     }
 
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
@@ -91,9 +89,14 @@ serve(async (req: Request) => {
     });
 
   } catch (error: any) {
-    console.error("Edge Function Error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500, // This is the 500 you are seeing
+    console.error("FULL ERROR DETAILS:", error);
+    
+    // RETURN THE ACTUAL ERROR MESSAGE TO FRONTEND
+    return new Response(JSON.stringify({ 
+      error: error.message, 
+      details: error.stack 
+    }), {
+      status: 400, // Return 400 instead of 500 so frontend can read the JSON body
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
