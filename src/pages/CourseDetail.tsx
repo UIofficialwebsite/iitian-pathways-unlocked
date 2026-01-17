@@ -8,9 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, AlertCircle, Star, Users, Calendar 
-} from 'lucide-react';
+import { ArrowLeft, AlertCircle, Star, Users, Calendar } from 'lucide-react';
 
 import NavBar from '@/components/NavBar';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
@@ -23,14 +21,8 @@ import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
 import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
+import BatchConfigurationModal, { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-
-// Simplified type for addons check
-interface SimpleAddon {
-  id: string;
-  subject_name: string;
-  price: number;
-}
 
 interface BatchScheduleItem {
   id: string;
@@ -49,18 +41,19 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user } = useAuth(); // Restored Auth Hook
 
   const [course, setCourse] = useState<Course | null>(null);
   const [addons, setAddons] = useState<SimpleAddon[]>([]); 
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   
-  // Enrollment States
+  // Restored Enrollment Status State
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
-  const [isPending, setIsPending] = useState(false); // Track pending status
-  
+  const [isPending, setIsPending] = useState(false);
+
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -102,15 +95,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // Check Enrollment Status
+        // Check Enrollment Status logic (Restored)
         if (user) {
-          // Fetch ALL enrollments (Success, Paid, Active, AND Pending)
           const { data: userEnrollments } = await supabase
             .from('enrollments')
             .select('subject_name, status')
             .eq('user_id', user.id)
             .eq('course_id', courseId)
-            // Filter out failed, but keep pending to notify user
             .neq('status', 'FAILED');
 
           if (userEnrollments && userEnrollments.length > 0) {
@@ -119,7 +110,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
             let pendingFound = false;
 
             userEnrollments.forEach(enrollment => {
-              // Normalize status check (case insensitive mostly, but DB is usually uppercase/lowercase consistent)
               const status = enrollment.status?.toLowerCase() || '';
               const isSuccess = status === 'success' || status === 'paid' || status === 'active';
               const isPendingStatus = status === 'pending';
@@ -137,7 +127,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
             setOwnedAddons(ownedSubjects);
             setIsMainCourseOwned(mainOwned);
-            setIsPending(pendingFound && !mainOwned); // Only mark as pending if main isn't owned yet
+            setIsPending(pendingFound && !mainOwned); 
           }
         }
 
@@ -151,17 +141,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     fetchCourseData();
   }, [courseId, user]);
 
-  const hasOptionalItems = addons.length > 0;
+  const hasAddons = addons.length > 0;
   
-  // LOGIC FIX: 
-  // 1. If Addons Exist: Navigate to Config Page.
-  // 2. If NO Addons: Do NOT define a handler. This forces EnrollmentCard to render the default <EnrollButton> (Direct Payment).
-  
-  const handleConfigClick = () => {
-    navigate(`/courses/${courseId}/configure`);
+  const handleEnrollClick = () => {
+    if (hasAddons) {
+      setIsConfigModalOpen(true);
+    } 
   };
-
-  const customEnrollHandler = hasOptionalItems ? handleConfigClick : undefined;
 
   if (loading) {
     return (
@@ -250,24 +236,31 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
              
              <aside className="lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
+                  {/* Updated with props for robust button logic */}
                   <EnrollmentCard 
                       course={course} 
                       isDashboardView={isDashboardView}
+                      customEnrollHandler={hasAddons ? handleEnrollClick : undefined}
                       isMainCourseOwned={isMainCourseOwned}
                       ownedAddons={ownedAddons}
-                      isPending={isPending} // Pass pending status
-                      // Logic: 
-                      // 1. If Main is owned -> show "Already Enrolled" (handled in Card) or "Upgrade" (handled via customEnrollHandler if addons exist)
-                      // 2. If Main NOT owned -> 
-                      //    a. If addons exist -> customEnrollHandler (Config Page)
-                      //    b. If NO addons -> undefined (Direct EnrollButton)
-                      customEnrollHandler={customEnrollHandler} 
+                      isPending={isPending}
                   />
                 </div>
              </aside>
            </div>
          </div>
        </main>
+
+       {course && (
+         <BatchConfigurationModal 
+            isOpen={isConfigModalOpen}
+            onClose={() => setIsConfigModalOpen(false)}
+            mainCourse={course}
+            addons={addons}
+            isMainCourseOwned={isMainCourseOwned}
+            ownedAddons={ownedAddons}
+         />
+       )}
     </div>
   );
 };
