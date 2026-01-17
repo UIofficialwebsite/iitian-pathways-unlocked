@@ -149,7 +149,6 @@ interface EnrollButtonProps {
   coursePrice?: number;
   className?: string;
   children?: React.ReactNode;
-  // Accepts array of Subject Names (Strings) for optional add-ons
   selectedSubjects?: string[];
   disabled?: boolean;
 }
@@ -160,7 +159,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   coursePrice = 0,
   className = "", 
   children = "Enroll Now",
-  selectedSubjects = [], // Default to empty if not provided
+  selectedSubjects = [],
   disabled = false
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -197,7 +196,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       return;
     }
 
-    // Check if user already has a phone number in their profile
     try {
       setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -206,25 +204,23 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         return;
       }
 
-      // Fetch profile to see if phone exists
       const { data: profile } = await supabase
         .from('profiles')
         .select('phone')
         .eq('id', user.id)
         .single();
 
-      if (profile?.phone) {
-        // Phone exists, proceed directly
+      // FIX: Validate the phone number from the profile. 
+      // If it's too short (e.g. "123"), ask for it again.
+      if (profile?.phone && profile.phone.length >= 10) {
         processPayment(profile.phone);
       } else {
-        // Phone missing, show custom modal
         setIsProcessing(false);
         setShowPhoneDialog(true);
       }
     } catch (error) {
       console.error("Error checking profile:", error);
       setIsProcessing(false);
-      // Fallback: show dialog just in case
       setShowPhoneDialog(true);
     }
   };
@@ -244,7 +240,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // CRITICAL: Save phone number to profile
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ phone: manualPhone })
@@ -272,10 +267,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       if (!user) throw new Error("User not authenticated");
 
       console.log("Initiating Payment...");
-      console.log("Course ID:", courseId);
-      console.log("Selected Subjects:", selectedSubjects);
 
-      // Call Backend Function
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
@@ -287,19 +279,27 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         },
       });
 
+      // BETTER ERROR HANDLING
       if (error) {
-        // IMPROVED ERROR HANDLING: Try to parse the real error from the backend
+        console.error("Supabase Invoke Error:", error);
+        
         let errorMessage = "Payment initialization failed";
         try {
+           // Try to read the JSON body if available
            const body = JSON.parse(error.message);
            errorMessage = body.error || errorMessage;
-           if (body.details) console.error("Backend Error Details:", body.details);
-        } catch (e) { 
-            // If parsing fails, use the raw message
-            if (error.message) errorMessage = error.message;
+           if (body.details) console.error("Backend Details:", body.details);
+        } catch (e) {
+           // Fallback to raw message
+           if (error.message) errorMessage = error.message;
         }
-        console.error("Supabase Invoke Error:", error);
+        
         throw new Error(errorMessage);
+      }
+
+      // Handle "Soft Errors" where status was 200 but body contains error
+      if (data?.error) {
+         throw new Error(data.error);
       }
 
       if (!data || !data.payment_session_id) {
@@ -314,8 +314,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         
         cashfree.checkout({
           paymentSessionId: data.payment_session_id,
-          // CRITICAL FIX: Use the verifyUrl returned by the backend
-          // This ensures the database gets updated before going to the dashboard
           returnUrl: data.verifyUrl, 
         });
       };
@@ -334,7 +332,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
   return (
     <>
-      {/* Inject Styles */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
 
       <Button 
@@ -352,24 +349,16 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         )}
       </Button>
 
-      {/* Custom Dialog Implementation */}
       <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
         <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
-          
           <div className="custom-modal-wrapper">
-            <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>
-              &times;
-            </button>
+            <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
 
-            {/* Horizontal Loading Dots */}
             <div className="loading-container">
-              <div className="dot"></div>
-              <div className="dot"></div>
-              <div className="dot"></div>
+              <div className="dot"></div><div className="dot"></div><div className="dot"></div>
             </div>
 
             <h2 className="modal-title">Contact Details Required</h2>
-            
             <p className="modal-description">
               Please provide your phone number to generate your payment receipt and finalize your enrollment process.
             </p>
@@ -386,22 +375,12 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
             </div>
 
             <div className="modal-actions">
-              <button 
-                className="btn btn-secondary" 
-                onClick={() => setShowPhoneDialog(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="btn btn-primary"
-                onClick={handlePhoneSubmit}
-                disabled={isProcessing}
-              >
+              <button className="btn btn-secondary" onClick={() => setShowPhoneDialog(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
                 {isProcessing ? "Saving..." : "Continue to Enroll"}
               </button>
             </div>
           </div>
-
         </DialogContent>
       </Dialog>
     </>
