@@ -122,7 +122,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     disabled={enrolling}
                 >
                     {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Continue Enrollment
+                    Continue with Enrollment
                 </Button>
             );
         } 
