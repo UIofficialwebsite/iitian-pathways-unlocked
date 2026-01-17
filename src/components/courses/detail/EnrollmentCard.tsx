@@ -3,29 +3,47 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
+import { useNavigate } from 'react-router-dom';
 
 interface EnrollmentCardProps {
     course: Course;
     isDashboardView?: boolean;
-    // New prop to hijack the click event
     customEnrollHandler?: () => void;
+    // Ownership props
+    isMainCourseOwned?: boolean;
+    ownedAddons?: string[];
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
     course, 
     isDashboardView, 
-    customEnrollHandler 
+    customEnrollHandler,
+    isMainCourseOwned = false,
+    ownedAddons = []
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
     const cardRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
         : 0;
+        
+    // Check for expiration
+    const today = new Date();
+    const endDate = course.end_date ? new Date(course.end_date) : null;
+    const isExpired = endDate && today > endDate;
+
+    // Logic: If main course is owned AND user isn't upgrading, treat as enrolled
+    // Note: This simple logic assumes if customEnrollHandler is passed, there might be options.
+    // We rely on the parent (CourseDetail) to determine if there are remaining add-ons to buy.
+    
+    // Determine button state
+    const isEnrolledAndActive = isMainCourseOwned && !isExpired;
 
     useEffect(() => {
         const scrollContainer = isDashboardView 
@@ -65,6 +83,65 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             }
         } catch (error) {
             console.error('Error sharing:', error);
+        }
+    };
+
+    const renderMainButton = () => {
+        // Case 1: Already Enrolled & Active & No more upgrades (or handled by parent logic)
+        // If parent passed customEnrollHandler, it implies upgrades MIGHT be available.
+        // But if `isMainCourseOwned` is true, we should be careful about text.
+        
+        if (isEnrolledAndActive) {
+            // If customEnrollHandler exists, it means there are optional items.
+            // But we need to check if we actually have anything left to buy?
+            // That logic resides in CourseDetail calculating 'isFullyEnrolled'. 
+            // For here, if customEnrollHandler is passed and main is owned, assume "Upgrade/Customize"
+            if (customEnrollHandler) {
+                 return (
+                    <Button 
+                        size="lg" 
+                        className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                        onClick={customEnrollHandler}
+                    >
+                        Customize / Upgrade
+                    </Button>
+                 );
+            }
+            
+            // Otherwise, purely enrolled
+            return (
+                <Button 
+                    size="lg" 
+                    className="flex-1 text-lg w-full bg-green-600 hover:bg-green-700"
+                    onClick={() => navigate('/dashboard')}
+                >
+                    Already Enrolled <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+            );
+        }
+
+        // Case 2: Not Enrolled or Expired -> Show Enroll/Pay Options
+        if (customEnrollHandler) {
+            return (
+                <Button 
+                    size="lg" 
+                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                    onClick={customEnrollHandler}
+                >
+                    Enroll Now
+                </Button>
+            );
+        } else {
+            return (
+                <EnrollButton
+                    courseId={course.id}
+                    coursePrice={course.discounted_price || course.price}
+                    enrollmentLink={course.enroll_now_link || undefined}
+                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                >
+                    Enroll Now
+                </EnrollButton>
+            );
         }
     };
 
@@ -122,26 +199,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                         <Separator className="my-4" />
 
                         <div className="flex gap-2">
-                            {customEnrollHandler ? (
-                                // OPTION A: If Optional Items Exist -> Show Button that opens Modal
-                                <Button 
-                                    size="lg" 
-                                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
-                                    onClick={customEnrollHandler}
-                                >
-                                    Enroll Now
-                                </Button>
-                            ) : (
-                                // OPTION B: No Optional Items -> Direct Payment (Default Behavior)
-                                <EnrollButton
-                                    courseId={course.id}
-                                    coursePrice={course.discounted_price || course.price}
-                                    enrollmentLink={course.enroll_now_link || undefined}
-                                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
-                                >
-                                    Enroll Now
-                                </EnrollButton>
-                            )}
+                            {renderMainButton()}
 
                             <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
                                 {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
