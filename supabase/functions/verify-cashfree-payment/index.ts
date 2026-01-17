@@ -46,6 +46,7 @@ serve(async (req: Request) => {
       ? "https://api.cashfree.com/pg/orders"
       : "https://sandbox.cashfree.com/pg/orders";
 
+    // 1. Call Cashfree to get the status
     const verifyResponse = await fetch(`${cashfreeApiUrl}/${orderId}`, {
       method: "GET",
       headers: {
@@ -56,7 +57,6 @@ serve(async (req: Request) => {
     });
 
     if (!verifyResponse.ok) {
-      const errorBody = await verifyResponse.text();
       console.error("Cashfree verification failed with status:", verifyResponse.status);
       return new Response(null, {
         status: 302,
@@ -67,15 +67,40 @@ serve(async (req: Request) => {
     const paymentData = await verifyResponse.json();
     console.log("Cashfree Payment Data:", JSON.stringify(paymentData, null, 2));
 
-    // FIX: Map "PAID" to "success" (lowercase) to match Frontend logic
+    // 2. Determine Status
     const finalStatus = paymentData.order_status === "PAID" ? "success" : "failed";
+    
+    // Extract User ID (We sent this as customer_id in the create step)
+    const userId = paymentData.customer_details?.customer_id;
 
+    // 3. Initialize Supabase Client
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Update DB and select count to verify it worked
+    // 4. Insert into the NEW 'payments' table
+    // We do this regardless of success/failure to have a log of the attempt
+    const { error: paymentInsertError } = await supabase
+      .from("payments")
+      .insert({
+        order_id: orderId,
+        payment_id: paymentData.cf_order_id || null, // Cashfree's internal ID
+        user_id: userId,
+        amount: paymentData.order_amount,
+        status: finalStatus,
+        payment_mode: paymentData.payment_session_id ? "session" : "unknown", // You can refine this if payment_group is available
+        raw_response: paymentData // Store full JSON for debugging
+      });
+
+    if (paymentInsertError) {
+      console.error("Error inserting into payments table:", paymentInsertError);
+      // We don't stop execution here, as the user might still need access to the course
+    } else {
+      console.log(`Payment record inserted for order ${orderId}`);
+    }
+
+    // 5. Update the existing 'enrollments' table (Maintains course access logic)
     const { data, error: updateError } = await supabase
       .from("enrollments")
       .update({
@@ -86,23 +111,14 @@ serve(async (req: Request) => {
       .select();
 
     if (updateError) {
-      console.error("Database update error:", updateError);
+      console.error("Database update error (enrollments):", updateError);
       return new Response(null, {
         status: 302,
         headers: { Location: `${frontendUrl}/dashboard?payment=error&message=db_error` },
       });
     }
 
-    // Check if any row was actually updated
-    if (!data || data.length === 0) {
-      console.error(`No enrollment found with order_id: ${orderId}. Database update likely missed.`);
-      // We still redirect to success if paid, but warn in logs. 
-      // This implies the 'enrollments' table might not have 'order_id' column populated correctly.
-    } else {
-      console.log(`Successfully updated ${data.length} row(s) for order ${orderId} to status: ${finalStatus}`);
-    }
-
-    // Redirect to dashboard with success or failure status
+    // 6. Redirect to Frontend
     const redirectUrl = finalStatus === "success"
       ? `${frontendUrl}/dashboard?payment=success`
       : `${frontendUrl}/dashboard?payment=failed`;
