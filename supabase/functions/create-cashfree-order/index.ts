@@ -18,6 +18,9 @@ serve(async (req: Request) => {
 
     if (!envSecret || !envKey) throw new Error("Cashfree keys missing in Supabase Secrets");
 
+    // Get the origin (Frontend URL) from the request to ensure we redirect back correctly
+    const origin = req.headers.get("origin") || "https://preview.lovable.app";
+
     // 1. Inputs
     const { 
       courseId, 
@@ -51,7 +54,8 @@ serve(async (req: Request) => {
             customer_email: customerEmail || "test@example.com",
           },
           order_meta: {
-            return_url: `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id={order_id}`,
+            // Pass the origin as a query parameter 'redirect_url'
+            return_url: `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id={order_id}&redirect_url=${encodeURIComponent(origin)}`,
           },
         }),
       }
@@ -59,7 +63,6 @@ serve(async (req: Request) => {
 
     if (!cashfreeResponse.ok) {
       const errText = await cashfreeResponse.text();
-      // Throw actual Cashfree error
       throw new Error(`Cashfree API Error: ${errText}`);
     }
 
@@ -79,8 +82,7 @@ serve(async (req: Request) => {
     });
 
     if (dbError) {
-        // Throw actual DB error
-        throw new Error(`DB Error: ${dbError.message} (Hint: Check enroll_student_with_addons function)`);
+        throw new Error(`DB Error: ${dbError.message}`);
     }
 
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
@@ -91,12 +93,11 @@ serve(async (req: Request) => {
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
     
-    // RETURN THE ACTUAL ERROR MESSAGE TO FRONTEND
     return new Response(JSON.stringify({ 
       error: error.message, 
       details: error.stack 
     }), {
-      status: 400, // Return 400 instead of 500 so frontend can read the JSON body
+      status: 400, 
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
