@@ -19,7 +19,7 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
-  status: string | null; // Added DB status column
+  status: string | null;
   courses: {
     id: string;
     title: string | null;
@@ -47,7 +47,7 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   const StatusIndicator = () => {
     if (enrollment.status === 'Pending') {
        return (
-         <Badge variant="outline" className="text-yellow-600 border-yellow-300 bg-yellow-50">
+         <Badge variant="outline" className="text-amber-700 border-amber-300 bg-amber-50">
            Payment Pending
          </Badge>
        );
@@ -143,7 +143,7 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   );
 };
 
-// --- No Enrollments Placeholder (unchanged) ---
+// --- No Enrollments Placeholder ---
 const NoEnrollmentsPlaceholder = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
@@ -203,7 +203,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             )
           `)
           .eq('user_id', user.id)
-          // Hide FAILED transactions, but keep PENDING to show user status
+          // Hide FAILED transactions, but keep PENDING to show user status as requested
           .neq('status', 'FAILED');
 
         if (error) throw error;
@@ -225,19 +225,22 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             ? new Date(enrollment.courses.end_date) 
             : null;
 
-          // Determine Status
+          // Determine Status based on DB status column first
           let status: GroupedEnrollment['status'] = 'Unknown';
-          
-          if (enrollment.status === 'PENDING') {
+          const dbStatus = enrollment.status?.toUpperCase();
+
+          if (dbStatus === 'PENDING') {
               status = 'Pending';
           } else if (endDate && today > endDate) {
               status = 'Batch Expired';
-          } else {
+          } else if (dbStatus === 'SUCCESS' || dbStatus === 'PAID' || dbStatus === 'ACTIVE') {
               status = 'Ongoing'; 
+          } else {
+             // Fallback for nulls or other states
+             status = 'Ongoing';
           }
 
           // If we already have this course in the map, we prioritize the "best" status
-          // e.g., if one entry is 'Ongoing' (add-on) and another is 'Pending', we treat the course as Ongoing overall
           if (!enrollmentsMap.has(course_id)) {
             enrollmentsMap.set(course_id, {
               course_id: course_id,
@@ -253,12 +256,11 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
 
           const groupedEntry = enrollmentsMap.get(course_id)!;
           
-          // Add subject
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
           }
           
-          // Status Priority Logic: Ongoing > Batch Expired > Pending
+          // Logic: If any part of the course is 'Ongoing', the whole card shows as Ongoing.
           if (status === 'Ongoing') groupedEntry.status = 'Ongoing';
         }
 
