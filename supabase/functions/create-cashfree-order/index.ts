@@ -7,40 +7,39 @@ const corsHeaders = {
 };
 
 serve(async (req: Request) => {
-  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // 1. Load Environment Variables
     const envKey = Deno.env.get("CASHFREE_KEY");
     const envSecret = Deno.env.get("CASHFREE_SECRET");
-    const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox"; // Defaults to sandbox if missing
-
-    // Debugging logs (optional, remove in production if preferred)
-    console.log("DEBUG CHECK:");
-    console.log("- CASHFREE_KEY exists?", !!envKey);
-    console.log("- CASHFREE_SECRET exists?", !!envSecret);
-    console.log("- Environment:", cashfreeEnv);
+    const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
 
     if (!envSecret || !envKey) {
-      throw new Error("CRITICAL: Cashfree API Keys are missing from Environment Variables!");
+      throw new Error("CRITICAL: Cashfree API Keys are missing!");
     }
 
-    // 2. Parse Request Body
-    const { courseId, amount, userId, customerPhone, customerEmail } = await req.json();
+    // --- UPDATED: Accept courseIds (Array) OR courseId (Single) ---
+    const { courseIds, courseId, amount, userId, customerPhone, customerEmail } = await req.json();
 
-    // 3. Set API URL based on Environment
+    // Normalize to an array: If courseIds exists, use it; otherwise wrap courseId
+    const targetCourseIds = courseIds && Array.isArray(courseIds) ? courseIds : [courseId];
+
+    if (targetCourseIds.length === 0 || !targetCourseIds[0]) {
+        throw new Error("No course IDs provided for enrollment");
+    }
+
     const cashfreeApiUrl = cashfreeEnv === "production"
       ? "https://api.cashfree.com/pg/orders"
       : "https://sandbox.cashfree.com/pg/orders";
 
-    // 4. Prepare Order Payload
+    // Create a Unique Order ID
     const orderId = `order_${Date.now()}_${userId}`;
     const validPhone = (customerPhone && customerPhone.length >= 10) ? customerPhone : "9999999999";
     const validEmail = customerEmail || "test@example.com";
 
+    // 1. Prepare Cashfree Payload
     const orderPayload = {
       order_id: orderId,
       order_amount: amount,
@@ -57,7 +56,7 @@ serve(async (req: Request) => {
 
     console.log("Sending to Cashfree:", JSON.stringify(orderPayload));
 
-    // 5. Call Cashfree API
+    // 2. Call Cashfree API
     const cashfreeResponse = await fetch(cashfreeApiUrl, {
       method: "POST",
       headers: {
@@ -77,22 +76,30 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // 6. Save Enrollment to Database
+    // 3. Save Multiple Enrollments to Database
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    await supabase.from("enrollments").insert({
-      user_id: userId,
-      course_id: courseId,
-      amount: amount,
-      order_id: orderId,
-      status: "pending",
-    });
+    // Create an array of rows to insert
+    const enrollmentRows = targetCourseIds.map((id: string, index: number) => ({
+        user_id: userId,
+        course_id: id,
+        // We store the full amount on the first course (Main Course)
+        // and 0 on the add-ons to avoid inflating your revenue stats.
+        amount: index === 0 ? amount : 0, 
+        order_id: orderId,
+        status: "pending",
+    }));
 
-    // 7. Return Response with Environment
-    // CRITICAL: We return 'environment' so the frontend knows which mode to use.
+    const { error: insertError } = await supabase.from("enrollments").insert(enrollmentRows);
+
+    if (insertError) {
+        console.error("DB Insert Error:", insertError);
+        throw new Error("Failed to create enrollment records");
+    }
+
     return new Response(JSON.stringify({ ...orderData, environment: cashfreeEnv }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
