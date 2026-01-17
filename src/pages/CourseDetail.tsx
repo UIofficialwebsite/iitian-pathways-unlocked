@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, AlertCircle, Star, Users, Calendar 
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import NavBar from '@/components/NavBar';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
@@ -25,7 +26,6 @@ import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
 import { useAuth } from '@/hooks/useAuth';
 
-// Simplified type for addons check
 interface SimpleAddon {
   id: string;
   subject_name: string;
@@ -59,10 +59,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
-  const [isPending, setIsPending] = useState(false); // Track pending status
+  const [isPending, setIsPending] = useState(false);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
 
   const sectionRefs = {
     features: useRef<HTMLDivElement>(null),
@@ -97,20 +98,20 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (courseResult.error) throw courseResult.error;
         if (!courseResult.data) { setError("Course not found"); return; }
         
-        setCourse(courseResult.data as any);
+        const fetchedCourse = courseResult.data as Course;
+        setCourse(fetchedCourse);
+
         if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // Check Enrollment Status
+        // Check Enrollment Status (Simple Check)
         if (user) {
-          // Fetch ALL enrollments (Success, Paid, Active, AND Pending)
           const { data: userEnrollments } = await supabase
             .from('enrollments')
             .select('subject_name, status')
             .eq('user_id', user.id)
             .eq('course_id', courseId)
-            // Filter out failed, but keep pending to notify user
             .neq('status', 'FAILED');
 
           if (userEnrollments && userEnrollments.length > 0) {
@@ -119,7 +120,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
             let pendingFound = false;
 
             userEnrollments.forEach(enrollment => {
-              // Normalize status check (case insensitive mostly, but DB is usually uppercase/lowercase consistent)
               const status = enrollment.status?.toLowerCase() || '';
               const isSuccess = status === 'success' || status === 'paid' || status === 'active';
               const isPendingStatus = status === 'pending';
@@ -137,7 +137,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
             setOwnedAddons(ownedSubjects);
             setIsMainCourseOwned(mainOwned);
-            setIsPending(pendingFound && !mainOwned); // Only mark as pending if main isn't owned yet
+            setIsPending(pendingFound && !mainOwned); 
           }
         }
 
@@ -153,15 +153,62 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const hasOptionalItems = addons.length > 0;
   
-  // LOGIC FIX: 
-  // 1. If Addons Exist: Navigate to Config Page.
-  // 2. If NO Addons: Do NOT define a handler. This forces EnrollmentCard to render the default <EnrollButton> (Direct Payment).
-  
   const handleConfigClick = () => {
     navigate(`/courses/${courseId}/configure`);
   };
 
-  const customEnrollHandler = hasOptionalItems ? handleConfigClick : undefined;
+  // --- FREE ENROLLMENT LOGIC ---
+  const handleFreeEnroll = async () => {
+    if (!user) {
+      toast.error("Please login to enroll.");
+      navigate('/auth');
+      return;
+    }
+
+    if (!course) return;
+
+    // Optional: Check for profile completeness (e.g. phone number) here if needed
+
+    try {
+      setEnrolling(true);
+      
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: course.id,
+          amount: 0,
+          currency: 'INR',
+          status: 'active', // Direct success for free
+          payment_id: 'free_enrollment',
+          subject_name: null // Main course
+        });
+
+      if (enrollError) throw enrollError;
+
+      toast.success("Successfully enrolled in the batch!");
+      setIsMainCourseOwned(true); // Update UI immediately
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast.error("Enrollment failed. Please try again.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  // Handler Logic:
+  // 1. If Addons Exist -> Go to Config
+  // 2. If Free & No Addons -> Direct Free Enroll
+  // 3. Else -> Undefined (EnrollmentCard uses default Payment Button)
+  
+  let customEnrollHandler: (() => void) | undefined = undefined;
+
+  if (hasOptionalItems) {
+    customEnrollHandler = handleConfigClick;
+  } else if (course && (course.price === 0 || course.price === null)) {
+    customEnrollHandler = handleFreeEnroll;
+  }
 
   if (loading) {
     return (
@@ -255,13 +302,10 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                       isDashboardView={isDashboardView}
                       isMainCourseOwned={isMainCourseOwned}
                       ownedAddons={ownedAddons}
-                      isPending={isPending} // Pass pending status
-                      // Logic: 
-                      // 1. If Main is owned -> show "Already Enrolled" (handled in Card) or "Upgrade" (handled via customEnrollHandler if addons exist)
-                      // 2. If Main NOT owned -> 
-                      //    a. If addons exist -> customEnrollHandler (Config Page)
-                      //    b. If NO addons -> undefined (Direct EnrollButton)
+                      isPending={isPending}
                       customEnrollHandler={customEnrollHandler} 
+                      isFreeCourse={course.price === 0 || course.price === null}
+                      enrolling={enrolling}
                   />
                 </div>
              </aside>
