@@ -41,14 +41,14 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
-  const { user } = useAuth(); // Restored Auth Hook
+  const { user } = useAuth(); 
 
   const [course, setCourse] = useState<Course | null>(null);
   const [addons, setAddons] = useState<SimpleAddon[]>([]); 
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   
-  // Restored Enrollment Status State
+  // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
   const [isPending, setIsPending] = useState(false);
@@ -95,7 +95,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // Check Enrollment Status logic (Restored)
+        // Check Enrollment Status
         if (user) {
           const { data: userEnrollments } = await supabase
             .from('enrollments')
@@ -144,6 +144,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const hasAddons = addons.length > 0;
   
   const handleEnrollClick = () => {
+    // Open modal if add-ons exist
     if (hasAddons) {
       setIsConfigModalOpen(true);
     } 
@@ -236,7 +237,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
              
              <aside className="lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
-                  {/* Updated with props for robust button logic */}
                   <EnrollmentCard 
                       course={course} 
                       isDashboardView={isDashboardView}
