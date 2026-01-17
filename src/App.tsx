@@ -22,6 +22,7 @@ import CareerOpportunities from "./pages/CareerOpportunities";
 import JobDetails from "./pages/JobDetails";
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
+import BatchConfiguration from "./pages/BatchConfiguration"; // NEW IMPORT
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ProfileComplete from "./pages/ProfileComplete";
@@ -37,7 +38,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import FAQ from "./pages/FAQ";
 import IITMCalculators from "./pages/IITMCalculators";
-import NewsDetail from "./pages/NewsDetail"; // Import the new Detail Page
+import NewsDetail from "./pages/NewsDetail";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,8 @@ const App = () => (
               <Route path="/courses/category/:examCategory" element={<Courses />} />
               <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
+              <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} /> {/* NEW ROUTE */}
+              
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
               <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
@@ -65,7 +68,7 @@ const App = () => (
               {/* IITM BS ROUTES */}
               <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
               <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
-              <Route path="/news/:newsId" element={<NewsDetail />} /> {/* Route for News Detail */}
+              <Route path="/news/:newsId" element={<NewsDetail />} />
               
               <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
               
