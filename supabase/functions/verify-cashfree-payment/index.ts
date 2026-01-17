@@ -5,9 +5,6 @@ const cashfreeKey = Deno.env.get("CASHFREE_KEY");
 const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
 const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
 
-// Frontend URL to redirect after payment verification
-const frontendUrl = "https://id-preview--dca5d5ef-a639-4298-9504-2bbd9c207634.lovable.app";
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -18,10 +15,15 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  try {
-    const url = new URL(req.url);
-    const orderId = url.searchParams.get("order_id");
+  // Parse URL and Redirect URL
+  const url = new URL(req.url);
+  const orderId = url.searchParams.get("order_id");
+  const passedRedirectUrl = url.searchParams.get("redirect_url");
+  
+  // Default fallback if no redirect URL passed
+  const frontendUrl = passedRedirectUrl ? decodeURIComponent(passedRedirectUrl) : "https://preview.lovable.app";
 
+  try {
     if (!orderId) {
       console.error("Order ID not found in the return URL.");
       return new Response(null, {
@@ -56,7 +58,6 @@ serve(async (req: Request) => {
     if (!verifyResponse.ok) {
       const errorBody = await verifyResponse.text();
       console.error("Cashfree verification failed with status:", verifyResponse.status);
-      console.error("Cashfree Verification Error Body:", errorBody);
       return new Response(null, {
         status: 302,
         headers: { Location: `${frontendUrl}/dashboard?payment=error&message=verification_failed` },
@@ -66,20 +67,23 @@ serve(async (req: Request) => {
     const paymentData = await verifyResponse.json();
     console.log("Cashfree Payment Data:", JSON.stringify(paymentData, null, 2));
 
-    const finalStatus = paymentData.order_status === "PAID" ? "completed" : "failed";
+    // FIX: Map "PAID" to "success" (lowercase) to match Frontend logic
+    const finalStatus = paymentData.order_status === "PAID" ? "success" : "failed";
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const { error: updateError } = await supabase
+    // Update DB and select count to verify it worked
+    const { data, error: updateError } = await supabase
       .from("enrollments")
       .update({
         status: finalStatus,
         payment_id: paymentData.cf_order_id,
       })
-      .eq("order_id", orderId);
+      .eq("order_id", orderId)
+      .select();
 
     if (updateError) {
       console.error("Database update error:", updateError);
@@ -89,10 +93,17 @@ serve(async (req: Request) => {
       });
     }
 
-    console.log(`Successfully updated order ${orderId} to status: ${finalStatus}`);
+    // Check if any row was actually updated
+    if (!data || data.length === 0) {
+      console.error(`No enrollment found with order_id: ${orderId}. Database update likely missed.`);
+      // We still redirect to success if paid, but warn in logs. 
+      // This implies the 'enrollments' table might not have 'order_id' column populated correctly.
+    } else {
+      console.log(`Successfully updated ${data.length} row(s) for order ${orderId} to status: ${finalStatus}`);
+    }
 
     // Redirect to dashboard with success or failure status
-    const redirectUrl = finalStatus === "completed"
+    const redirectUrl = finalStatus === "success"
       ? `${frontendUrl}/dashboard?payment=success`
       : `${frontendUrl}/dashboard?payment=failed`;
 
