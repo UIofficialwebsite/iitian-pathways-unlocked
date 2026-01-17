@@ -59,6 +59,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
+  const [isPending, setIsPending] = useState(false); // Track pending status
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -103,27 +104,40 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
         // Check Enrollment Status
         if (user) {
+          // Fetch ALL enrollments (Success, Paid, Active, AND Pending)
           const { data: userEnrollments } = await supabase
             .from('enrollments')
             .select('subject_name, status')
             .eq('user_id', user.id)
             .eq('course_id', courseId)
-            .or('status.eq.success,status.eq.paid,status.eq.active');
+            // Filter out failed, but keep pending to notify user
+            .neq('status', 'FAILED');
 
-          if (userEnrollments) {
+          if (userEnrollments && userEnrollments.length > 0) {
             const ownedSubjects: string[] = [];
             let mainOwned = false;
+            let pendingFound = false;
 
             userEnrollments.forEach(enrollment => {
-              if (enrollment.subject_name) {
-                ownedSubjects.push(enrollment.subject_name);
-              } else {
-                mainOwned = true;
+              // Normalize status check (case insensitive mostly, but DB is usually uppercase/lowercase consistent)
+              const status = enrollment.status?.toLowerCase() || '';
+              const isSuccess = status === 'success' || status === 'paid' || status === 'active';
+              const isPendingStatus = status === 'pending';
+
+              if (isSuccess) {
+                if (enrollment.subject_name) {
+                  ownedSubjects.push(enrollment.subject_name);
+                } else {
+                  mainOwned = true;
+                }
+              } else if (isPendingStatus) {
+                pendingFound = true;
               }
             });
 
             setOwnedAddons(ownedSubjects);
             setIsMainCourseOwned(mainOwned);
+            setIsPending(pendingFound && !mainOwned); // Only mark as pending if main isn't owned yet
           }
         }
 
@@ -139,10 +153,15 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const hasOptionalItems = addons.length > 0;
   
-  // Logic: Direct to config page if partial upgrades exist or if it's a fresh enroll with options
-  const handleEnrollClick = () => {
+  // LOGIC FIX: 
+  // 1. If Addons Exist: Navigate to Config Page.
+  // 2. If NO Addons: Do NOT define a handler. This forces EnrollmentCard to render the default <EnrollButton> (Direct Payment).
+  
+  const handleConfigClick = () => {
     navigate(`/courses/${courseId}/configure`);
   };
+
+  const customEnrollHandler = hasOptionalItems ? handleConfigClick : undefined;
 
   if (loading) {
     return (
@@ -236,8 +255,13 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                       isDashboardView={isDashboardView}
                       isMainCourseOwned={isMainCourseOwned}
                       ownedAddons={ownedAddons}
-                      // Always route through the config page if there are options or complex logic
-                      customEnrollHandler={hasOptionalItems || !isMainCourseOwned ? handleEnrollClick : undefined}
+                      isPending={isPending} // Pass pending status
+                      // Logic: 
+                      // 1. If Main is owned -> show "Already Enrolled" (handled in Card) or "Upgrade" (handled via customEnrollHandler if addons exist)
+                      // 2. If Main NOT owned -> 
+                      //    a. If addons exist -> customEnrollHandler (Config Page)
+                      //    b. If NO addons -> undefined (Direct EnrollButton)
+                      customEnrollHandler={customEnrollHandler} 
                   />
                 </div>
              </aside>
