@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
 import { ChevronRight, MoveRight, BookOpen, Maximize2, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from '@/integrations/supabase/client';
 
 interface FreeBatchSectionProps {
   batches: Tables<'courses'>[];
@@ -17,8 +18,29 @@ const StandardCourseCard: React.FC<{
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
-  const [isPreviewOpen, setIsPreviewOpen] = React.useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const isMobile = useIsMobile();
+
+  // Check for Paid Add-ons if Base is Free
+  useEffect(() => {
+    const checkAddons = async () => {
+      if (course.price === 0 || course.price === null) {
+        const { data } = await supabase
+          .from('course_addons')
+          .select('price')
+          .eq('course_id', course.id);
+        
+        if (data && data.length > 0) {
+          const paidAddons = data.filter(addon => addon.price > 0);
+          if (paidAddons.length > 0) {
+            setMinAddonPrice(Math.min(...paidAddons.map(p => p.price)));
+          }
+        }
+      }
+    };
+    checkAddons();
+  }, [course.id, course.price]);
   
   return (
     <>
@@ -69,7 +91,20 @@ const StandardCourseCard: React.FC<{
 
           {/* Footer Section */}
           <div className={`flex justify-between items-center mt-auto ${isMobile ? 'pt-3' : 'pt-4'} border-t border-gray-100`}>
-            <span className={`${isMobile ? 'text-[18px]' : 'text-[22px]'} font-extrabold text-black uppercase tracking-tighter`}>Free</span>
+            
+            {/* PRICE DISPLAY LOGIC */}
+            {minAddonPrice !== null ? (
+              <div className="flex flex-col leading-tight">
+                <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+                <span className={`${isMobile ? 'text-[18px]' : 'text-[22px]'} font-extrabold text-[#1E3A8A]`}>
+                  ₹{minAddonPrice.toLocaleString()}
+                </span>
+              </div>
+            ) : (
+              <span className={`${isMobile ? 'text-[18px]' : 'text-[22px]'} font-extrabold text-black uppercase tracking-tighter`}>
+                Free
+              </span>
+            )}
             
             <div className="flex gap-2">
               <button 
