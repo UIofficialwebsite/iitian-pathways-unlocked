@@ -79,7 +79,7 @@ const CourseCard: React.FC<{
             {minAddonPrice !== null ? (
               <div className="flex flex-col leading-tight">
                 <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
-                <span className="text-[20px] font-extrabold text-[#1E3A8A]">₹{minAddonPrice.toLocaleString()}</span>
+                <span className="text-[20px] font-extrabold text-black">₹{minAddonPrice.toLocaleString()}</span>
               </div>
             ) : (
               <>
