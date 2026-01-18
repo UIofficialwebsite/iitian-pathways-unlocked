@@ -17,9 +17,31 @@ const CourseCard: React.FC<{
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
+  const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+
   const discount = course.discounted_price 
     ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
     : 0;
+
+  // Check for Paid Add-ons if Base is Free
+  useEffect(() => {
+    const checkAddons = async () => {
+      if (course.price === 0 || course.price === null) {
+        const { data } = await supabase
+          .from('course_addons')
+          .select('price')
+          .eq('course_id', course.id);
+        
+        if (data && data.length > 0) {
+          const paidAddons = data.filter(addon => addon.price > 0);
+          if (paidAddons.length > 0) {
+            setMinAddonPrice(Math.min(...paidAddons.map(p => p.price)));
+          }
+        }
+      }
+    };
+    checkAddons();
+  }, [course.id, course.price]);
 
   return (
     <div className="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
@@ -54,11 +76,20 @@ const CourseCard: React.FC<{
         
         <div className="flex justify-between items-center mt-auto pt-[15px] border-t border-gray-100">
           <div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
-              {course.discounted_price && <span className="text-[13px] text-[#9ca3af] line-through">₹{course.price}</span>}
-            </div>
-            {discount > 0 && <span className="text-[#166534] font-bold text-[13px]">{discount}% OFF</span>}
+            {minAddonPrice !== null ? (
+              <div className="flex flex-col leading-tight">
+                <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+                <span className="text-[20px] font-extrabold text-black">₹{minAddonPrice.toLocaleString()}</span>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[20px] font-extrabold text-black">₹{course.discounted_price || course.price}</span>
+                  {course.discounted_price && <span className="text-[13px] text-[#9ca3af] line-through">₹{course.price}</span>}
+                </div>
+                {discount > 0 && <span className="text-[#166534] font-bold text-[13px]">{discount}% OFF</span>}
+              </>
+            )}
           </div>
           <div className="flex gap-2">
             <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors">Enroll</button>
@@ -84,7 +115,6 @@ const FastTrackBatchesTab: React.FC<FastTrackBatchesTabProps> = ({ focusArea, on
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [appliedFilters, setAppliedFilters] = useState<Record<string, string[]>>({});
 
-  // Animation State for Placeholder
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
 
   useEffect(() => {
@@ -93,14 +123,13 @@ const FastTrackBatchesTab: React.FC<FastTrackBatchesTabProps> = ({ focusArea, on
       const { data } = await supabase.from('courses')
         .select('*')
         .ilike('exam_category', focusArea)
-        .eq('batch_type', 'fastrack'); // Filter changed to fastrack
+        .eq('batch_type', 'fastrack');
       if (data) setBatches(data);
       setLoading(false);
     };
     fetchCourses();
   }, [focusArea]);
 
-  // Interleaved Keywords for "Unorganised" animated placeholder
   const searchKeywords = useMemo(() => {
     const levels = Array.from(new Set(batches.filter(b => b.level).map(b => b.level as string)));
     const subjects = Array.from(new Set(batches.filter(b => b.subject).map(b => b.subject as string)));
@@ -120,7 +149,6 @@ const FastTrackBatchesTab: React.FC<FastTrackBatchesTabProps> = ({ focusArea, on
     return result.length > 0 ? result : ["Physics", "Chemistry", "Fastrack", "JEE", "NEET"];
   }, [batches, focusArea]);
 
-  // Interval for placeholder rotation (2.5s)
   useEffect(() => {
     if (searchKeywords.length === 0) return;
     const interval = setInterval(() => {
@@ -181,7 +209,6 @@ const FastTrackBatchesTab: React.FC<FastTrackBatchesTabProps> = ({ focusArea, on
           <div className="relative flex-1 max-w-[250px] md:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#9ca3af]" />
             <Input 
-              // Same animated placeholder logic without quotes
               placeholder={`Search ${searchKeywords[placeholderIndex]}`} 
               value={searchQuery} 
               onChange={(e) => setSearchQuery(e.target.value)} 
