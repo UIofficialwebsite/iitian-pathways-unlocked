@@ -374,70 +374,70 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* Top Header Section */}
-      <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0">
-          <div className="max-w-[1000px] mx-auto px-5 py-4 flex items-center justify-between">
+      {/* --- MOBILE HEADER (Visible only on < md) --- */}
+      <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
+          <div className="px-5 py-4 flex items-center justify-between">
             <div 
                 className="cursor-pointer group flex items-center gap-4"
                 onClick={() => navigate(-1)}
             >
-                <ArrowLeft className="w-5 h-5 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
-                <div className="grid place-items-start">
-                    <div className="col-start-1 row-start-1 flex items-center gap-3 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2 group-hover:pointer-events-none">
-                        <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-10 h-10 object-contain drop-shadow-sm" />
-                        <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-xl tracking-tight hidden sm:block">Unknown IITians</span>
-                    </div>
-                    <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
-                        <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
-                    </div>
+                <ArrowLeft className="w-5 h-5 text-[#1a1f36]" />
+                <div className="flex items-center gap-3">
+                    <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-8 h-8 object-contain drop-shadow-sm" />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight">Unknown IITians</span>
                 </div>
             </div>
-            
-            <div className="text-sm font-semibold text-gray-400">BATCH CONFIGURATION</div>
           </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-[1000px] px-5 mt-8 pb-20">
+      <div className="relative z-10 w-full max-w-[1000px] px-5 mt-4 md:mt-12 pb-20">
         
-        {/* Toggle Details Button */}
-        <div className="flex justify-center mb-6">
+        {/* --- PC HEADER (Visible only on >= md) - Restored to Original --- */}
+        <div 
+            className="hidden md:flex mb-10 w-fit cursor-pointer group items-center gap-4"
+            onClick={() => navigate(-1)}
+        >
+            <ArrowLeft className="w-5 h-5 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
+            <div className="grid place-items-start">
+                <div className="col-start-1 row-start-1 flex items-center gap-4 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2 group-hover:pointer-events-none">
+                    <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-14 h-14 object-contain drop-shadow-sm" />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">Unknown IITians</span>
+                </div>
+                <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
+                </div>
+            </div>
+        </div>
+
+        {/* --- MOBILE DETAILS TOGGLE (Visible only on < md) --- */}
+        <div className="flex justify-center mt-2 mb-6 md:hidden">
             <button 
                 onClick={() => setShowDetails(!showDetails)}
-                className="flex items-center gap-2 px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium text-sm rounded-full transition-all duration-200 active:scale-95 shadow-sm"
+                className="flex flex-col items-center justify-center gap-1 px-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50"
             >
-                <span>{showDetails ? "Hide Batch Details" : "View Batch Details"}</span>
-                {showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                <span className="font-normal text-sm leading-none">View Detail</span>
+                {showDetails ? <ChevronUp className="w-4 h-4 text-black" /> : <ChevronDown className="w-4 h-4 text-black" />}
             </button>
         </div>
 
-        {/* Slidable Batch Details */}
+        {/* --- MOBILE DETAILS SLIDER (Visible only on < md) --- */}
         <div 
-            className={`overflow-hidden transition-all duration-500 ease-in-out ${
+            className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${
                 showDetails ? "max-h-[500px] opacity-100 mb-10" : "max-h-0 opacity-0 mb-0"
             }`}
         >
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-8 text-center shadow-sm max-w-2xl mx-auto">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-4">
-                    <Info className="w-6 h-6" />
+            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-6 text-center shadow-sm">
+                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 text-blue-600 mb-3">
+                    <Info className="w-5 h-5" />
                 </div>
-                <h2 className="text-2xl font-bold text-[#1a1f36] mb-2">{course.title}</h2>
-                <div className="flex flex-wrap justify-center items-center gap-4 text-sm text-[#4f566b] font-medium">
-                    {course.start_date && (
-                        <span className="px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
-                            Starts: {formatDate(course.start_date)}
-                        </span>
-                    )}
-                    {course.end_date && (
-                        <span className="px-3 py-1 bg-gray-50 rounded-full border border-gray-100">
-                            Ends: {formatDate(course.end_date)}
-                        </span>
-                    )}
+                <h2 className="text-xl font-bold text-[#1a1f36] mb-2">{course.title}</h2>
+                <div className="flex flex-col gap-1 text-sm text-[#4f566b] font-medium mb-4">
+                    {course.start_date && <span>Starts: {formatDate(course.start_date)}</span>}
+                    {course.end_date && <span>Ends: {formatDate(course.end_date)}</span>}
                 </div>
                 {course.description && (
-                    <p className="mt-4 text-gray-500 text-sm max-w-lg mx-auto leading-relaxed">
-                        {course.description.length > 150 
-                            ? `${course.description.substring(0, 150)}...` 
-                            : course.description}
+                    <p className="text-gray-500 text-sm leading-relaxed">
+                        {course.description}
                     </p>
                 )}
             </div>
@@ -448,9 +448,24 @@ const BatchConfiguration = () => {
           
           {/* --- LEFT COLUMN: Configuration --- */}
           <div className="flex-[1.2] w-full">
-            <div className="mb-6">
-                <h1 className="text-[24px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
-                <p className="text-[#4f566b] text-sm mt-1">Customize your learning path by choosing the subjects you need.</p>
+            
+            {/* --- PC BATCH INFO (Visible only on >= md) - Restored to Original --- */}
+            <div className="hidden md:block mb-8">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
+                <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
+                    <span className="font-semibold">Batch Name:</span> <span className="font-normal">{course.title}</span>
+                </h2>
+                <p className="text-[#4f566b] font-medium text-sm mb-4">
+                    {course.start_date && <span>Starts on {formatDate(course.start_date)}</span>}
+                    {course.start_date && course.end_date && <span className="mx-2">•</span>}
+                    {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
+                </p>
+            </div>
+
+            {/* --- MOBILE TITLE (Visible only on < md) --- */}
+            <div className="md:hidden mb-6">
+                 <h1 className="text-[24px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
+                 <p className="text-[#4f566b] text-sm mt-1">Customize your learning path.</p>
             </div>
             
             <div className="flex flex-col gap-3">
@@ -488,9 +503,9 @@ const BatchConfiguration = () => {
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: Summary --- */}
+          {/* --- RIGHT COLUMN: Summary (Shared) --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-start pt-2">
-            <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm sticky top-24">
+            <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm md:sticky md:top-24">
               <h2 className="text-[18px] font-bold text-[#1a1f36] mb-6 tracking-tight">Enrollment Summary</h2>
 
               <div className="flex justify-between mb-3 text-sm">
