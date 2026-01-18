@@ -44,7 +44,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
       {/* Container "Holding" Section */}
       <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
         
-        {/* Updated Heading */}
+        {/* Heading */}
         <h2 className="text-2xl md:text-3xl font-bold mb-6 text-[#1a1f36]">
           Batch Schedules
         </h2>
@@ -78,21 +78,24 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                       <div 
                         key={item.id}
                         className={cn(
-                          "flex items-center justify-between p-4",
-                          "bg-gray-50 border border-gray-100 rounded-lg", // Light colour subject bar
-                          "transition-colors duration-200"
+                          "flex items-center justify-between p-5", // Increased padding for bigger feel
+                          "bg-white border border-gray-200 rounded-xl", // Light color (White) & Rounded
+                          "hover:border-black/20 transition-all duration-200 shadow-sm"
                         )}
                       >
                         {/* Subject Name */}
-                        <span className="text-[15px] text-[#1a1f36] font-medium leading-relaxed">
+                        <span className="text-[16px] text-[#1a1f36] font-medium leading-relaxed">
                           {item.subject_name}
                         </span>
 
-                        {/* Download Button - Black Filled */}
+                        {/* Download Button - Big Type, Black Filled */}
                         <Button
-                          size="sm"
                           onClick={() => handleDownload(item.file_link)}
-                          className="ml-4 bg-black text-white hover:bg-black/90 border-transparent shadow-none"
+                          className={cn(
+                            "ml-4 bg-black text-white hover:bg-black/90",
+                            "h-11 px-8 min-w-[140px]", // Bigger dimensions
+                            "text-base font-medium rounded-lg shadow-none"
+                          )}
                         >
                           Download
                         </Button>
@@ -106,9 +109,9 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                       variant="outline"
                       onClick={() => toggleBatch(batchName)}
                       className={cn(
-                        "w-full mt-3",
-                        "bg-white border border-black text-black", // White box, black outline
-                        "hover:bg-gray-50 transition-colors"
+                        "w-full mt-3 h-12",
+                        "bg-white border border-black text-black", 
+                        "hover:bg-gray-50 transition-colors text-base font-medium"
                       )}
                     >
                       {isExpanded ? "Show Less" : `${remainingCount} more subjects`}
