@@ -6,12 +6,9 @@ import {
   Headphones, 
   WalletMinimal, 
   UserCheck, 
-  Star,
-  ChevronDown,
-  ChevronUp
+  Star
 } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface FeaturesSectionProps {
@@ -50,7 +47,6 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
   ];
 
   // 2. Determine which list to use
-  // If course has custom features strings, map them to a uniform structure
   const hasCustomFeatures = course.features && course.features.length > 0;
   
   const featuresList = hasCustomFeatures
@@ -63,20 +59,22 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
   const hasMore = extraFeatures.length > 0;
 
   return (
-    <section id="features" className="scroll-mt-24 w-full bg-white">
-      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
-        About the Batch
-      </h2>
+    <section id="features" className="scroll-mt-24">
+      {/* Container "Holding" Section - White Background, Border, Rounded */}
+      <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
+        
+        <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
+          About the Batch
+        </h2>
 
-      {/* --- 2x2 Grid Layout --- */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Render Initial 4 Items */}
-        {initialFeatures.map((feature, idx) => (
-          <FeatureCard key={`init-${idx}`} icon={feature.icon} text={feature.text} />
-        ))}
+        {/* --- Grid Layout (Stacks on mobile, 2 columns on desktop) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Render Initial 4 Items */}
+          {initialFeatures.map((feature, idx) => (
+            <FeatureCard key={`init-${idx}`} icon={feature.icon} text={feature.text} />
+          ))}
 
-        {/* Render Extra Items (Hidden/Shown based on state) */}
-        {hasMore && (
+          {/* Render Extra Items (Hidden/Shown based on state) */}
           <div className={cn(
             "col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-500 ease-in-out overflow-hidden",
             isExpanded ? "max-h-[1000px] opacity-100 mt-0" : "max-h-0 opacity-0"
@@ -85,26 +83,23 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
               <FeatureCard key={`extra-${idx}`} icon={feature.icon} text={feature.text} />
             ))}
           </div>
+        </div>
+
+        {/* --- Toggle Button --- */}
+        {hasMore && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={cn(
+              "w-full mt-4 bg-white border border-[#e3e8ee] p-4 rounded-lg",
+              "text-[15px] font-semibold text-[#1a1f36] text-center cursor-pointer",
+              "hover:border-black transition-all duration-300 ease-out",
+              isExpanded ? "hidden pointer-events-none" : "block"
+            )}
+          >
+            More Features
+          </button>
         )}
       </div>
-
-      {/* --- Toggle Button --- */}
-      {hasMore && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={cn(
-            "w-full mt-4 bg-white border border-[#e3e8ee] p-4 rounded-lg",
-            "text-[15px] font-semibold text-[#1a1f36] text-center",
-            "hover:border-black transition-all duration-300 ease-out",
-            // If expanded, we can choose to hide the button or change text. 
-            // The reference hides it, but for UX 'Show Less' is often better.
-            // Following the reference behavior of hiding:
-            isExpanded ? "hidden pointer-events-none" : "block"
-          )}
-        >
-          More Features
-        </button>
-      )}
     </section>
   );
 };
