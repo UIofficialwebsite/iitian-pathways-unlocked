@@ -6,10 +6,7 @@ import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal
 import { useAuth } from '@/hooks/useAuth';
 import NavBar from '@/components/NavBar';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Separator } from '@/components/ui/separator';
-import { Card } from '@/components/ui/card';
-import { Loader2, Check, ShieldCheck, ArrowLeft, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BatchConfiguration = () => {
@@ -39,8 +36,6 @@ const BatchConfiguration = () => {
 
         if (addonsRes.data) {
           setAddons(addonsRes.data);
-          // Optional: Pre-select all add-ons? Or none? 
-          // Let's start with none selected for "Choice Making"
           setSelectedAddonIds([]);
         }
       } catch (error) {
@@ -79,20 +74,17 @@ const BatchConfiguration = () => {
     }
     setProcessing(true);
     
-    // Simulate processing or redirect to actual Payment Gateway logic
-    // In a real scenario, you'd create an order on your backend here
-    // For now, we simulate a delay and success
+    // Simulate processing
     setTimeout(() => {
         setProcessing(false);
         toast.success("Proceeding to Payment Gateway...");
-        // Navigate to payment wrapper or trigger SDK
         // navigate('/payment', { state: { courseId, addonIds: selectedAddonIds, amount: finalTotal } });
     }, 1000);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f6f9fc] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
@@ -106,190 +98,154 @@ const BatchConfiguration = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f7f9fc] font-['Inter',sans-serif] text-slate-900">
-      <NavBar />
+    <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden">
       
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-28">
+      {/* Background Gradient Blob (Fixed Bottom Right) */}
+      <div 
+        className="fixed -bottom-[150px] -right-[100px] w-[800px] h-[400px] -z-0 pointer-events-none opacity-70 blur-[20px] hidden md:block"
+        style={{
+            background: 'linear-gradient(110deg, rgba(246, 249, 252, 0) 20%, #ffcf4d 40%, #ff61d2 60%, #70e2ff 100%)',
+            transform: 'rotate(-10deg)',
+        }}
+      />
+      {/* Mobile background blob adjustment */}
+      <div 
+        className="fixed -bottom-[50px] -right-[50px] w-full h-[250px] -z-0 pointer-events-none opacity-70 blur-[20px] md:hidden"
+        style={{
+            background: 'linear-gradient(110deg, rgba(246, 249, 252, 0) 20%, #ffcf4d 40%, #ff61d2 60%, #70e2ff 100%)',
+            transform: 'rotate(-10deg)',
+        }}
+      />
+
+      <div className="relative z-10">
+        <NavBar />
         
-        {/* Header */}
-        <div className="mb-10">
-          <Button 
-            variant="ghost" 
-            className="pl-0 hover:bg-transparent text-slate-500 hover:text-slate-800 mb-2" 
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Course
-          </Button>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Configure Your Plan</h1>
-          <p className="text-slate-500 mt-2">Customize your learning journey by selecting the subjects you need.</p>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        {/* Main Wrapper */}
+        <div className="max-w-[1000px] mx-auto px-5 py-8 md:py-16 flex flex-col md:flex-row gap-8 md:gap-[60px] items-start">
           
-          {/* --- LEFT COLUMN: Subject Selection --- */}
-          <div className="lg:col-span-7 space-y-8">
+          {/* --- LEFT COLUMN: Configuration --- */}
+          <div className="flex-[1.2] w-full">
+            <div className="mb-6">
+                <button 
+                  onClick={() => navigate(-1)}
+                  className="flex items-center text-[#4f566b] hover:text-[#1a1f36] text-sm font-medium mb-4 transition-colors"
+                >
+                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
+                </button>
+                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
+                <p className="text-[#4f566b] mt-2">Select the subjects you want to include in your bundle.</p>
+            </div>
             
-            {/* 1. Core Subjects (Included) */}
-            {coreSubjects.length > 0 && (
-              <section>
-                <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 flex items-center gap-2">
-                  <Lock className="w-3 h-3 text-green-600" /> Core Batch (Included)
-                </h3>
-                <div className="space-y-3">
-                  {coreSubjects.map((subject, idx) => (
-                    <div 
-                      key={idx} 
-                      className="flex items-center p-4 bg-white border border-slate-200 rounded-lg shadow-sm opacity-80 cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-center w-5 h-5 bg-green-100 border-green-200 rounded text-green-700 mr-4">
-                        <Check className="w-3.5 h-3.5" />
-                      </div>
-                      <span className="font-medium text-slate-700">{subject}</span>
-                      <span className="ml-auto text-xs font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
-                        INCLUDED
-                      </span>
+            <div className="flex flex-col gap-3">
+              
+              {/* Core Subjects (Included/Locked) */}
+              {coreSubjects.map((subject, idx) => (
+                <div 
+                  key={`core-${idx}`}
+                  className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-60 cursor-not-allowed select-none"
+                >
+                  <div className="flex items-center flex-grow">
+                    {/* Fake Checkbox (Checked) */}
+                    <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
+                        <Check className="w-3 h-3 text-[#4f566b]" strokeWidth={3} />
                     </div>
-                  ))}
+                    <div className="flex flex-col">
+                        <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
+                        <span className="text-xs text-[#4f566b] flex items-center gap-1 mt-0.5"><Lock className="w-3 h-3"/> Core Subject</span>
+                    </div>
+                  </div>
+                  <span className="font-semibold text-[15px] text-[#22c55e]">INCLUDED</span>
                 </div>
-              </section>
-            )}
+              ))}
 
-            {/* 2. Optional Add-ons (Choice Making) */}
-            {addons.length > 0 && (
-              <section>
-                 <h3 className="text-sm font-semibold text-slate-900 uppercase tracking-wider mb-4 mt-8">
-                  Available Add-ons
-                </h3>
-                <div className="space-y-3">
-                  {addons.map((addon) => {
-                    const isSelected = selectedAddonIds.includes(addon.id);
-                    return (
+              {/* Optional Add-ons */}
+              {addons.map((addon) => {
+                const isSelected = selectedAddonIds.includes(addon.id);
+                return (
+                  <label 
+                    key={addon.id}
+                    className="group flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg cursor-pointer transition-colors duration-150 hover:border-black"
+                  >
+                    <div className="flex items-center flex-grow">
+                      {/* Custom Checkbox */}
                       <div 
-                        key={addon.id}
-                        onClick={() => toggleAddon(addon.id)}
-                        className={`
-                          group flex items-center p-4 rounded-lg border cursor-pointer transition-all duration-200
-                          ${isSelected 
-                            ? 'bg-white border-black shadow-md' 
-                            : 'bg-white border-slate-200 hover:border-slate-300 hover:shadow-sm'}
+                        className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
+                            ${isSelected ? 'bg-[#1a1f36] border-[#1a1f36]' : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'}
                         `}
                       >
-                        <Checkbox 
-                          checked={isSelected}
-                          onCheckedChange={() => toggleAddon(addon.id)}
-                          className="mr-4 data-[state=checked]:bg-black data-[state=checked]:border-black"
-                        />
-                        <div className="flex-1">
-                          <span className={`font-medium transition-colors ${isSelected ? 'text-black' : 'text-slate-600'}`}>
-                            {addon.subject_name}
-                          </span>
-                        </div>
-                        {/* Price is HIDDEN here as per request */}
+                         <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={isSelected} 
+                            onChange={() => toggleAddon(addon.id)}
+                         />
+                         {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
                       </div>
-                    );
-                  })}
+                      <span className="font-medium text-[15px] text-[#1a1f36]">{addon.subject_name}</span>
+                    </div>
+                    <span className="font-semibold text-[15px] text-[#1a1f36]">₹{addon.price}</span>
+                  </label>
+                );
+              })}
+              
+              {addons.length === 0 && coreSubjects.length === 0 && (
+                <div className="p-4 text-center text-[#4f566b] bg-white border border-[#e3e8ee] rounded-lg">
+                    No configurable options available for this course.
                 </div>
-              </section>
-            )}
+              )}
 
-             {/* Value Props / Trust Signals */}
-             <div className="grid grid-cols-2 gap-4 mt-8">
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <ShieldCheck className="w-5 h-5 text-slate-400" />
-                    <span>Secure Payment Processing</span>
-                </div>
-                <div className="flex items-center gap-3 text-sm text-slate-500">
-                    <Check className="w-5 h-5 text-slate-400" />
-                    <span>Instant Access after Payment</span>
-                </div>
-             </div>
-
+            </div>
           </div>
 
+          {/* --- RIGHT COLUMN: Summary --- */}
+          <div className="md:flex-[0.8] w-full">
+            <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full sticky top-28">
+              <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Order Summary</h2>
 
-          {/* --- RIGHT COLUMN: Bill Summary (Sticky) --- */}
-          <div className="lg:col-span-5 relative">
-            <div className="sticky top-32">
-              <Card className="border-0 shadow-xl bg-white overflow-hidden rounded-2xl ring-1 ring-slate-200">
-                <div className="p-6 md:p-8 space-y-6">
-                  
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-900">Bill Summary</h2>
-                    <p className="text-sm text-slate-500 mt-1">Review your plan details below.</p>
-                  </div>
+              {/* Base Plan Line */}
+              <div className="flex justify-between mb-3 text-sm">
+                <span className="text-[#1a1f36] font-medium">Base Plan</span>
+                {basePrice === 0 ? (
+                    <span className="text-[#22c55e] font-bold">FREE</span>
+                ) : (
+                    <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>
+                )}
+              </div>
 
-                  <Separator className="bg-slate-100" />
-
-                  {/* Bill Table */}
-                  <div className="space-y-4">
-                    
-                    {/* Base Plan Row */}
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="font-semibold text-slate-900">Base Plan</div>
-                        <div className="text-xs text-slate-500 mt-0.5">Core Batch Access</div>
-                      </div>
-                      <div className="font-semibold text-slate-900">
-                        {basePrice === 0 ? "FREE" : `₹${basePrice.toLocaleString()}`}
-                      </div>
-                    </div>
-
-                    {/* Selected Add-ons Rows */}
-                    {selectedAddonsList.map((addon) => (
-                      <div key={addon.id} className="flex justify-between items-start animate-in fade-in slide-in-from-left-2 duration-300">
-                        <div>
-                          <div className="font-medium text-slate-700">{addon.subject_name}</div>
-                          <div className="text-xs text-slate-400 mt-0.5">Add-on Subject</div>
-                        </div>
-                        <div className="font-medium text-slate-700">
-                          ₹{addon.price.toLocaleString()}
-                        </div>
-                      </div>
-                    ))}
-
-                    {/* Empty State Hint if only Base is Free */}
-                    {basePrice === 0 && selectedAddonsList.length === 0 && (
-                      <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                        No paid items selected. You can enroll for free.
-                      </div>
-                    )}
-
-                  </div>
-
-                  <Separator className="bg-slate-100" />
-
-                  {/* Total Row */}
-                  <div className="flex justify-between items-end pt-2">
-                    <div className="text-sm font-medium text-slate-500">Total Due Today</div>
-                    <div className="text-3xl font-bold text-slate-900 tracking-tight">
-                      ₹{finalTotal.toLocaleString()}
-                    </div>
-                  </div>
-
-                  {/* Action Button */}
-                  <Button 
-                    size="lg" 
-                    className="w-full text-base font-medium h-12 bg-black hover:bg-black/90 text-white shadow-lg shadow-black/10 transition-all hover:scale-[1.01]"
-                    onClick={handlePayment}
-                    disabled={processing}
-                  >
-                    {processing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...
-                      </>
-                    ) : (
-                      "Continue to Payment"
-                    )}
-                  </Button>
-                  
-                  <p className="text-center text-xs text-slate-400">
-                    By confirming, you agree to our Terms of Service.
-                  </p>
+              {/* Selected Addons Lines */}
+              {selectedAddonsList.map(addon => (
+                <div key={`summary-${addon.id}`} className="flex justify-between mb-3 text-sm animate-in fade-in slide-in-from-left-2">
+                    <span className="text-[#4f566b]">{addon.subject_name}</span>
+                    <span className="text-[#4f566b]">₹{addon.price}</span>
                 </div>
-                
-                {/* Stripe-like colored strip at bottom */}
-                <div className="h-1.5 w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500" />
-              </Card>
+              ))}
+
+              {/* Divider */}
+              <div className="h-px bg-[#e3e8ee] my-5"></div>
+
+              {/* Total Row */}
+              <div className="flex justify-between items-baseline mb-6">
+                <span className="text-[16px] font-semibold text-[#1a1f36]">Total Due Today</span>
+                <span className="text-[24px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
+              </div>
+
+              {/* Payment Button */}
+              <button 
+                onClick={handlePayment}
+                disabled={processing}
+                className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+              >
+                {processing ? (
+                   <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                   "Continue to Payment"
+                )}
+              </button>
+
+              <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
+                Terms of Service and any terms are overridden <br className="hidden md:block"/>
+                and the <a href="#" className="text-[#635bff] no-underline font-medium hover:underline">Privacy of Service</a>.
+              </p>
             </div>
           </div>
 
