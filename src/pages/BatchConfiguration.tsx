@@ -208,10 +208,8 @@ const BatchConfiguration = () => {
 
   // --- 2. Calculations ---
   const basePrice = course?.discounted_price ?? course?.price ?? 0;
-  // If main course is owned, effective base price is 0
   const effectiveBasePrice = isMainCourseOwned ? 0 : basePrice;
   
-  // Calculate total ONLY for selected addons that are NOT owned
   const selectedAddonsList = useMemo(() => {
     return addons.filter(addon => 
         selectedAddonIds.includes(addon.id) && !ownedAddonIds.includes(addon.id)
@@ -223,7 +221,6 @@ const BatchConfiguration = () => {
 
   // --- 3. Handlers ---
   const toggleAddon = (addonId: string) => {
-    // Prevent toggling if owned
     if (ownedAddonIds.includes(addonId)) return;
 
     setSelectedAddonIds(prev => 
@@ -296,7 +293,6 @@ const BatchConfiguration = () => {
     try {
       if (!courseId) throw new Error("Course information is missing");
 
-      // Filter out owned IDs so we don't double charge/enroll
       const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
 
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
@@ -306,7 +302,7 @@ const BatchConfiguration = () => {
           userId: user.id,
           customerEmail: user.email, 
           customerPhone: phoneNumber,
-          selectedSubjects: newAddonIds // Only send NEW add-ons
+          selectedSubjects: newAddonIds 
         },
       });
 
@@ -461,9 +457,9 @@ const BatchConfiguration = () => {
                     </div>
                     
                     {isOwned ? (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#22c55e] bg-green-50 px-2 py-1 rounded">
-                            <Check className="w-3 h-3" /> ENROLLED
-                        </div>
+                        <span className="text-xs font-bold text-[#22c55e] bg-green-50 px-2 py-1 rounded">
+                            ENROLLED
+                        </span>
                     ) : (
                         <span className="font-semibold text-[15px] text-[#1a1f36]">₹{addon.price}</span>
                     )}
