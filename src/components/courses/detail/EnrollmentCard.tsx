@@ -201,7 +201,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     return (
-        <div ref={cardRef}>
+        <div ref={cardRef} className="lg:scale-95 lg:origin-top">
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
                 <Card className="overflow-hidden rounded-lg font-sans bg-white">
                     <CardHeader className="p-0">
