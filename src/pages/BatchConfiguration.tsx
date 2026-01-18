@@ -223,6 +223,11 @@ const BatchConfiguration = () => {
       return;
     }
 
+    if (finalTotal === 0) {
+        toast.error("Total amount must be greater than zero.");
+        return;
+    }
+
     setProcessing(true);
 
     try {
@@ -376,7 +381,7 @@ const BatchConfiguration = () => {
 
       {/* --- MOBILE DETAILS DRAWER (Overlay from Top) --- */}
       <div 
-        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] rounded-b-[24px] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
             showDetails ? 'translate-y-0' : '-translate-y-[120%]'
         }`}
       >
@@ -567,7 +572,7 @@ const BatchConfiguration = () => {
 
               <button 
                 onClick={handlePayment}
-                disabled={processing}
+                disabled={processing || finalTotal === 0}
                 className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
