@@ -106,7 +106,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         // Shared classes for all main buttons to ensure consistent mobile layout
         // flex-1: Takes remaining space
         // min-w-0: Allows shrinking below content size if necessary (prevents overflow)
-        const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 truncate px-4";
+        const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
 
         // 1. Everything Bought -> "Let's Study"
         if (isFullyEnrolled && !isExpired) {
@@ -157,7 +157,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     disabled={enrolling}
                 >
                     {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" /> : null}
-                    <span className="truncate">Continue with Enrollment</span>
+                    <span className="sm:hidden truncate">Continue to Enroll</span>
+                    <span className="hidden sm:inline truncate">Continue with Enrollment</span>
                 </Button>
             );
         } 
@@ -170,7 +171,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 enrollmentLink={course.enroll_now_link || undefined}
                 className={btnClasses}
             >
-                <span className="truncate">Continue Enrollment</span>
+                <span className="sm:hidden truncate">Continue to Enroll</span>
+                <span className="hidden sm:inline truncate">Continue Enrollment</span>
             </EnrollButton>
         );
     };
