@@ -51,21 +51,21 @@ const TermsOfService = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/20">
+    <div className="min-h-screen bg-white text-gray-900 font-sans selection:bg-gray-100">
       <NavBar />
 
       <main className="pt-32 pb-24 relative">
         <div className="container mx-auto px-6 max-w-7xl">
           
           {/* Page Header */}
-          <div className="mb-20 border-b border-white/10 pb-12">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">Terms of Service</h1>
+          <div className="mb-20 border-b border-gray-200 pb-12">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 mb-6">Terms of Service</h1>
             <div className="flex flex-col md:flex-row md:items-center gap-6 text-sm text-gray-500 font-mono">
               <span className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-blue-500/80 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
+                <span className="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.4)]"></span>
                 Effective Date: January 2024
               </span>
-              <span className="hidden md:inline text-gray-700">|</span>
+              <span className="hidden md:inline text-gray-300">|</span>
               <span>Unknown IITians</span>
             </div>
           </div>
@@ -83,19 +83,19 @@ const TermsOfService = () => {
                       className={cn(
                         "text-left px-4 py-2 text-sm transition-colors duration-200 block w-full rounded-md",
                         activeSection === section.id
-                          ? "text-white font-medium bg-white/5"
-                          : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                          ? "text-gray-900 font-medium bg-gray-100"
+                          : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                       )}
                     >
                       {section.title}
                     </button>
                   ))}
                 </nav>
-                <div className="mt-10 p-6 rounded-2xl bg-[#0a0a0a] border border-white/5">
-                  <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                <div className="mt-10 p-6 rounded-2xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs text-gray-500 mb-4 leading-relaxed">
                     Please review these terms carefully before using our platform.
                   </p>
-                  <a href="mailto:support@unknowniitians.live" className="text-xs font-bold text-white hover:underline flex items-center gap-1">
+                  <a href="mailto:support@unknowniitians.live" className="text-xs font-bold text-gray-900 hover:underline flex items-center gap-1">
                     Contact Legal <ChevronRight className="w-3 h-3" />
                   </a>
                 </div>
@@ -104,7 +104,7 @@ const TermsOfService = () => {
 
             {/* Main Content */}
             <div className="flex-1 max-w-3xl">
-              <div className="prose prose-invert prose-p:text-gray-400 prose-headings:text-white prose-headings:font-semibold prose-a:text-white prose-li:text-gray-400 max-w-none space-y-16">
+              <div className="prose prose-gray prose-p:text-gray-600 prose-headings:text-gray-900 prose-headings:font-semibold prose-a:text-gray-900 prose-li:text-gray-600 max-w-none space-y-16">
                 
                 {/* Agreement to Terms */}
                 <section id="agreement" className="scroll-mt-32">
@@ -162,17 +162,17 @@ const TermsOfService = () => {
                   <h2 className="text-2xl mb-6">Payment Terms and Refund Policy</h2>
                   
                   <div className="grid md:grid-cols-1 gap-4 not-prose mt-6">
-                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
-                      <h4 className="text-white font-semibold text-sm mb-2">Payment Processing</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">All payments are processed securely through our authorized payment partners. You agree to provide accurate payment information and authorize us to charge the specified amounts.</p>
+                    <div className="p-4 rounded-lg border border-gray-100 bg-gray-50">
+                      <h4 className="text-gray-900 font-semibold text-sm mb-2">Payment Processing</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">All payments are processed securely through our authorized payment partners. You agree to provide accurate payment information and authorize us to charge the specified amounts.</p>
                     </div>
-                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
-                      <h4 className="text-white font-semibold text-sm mb-2">Course Fees</h4>
-                      <p className="text-xs text-gray-400 leading-relaxed">Course fees are clearly stated at the time of enrollment. Prices may change without notice, but changes will not affect existing enrollments.</p>
+                    <div className="p-4 rounded-lg border border-gray-100 bg-gray-50">
+                      <h4 className="text-gray-900 font-semibold text-sm mb-2">Course Fees</h4>
+                      <p className="text-xs text-gray-500 leading-relaxed">Course fees are clearly stated at the time of enrollment. Prices may change without notice, but changes will not affect existing enrollments.</p>
                     </div>
-                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
-                      <h4 className="text-white font-semibold text-sm mb-2">Refund Policy</h4>
-                      <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                    <div className="p-4 rounded-lg border border-gray-100 bg-gray-50">
+                      <h4 className="text-gray-900 font-semibold text-sm mb-2">Refund Policy</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-xs text-gray-500">
                         <li>Refunds may be requested within 7 days of course enrollment</li>
                         <li>Refund eligibility depends on course progress and usage</li>
                         <li>Processing fees may be deducted from refund amounts</li>
@@ -189,11 +189,11 @@ const TermsOfService = () => {
                   
                   <div className="mt-6 space-y-4">
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">License to Use</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">License to Use</h3>
                       <p>We grant you a limited, non-exclusive, non-transferable license to access and use our content for personal educational purposes only.</p>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Restrictions</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Restrictions</h3>
                       <ul className="list-disc pl-5 space-y-2">
                         <li>You may not reproduce, distribute, or sell our content</li>
                         <li>You may not modify or create derivative works</li>
@@ -218,15 +218,15 @@ const TermsOfService = () => {
                   
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Service Availability</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Service Availability</h3>
                       <p>We strive to maintain service availability but do not guarantee uninterrupted access. Services may be temporarily unavailable due to maintenance, updates, or technical issues.</p>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Educational Outcomes</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Educational Outcomes</h3>
                       <p>While we provide quality educational content, we do not guarantee specific academic outcomes or exam results. Success depends on individual effort and circumstances.</p>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">Limitation of Liability</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">Limitation of Liability</h3>
                       <p>To the maximum extent permitted by law, Unknown IITians shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services.</p>
                     </div>
                   </div>
@@ -281,22 +281,22 @@ const TermsOfService = () => {
                 </section>
 
                 {/* Contact Information */}
-                <section id="contact" className="scroll-mt-32 border-t border-white/10 pt-16">
+                <section id="contact" className="scroll-mt-32 border-t border-gray-200 pt-16">
                   <h2 className="text-2xl mb-6">Contact Information</h2>
                   <p className="mb-6">If you have questions about these Terms of Service, please contact us:</p>
                   
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
-                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
-                      <span className="text-gray-500 block mb-1">Email</span>
-                      <a href="mailto:support@unknowniitians.live" className="text-white hover:underline">support@unknowniitians.live</a>
+                    <div className="bg-gray-50 p-4 rounded border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Email</span>
+                      <a href="mailto:support@unknowniitians.live" className="text-gray-900 hover:underline">support@unknowniitians.live</a>
                     </div>
-                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
-                      <span className="text-gray-500 block mb-1">Phone</span>
-                      <span className="text-white">+91 9876543210</span>
+                    <div className="bg-gray-50 p-4 rounded border border-gray-100">
+                      <span className="text-gray-400 block mb-1">Phone</span>
+                      <span className="text-gray-900">+91 9876543210</span>
                     </div>
-                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10 md:col-span-2">
-                      <span className="text-gray-500 block mb-1">Address</span>
-                      <span className="text-white">New Delhi, India</span>
+                    <div className="bg-gray-50 p-4 rounded border border-gray-100 md:col-span-2">
+                      <span className="text-gray-400 block mb-1">Address</span>
+                      <span className="text-gray-900">New Delhi, India</span>
                     </div>
                   </div>
                 </section>
