@@ -6,6 +6,129 @@ import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+
+// Custom Styles for the Phone Number Modal (Same as EnrollButton)
+const customStyles = `
+  /* Modal Container Overrides */
+  .custom-modal-wrapper {
+    font-family: 'Inter', sans-serif !important;
+    background: #ffffff;
+    width: 100%;
+    max-width: 440px;
+    border: 1px solid #000000;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    margin: 0 auto;
+  }
+
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 24px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    background-color: #000000;
+    border-radius: 50%;
+    animation: dot-pulse 1.4s infinite ease-in-out both;
+  }
+
+  .dot:nth-child(1) { animation-delay: -0.32s; }
+  .dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes dot-pulse {
+    0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  .modal-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #000000;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+    text-align: left;
+  }
+
+  .modal-description {
+    font-size: 14px;
+    color: #555555;
+    line-height: 1.6;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .form-group {
+    margin-bottom: 28px;
+    text-align: left;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #000000;
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    border: 1px solid #000000;
+    outline: none;
+    color: #000000;
+    background: white;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    border: 1px solid #000000;
+    transition: all 0.2s;
+    border-radius: 0;
+  }
+
+  .btn-secondary {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  .btn-primary {
+    background: #000000;
+    color: #ffffff;
+  }
+
+  .close-icon {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 20px;
+    color: #999;
+    cursor: pointer;
+    line-height: 1;
+    background: none;
+    border: none;
+    padding: 0;
+  }
+`;
 
 const BatchConfiguration = () => {
   const { courseId } = useParams<{ courseId: string }>();
@@ -19,12 +142,15 @@ const BatchConfiguration = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
+  // Phone Dialog State
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+  const [manualPhone, setManualPhone] = useState("");
+
   // --- 1. Fetch Data & Check Enrollment ---
   useEffect(() => {
     const fetchData = async () => {
       if (!courseId) return;
       try {
-        // Fetch Course, Addons, and User Enrollments in parallel
         const [courseRes, addonsRes, enrollmentsRes] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).single(),
           supabase.from('course_addons').select('*').eq('course_id', courseId),
@@ -43,34 +169,20 @@ const BatchConfiguration = () => {
 
         const fetchedAddons = addonsRes.data || [];
         setAddons(fetchedAddons);
-        setSelectedAddonIds([]); // Start with none selected (except defaults if logic requires)
+        setSelectedAddonIds([]); 
 
-        // --- Enrollment Check ---
+        // Enrollment Check
         if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
             const enrollments = enrollmentsRes.data;
-            
-            // Check if Base Plan is owned (entry with null subject_name)
             const isMainOwned = enrollments.some(e => !e.subject_name);
-            
-            // Get list of owned addon names
-            const ownedSubjectNames = enrollments
-                .filter(e => e.subject_name)
-                .map(e => e.subject_name);
+            const ownedSubjectNames = enrollments.filter(e => e.subject_name).map(e => e.subject_name);
+            const areAllAddonsOwned = fetchedAddons.every(addon => ownedSubjectNames.includes(addon.subject_name));
 
-            // Check if ALL available addons are owned
-            const areAllAddonsOwned = fetchedAddons.every(addon => 
-                ownedSubjectNames.includes(addon.subject_name)
-            );
-
-            // If Main Course is owned AND (No addons exist OR All addons are owned) -> Fully Enrolled
             if (isMainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
                 toast.info("You are already fully enrolled in this batch.");
-                navigate(`/courses/${courseId}`); // Redirect to course detail
+                navigate(`/courses/${courseId}`); 
                 return;
             }
-            
-            // Optional: If you want to disable already owned addons in the list, 
-            // you could process that here (e.g., set a state `ownedAddonIds`).
         }
 
       } catch (error) {
@@ -102,20 +214,127 @@ const BatchConfiguration = () => {
     );
   };
 
+  // --- Payment Logic Starts Here ---
+
   const handlePayment = async () => {
     if (!user) {
       toast.error("Please login to continue");
       return;
     }
+
+    setProcessing(true);
+
+    try {
+      // 1. Check for Phone Number in Profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('phone')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.phone && profile.phone.length >= 10) {
+        // Proceed if phone exists
+        await processPayment(profile.phone);
+      } else {
+        // Show dialog if missing
+        setProcessing(false);
+        setShowPhoneDialog(true);
+      }
+    } catch (error) {
+      console.error("Error checking profile:", error);
+      setProcessing(false);
+      setShowPhoneDialog(true);
+    }
+  };
+
+  const handlePhoneSubmit = async () => {
+    if (manualPhone.length < 10) {
+      toast.error("Please enter a valid 10-digit number");
+      return;
+    }
+
     setProcessing(true);
     
-    // Simulate processing
-    setTimeout(() => {
-        setProcessing(false);
-        toast.success("Proceeding to Payment Gateway...");
-        // navigate('/payment', { state: { courseId, addonIds: selectedAddonIds, amount: finalTotal } });
-    }, 1000);
+    try {
+      // Update profile with new phone
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ phone: manualPhone })
+        .eq('id', user.id);
+
+      if (updateError) {
+        console.error("Failed to update profile phone:", updateError);
+      }
+      
+      setShowPhoneDialog(false);
+      await processPayment(manualPhone);
+    } catch (error) {
+      setProcessing(false);
+      console.error(error);
+      toast.error("Something went wrong saving your contact info.");
+    }
   };
+
+  const processPayment = async (phoneNumber: string) => {
+    try {
+      if (!courseId) throw new Error("Course information is missing");
+
+      console.log("Initiating Cashfree Payment...");
+
+      // Call the Edge Function
+      const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
+        body: {
+          courseId,
+          amount: finalTotal, // Use the calculated total
+          userId: user.id,
+          customerEmail: user.email, 
+          customerPhone: phoneNumber,
+          selectedSubjects: selectedAddonIds // Pass selected addon IDs
+        },
+      });
+
+      if (error) {
+        let errorMessage = "Payment initialization failed";
+        try {
+           const body = JSON.parse(error.message);
+           errorMessage = body.error || errorMessage;
+        } catch (e) {
+           if (error.message) errorMessage = error.message;
+        }
+        throw new Error(errorMessage);
+      }
+
+      if (data?.error) {
+         throw new Error(data.error);
+      }
+
+      if (!data || !data.payment_session_id) {
+        throw new Error("Invalid response from payment server");
+      }
+
+      // Load Cashfree SDK and Checkout
+      const script = document.createElement('script');
+      script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+      script.onload = () => {
+        const cashfreeMode = data.environment || 'sandbox'; 
+        const cashfree = (window as any).Cashfree({ mode: cashfreeMode });
+        
+        cashfree.checkout({
+          paymentSessionId: data.payment_session_id,
+          returnUrl: data.verifyUrl, 
+        });
+        setProcessing(false); // Stop loading once redirected or modal opens
+      };
+      document.body.appendChild(script);
+
+    } catch (error: any) {
+      console.error("Enrollment error:", error);
+      toast.error(error.message || "Enrollment Failed");
+      setProcessing(false);
+    }
+  };
+
+  // --- End Payment Logic ---
 
   if (loading) {
     return (
@@ -127,24 +346,23 @@ const BatchConfiguration = () => {
 
   if (!course) return <div>Course not found</div>;
 
-  // Core Subjects List (Parsed from string)
   const coreSubjects = course.subject 
     ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
     : [];
 
-  // Date Formatting Helper
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
     return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: 'numeric', month: 'short', day: 'numeric'
     });
   };
 
   return (
     <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex flex-col items-center py-12">
       
+      {/* Inject Custom Styles for Modal */}
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+
       {/* Background Slope Effect */}
       <div 
         className="fixed bottom-[-20%] right-[-10%] w-[120%] h-[60%] -z-0 pointer-events-none opacity-70 blur-[40px]"
@@ -162,49 +380,28 @@ const BatchConfiguration = () => {
             className="mb-10 w-fit cursor-pointer group flex items-center gap-4"
             onClick={() => navigate(-1)}
         >
-            {/* Arrow - Always visible (Size Reduced) */}
             <ArrowLeft className="w-5 h-5 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
-
-            {/* Content Swapper */}
             <div className="grid place-items-start">
-                
-                {/* Branding (Default Visible) */}
                 <div className="col-start-1 row-start-1 flex items-center gap-4 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2 group-hover:pointer-events-none">
-                    <img 
-                      src="https://i.ibb.co/kgdrjTby/UI-Logo.png" 
-                      alt="UI Logo" 
-                      className="w-14 h-14 object-contain drop-shadow-sm" 
-                    />
-                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">
-                        Unknown IITians
-                    </span>
+                    <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-14 h-14 object-contain drop-shadow-sm" />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">Unknown IITians</span>
                 </div>
-
-                {/* Back Text (Hover Visible - Size Reduced) */}
                 <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
-                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">
-                        Back
-                    </span>
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
                 </div>
-
             </div>
         </div>
 
         {/* Main Grid */}
         <div className="flex flex-col md:flex-row gap-8 md:gap-[60px]">
           
-          {/* --- LEFT COLUMN: Configuration (Top Aligned) --- */}
+          {/* --- LEFT COLUMN: Configuration --- */}
           <div className="flex-[1.2] w-full">
-            
             <div className="mb-8">
-                {/* Heading */}
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
-                
-                {/* Batch Name (Semi-bold Label, Normal Value) */}
                 <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
                     <span className="font-semibold">Batch Name:</span> <span className="font-normal">{course.title}</span>
                 </h2>
-                
                 <p className="text-[#4f566b] font-medium text-sm mb-4">
                     {course.start_date && <span>Starts on {formatDate(course.start_date)}</span>}
                     {course.start_date && course.end_date && <span className="mx-2">•</span>}
@@ -213,46 +410,25 @@ const BatchConfiguration = () => {
             </div>
             
             <div className="flex flex-col gap-3">
-              
-              {/* Core Subjects (Included/Locked) */}
               {coreSubjects.map((subject, idx) => (
-                <div 
-                  key={`core-${idx}`}
-                  className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-70 cursor-not-allowed select-none"
-                >
+                <div key={`core-${idx}`} className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-70 cursor-not-allowed select-none">
                   <div className="flex items-center flex-grow">
                     <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
                         <Check className="w-3 h-3 text-[#4f566b]" strokeWidth={3} />
                     </div>
-                    <div className="flex flex-col">
-                        <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
-                    </div>
+                    <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
                   </div>
                   <span className="font-semibold text-[13px] text-[#22c55e] bg-green-50 px-2 py-1 rounded">INCLUDED</span>
                 </div>
               ))}
 
-              {/* Optional Add-ons */}
               {addons.map((addon) => {
                 const isSelected = selectedAddonIds.includes(addon.id);
                 return (
-                  <label 
-                    key={addon.id}
-                    className="group flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg cursor-pointer transition-colors duration-150 hover:border-black"
-                  >
+                  <label key={addon.id} className="group flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg cursor-pointer transition-colors duration-150 hover:border-black">
                     <div className="flex items-center flex-grow">
-                      {/* Custom Checkbox */}
-                      <div 
-                        className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
-                            ${isSelected ? 'bg-[#1a1f36] border-[#1a1f36]' : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'}
-                        `}
-                      >
-                         <input 
-                            type="checkbox" 
-                            className="hidden" 
-                            checked={isSelected} 
-                            onChange={() => toggleAddon(addon.id)}
-                         />
+                      <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 ${isSelected ? 'bg-[#1a1f36] border-[#1a1f36]' : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'}`}>
+                         <input type="checkbox" className="hidden" checked={isSelected} onChange={() => toggleAddon(addon.id)} />
                          {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
                       </div>
                       <span className="font-medium text-[15px] text-[#1a1f36]">{addon.subject_name}</span>
@@ -263,33 +439,24 @@ const BatchConfiguration = () => {
               })}
               
               {addons.length === 0 && coreSubjects.length === 0 && (
-                <div className="p-4 text-center text-[#4f566b] bg-white border border-[#e3e8ee] rounded-lg">
-                    No configurable options available for this course.
-                </div>
+                <div className="p-4 text-center text-[#4f566b] bg-white border border-[#e3e8ee] rounded-lg">No configurable options available.</div>
               )}
-
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: Summary (Middle Aligned via Flex) --- */}
+          {/* --- RIGHT COLUMN: Summary --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-center">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm">
               <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Enrollment Summary</h2>
 
-              {/* Base Plan Line */}
               <div className="flex justify-between mb-3 text-sm">
                 <div className="flex flex-col">
                     <span className="text-[#1a1f36] font-medium">Base Plan</span>
                     <span className="text-xs text-[#4f566b]">{course.title}</span>
                 </div>
-                {basePrice === 0 ? (
-                    <span className="text-[#22c55e] font-bold">FREE</span>
-                ) : (
-                    <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>
-                )}
+                {basePrice === 0 ? <span className="text-[#22c55e] font-bold">FREE</span> : <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>}
               </div>
 
-              {/* Selected Addons Lines */}
               {selectedAddonsList.map(addon => (
                 <div key={`summary-${addon.id}`} className="flex justify-between mb-3 text-sm animate-in fade-in slide-in-from-left-2">
                     <span className="text-[#4f566b]">{addon.subject_name}</span>
@@ -297,53 +464,68 @@ const BatchConfiguration = () => {
                 </div>
               ))}
 
-              {/* Divider */}
               <div className="h-px bg-[#e3e8ee] my-5"></div>
 
-              {/* Total Row */}
               <div className="flex justify-between items-baseline mb-6">
                 <span className="text-[16px] font-semibold text-[#1a1f36]">Total Due Today</span>
                 <span className="text-[24px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
               </div>
 
-              {/* Payment Button - No Shadow */}
               <button 
                 onClick={handlePayment}
                 disabled={processing}
                 className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
-                {processing ? (
-                   <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                   "Continue to Payment"
-                )}
+                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
               </button>
 
               <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
                 By continuing, you agree to our <br className="hidden md:block"/>
-                <a 
-                    href="/terms-of-service" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-[#635bff] no-underline font-medium hover:underline"
-                >
-                    Terms of Service
-                </a> 
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-[#635bff] no-underline font-medium hover:underline">Terms of Service</a> 
                 {' '}&{' '} 
-                <a 
-                    href="/privacy-policy" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-[#635bff] no-underline font-medium hover:underline"
-                >
-                    Privacy Policy
-                </a>.
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#635bff] no-underline font-medium hover:underline">Privacy Policy</a>.
               </p>
             </div>
           </div>
-
         </div>
       </div>
+
+      {/* Phone Number Required Dialog */}
+      <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
+        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
+          <div className="custom-modal-wrapper">
+            <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
+
+            <div className="loading-container">
+              <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+            </div>
+
+            <h2 className="modal-title">Contact Details Required</h2>
+            <p className="modal-description">
+              Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+            </p>
+
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input 
+                type="tel" 
+                className="form-input" 
+                placeholder="e.g., 9876543210"
+                value={manualPhone}
+                onChange={(e) => setManualPhone(e.target.value)}
+              />
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn btn-secondary" onClick={() => setShowPhoneDialog(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={processing}>
+                {processing ? "Saving..." : "Continue to Enroll"}
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </div>
   );
 };
