@@ -17,8 +17,7 @@ interface ScheduleSectionProps {
 const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
   // Group schedule by batch_name
   const groupedSchedule = scheduleData.reduce((acc, item) => {
-    // Handle generic or missing batch names if necessary, 
-    // but here we group by whatever is in the DB.
+    // Handle generic or missing batch names
     const key = item.batch_name || "General"; 
     if (!acc[key]) {
       acc[key] = [];
@@ -48,9 +47,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
         ) : (
           <div className="space-y-6">
             {Object.entries(groupedSchedule).map(([batchName, items]) => {
-              // Logic: "if batch name not written then simply ignoe"
-              // We check if batchName is "General" (our fallback) or empty string.
-              // If it's a specific name, we show it.
+              // Logic: Show specific batch name if present and not "General"
               const showHeader = batchName && batchName !== "General" && batchName.trim() !== "";
 
               return (
@@ -61,28 +58,28 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                     </h3>
                   )}
                   
-                  <div className="flex flex-col">
-                    {items.map((item, idx) => (
+                  {/* List of Subjects in Grey Boxes */}
+                  <div className="flex flex-col gap-3">
+                    {items.map((item) => (
                       <div 
                         key={item.id}
                         className={cn(
-                          "flex items-center justify-between py-4",
-                          "border-b border-[#e3e8ee]",
-                          idx === 0 && !showHeader && "pt-0", // Adjust top padding if no header
-                          idx === items.length - 1 && "border-b-0 pb-0" // Remove border for last item
+                          "flex items-center justify-between p-4",
+                          "bg-gray-50 border border-gray-100 rounded-lg", // Grey rectangular box style
+                          "hover:bg-gray-100 transition-colors duration-200" // Subtle hover effect
                         )}
                       >
-                        {/* Subject Name - Clean Text */}
-                        <span className="text-[15px] text-[#1a1f36] font-normal leading-relaxed">
+                        {/* Subject Name */}
+                        <span className="text-[15px] text-[#1a1f36] font-medium leading-relaxed">
                           {item.subject_name}
                         </span>
 
-                        {/* Download Button - No Icon */}
+                        {/* Download Button */}
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDownload(item.file_link)}
-                          className="ml-4 border-gray-300 hover:border-black hover:bg-transparent text-[#1a1f36]"
+                          className="ml-4 bg-white border-gray-200 hover:border-black hover:bg-white text-[#1a1f36]"
                         >
                           Download
                         </Button>
