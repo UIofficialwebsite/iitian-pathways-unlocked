@@ -375,36 +375,52 @@ const BatchConfiguration = () => {
       />
 
       {/* --- MOBILE DETAILS DRAWER (Overlay from Top) --- */}
-      {/* This comes ABOVE the header (z-[60] vs header z-50) */}
       <div 
-        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-xl transition-transform duration-300 ease-out flex flex-col items-center pt-8 pb-6 px-5 rounded-b-2xl border-b border-gray-100 md:hidden ${
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-xl transition-transform duration-300 ease-out flex flex-col items-center pt-12 pb-8 px-6 rounded-b-3xl border-b border-gray-100 md:hidden ${
             showDetails ? 'translate-y-0' : '-translate-y-[120%]'
         }`}
       >
         <button 
             onClick={() => setShowDetails(false)}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full"
         >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
         </button>
 
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-4 shadow-sm">
-            <Info className="w-6 h-6" />
+        <div className="w-full bg-gray-50/80 p-5 rounded-xl border border-gray-100 space-y-4">
+            
+            {/* Batch Name */}
+            <div>
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Batch Name</span>
+                <span className="text-sm font-medium text-gray-900 leading-tight block">{course.title}</span>
+            </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Start Date</span>
+                    <span className="text-sm font-normal text-gray-700">{formatDate(course.start_date)}</span>
+                </div>
+                <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">End Date</span>
+                    <span className="text-sm font-normal text-gray-700">{formatDate(course.end_date)}</span>
+                </div>
+            </div>
+
+            {/* Batch ID */}
+            <div>
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Batch ID</span>
+                <span className="text-xs font-mono text-gray-500 break-all bg-white px-2 py-1 rounded border border-gray-100 inline-block">
+                    {course.id}
+                </span>
+            </div>
+
+            {/* Email */}
+            <div>
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Email Address</span>
+                <span className="text-sm font-medium text-gray-900 break-all">{user?.email || 'N/A'}</span>
+            </div>
         </div>
-        <h2 className="text-xl font-bold text-[#1a1f36] mb-3 text-center">{course.title}</h2>
-        <div className="flex flex-col gap-1.5 text-sm text-[#4f566b] mb-4 items-center">
-            {course.start_date && (
-                <span className="font-normal">Starts: {formatDate(course.start_date)}</span>
-            )}
-            {course.end_date && (
-                <span className="font-normal">Ends: {formatDate(course.end_date)}</span>
-            )}
-        </div>
-        {course.description && (
-            <p className="text-gray-500 text-sm leading-relaxed text-center max-w-sm">
-                {course.description}
-            </p>
-        )}
       </div>
       
       {/* --- OVERLAY BACKDROP for Mobile --- */}
