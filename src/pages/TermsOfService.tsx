@@ -95,7 +95,7 @@ const TermsOfService = () => {
                   <p className="text-xs text-gray-400 mb-4 leading-relaxed">
                     Please review these terms carefully before using our platform.
                   </p>
-                  <a href="mailto:legal@unknowniitians.com" className="text-xs font-bold text-white hover:underline flex items-center gap-1">
+                  <a href="mailto:support@unknowniitians.live" className="text-xs font-bold text-white hover:underline flex items-center gap-1">
                     Contact Legal <ChevronRight className="w-3 h-3" />
                   </a>
                 </div>
@@ -266,7 +266,7 @@ const TermsOfService = () => {
                   
                   <div>
                     <h2 className="text-2xl mb-6">Governing Law and Jurisdiction</h2>
-                    <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in Mumbai, Maharashtra, India.</p>
+                    <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in New Delhi, India.</p>
                   </div>
 
                   <div>
@@ -288,7 +288,7 @@ const TermsOfService = () => {
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
                       <span className="text-gray-500 block mb-1">Email</span>
-                      <a href="mailto:legal@unknowniitians.com" className="text-white hover:underline">legal@unknowniitians.com</a>
+                      <a href="mailto:support@unknowniitians.live" className="text-white hover:underline">support@unknowniitians.live</a>
                     </div>
                     <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
                       <span className="text-gray-500 block mb-1">Phone</span>
@@ -296,7 +296,7 @@ const TermsOfService = () => {
                     </div>
                     <div className="bg-[#0a0a0a] p-4 rounded border border-white/10 md:col-span-2">
                       <span className="text-gray-500 block mb-1">Address</span>
-                      <span className="text-white">123 Education Street, Mumbai, Maharashtra 400001, India</span>
+                      <span className="text-white">New Delhi, India</span>
                     </div>
                   </div>
                 </section>
