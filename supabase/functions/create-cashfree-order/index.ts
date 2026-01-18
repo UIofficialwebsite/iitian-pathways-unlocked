@@ -32,6 +32,47 @@ serve(async (req: Request) => {
     const orderId = `order_${Date.now()}_${userId}`;
     const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
 
+    // Initialize Supabase client early to fetch user and course data
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Fetch user's name from profiles table
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, student_name')
+      .eq('id', userId)
+      .single();
+
+    const customerName = profile?.full_name || profile?.student_name || "Customer";
+
+    // Fetch course details (title + mandatory subjects)
+    const { data: course } = await supabase
+      .from('courses')
+      .select('title, subject')
+      .eq('id', courseId)
+      .single();
+
+    const batchName = course?.title || "Unknown Batch";
+
+    // Parse mandatory subjects (comma-separated in courses.subject)
+    const mandatorySubjects: string[] = course?.subject
+      ? course.subject.split(',').map((s: string) => s.trim()).filter(Boolean)
+      : [];
+
+    // Get addon names from course_addons
+    let addonNames: string[] = [];
+    if (selectedSubjects && selectedSubjects.length > 0) {
+      const { data: addons } = await supabase
+        .from('course_addons')
+        .select('subject_name')
+        .in('id', selectedSubjects);
+      
+      addonNames = addons?.map(a => a.subject_name).filter(Boolean) || [];
+    }
+
+    // Combine mandatory + addon subjects (unique values)
+    const allSubjects = [...new Set([...mandatorySubjects, ...addonNames])];
+    const coursesString = allSubjects.length > 0 ? allSubjects.join(", ") : "No subjects";
+
     // 1. Create Order with Cashfree
     const cashfreeResponse = await fetch(
       cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
@@ -49,11 +90,18 @@ serve(async (req: Request) => {
           order_currency: "INR",
           customer_details: {
             customer_id: userId,
+            customer_name: customerName,
             customer_phone: customerPhone || "9999999999",
             customer_email: customerEmail || "test@example.com",
           },
           order_meta: {
             return_url: verifyUrl,
+          },
+          order_note: batchName,
+          order_tags: {
+            batch: batchName,
+            courses: coursesString,
+            user_id: userId
           },
         }),
       }
@@ -66,8 +114,8 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // 2. Database Logic
-    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // 2. Database Logic - Supabase client already initialized above
 
     // A. Fetch Add-on details
     let addonsData: any[] = [];
