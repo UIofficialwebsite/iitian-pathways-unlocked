@@ -103,15 +103,20 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     const renderMainButton = () => {
+        // Shared classes for all main buttons to ensure consistent mobile layout
+        // flex-1: Takes remaining space
+        // min-w-0: Allows shrinking below content size if necessary (prevents overflow)
+        const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 truncate px-4";
+
         // 1. Everything Bought -> "Let's Study"
         if (isFullyEnrolled && !isExpired) {
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
+                    className={btnClasses}
                     onClick={() => navigate('/dashboard')}
                 >
-                    <Book className="w-4 h-4 mr-2" /> Let's Study
+                    <Book className="w-4 h-4 mr-2 shrink-0" /> <span className="truncate">Let's Study</span>
                 </Button>
             );
         }
@@ -121,10 +126,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11" // Keep Black
-                    onClick={customEnrollHandler} // Should go to Config Page
+                    className={btnClasses}
+                    onClick={customEnrollHandler} 
                 >
-                    Upgrade Enrollment
+                    <span className="truncate">Upgrade Enrollment</span>
                 </Button>
             );
         }
@@ -134,10 +139,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              return (
                 <Button
                     size="lg"
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
+                    className={btnClasses}
                     onClick={() => navigate(`/courses/${course.id}/configure`)}
                 >
-                    Configure Plan
+                    <span className="truncate">Configure Plan</span>
                 </Button>
              );
         }
@@ -147,12 +152,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
+                    className={btnClasses}
                     onClick={customEnrollHandler}
                     disabled={enrolling}
                 >
-                    {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Continue with Enrollment
+                    {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" /> : null}
+                    <span className="truncate">Continue with Enrollment</span>
                 </Button>
             );
         } 
@@ -163,9 +168,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 courseId={course.id}
                 coursePrice={course.discounted_price || course.price}
                 enrollmentLink={course.enroll_now_link || undefined}
-                className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
+                className={btnClasses}
             >
-                Continue Enrollment
+                <span className="truncate">Continue Enrollment</span>
             </EnrollButton>
         );
     };
@@ -242,7 +247,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
                         <Separator className="my-4" />
 
-                        <div className="flex gap-3 items-center">
+                        <div className="flex w-full gap-3 items-center">
                             {renderMainButton()}
                             
                             <ShareButton 
