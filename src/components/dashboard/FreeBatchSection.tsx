@@ -3,6 +3,8 @@ import { Tables } from "@/integrations/supabase/types";
 import { ChevronRight, MoveRight, BookOpen, Maximize2, X } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from '@/integrations/supabase/client';
+import EnrollButton from "@/components/EnrollButton"; 
+import { useNavigate } from "react-router-dom"; 
 
 interface FreeBatchSectionProps {
   batches: Tables<'courses'>[];
@@ -18,8 +20,10 @@ const StandardCourseCard: React.FC<{
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
+  const navigate = useNavigate();
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+  const [hasAddons, setHasAddons] = useState(false);
   const isMobile = useIsMobile();
 
   // Check for Paid Add-ons if Base is Free
@@ -32,6 +36,7 @@ const StandardCourseCard: React.FC<{
           .eq('course_id', course.id);
         
         if (data && data.length > 0) {
+          setHasAddons(true);
           const paidAddons = data.filter(addon => addon.price > 0);
           if (paidAddons.length > 0) {
             setMinAddonPrice(Math.min(...paidAddons.map(p => p.price)));
@@ -41,6 +46,33 @@ const StandardCourseCard: React.FC<{
     };
     checkAddons();
   }, [course.id, course.price]);
+
+  const renderEnrollAction = () => {
+    if (hasAddons) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/courses/${course.id}/configure`);
+          }} 
+          className="bg-black text-white py-1.5 px-4 md:py-2 md:px-5 rounded-[10px] font-bold text-[12px] md:text-[14px] hover:bg-black/90 transition-colors"
+        >
+          Enroll
+        </button>
+      );
+    }
+
+    return (
+      <EnrollButton
+        courseId={course.id}
+        coursePrice={0} // Free batch
+        enrollmentLink={course.enroll_now_link || undefined}
+        className="bg-black text-white py-1.5 px-4 md:py-2 md:px-5 rounded-[10px] font-bold text-[12px] md:text-[14px] hover:bg-black/90 transition-colors"
+      >
+        Enroll
+      </EnrollButton>
+    );
+  };
   
   return (
     <>
@@ -107,12 +139,9 @@ const StandardCourseCard: React.FC<{
             )}
             
             <div className="flex gap-2">
-              <button 
-                onClick={() => onSelect(course.id)} 
-                className="bg-[#1f2937] text-white py-1.5 px-4 md:py-2 md:px-5 rounded-[10px] font-bold text-[12px] md:text-[14px] hover:bg-black transition-colors"
-              >
-                Enroll
-              </button>
+              
+              {renderEnrollAction()}
+
               <button 
                 onClick={() => onSelect(course.id)} 
                 className="bg-white border border-[#e5e7eb] w-8 h-8 md:w-10 md:h-10 rounded-[10px] flex items-center justify-center hover:bg-gray-50 transition-colors"
