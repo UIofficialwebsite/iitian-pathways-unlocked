@@ -63,6 +63,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
       {/* Container "Holding" Section - White Background, Border, Rounded */}
       <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
         
+        {/* Updated Heading */}
         <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
           Batch Features
         </h2>
@@ -90,9 +91,11 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className={cn(
-              "w-full mt-4 bg-white border border-[#e3e8ee] p-4 rounded-lg",
+              "w-full mt-4 bg-white p-4 rounded-lg",
+              // Updated border to be darker ('black a bit')
+              "border border-gray-800", 
               "text-[15px] font-semibold text-[#1a1f36] text-center cursor-pointer",
-              "hover:border-black transition-all duration-300 ease-out",
+              "hover:bg-gray-50 transition-all duration-300 ease-out",
               isExpanded ? "hidden pointer-events-none" : "block"
             )}
           >
