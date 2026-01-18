@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -168,7 +168,6 @@ const BatchConfiguration = () => {
             setIsMainCourseOwned(mainOwned);
 
             // 2. Check Add-ons (Robust Match: ID or Name)
-            // Create a Set of all "subject_name" values found in enrollments (could be IDs or Names)
             const ownedIdentifiers = new Set(
                 enrollments
                     .filter(e => e.subject_name)
@@ -186,7 +185,6 @@ const BatchConfiguration = () => {
             setOwnedAddonIds(ownedIds);
 
             // 3. Redirect only if EVERYTHING available is owned
-            // (Main is owned AND (No addons exist OR All addons are owned))
             const areAllAddonsOwned = fetchedAddons.every(addon => ownedIds.includes(addon.id));
             
             if (mainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
@@ -382,7 +380,7 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* Mobile Drawer & Header logic omitted for brevity, keeping existing structure */}
+      {/* --- MOBILE HEADER --- */}
       <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
           <div className="px-5 py-4 flex items-center justify-between">
             <div className="cursor-pointer group flex items-center gap-4" onClick={() => navigate(-1)}>
@@ -405,6 +403,11 @@ const BatchConfiguration = () => {
                 <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
                     <span className="font-semibold">Batch Name:</span> <span className="font-normal">{course.title}</span>
                 </h2>
+                <p className="text-[#4f566b] font-medium text-sm mb-4">
+                    {course.start_date && <span>Starts on {formatDate(course.start_date)}</span>}
+                    {course.start_date && course.end_date && <span className="mx-2">•</span>}
+                    {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
+                </p>
             </div>
             
             <div className="flex flex-col gap-3">
@@ -418,7 +421,7 @@ const BatchConfiguration = () => {
                     <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
                   </div>
                   <span className="font-semibold text-[11px] text-[#22c55e] bg-green-50 px-2 py-1 rounded tracking-wide">
-                    {isMainCourseOwned ? "PURCHASED" : "INCLUDED"}
+                    {isMainCourseOwned ? "ENROLLED" : "INCLUDED"}
                   </span>
                 </div>
               ))}
@@ -458,8 +461,8 @@ const BatchConfiguration = () => {
                     </div>
                     
                     {isOwned ? (
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded border border-gray-300">
-                            <Lock className="w-3 h-3" /> PURCHASED
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#22c55e] bg-green-50 px-2 py-1 rounded">
+                            <Check className="w-3 h-3" /> ENROLLED
                         </div>
                     ) : (
                         <span className="font-semibold text-[15px] text-[#1a1f36]">₹{addon.price}</span>
@@ -480,7 +483,7 @@ const BatchConfiguration = () => {
                     <span className="text-xs text-[#4f566b] truncate max-w-[150px]">{course.title}</span>
                 </div>
                 {isMainCourseOwned ? (
-                     <span className="text-[#22c55e] font-bold text-xs bg-green-50 px-2 py-0.5 rounded h-fit">PURCHASED</span>
+                     <span className="text-[#22c55e] font-bold text-xs bg-green-50 px-2 py-0.5 rounded h-fit">ENROLLED</span>
                 ) : (
                     basePrice === 0 ? <span className="text-[#22c55e] font-bold">FREE</span> : <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>
                 )}
