@@ -196,6 +196,38 @@ export type Database = {
         }
         Relationships: []
       }
+      course_addons: {
+        Row: {
+          course_id: string
+          created_at: string | null
+          id: string
+          price: number
+          subject_name: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string | null
+          id?: string
+          price?: number
+          subject_name: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string | null
+          id?: string
+          price?: number
+          subject_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_addons_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_faqs: {
         Row: {
           answer: string
@@ -248,6 +280,7 @@ export type Database = {
           is_live: boolean | null
           language: string | null
           level: string | null
+          parent_course_id: string | null
           payment_type: string | null
           price: number
           rating: number | null
@@ -277,6 +310,7 @@ export type Database = {
           is_live?: boolean | null
           language?: string | null
           level?: string | null
+          parent_course_id?: string | null
           payment_type?: string | null
           price: number
           rating?: number | null
@@ -306,6 +340,7 @@ export type Database = {
           is_live?: boolean | null
           language?: string | null
           level?: string | null
+          parent_course_id?: string | null
           payment_type?: string | null
           price?: number
           rating?: number | null
@@ -316,7 +351,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "courses_parent_course_id_fkey"
+            columns: ["parent_course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employees: {
         Row: {
@@ -802,6 +845,63 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          amount: number | null
+          batch: string | null
+          courses: string | null
+          created_at: string
+          customer_email: string | null
+          customer_phone: string | null
+          id: string
+          order_id: string
+          payment_group: string | null
+          payment_id: string | null
+          payment_mode: string | null
+          payment_time: string | null
+          raw_response: Json | null
+          status: string | null
+          user_id: string | null
+          utr: string | null
+        }
+        Insert: {
+          amount?: number | null
+          batch?: string | null
+          courses?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id: string
+          payment_group?: string | null
+          payment_id?: string | null
+          payment_mode?: string | null
+          payment_time?: string | null
+          raw_response?: Json | null
+          status?: string | null
+          user_id?: string | null
+          utr?: string | null
+        }
+        Update: {
+          amount?: number | null
+          batch?: string | null
+          courses?: string | null
+          created_at?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          id?: string
+          order_id?: string
+          payment_group?: string | null
+          payment_id?: string | null
+          payment_mode?: string | null
+          payment_time?: string | null
+          raw_response?: Json | null
+          status?: string | null
+          user_id?: string | null
+          utr?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           branch: string | null
@@ -1275,6 +1375,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      enroll_student_with_addons:
+        | {
+            Args: {
+              p_addon_subjects: string[]
+              p_course_id: string
+              p_order_id: string
+              p_payment_id: string
+              p_status: string
+              p_total_amount: number
+              p_user_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_addon_course_ids: string[]
+              p_main_course_id: string
+              p_order_id: string
+              p_payment_id: string
+              p_status?: string
+              p_total_amount: number
+              p_user_id: string
+            }
+            Returns: undefined
+          }
       generate_all_recommendations: { Args: never; Returns: string }
       generate_content_recs_for_user: {
         Args: { user_id_input: string }
