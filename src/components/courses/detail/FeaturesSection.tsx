@@ -64,7 +64,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
       <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
         
         <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
-          About the Batch
+          Batch Features
         </h2>
 
         {/* --- Grid Layout (Stacks on mobile, 2 columns on desktop) --- */}
