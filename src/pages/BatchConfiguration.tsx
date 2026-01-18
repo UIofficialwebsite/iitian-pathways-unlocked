@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, Info, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -374,6 +374,47 @@ const BatchConfiguration = () => {
         }}
       />
 
+      {/* --- MOBILE DETAILS DRAWER (Overlay from Top) --- */}
+      {/* This comes ABOVE the header (z-[60] vs header z-50) */}
+      <div 
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-xl transition-transform duration-300 ease-out flex flex-col items-center pt-8 pb-6 px-5 rounded-b-2xl border-b border-gray-100 md:hidden ${
+            showDetails ? 'translate-y-0' : '-translate-y-[120%]'
+        }`}
+      >
+        <button 
+            onClick={() => setShowDetails(false)}
+            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+            <X className="w-6 h-6" />
+        </button>
+
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-4 shadow-sm">
+            <Info className="w-6 h-6" />
+        </div>
+        <h2 className="text-xl font-bold text-[#1a1f36] mb-3 text-center">{course.title}</h2>
+        <div className="flex flex-col gap-1.5 text-sm text-[#4f566b] mb-4 items-center">
+            {course.start_date && (
+                <span className="font-normal">Starts: {formatDate(course.start_date)}</span>
+            )}
+            {course.end_date && (
+                <span className="font-normal">Ends: {formatDate(course.end_date)}</span>
+            )}
+        </div>
+        {course.description && (
+            <p className="text-gray-500 text-sm leading-relaxed text-center max-w-sm">
+                {course.description}
+            </p>
+        )}
+      </div>
+      
+      {/* --- OVERLAY BACKDROP for Mobile --- */}
+      {showDetails && (
+        <div 
+            className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
+            onClick={() => setShowDetails(false)}
+        />
+      )}
+
       {/* --- MOBILE HEADER (Visible only on < md) --- */}
       <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
           <div className="px-5 py-4 flex items-center justify-between">
@@ -413,34 +454,11 @@ const BatchConfiguration = () => {
         <div className="flex justify-center mt-2 mb-6 md:hidden">
             <button 
                 onClick={() => setShowDetails(!showDetails)}
-                className="flex flex-col items-center justify-center gap-1 px-12 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50"
+                className="flex items-center justify-center gap-2 px-8 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50 shadow-sm"
             >
-                <span className="font-normal text-sm leading-none">View Detail</span>
+                <span className="font-normal text-sm">View Detail</span>
                 {showDetails ? <ChevronUp className="w-4 h-4 text-black" /> : <ChevronDown className="w-4 h-4 text-black" />}
             </button>
-        </div>
-
-        {/* --- MOBILE DETAILS SLIDER (Visible only on < md) --- */}
-        <div 
-            className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${
-                showDetails ? "max-h-[500px] opacity-100 mb-10" : "max-h-0 opacity-0 mb-0"
-            }`}
-        >
-            <div className="bg-white/80 backdrop-blur-sm border border-gray-200 rounded-xl p-6 text-center shadow-sm">
-                <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-blue-50 text-blue-600 mb-3">
-                    <Info className="w-5 h-5" />
-                </div>
-                <h2 className="text-xl font-bold text-[#1a1f36] mb-2">{course.title}</h2>
-                <div className="flex flex-col gap-1 text-sm text-[#4f566b] font-medium mb-4">
-                    {course.start_date && <span>Starts: {formatDate(course.start_date)}</span>}
-                    {course.end_date && <span>Ends: {formatDate(course.end_date)}</span>}
-                </div>
-                {course.description && (
-                    <p className="text-gray-500 text-sm leading-relaxed">
-                        {course.description}
-                    </p>
-                )}
-            </div>
         </div>
 
         {/* Main Grid */}
