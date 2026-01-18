@@ -1,88 +1,128 @@
-import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Video, Users, BookOpen, Headphones, CheckCircle, WalletMinimal, UserCheck } from "lucide-react";
+import React, { useState } from 'react';
+import { 
+  Video, 
+  Users, 
+  BookOpen, 
+  Headphones, 
+  WalletMinimal, 
+  UserCheck, 
+  Star,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface FeaturesSectionProps {
   course: Course;
 }
 
 const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // 1. Define Default Features (Rich objects)
   const defaultFeatures = [
     {
       icon: Video,
-      title: "Live Classes",
-      description: "Interactive live sessions with expert instructors"
+      text: "Live Classes: Interactive live sessions with expert instructors"
     },
     {
       icon: Users,
-      title: "Small Batch Size",
-      description: "Personalized attention with limited students per batch"
+      text: "Small Batch Size: Personalized attention with limited students"
     },
     {
       icon: WalletMinimal,
-      title: "Affordable Learning",
-      description: "High-quality education at prices every student can afford."
+      text: "Affordable Learning: High-quality education at accessible prices"
     },
     {
       icon: UserCheck,
-      title: "Personal Mentorship",
-      description: "Dedicated mentors to guide you with study plans, career oriented decisions"
+      text: "Personal Mentorship: Dedicated mentors for study plans & career guidance"
     },
     {
       icon: BookOpen,
-      title: "Study Materials",
-      description: "Comprehensive notes, PDFs, and practice questions"
+      text: "Study Materials: Comprehensive notes, PDFs, and practice questions"
     },
     {
       icon: Headphones,
-      title: "24/7 Support",
-      description: "Get your doubts resolved anytime through our portal"
+      text: "24/7 Support: Get your doubts resolved anytime through our portal"
     }
   ];
 
-  // Use course features if available, otherwise use default features
+  // 2. Determine which list to use
+  // If course has custom features strings, map them to a uniform structure
   const hasCustomFeatures = course.features && course.features.length > 0;
+  
+  const featuresList = hasCustomFeatures
+    ? course.features!.map((f) => ({ icon: Star, text: f }))
+    : defaultFeatures;
+
+  // 3. Split into Initial (4) and Extra (Rest)
+  const initialFeatures = featuresList.slice(0, 4);
+  const extraFeatures = featuresList.slice(4);
+  const hasMore = extraFeatures.length > 0;
 
   return (
-    <section id="features" className="scroll-mt-24">
-      <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Course Features</h2>
-      {hasCustomFeatures ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {course.features!.map((feature, idx) => (
-            <Card key={idx} className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-3 md:p-4">
-                <div className="flex items-start gap-2 md:gap-3">
-                  <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <p className="text-xs md:text-sm leading-relaxed">{feature}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-          {defaultFeatures.map((feature, idx) => {
-            const Icon = feature.icon;
-            return (
-              <Card key={idx} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4 md:p-6">
-                  <div className="flex items-start gap-3 md:gap-4">
-                    <div className="p-2 md:p-3 rounded-lg bg-primary/10">
-                      <Icon className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-1 md:mb-2 text-sm md:text-base">{feature.title}</h3>
-                      <p className="text-xs md:text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+    <section id="features" className="scroll-mt-24 w-full bg-white">
+      <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
+        About the Batch
+      </h2>
+
+      {/* --- 2x2 Grid Layout --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Render Initial 4 Items */}
+        {initialFeatures.map((feature, idx) => (
+          <FeatureCard key={`init-${idx}`} icon={feature.icon} text={feature.text} />
+        ))}
+
+        {/* Render Extra Items (Hidden/Shown based on state) */}
+        {hasMore && (
+          <div className={cn(
+            "col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-500 ease-in-out overflow-hidden",
+            isExpanded ? "max-h-[1000px] opacity-100 mt-0" : "max-h-0 opacity-0"
+          )}>
+            {extraFeatures.map((feature, idx) => (
+              <FeatureCard key={`extra-${idx}`} icon={feature.icon} text={feature.text} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* --- Toggle Button --- */}
+      {hasMore && (
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className={cn(
+            "w-full mt-4 bg-white border border-[#e3e8ee] p-4 rounded-lg",
+            "text-[15px] font-semibold text-[#1a1f36] text-center",
+            "hover:border-black transition-all duration-300 ease-out",
+            // If expanded, we can choose to hide the button or change text. 
+            // The reference hides it, but for UX 'Show Less' is often better.
+            // Following the reference behavior of hiding:
+            isExpanded ? "hidden pointer-events-none" : "block"
+          )}
+        >
+          More Features
+        </button>
       )}
     </section>
+  );
+};
+
+// --- Sub-Component for the Card Design ---
+const FeatureCard = ({ icon: Icon, text }: { icon: any, text: string }) => {
+  return (
+    <div className="group flex items-center gap-4 bg-white border border-[#e3e8ee] p-5 rounded-lg transition-colors duration-200 hover:border-black">
+      {/* Icon Circle */}
+      <div className="min-w-[36px] h-9 w-9 bg-[#f8fafc] rounded-full flex items-center justify-center shrink-0">
+        <Icon className="h-4 w-4 text-gray-700" />
+      </div>
+      
+      {/* Text */}
+      <div className="text-[14px] leading-relaxed text-[#1a1f36] font-normal">
+        {text}
+      </div>
+    </div>
   );
 };
 
