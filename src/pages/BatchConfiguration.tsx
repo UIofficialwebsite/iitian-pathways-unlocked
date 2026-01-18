@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, Info, X } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, Info, X, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
@@ -139,6 +139,10 @@ const BatchConfiguration = () => {
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   
+  // Enrollment State
+  const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
+  const [ownedAddonIds, setOwnedAddonIds] = useState<string[]>([]);
+  
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -170,21 +174,37 @@ const BatchConfiguration = () => {
 
         const fetchedAddons = addonsRes.data || [];
         setAddons(fetchedAddons);
-        setSelectedAddonIds([]); 
-
-        // Enrollment Check
+        
+        // Enrollment Logic
         if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
             const enrollments = enrollmentsRes.data;
-            const isMainOwned = enrollments.some(e => !e.subject_name);
-            const ownedSubjectNames = enrollments.filter(e => e.subject_name).map(e => e.subject_name);
-            const areAllAddonsOwned = fetchedAddons.every(addon => ownedSubjectNames.includes(addon.subject_name));
+            
+            // Check Main Course Ownership (any row with null subject_name)
+            const mainOwned = enrollments.some(e => !e.subject_name);
+            setIsMainCourseOwned(mainOwned);
 
-            if (isMainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
+            // Check Addon Ownership (map subject names to addon IDs)
+            const ownedSubjectNames = enrollments
+                .filter(e => e.subject_name)
+                .map(e => e.subject_name);
+            
+            // Find IDs of addons that match the owned subject names
+            const ownedIds = fetchedAddons
+                .filter(addon => ownedSubjectNames.includes(addon.subject_name))
+                .map(addon => addon.id);
+            
+            setOwnedAddonIds(ownedIds);
+
+            // If fully enrolled, redirect
+            const areAllAddonsOwned = fetchedAddons.every(addon => ownedSubjectNames.includes(addon.subject_name));
+            if (mainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
                 toast.info("You are already fully enrolled in this batch.");
                 navigate(`/courses/${courseId}`); 
                 return;
             }
         }
+        
+        setSelectedAddonIds([]); 
 
       } catch (error) {
         console.error('Error fetching batch details:', error);
@@ -197,17 +217,25 @@ const BatchConfiguration = () => {
   }, [courseId, user, navigate]);
 
   // --- 2. Calculations ---
+  // If main course is owned, base price contribution is 0 for the upgrade
   const basePrice = course?.discounted_price ?? course?.price ?? 0;
+  const effectiveBasePrice = isMainCourseOwned ? 0 : basePrice;
   
+  // Only calculate total for selected addons that are NOT already owned
   const selectedAddonsList = useMemo(() => {
-    return addons.filter(addon => selectedAddonIds.includes(addon.id));
-  }, [addons, selectedAddonIds]);
+    return addons.filter(addon => 
+        selectedAddonIds.includes(addon.id) && !ownedAddonIds.includes(addon.id)
+    );
+  }, [addons, selectedAddonIds, ownedAddonIds]);
 
   const addonsTotal = selectedAddonsList.reduce((sum, addon) => sum + addon.price, 0);
-  const finalTotal = basePrice + addonsTotal;
+  const finalTotal = effectiveBasePrice + addonsTotal;
 
   // --- 3. Handlers ---
   const toggleAddon = (addonId: string) => {
+    // Prevent toggling if already owned
+    if (ownedAddonIds.includes(addonId)) return;
+
     setSelectedAddonIds(prev => 
       prev.includes(addonId) 
         ? prev.filter(id => id !== addonId) 
@@ -224,14 +252,13 @@ const BatchConfiguration = () => {
     }
 
     if (finalTotal === 0) {
-        toast.error("Total amount must be greater than zero.");
+        toast.error("Please select at least one new item to purchase.");
         return;
     }
 
     setProcessing(true);
 
     try {
-      // 1. Check for Phone Number in Profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('phone')
@@ -239,10 +266,8 @@ const BatchConfiguration = () => {
         .single();
 
       if (profile?.phone && profile.phone.length >= 10) {
-        // Proceed if phone exists
         await processPayment(profile.phone);
       } else {
-        // Show dialog if missing
         setProcessing(false);
         setShowPhoneDialog(true);
       }
@@ -262,15 +287,12 @@ const BatchConfiguration = () => {
     setProcessing(true);
     
     try {
-      // Update profile with new phone
       const { error: updateError } = await supabase
         .from('profiles')
         .update({ phone: manualPhone })
         .eq('id', user.id);
 
-      if (updateError) {
-        console.error("Failed to update profile phone:", updateError);
-      }
+      if (updateError) console.error("Failed to update profile phone:", updateError);
       
       setShowPhoneDialog(false);
       await processPayment(manualPhone);
@@ -287,15 +309,17 @@ const BatchConfiguration = () => {
 
       console.log("Initiating Cashfree Payment...");
 
-      // Call the Edge Function
+      // Only send the NEWLY selected addons to the backend
+      const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
+
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
           courseId,
-          amount: finalTotal, // Use the calculated total
+          amount: finalTotal, 
           userId: user.id,
           customerEmail: user.email, 
           customerPhone: phoneNumber,
-          selectedSubjects: selectedAddonIds // Pass selected addon IDs
+          selectedSubjects: newAddonIds // IMPORTANT: Only send new addons
         },
       });
 
@@ -310,15 +334,9 @@ const BatchConfiguration = () => {
         throw new Error(errorMessage);
       }
 
-      if (data?.error) {
-         throw new Error(data.error);
-      }
+      if (data?.error) throw new Error(data.error);
+      if (!data || !data.payment_session_id) throw new Error("Invalid response from payment server");
 
-      if (!data || !data.payment_session_id) {
-        throw new Error("Invalid response from payment server");
-      }
-
-      // Load Cashfree SDK and Checkout
       const script = document.createElement('script');
       script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
       script.onload = () => {
@@ -329,7 +347,7 @@ const BatchConfiguration = () => {
           paymentSessionId: data.payment_session_id,
           returnUrl: data.verifyUrl, 
         });
-        setProcessing(false); // Stop loading once redirected or modal opens
+        setProcessing(false); 
       };
       document.body.appendChild(script);
 
@@ -366,10 +384,8 @@ const BatchConfiguration = () => {
   return (
     <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex flex-col items-center">
       
-      {/* Inject Custom Styles for Modal */}
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
 
-      {/* Background Slope Effect */}
       <div 
         className="fixed bottom-[-20%] right-[-10%] w-[120%] h-[60%] -z-0 pointer-events-none opacity-70 blur-[40px]"
         style={{
@@ -379,7 +395,7 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* --- MOBILE DETAILS DRAWER (Overlay from Top) --- */}
+      {/* --- MOBILE DETAILS DRAWER --- */}
       <div 
         className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] rounded-b-[24px] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
             showDetails ? 'translate-y-0' : '-translate-y-[120%]'
@@ -393,14 +409,10 @@ const BatchConfiguration = () => {
         </div>
 
         <div className="flex flex-col gap-7 mt-4">
-            
-            {/* Batch Name */}
             <div className="flex flex-col gap-1">
                 <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch Name</span>
                 <span className="text-[22px] font-bold text-[#1a1f36] tracking-tight">{course.title}</span>
             </div>
-
-            {/* Dates (Stacked on mobile as per design) */}
             <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Start Date</span>
@@ -413,23 +425,12 @@ const BatchConfiguration = () => {
                     </span>
                 </div>
             </div>
-
-            {/* Batch ID */}
-            <div className="flex flex-col gap-1">
-                <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch ID</span>
-                <span className="text-[14px] font-normal text-[#1a1f36] break-all leading-relaxed opacity-90">
-                    {course.id}
-                </span>
-            </div>
-
-            {/* Email Address Bar */}
             <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md text-[15px] font-normal text-[#1a1f36] text-center mt-2">
                 {user?.email || 'N/A'}
             </div>
         </div>
       </div>
       
-      {/* --- OVERLAY BACKDROP for Mobile --- */}
       {showDetails && (
         <div 
             className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
@@ -437,7 +438,7 @@ const BatchConfiguration = () => {
         />
       )}
 
-      {/* --- MOBILE HEADER (Visible only on < md) --- */}
+      {/* --- MOBILE HEADER --- */}
       <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
           <div className="px-5 py-4 flex items-center justify-between">
             <div 
@@ -455,7 +456,7 @@ const BatchConfiguration = () => {
 
       <div className="relative z-10 w-full max-w-[1000px] px-5 mt-4 md:mt-12 pb-20">
         
-        {/* --- PC HEADER (Visible only on >= md) - Restored to Original --- */}
+        {/* --- PC HEADER --- */}
         <div 
             className="hidden md:flex mb-10 w-fit cursor-pointer group items-center gap-4"
             onClick={() => navigate(-1)}
@@ -472,7 +473,7 @@ const BatchConfiguration = () => {
             </div>
         </div>
 
-        {/* --- MOBILE DETAILS TOGGLE (Visible only on < md) --- */}
+        {/* --- MOBILE DETAILS TOGGLE --- */}
         <div className="flex justify-center mt-2 mb-6 md:hidden">
             <button 
                 onClick={() => setShowDetails(!showDetails)}
@@ -489,7 +490,6 @@ const BatchConfiguration = () => {
           {/* --- LEFT COLUMN: Configuration --- */}
           <div className="flex-[1.2] w-full">
             
-            {/* --- PC BATCH INFO (Visible only on >= md) - Restored to Original --- */}
             <div className="hidden md:block mb-8">
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
                 <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
@@ -502,7 +502,6 @@ const BatchConfiguration = () => {
                 </p>
             </div>
 
-            {/* --- MOBILE TITLE (Visible only on < md) --- */}
             <div className="md:hidden mb-6">
                  <h1 className="text-[24px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
                  <p className="text-[#4f566b] text-sm mt-1">Customize your learning path.</p>
@@ -517,22 +516,50 @@ const BatchConfiguration = () => {
                     </div>
                     <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
                   </div>
-                  <span className="font-semibold text-[11px] text-[#22c55e] bg-green-50 px-2 py-1 rounded tracking-wide">INCLUDED</span>
+                  <span className="font-semibold text-[11px] text-[#22c55e] bg-green-50 px-2 py-1 rounded tracking-wide">
+                    {isMainCourseOwned ? "PURCHASED" : "INCLUDED"}
+                  </span>
                 </div>
               ))}
 
               {addons.map((addon) => {
-                const isSelected = selectedAddonIds.includes(addon.id);
+                const isOwned = ownedAddonIds.includes(addon.id);
+                const isSelected = selectedAddonIds.includes(addon.id) || isOwned;
+                
                 return (
-                  <label key={addon.id} className="group flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg cursor-pointer transition-all duration-150 hover:border-black hover:shadow-sm">
+                  <label 
+                    key={addon.id} 
+                    className={`group flex items-center justify-between border p-[18px] px-6 rounded-lg transition-all duration-150 
+                        ${isOwned 
+                            ? 'bg-gray-50 border-gray-200 cursor-not-allowed opacity-80' 
+                            : 'bg-white border-[#e3e8ee] cursor-pointer hover:border-black hover:shadow-sm'
+                        }`}
+                  >
                     <div className="flex items-center flex-grow">
-                      <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 ${isSelected ? 'bg-[#1a1f36] border-[#1a1f36]' : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'}`}>
-                         <input type="checkbox" className="hidden" checked={isSelected} onChange={() => toggleAddon(addon.id)} />
+                      <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
+                        ${isSelected 
+                            ? 'bg-[#1a1f36] border-[#1a1f36]' 
+                            : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'
+                        }`}>
+                         <input 
+                            type="checkbox" 
+                            className="hidden" 
+                            checked={isSelected} 
+                            disabled={isOwned}
+                            onChange={() => toggleAddon(addon.id)} 
+                         />
                          {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
                       </div>
                       <span className="font-medium text-[15px] text-[#1a1f36]">{addon.subject_name}</span>
                     </div>
-                    <span className="font-semibold text-[15px] text-[#1a1f36]">₹{addon.price}</span>
+                    
+                    {isOwned ? (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                            <Lock className="w-3 h-3" /> PURCHASED
+                        </div>
+                    ) : (
+                        <span className="font-semibold text-[15px] text-[#1a1f36]">₹{addon.price}</span>
+                    )}
                   </label>
                 );
               })}
@@ -543,7 +570,7 @@ const BatchConfiguration = () => {
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: Summary (Shared) --- */}
+          {/* --- RIGHT COLUMN: Summary --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-start pt-2">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm md:sticky md:top-24">
               <h2 className="text-[18px] font-bold text-[#1a1f36] mb-6 tracking-tight">Enrollment Summary</h2>
@@ -553,7 +580,11 @@ const BatchConfiguration = () => {
                     <span className="text-[#1a1f36] font-medium">Base Plan</span>
                     <span className="text-xs text-[#4f566b] truncate max-w-[150px]">{course.title}</span>
                 </div>
-                {basePrice === 0 ? <span className="text-[#22c55e] font-bold">FREE</span> : <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>}
+                {isMainCourseOwned ? (
+                     <span className="text-[#22c55e] font-bold text-xs bg-green-50 px-2 py-0.5 rounded h-fit">PURCHASED</span>
+                ) : (
+                    basePrice === 0 ? <span className="text-[#22c55e] font-bold">FREE</span> : <span className="text-[#1a1f36] font-medium">₹{basePrice}</span>
+                )}
               </div>
 
               {selectedAddonsList.map(addon => (
@@ -589,21 +620,17 @@ const BatchConfiguration = () => {
         </div>
       </div>
 
-      {/* Phone Number Required Dialog */}
       <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
         <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
           <div className="custom-modal-wrapper">
             <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
-
             <div className="loading-container">
               <div className="dot"></div><div className="dot"></div><div className="dot"></div>
             </div>
-
             <h2 className="modal-title">Contact Details Required</h2>
             <p className="modal-description">
               Please provide your phone number to generate your payment receipt and finalize your enrollment process.
             </p>
-
             <div className="form-group">
               <label className="form-label">Phone Number</label>
               <input 
@@ -614,7 +641,6 @@ const BatchConfiguration = () => {
                 onChange={(e) => setManualPhone(e.target.value)}
               />
             </div>
-
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowPhoneDialog(false)}>Cancel</button>
               <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={processing}>
