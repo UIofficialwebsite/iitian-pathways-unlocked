@@ -120,24 +120,30 @@ const BatchConfiguration = () => {
 
       <div className="relative z-10 w-full max-w-[1000px] px-5">
         
-        {/* Top Header Row */}
-        <div className="mb-10 flex items-center gap-6">
-            <button 
-                onClick={() => navigate(-1)}
-                className="flex items-center text-[#4f566b] hover:text-[#1a1f36] text-sm font-medium transition-colors"
-            >
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back
-            </button>
+        {/* Top Header Row with Smooth Back Animation */}
+        <div 
+            className="mb-10 flex items-center gap-4 w-fit cursor-pointer group" 
+            onClick={() => navigate(-1)}
+        >
+            {/* Animated Back Button Container */}
+            <div className="flex items-center text-[#4f566b] transition-all duration-300 group-hover:text-[#1a1f36] group-hover:-translate-x-1">
+                <ArrowLeft className="w-5 h-5" />
+                <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
+                    <span className="overflow-hidden font-medium text-sm ml-0 group-hover:ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                        Back
+                    </span>
+                </div>
+            </div>
             
             {/* Divider */}
-            <div className="h-8 w-px bg-slate-300"></div>
+            <div className="h-8 w-px bg-slate-300 mx-2"></div>
 
             {/* Branding - Bigger Logo & Text */}
             <div className="flex items-center gap-4">
                 <img 
                   src="https://i.ibb.co/kgdrjTby/UI-Logo.png" 
                   alt="UI Logo" 
-                  className="w-14 h-14 object-contain drop-shadow-sm" 
+                  className="w-14 h-14 object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105" 
                 />
                 <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">
                     Unknown IITians
@@ -152,7 +158,8 @@ const BatchConfiguration = () => {
           <div className="flex-[1.2] w-full">
             
             <div className="mb-8">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
+                {/* Updated Heading */}
+                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
                 
                 {/* Batch Name (Semi-bold Label, Normal Value) */}
                 <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
@@ -165,7 +172,7 @@ const BatchConfiguration = () => {
                     {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
                 </p>
 
-                <p className="text-[#4f566b] text-sm mt-4">Review included subjects and select additional add-ons below.</p>
+                {/* Removed Review Paragraph as requested */}
             </div>
             
             <div className="flex flex-col gap-3">
@@ -230,7 +237,8 @@ const BatchConfiguration = () => {
           {/* --- RIGHT COLUMN: Summary (Middle Aligned via Flex) --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-center">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm">
-              <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Order Summary</h2>
+              {/* Updated Title */}
+              <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Enrollment Summary</h2>
 
               {/* Base Plan Line */}
               <div className="flex justify-between mb-3 text-sm">
@@ -262,11 +270,11 @@ const BatchConfiguration = () => {
                 <span className="text-[24px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
               </div>
 
-              {/* Payment Button */}
+              {/* Payment Button - Purple Shadow Removed */}
               <button 
                 onClick={handlePayment}
                 disabled={processing}
-                className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-indigo-500/20"
+                className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
                 {processing ? (
                    <Loader2 className="w-5 h-5 animate-spin" />
