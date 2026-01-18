@@ -1,193 +1,313 @@
-
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import { cn } from '@/lib/utils';
+import { ChevronRight } from 'lucide-react';
+
+const SECTIONS = [
+  { id: 'agreement', title: '1. Agreement' },
+  { id: 'description', title: '2. Service Description' },
+  { id: 'accounts', title: '3. User Accounts' },
+  { id: 'acceptable-use', title: '4. Acceptable Use' },
+  { id: 'payment', title: '5. Payments & Refunds' },
+  { id: 'ip', title: '6. Intellectual Property' },
+  { id: 'privacy', title: '7. Privacy' },
+  { id: 'disclaimer', title: '8. Disclaimers' },
+  { id: 'verification', title: '9. Employment Verification' },
+  { id: 'termination', title: '10. Termination' },
+  { id: 'contact', title: '11. Contact Us' },
+];
 
 const TermsOfService = () => {
-  return (
-    <>
-      <NavBar />
+  const [activeSection, setActiveSection] = useState('agreement');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+
+    const handleScroll = () => {
+      const scrollPosition = window.scrollY + 200;
       
-      <main className="pt-20 pb-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="prose prose-lg max-w-none">
-            <h1 className="text-4xl font-bold text-gray-900 mb-8 text-center">Terms of Service</h1>
-            
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-              <p className="text-gray-700 mb-2"><strong>Last Updated:</strong> January 2024</p>
-              <p className="text-gray-700"><strong>Effective Date:</strong> January 2024</p>
+      for (const section of SECTIONS) {
+        const element = document.getElementById(section.id);
+        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
+          setActiveSection(section.id);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      window.scrollTo({
+        top: element.offsetTop - 120,
+        behavior: 'smooth'
+      });
+      setActiveSection(id);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/20">
+      <NavBar />
+
+      <main className="pt-32 pb-24 relative">
+        <div className="container mx-auto px-6 max-w-7xl">
+          
+          {/* Page Header */}
+          <div className="mb-20 border-b border-white/10 pb-12">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">Terms of Service</h1>
+            <div className="flex flex-col md:flex-row md:items-center gap-6 text-sm text-gray-500 font-mono">
+              <span className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500/80 shadow-[0_0_8px_rgba(59,130,246,0.4)]"></span>
+                Effective Date: January 2024
+              </span>
+              <span className="hidden md:inline text-gray-700">|</span>
+              <span>Unknown IITians</span>
             </div>
+          </div>
 
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Agreement to Terms</h2>
-              <p className="text-gray-700 leading-relaxed">
-                By accessing and using the Unknown IITians website and services, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Description of Service</h2>
-              <p className="text-gray-700 mb-4">Unknown IITians provides educational services including:</p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Online courses and educational content</li>
-                <li>Exam preparation materials for JEE, NEET, and IITM BS</li>
-                <li>Study resources, notes, and practice questions</li>
-                <li>Career guidance and counseling services</li>
-                <li>Employment verification services</li>
-                <li>Community forums and study groups</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">User Accounts and Registration</h2>
-              <p className="text-gray-700 mb-4">To access certain features of our services, you must register for an account. You agree to:</p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Provide accurate, current, and complete information during registration</li>
-                <li>Maintain and promptly update your account information</li>
-                <li>Maintain the security of your password and account</li>
-                <li>Accept responsibility for all activities under your account</li>
-                <li>Notify us immediately of any unauthorized use of your account</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Acceptable Use Policy</h2>
-              <p className="text-gray-700 mb-4">You agree not to use our services to:</p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Violate any applicable laws or regulations</li>
-                <li>Infringe upon intellectual property rights</li>
-                <li>Transmit harmful, offensive, or inappropriate content</li>
-                <li>Interfere with or disrupt our services or servers</li>
-                <li>Attempt to gain unauthorized access to our systems</li>
-                <li>Use our services for commercial purposes without permission</li>
-                <li>Share your account credentials with others</li>
-                <li>Engage in fraudulent or deceptive practices</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Payment Terms and Refund Policy</h2>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Payment Processing</h3>
-              <p className="text-gray-700 mb-4">All payments are processed securely through our authorized payment partners. You agree to provide accurate payment information and authorize us to charge the specified amounts.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Course Fees</h3>
-              <p className="text-gray-700 mb-4">Course fees are clearly stated at the time of enrollment. Prices may change without notice, but changes will not affect existing enrollments.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Refund Policy</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Refunds may be requested within 7 days of course enrollment</li>
-                <li>Refund eligibility depends on course progress and usage</li>
-                <li>Processing fees may be deducted from refund amounts</li>
-                <li>Refunds are processed within 7-14 business days</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Intellectual Property Rights</h2>
-              <p className="text-gray-700 mb-4">All content on our platform, including but not limited to text, graphics, logos, videos, and software, is the property of Unknown IITians and is protected by intellectual property laws.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">License to Use</h3>
-              <p className="text-gray-700 mb-4">We grant you a limited, non-exclusive, non-transferable license to access and use our content for personal educational purposes only.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Restrictions</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>You may not reproduce, distribute, or sell our content</li>
-                <li>You may not modify or create derivative works</li>
-                <li>You may not reverse engineer our software</li>
-                <li>You may not share login credentials or course access</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Privacy and Data Protection</h2>
-              <p className="text-gray-700">
-                Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference. By using our services, you consent to the collection and use of your information as described in our Privacy Policy.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Disclaimers and Limitations of Liability</h2>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Service Availability</h3>
-              <p className="text-gray-700 mb-4">We strive to maintain service availability but do not guarantee uninterrupted access. Services may be temporarily unavailable due to maintenance, updates, or technical issues.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Educational Outcomes</h3>
-              <p className="text-gray-700 mb-4">While we provide quality educational content, we do not guarantee specific academic outcomes or exam results. Success depends on individual effort and circumstances.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Limitation of Liability</h3>
-              <p className="text-gray-700">
-                To the maximum extent permitted by law, Unknown IITians shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Employment Verification Services</h2>
-              <p className="text-gray-700 mb-4">Our employment verification services are provided for legitimate verification purposes only. Users of this service agree to:</p>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Use verification services only for lawful purposes</li>
-                <li>Provide accurate information for verification requests</li>
-                <li>Respect the privacy of individuals being verified</li>
-                <li>Not misuse or falsify verification information</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Termination</h2>
-              <p className="text-gray-700 mb-4">We may terminate or suspend your account and access to our services at our sole discretion, without prior notice, for conduct that we believe violates these Terms or is harmful to other users, us, or third parties.</p>
-              
-              <h3 className="text-xl font-medium text-gray-800 mb-3">Effects of Termination</h3>
-              <ul className="list-disc list-inside text-gray-700 space-y-2">
-                <li>Your right to access our services will cease immediately</li>
-                <li>Any outstanding payments become immediately due</li>
-                <li>We may delete your account and associated data</li>
-                <li>Certain provisions of these Terms will survive termination</li>
-              </ul>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Indemnification</h2>
-              <p className="text-gray-700">
-                You agree to indemnify, defend, and hold harmless Unknown IITians, its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses arising out of or in any way connected with your use of our services or violation of these Terms.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Governing Law and Jurisdiction</h2>
-              <p className="text-gray-700">
-                These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in Mumbai, Maharashtra, India.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Changes to Terms</h2>
-              <p className="text-gray-700">
-                We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting on our website. Your continued use of our services after changes are posted constitutes acceptance of the modified Terms.
-              </p>
-            </section>
-
-            <section className="mb-8">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Severability</h2>
-              <p className="text-gray-700">
-                If any provision of these Terms is found to be unenforceable or invalid, such provision shall be limited or eliminated to the minimum extent necessary so that these Terms shall otherwise remain in full force and effect.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">Contact Information</h2>
-              <p className="text-gray-700 mb-4">If you have questions about these Terms of Service, please contact us:</p>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-                <p className="text-gray-700 mb-2"><strong>Email:</strong> legal@unknowniitians.com</p>
-                <p className="text-gray-700 mb-2"><strong>Phone:</strong> +91 9876543210</p>
-                <p className="text-gray-700"><strong>Address:</strong> 123 Education Street, Mumbai, Maharashtra 400001, India</p>
+          <div className="flex flex-col lg:flex-row gap-16 relative">
+            
+            {/* Sidebar Navigation (Sticky) */}
+            <aside className="hidden lg:block w-64 shrink-0">
+              <div className="sticky top-32">
+                <nav className="flex flex-col space-y-1">
+                  {SECTIONS.map((section) => (
+                    <button
+                      key={section.id}
+                      onClick={() => scrollToSection(section.id)}
+                      className={cn(
+                        "text-left px-4 py-2 text-sm transition-colors duration-200 block w-full rounded-md",
+                        activeSection === section.id
+                          ? "text-white font-medium bg-white/5"
+                          : "text-gray-500 hover:text-gray-300 hover:bg-white/5"
+                      )}
+                    >
+                      {section.title}
+                    </button>
+                  ))}
+                </nav>
+                <div className="mt-10 p-6 rounded-2xl bg-[#0a0a0a] border border-white/5">
+                  <p className="text-xs text-gray-400 mb-4 leading-relaxed">
+                    Please review these terms carefully before using our platform.
+                  </p>
+                  <a href="mailto:legal@unknowniitians.com" className="text-xs font-bold text-white hover:underline flex items-center gap-1">
+                    Contact Legal <ChevronRight className="w-3 h-3" />
+                  </a>
+                </div>
               </div>
-            </section>
+            </aside>
+
+            {/* Main Content */}
+            <div className="flex-1 max-w-3xl">
+              <div className="prose prose-invert prose-p:text-gray-400 prose-headings:text-white prose-headings:font-semibold prose-a:text-white prose-li:text-gray-400 max-w-none space-y-16">
+                
+                {/* Agreement to Terms */}
+                <section id="agreement" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Agreement to Terms</h2>
+                  <p>
+                    By accessing and using the Unknown IITians website and services, you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                  </p>
+                </section>
+
+                {/* Description of Service */}
+                <section id="description" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Description of Service</h2>
+                  <p>Unknown IITians provides educational services including:</p>
+                  <ul className="list-disc pl-5 space-y-2 mt-4">
+                    <li>Online courses and educational content</li>
+                    <li>Exam preparation materials for JEE, NEET, and IITM BS</li>
+                    <li>Study resources, notes, and practice questions</li>
+                    <li>Career guidance and counseling services</li>
+                    <li>Employment verification services</li>
+                    <li>Community forums and study groups</li>
+                  </ul>
+                </section>
+
+                {/* User Accounts */}
+                <section id="accounts" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">User Accounts and Registration</h2>
+                  <p>To access certain features of our services, you must register for an account. You agree to:</p>
+                  <ul className="list-disc pl-5 space-y-2 mt-4">
+                    <li>Provide accurate, current, and complete information during registration</li>
+                    <li>Maintain and promptly update your account information</li>
+                    <li>Maintain the security of your password and account</li>
+                    <li>Accept responsibility for all activities under your account</li>
+                    <li>Notify us immediately of any unauthorized use of your account</li>
+                  </ul>
+                </section>
+
+                {/* Acceptable Use */}
+                <section id="acceptable-use" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Acceptable Use Policy</h2>
+                  <p>You agree not to use our services to:</p>
+                  <ul className="list-disc pl-5 space-y-2 mt-4">
+                    <li>Violate any applicable laws or regulations</li>
+                    <li>Infringe upon intellectual property rights</li>
+                    <li>Transmit harmful, offensive, or inappropriate content</li>
+                    <li>Interfere with or disrupt our services or servers</li>
+                    <li>Attempt to gain unauthorized access to our systems</li>
+                    <li>Use our services for commercial purposes without permission</li>
+                    <li>Share your account credentials with others</li>
+                    <li>Engage in fraudulent or deceptive practices</li>
+                  </ul>
+                </section>
+
+                {/* Payment Terms */}
+                <section id="payment" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Payment Terms and Refund Policy</h2>
+                  
+                  <div className="grid md:grid-cols-1 gap-4 not-prose mt-6">
+                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
+                      <h4 className="text-white font-semibold text-sm mb-2">Payment Processing</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed">All payments are processed securely through our authorized payment partners. You agree to provide accurate payment information and authorize us to charge the specified amounts.</p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
+                      <h4 className="text-white font-semibold text-sm mb-2">Course Fees</h4>
+                      <p className="text-xs text-gray-400 leading-relaxed">Course fees are clearly stated at the time of enrollment. Prices may change without notice, but changes will not affect existing enrollments.</p>
+                    </div>
+                    <div className="p-4 rounded-lg border border-white/10 bg-[#0a0a0a]">
+                      <h4 className="text-white font-semibold text-sm mb-2">Refund Policy</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-xs text-gray-400">
+                        <li>Refunds may be requested within 7 days of course enrollment</li>
+                        <li>Refund eligibility depends on course progress and usage</li>
+                        <li>Processing fees may be deducted from refund amounts</li>
+                        <li>Refunds are processed within 7-14 business days</li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Intellectual Property */}
+                <section id="ip" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Intellectual Property Rights</h2>
+                  <p>All content on our platform, including but not limited to text, graphics, logos, videos, and software, is the property of Unknown IITians and is protected by intellectual property laws.</p>
+                  
+                  <div className="mt-6 space-y-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">License to Use</h3>
+                      <p>We grant you a limited, non-exclusive, non-transferable license to access and use our content for personal educational purposes only.</p>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Restrictions</h3>
+                      <ul className="list-disc pl-5 space-y-2">
+                        <li>You may not reproduce, distribute, or sell our content</li>
+                        <li>You may not modify or create derivative works</li>
+                        <li>You may not reverse engineer our software</li>
+                        <li>You may not share login credentials or course access</li>
+                      </ul>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Privacy */}
+                <section id="privacy" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Privacy and Data Protection</h2>
+                  <p>
+                    Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference. By using our services, you consent to the collection and use of your information as described in our Privacy Policy.
+                  </p>
+                </section>
+
+                {/* Disclaimers */}
+                <section id="disclaimer" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Disclaimers and Limitations of Liability</h2>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Service Availability</h3>
+                      <p>We strive to maintain service availability but do not guarantee uninterrupted access. Services may be temporarily unavailable due to maintenance, updates, or technical issues.</p>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Educational Outcomes</h3>
+                      <p>While we provide quality educational content, we do not guarantee specific academic outcomes or exam results. Success depends on individual effort and circumstances.</p>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Limitation of Liability</h3>
+                      <p>To the maximum extent permitted by law, Unknown IITians shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of our services.</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Employment Verification */}
+                <section id="verification" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Employment Verification Services</h2>
+                  <p>Our employment verification services are provided for legitimate verification purposes only. Users of this service agree to:</p>
+                  <ul className="list-disc pl-5 space-y-2 mt-4">
+                    <li>Use verification services only for lawful purposes</li>
+                    <li>Provide accurate information for verification requests</li>
+                    <li>Respect the privacy of individuals being verified</li>
+                    <li>Not misuse or falsify verification information</li>
+                  </ul>
+                </section>
+
+                {/* Termination */}
+                <section id="termination" className="scroll-mt-32">
+                  <h2 className="text-2xl mb-6">Termination</h2>
+                  <p>We may terminate or suspend your account and access to our services at our sole discretion, without prior notice, for conduct that we believe violates these Terms or is harmful to other users, us, or third parties.</p>
+                  <p className="mt-4">Effects of Termination:</p>
+                  <ul className="list-disc pl-5 space-y-2 mt-2">
+                    <li>Your right to access our services will cease immediately</li>
+                    <li>Any outstanding payments become immediately due</li>
+                    <li>We may delete your account and associated data</li>
+                    <li>Certain provisions of these Terms will survive termination</li>
+                  </ul>
+                </section>
+
+                {/* Additional Legal Sections Grouped */}
+                <section className="scroll-mt-32 space-y-12">
+                  <div>
+                    <h2 className="text-2xl mb-6">Indemnification</h2>
+                    <p>You agree to indemnify, defend, and hold harmless Unknown IITians, its officers, directors, employees, and agents from and against any claims, liabilities, damages, losses, and expenses arising out of or in any way connected with your use of our services or violation of these Terms.</p>
+                  </div>
+                  
+                  <div>
+                    <h2 className="text-2xl mb-6">Governing Law and Jurisdiction</h2>
+                    <p>These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising under these Terms shall be subject to the exclusive jurisdiction of the courts in Mumbai, Maharashtra, India.</p>
+                  </div>
+
+                  <div>
+                    <h2 className="text-2xl mb-6">Changes to Terms</h2>
+                    <p>We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting on our website. Your continued use of our services after changes are posted constitutes acceptance of the modified Terms.</p>
+                  </div>
+
+                  <div>
+                    <h2 className="text-2xl mb-6">Severability</h2>
+                    <p>If any provision of these Terms is found to be unenforceable or invalid, such provision shall be limited or eliminated to the minimum extent necessary so that these Terms shall otherwise remain in full force and effect.</p>
+                  </div>
+                </section>
+
+                {/* Contact Information */}
+                <section id="contact" className="scroll-mt-32 border-t border-white/10 pt-16">
+                  <h2 className="text-2xl mb-6">Contact Information</h2>
+                  <p className="mb-6">If you have questions about these Terms of Service, please contact us:</p>
+                  
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
+                      <span className="text-gray-500 block mb-1">Email</span>
+                      <a href="mailto:legal@unknowniitians.com" className="text-white hover:underline">legal@unknowniitians.com</a>
+                    </div>
+                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10">
+                      <span className="text-gray-500 block mb-1">Phone</span>
+                      <span className="text-white">+91 9876543210</span>
+                    </div>
+                    <div className="bg-[#0a0a0a] p-4 rounded border border-white/10 md:col-span-2">
+                      <span className="text-gray-500 block mb-1">Address</span>
+                      <span className="text-white">123 Education Street, Mumbai, Maharashtra 400001, India</span>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            </div>
           </div>
         </div>
       </main>
-
       <Footer />
-    </>
+    </div>
   );
 };
 
