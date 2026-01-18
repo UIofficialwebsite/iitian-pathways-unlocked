@@ -7,6 +7,8 @@ import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
 import SlidersIcon from "@/components/ui/SliderIcon";
 import RefineBatchesModal from "./RefineBatchesModal"; 
+import EnrollButton from "@/components/EnrollButton"; // Added Import
+import { useNavigate } from "react-router-dom"; // Added Import
 
 interface FastTrackBatchesTabProps {
   focusArea: string;
@@ -17,35 +19,71 @@ const CourseCard: React.FC<{
   course: Tables<'courses'>, 
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
+  const navigate = useNavigate();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+  const [hasAddons, setHasAddons] = useState(false);
 
   const discount = course.discounted_price 
     ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
     : 0;
 
-  // Check for Paid Add-ons if Base is Free
+  // Check for Paid Add-ons
   useEffect(() => {
     const checkAddons = async () => {
-      if (course.price === 0 || course.price === null) {
-        const { data } = await supabase
-          .from('course_addons')
-          .select('price')
-          .eq('course_id', course.id);
+      const { data } = await supabase
+        .from('course_addons')
+        .select('price')
+        .eq('course_id', course.id);
+      
+      if (data && data.length > 0) {
+        setHasAddons(true);
         
-        if (data && data.length > 0) {
+        // Calculate min price for display only if base is free
+        if (course.price === 0 || course.price === null) {
           const paidAddons = data.filter(addon => addon.price > 0);
           if (paidAddons.length > 0) {
             setMinAddonPrice(Math.min(...paidAddons.map(p => p.price)));
           }
         }
+      } else {
+        setHasAddons(false);
       }
     };
     checkAddons();
   }, [course.id, course.price]);
 
+  const renderEnrollAction = () => {
+    // 1. If Add-ons exist -> Navigate to Config Page
+    if (hasAddons) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/courses/${course.id}/configure`);
+          }} 
+          className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors"
+        >
+          Buy Now
+        </button>
+      );
+    }
+
+    // 2. If No Add-ons -> Direct Payment
+    return (
+      <EnrollButton
+        courseId={course.id}
+        coursePrice={course.discounted_price || course.price}
+        enrollmentLink={course.enroll_now_link || undefined}
+        className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors"
+      >
+        Enroll
+      </EnrollButton>
+    );
+  };
+
   return (
     <div className="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
-      <div className="w-full aspect-video overflow-hidden bg-gray-100">
+      <div className="w-full aspect-video overflow-hidden bg-gray-100 cursor-pointer" onClick={() => onSelect(course.id)}>
         <img 
           src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
           alt={course.title} 
@@ -59,7 +97,12 @@ const CourseCard: React.FC<{
           <span className="border border-[#ccc] px-2 py-0.5 rounded-[4px] text-[10px] font-semibold text-[#555] uppercase">{course.language || 'Hinglish'}</span>
         </div>
         
-        <h2 className="text-[18px] font-bold text-[#1f2937] mb-[12px] line-clamp-2 leading-tight h-[44px]">{course.title}</h2>
+        <h2 
+          onClick={() => onSelect(course.id)}
+          className="text-[18px] font-bold text-[#1f2937] mb-[12px] line-clamp-2 leading-tight h-[44px] cursor-pointer hover:text-blue-800 transition-colors"
+        >
+          {course.title}
+        </h2>
         
         <div className="min-h-[50px] space-y-2 mb-4">
           <div className="flex items-center gap-2.5 text-[#4b5563] text-[14px]">
@@ -92,7 +135,9 @@ const CourseCard: React.FC<{
             )}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => onSelect(course.id)} className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors">Enroll</button>
+            
+            {renderEnrollAction()}
+
             <button onClick={() => onSelect(course.id)} className="bg-white border border-[#e5e7eb] w-9 h-9 rounded-lg flex items-center justify-center hover:bg-gray-50 transition-colors">
               <ChevronRight className="w-5 h-5 text-[#1f2937]" strokeWidth={2.5} />
             </button>
