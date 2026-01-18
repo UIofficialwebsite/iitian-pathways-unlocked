@@ -1,19 +1,13 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const cashfreeKey = Deno.env.get("CASHFREE_KEY");
-const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
-const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
-const supabaseUrl = Deno.env.get("SUPABASE_URL");
-const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
+  // Handle CORS preflight request
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,146 +18,118 @@ serve(async (req: Request) => {
   const frontendUrl = passedRedirectUrl ? decodeURIComponent(passedRedirectUrl) : "https://preview.lovable.app";
 
   try {
-    // 1. CRITICAL: Check for Service Role Key
-    // If this is missing, the DB client will fail to bypass RLS.
-    if (!supabaseUrl || !supabaseServiceRoleKey) {
-      console.error("❌ FATAL: Supabase URL or Service Role Key is missing in Secrets!");
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=server_config_error` },
-      });
+    // 1. Validate Secrets & Setup Client
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const cashfreeKey = Deno.env.get("CASHFREE_KEY");
+    const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
+
+    if (!supabaseUrl || !supabaseKey || !cashfreeKey || !cashfreeSecret) {
+      console.error("❌ Critical: Missing API Keys in Secrets");
+      return new Response(null, { status: 302, headers: { Location: `${frontendUrl}/dashboard?payment=error` } });
     }
+
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
 
     if (!orderId) {
-      console.error("❌ Order ID not found in URL");
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=missing_order_id` },
-      });
+      console.error("❌ Missing Order ID");
+      return new Response(null, { status: 302, headers: { Location: `${frontendUrl}/dashboard?payment=error` } });
     }
 
-    // 2. Initialize Supabase Admin Client
-    // using 'auth: { persistSession: false }' ensures it acts purely as a backend admin
-    const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    });
+    // 2. Verify Status with Cashfree
+    const cashfreeEnv = Deno.env.get("CASHFREE_ENVIRONMENT") ?? "sandbox";
+    const cashfreeApiUrl = cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders";
 
-    // 3. Verify with Cashfree
-    const cashfreeApiUrl = cashfreeEnv === "production"
-      ? "https://api.cashfree.com/pg/orders"
-      : "https://sandbox.cashfree.com/pg/orders";
-
-    const verifyResponse = await fetch(`${cashfreeApiUrl}/${orderId}`, {
-      method: "GET",
+    const verifyResp = await fetch(`${cashfreeApiUrl}/${orderId}`, {
       headers: {
-        "x-client-id": cashfreeKey || "",
-        "x-client-secret": cashfreeSecret || "",
-        "x-api-version": "2023-08-01",
-      },
+        "x-client-id": cashfreeKey,
+        "x-client-secret": cashfreeSecret,
+        "x-api-version": "2023-08-01"
+      }
     });
 
-    if (!verifyResponse.ok) {
-      console.error("❌ Cashfree API Verification Failed:", verifyResponse.status);
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=verification_failed` },
-      });
+    if (!verifyResp.ok) {
+      console.error("❌ Cashfree Verification Failed:", verifyResp.status);
+      return new Response(null, { status: 302, headers: { Location: `${frontendUrl}/dashboard?payment=error` } });
     }
 
-    const paymentData = await verifyResponse.json();
+    const paymentData = await verifyResp.json();
     const finalStatus = paymentData.order_status === "PAID" ? "success" : "failed";
     const userId = paymentData.customer_details?.customer_id;
 
-    console.log(`✅ Payment Verified: ${finalStatus} for Order: ${orderId}`);
-
-    // 4. Fetch Course & Addon Details from Enrollments
-    const { data: enrollmentData, error: enrollmentError } = await supabase
+    // 3. Fetch Details Safe for Multiple Rows (The Fix)
+    // We use .select() instead of .maybeSingle() to prevent crashing on 2+ rows
+    const { data: enrollments, error: fetchError } = await supabase
       .from("enrollments")
       .select(`
-        course_id,
         subject_name,
-        courses (
-          title
-        )
+        courses ( title )
       `)
-      .eq("order_id", orderId)
-      .maybeSingle();
-
-    if (enrollmentError) {
-      console.error("⚠️ Error fetching enrollment details:", enrollmentError);
-    }
-
-    // Format the data for the columns
-    const mainBatchName = enrollmentData?.courses?.title || "Unknown Batch";
-    
-    // Handle subject_name safely (it can be string, array, or null)
-    let addonsNames = "None";
-    if (enrollmentData?.subject_name) {
-      if (Array.isArray(enrollmentData.subject_name)) {
-        addonsNames = enrollmentData.subject_name.join(", ");
-      } else {
-        addonsNames = String(enrollmentData.subject_name);
-      }
-    }
-
-    // 5. Insert into 'payments' table
-    const paymentRecord = {
-      order_id: orderId,
-      payment_id: paymentData.cf_order_id || null, // If null, the SQL update 'DROP NOT NULL' will save us
-      user_id: userId || null,
-      amount: paymentData.order_amount,
-      status: finalStatus,
-      payment_mode: paymentData.payment_session_id ? "session" : "unknown",
-      raw_response: paymentData,
-      batch: mainBatchName,
-      courses: addonsNames
-    };
-
-    console.log("Attempting to insert payment record:", JSON.stringify(paymentRecord));
-
-    const { error: insertError } = await supabase
-      .from("payments")
-      .insert(paymentRecord);
-
-    if (insertError) {
-      // Log the EXACT error from the database (e.g. "Relation does not exist" or "RLS violation")
-      console.error("❌ DATABASE ERROR: Failed to insert payment:", insertError);
-      console.error("Error Code:", insertError.code, "Message:", insertError.message);
-    } else {
-      console.log("✅ Payment record successfully saved.");
-    }
-
-    // 6. Update Enrollments Status
-    const { error: updateError } = await supabase
-      .from("enrollments")
-      .update({
-        status: finalStatus,
-        payment_id: paymentData.cf_order_id,
-      })
       .eq("order_id", orderId);
 
-    if (updateError) {
-      console.error("❌ Error updating enrollment status:", updateError);
+    if (fetchError) console.error("⚠️ Enrollment Fetch Error:", fetchError);
+
+    // 4. Process Data safely
+    let mainBatchName = "Unknown Batch";
+    let allAddons: string[] = [];
+
+    if (enrollments && enrollments.length > 0) {
+      // Logic: The first row usually contains the main course link
+      // If you have multiple rows, they usually link to the same course or split logic
+      mainBatchName = enrollments[0]?.courses?.title || "Unknown Batch";
+
+      // Collect all subject/addon names from all rows
+      enrollments.forEach(row => {
+        if (row.subject_name) {
+          if (Array.isArray(row.subject_name)) {
+            allAddons.push(...row.subject_name);
+          } else {
+            // Split by comma if it's a string like "Maths, Physics"
+            const parts = String(row.subject_name).split(',');
+            allAddons.push(...parts.map(s => s.trim()));
+          }
+        }
+      });
     }
 
-    // 7. Redirect User
-    const redirectUrl = finalStatus === "success"
-      ? `${frontendUrl}/dashboard?payment=success`
-      : `${frontendUrl}/dashboard?payment=failed`;
+    // Deduplicate and join
+    const coursesString = allAddons.length > 0 ? [...new Set(allAddons)].join(", ") : "None";
 
-    return new Response(null, {
-      status: 302,
-      headers: { Location: redirectUrl },
-    });
+    // 5. Insert Payment Record
+    const { error: insertError } = await supabase
+      .from("payments")
+      .insert({
+        order_id: orderId,
+        payment_id: paymentData.cf_order_id || null,
+        user_id: userId || null,
+        amount: paymentData.order_amount,
+        status: finalStatus,
+        payment_mode: paymentData.payment_session_id ? "session" : "unknown",
+        raw_response: paymentData,
+        batch: mainBatchName,  // Saved to 'batch' column
+        courses: coursesString // Saved to 'courses' column
+      });
 
-  } catch (error: any) {
-    console.error("❌ UNHANDLED EXCEPTION:", error.message, error.stack);
-    return new Response(null, {
-      status: 302,
-      headers: { Location: `${frontendUrl}/dashboard?payment=error&message=unknown_error` },
-    });
+    if (insertError) {
+      // Logs the specific reason if it still fails (e.g., RLS)
+      console.error("❌ DB INSERT ERROR:", insertError.message);
+    } else {
+      console.log(`✅ Payment Saved: Batch=[${mainBatchName}], Courses=[${coursesString}]`);
+    }
+
+    // 6. Update Enrollment Status
+    await supabase.from("enrollments")
+      .update({ status: finalStatus, payment_id: paymentData.cf_order_id })
+      .eq("order_id", orderId);
+
+    // 7. Redirect
+    const redirectUrl = `${frontendUrl}/dashboard?payment=${finalStatus}`;
+    return new Response(null, { status: 302, headers: { Location: redirectUrl } });
+
+  } catch (err: any) {
+    console.error("❌ Unhandled Error:", err.message);
+    return new Response(null, { status: 302, headers: { Location: `${frontendUrl}/dashboard?payment=error` } });
   }
 });
