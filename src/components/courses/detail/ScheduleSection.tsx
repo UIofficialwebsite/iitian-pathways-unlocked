@@ -133,7 +133,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                         "hover:bg-gray-50 transition-colors text-base font-medium"
                       )}
                     >
-                      {isExpanded ? "Show Less" : `${remainingCount} more subjects`}
+                      {isExpanded ? "Show Less" : `${remainingCount}+ more subjects`}
                     </Button>
                   )}
                 </div>
