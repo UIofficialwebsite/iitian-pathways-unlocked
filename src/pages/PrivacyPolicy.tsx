@@ -20,7 +20,7 @@ const PrivacyPolicy = () => {
     window.scrollTo(0, 0);
 
     const handleScroll = () => {
-      const scrollPosition = window.scrollY + 200;
+      const scrollPosition = window.scrollY + 200; // Offset for sticky header
       
       for (const section of SECTIONS) {
         const element = document.getElementById(section.id);
