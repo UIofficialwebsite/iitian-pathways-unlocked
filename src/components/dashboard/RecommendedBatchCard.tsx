@@ -1,18 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, Users, Share2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Tables } from '@/integrations/supabase/types';
-import EnrollButton from '@/components/EnrollButton'; // Updated import
+import EnrollButton from '@/components/EnrollButton';
+import { supabase } from "@/integrations/supabase/client";
 
 // --- HELPER FUNCTIONS ---
-
-/**
- * Helper function (outside component)
- * Formats a date string (YYYY-MM-DD) to a more readable format (DD Month YYYY)
- */
 const formatDate = (dateStr: string | null | undefined): string => {
   if (!dateStr) return 'To be announced'; 
   try {
@@ -26,9 +22,6 @@ const formatDate = (dateStr: string | null | undefined): string => {
   }
 };
 
-/**
- * Formats a slug-like string (e.g., 'data-science') to 'Data Science'
- */
 const formatBranch = (branch: string | null): string => {
   if (!branch) return '';
   return branch
@@ -37,17 +30,13 @@ const formatBranch = (branch: string | null): string => {
     .join(' ');
 };
 
-/**
- * Generates the specific audience text based on second-level filters
- */
 const getAudienceText = (course: any): string => {
   const { exam_category, branch, level, student_status } = course;
 
   if (exam_category === 'IITM BS') {
     const parts: string[] = [];
     if (branch) parts.push(formatBranch(branch));
-    if (level) parts.push(level); // 'Foundation', 'Diploma', etc.
-    
+    if (level) parts.push(level); 
     if (parts.length > 0) {
       return `For IITM BS (${parts.join(' - ')})`;
     }
@@ -55,48 +44,27 @@ const getAudienceText = (course: any): string => {
   }
 
   if (exam_category === 'COMPETITIVE_EXAM') {
-    if (student_status) {
-      return `For ${student_status}`;
-    }
+    if (student_status) return `For ${student_status}`;
     return 'For Competitive Exams';
   }
 
-  if (exam_category) {
-    return `For ${exam_category}`;
-  }
-
+  if (exam_category) return `For ${exam_category}`;
   return 'For All Students';
 };
 
-/**
- * Calculates discount percentage
- */
-const getDiscount = (
-  salePrice: number | null | undefined, 
-  originalPrice: number
-): string | null => {
-  if (typeof originalPrice !== 'number' || originalPrice <= 0) {
-    return null;
-  }
-  if (typeof salePrice !== 'number' || salePrice === null) {
-    return null;
-  }
-  if (originalPrice <= salePrice) {
-    return null;
-  }
+const getDiscount = (salePrice: number | null | undefined, originalPrice: number): string | null => {
+  if (typeof originalPrice !== 'number' || originalPrice <= 0) return null;
+  if (typeof salePrice !== 'number' || salePrice === null) return null;
+  if (originalPrice <= salePrice) return null;
   const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   return discount > 0 ? `${discount}% OFF` : null;
 };
 
-
-// --- TYPE DEFINITION ---
-type Course = Tables<'courses'> & {
-  discounted_price?: number | null; // Can be null
-};
-
-
 // --- COMPONENT ---
 export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
+  const navigate = useNavigate();
+  const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+  const [hasAddons, setHasAddons] = useState(false);
 
   const {
     id,
@@ -108,16 +76,42 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
     end_date,
   } = course;
 
+  // --- 1. FETCH ADD-ONS LOGIC ---
+  useEffect(() => {
+    const checkAddonsAndPrice = async () => {
+      const { data, error } = await supabase
+        .from('course_addons')
+        .select('price')
+        .eq('course_id', id);
+
+      if (!error && data && data.length > 0) {
+        setHasAddons(true);
+        // Only calculate "Starts at" price if Main Batch is FREE
+        if (price === 0 || price === null) {
+          const paidAddons = data.filter(addon => addon.price > 0);
+          if (paidAddons.length > 0) {
+            const lowest = Math.min(...paidAddons.map(p => p.price));
+            setMinAddonPrice(lowest);
+          } else {
+            setMinAddonPrice(null);
+          }
+        }
+      } else {
+        setHasAddons(false);
+        setMinAddonPrice(null);
+      }
+    };
+    checkAddonsAndPrice();
+  }, [id, price]);
+
+  // Standard Calc
   const originalPrice = price;
   const salePrice = discounted_price;
-  
   const discount = getDiscount(salePrice, originalPrice);
   const hasDiscount = !!discount;
-
   const finalPriceValue = (salePrice !== null && salePrice < originalPrice) ? salePrice : originalPrice;
   const finalPriceString = finalPriceValue === 0 ? 'Free' : `₹${Math.round(finalPriceValue)}`;
   
-  // Use the helper functions
   const startDate = formatDate(start_date);
   const endDate = formatDate(end_date);
   const audienceText = getAudienceText(course);
@@ -132,17 +126,70 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
     window.open(whatsappUrl, '_blank');
   };
 
+  const renderPriceSection = () => {
+    // Case: Free base + Paid Addons
+    if ((price === 0 || price === null) && minAddonPrice !== null) {
+      return (
+        <div className="flex-shrink-0">
+          <div className="flex flex-col leading-tight">
+            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+            <span className="text-3xl font-bold text-[#1E3A8A]">₹{minAddonPrice.toLocaleString()}</span>
+          </div>
+          <p className="text-xs font-medium text-gray-500 mt-1">(Customize Batch)</p>
+        </div>
+      );
+    }
+
+    // Standard Case
+    return (
+      <div className="flex-shrink-0">
+        <div className="flex items-baseline gap-2">
+          <span className="text-3xl font-bold text-gray-900">
+            {finalPriceString} 
+          </span>
+          {hasDiscount && (
+            <span className="text-md font-medium text-gray-400 line-through">
+              ₹{Math.round(originalPrice)}
+            </span>
+          )}
+        </div>
+        <p className="text-xs font-medium text-gray-500 -mt-1">(For Full Course)</p>
+      </div>
+    );
+  };
+
+  const renderActionButton = () => {
+    if (hasAddons) {
+      return (
+        <Button 
+          onClick={() => navigate(`/courses/${id}/configure`)}
+          className="w-full font-bold bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white"
+        >
+          Buy Now
+        </Button>
+      );
+    }
+
+    return (
+      <EnrollButton
+        courseId={id}
+        enrollmentLink={course.enroll_now_link || undefined}
+        coursePrice={finalPriceValue}
+        className="w-full font-bold bg-royal hover:bg-royal/90"
+      >
+        Buy Now
+      </EnrollButton>
+    );
+  };
+
   return (
     <Card 
       className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm transition-all hover:shadow-md h-full flex flex-col"
-      style={{
-        fontFamily: "'Inter', sans-serif" 
-      }}
+      style={{ fontFamily: "'Inter', sans-serif" }}
     >
       <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
         
         <div className="flex justify-between items-start gap-3">
-          {/* This line-clamp-2 class reduces the title to 2 lines max */}
           <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem] flex-1">
             {title || 'Unnamed Batch'}
           </h3>
@@ -181,19 +228,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
 
         <div className="flex justify-between items-end pt-2">
           
-          <div className="flex-shrink-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-gray-900">
-                {finalPriceString} 
-              </span>
-              {hasDiscount && (
-                <span className="text-md font-medium text-gray-400 line-through">
-                  ₹{Math.round(originalPrice)}
-                </span>
-              )}
-            </div>
-            <p className="text-xs font-medium text-gray-500 -mt-1">(For Full Course)</p>
-          </div>
+          {renderPriceSection()}
           
           {hasDiscount && (
             <div className="relative flex-shrink-0 ml-2">
@@ -205,7 +240,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
                 style={{
                   borderTop: '10px solid transparent',
                   borderBottom: '10px solid transparent',
-                  borderRight: '8px solid #ef4444' // red-500
+                  borderRight: '8px solid #ef4444' 
                 }}
               />
             </div>
@@ -219,15 +254,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
             </Button>
           </Link>
           
-          {/* Replaced the old Buy Now button with EnrollButton */}
-          <EnrollButton
-            courseId={id}
-            enrollmentLink={course.enroll_now_link || undefined}
-            coursePrice={finalPriceValue}
-            className="w-full font-bold bg-royal hover:bg-royal/90"
-          >
-            Buy Now
-          </EnrollButton>
+          {renderActionButton()}
         </div>
 
       </CardContent>
