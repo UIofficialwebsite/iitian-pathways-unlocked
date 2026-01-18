@@ -130,17 +130,16 @@ const BatchConfiguration = () => {
             </button>
             
             {/* Divider */}
-            <div className="h-5 w-px bg-slate-300"></div>
+            <div className="h-8 w-px bg-slate-300"></div>
 
-            {/* Branding */}
-            <div className="flex items-center gap-3">
-                {/* Assuming logo path based on provided files - adjust if needed */}
+            {/* Branding - Bigger Logo & Text */}
+            <div className="flex items-center gap-4">
                 <img 
-                  src="/lovable-uploads/logo_ui_new.png" 
+                  src="https://i.ibb.co/kgdrjTby/UI-Logo.png" 
                   alt="UI Logo" 
-                  className="w-8 h-auto object-contain" 
+                  className="w-14 h-14 object-contain drop-shadow-sm" 
                 />
-                <span className="font-['Inter',sans-serif] font-semibold text-[#1a1f36] text-lg tracking-tight">
+                <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">
                     Unknown IITians
                 </span>
             </div>
@@ -191,7 +190,6 @@ const BatchConfiguration = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
-                        {/* "Core Subject" text removed as requested */}
                     </div>
                   </div>
                   <span className="font-semibold text-[13px] text-[#22c55e] bg-green-50 px-2 py-1 rounded">INCLUDED</span>
