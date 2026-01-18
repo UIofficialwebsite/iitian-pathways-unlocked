@@ -3,10 +3,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Loader2 } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Loader2, Book } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from "@/integrations/supabase/client";
 
 interface EnrollmentCardProps {
     course: Course;
@@ -31,6 +32,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [copied, setCopied] = useState(false);
+    
+    // Logic for "Starts at" price
+    const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+    const [hasAddons, setHasAddons] = useState(false);
+
     const cardRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
 
@@ -41,6 +47,35 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const today = new Date();
     const endDate = course.end_date ? new Date(course.end_date) : null;
     const isExpired = endDate && today > endDate;
+
+    // --- 1. FETCH ADD-ONS TO DETERMINE LOWEST PRICE ---
+    useEffect(() => {
+        const checkAddonsAndPrice = async () => {
+            const { data, error } = await supabase
+                .from('course_addons')
+                .select('price')
+                .eq('course_id', course.id);
+
+            if (!error && data && data.length > 0) {
+                setHasAddons(true);
+
+                // Only calculate "Starts at" price if the Main Batch is FREE (0 or null)
+                if (course.price === 0 || course.price === null) {
+                    const paidAddons = data.filter(addon => addon.price > 0);
+                    if (paidAddons.length > 0) {
+                        const lowest = Math.min(...paidAddons.map(p => p.price));
+                        setMinAddonPrice(lowest);
+                    } else {
+                        setMinAddonPrice(null);
+                    }
+                }
+            } else {
+                setHasAddons(false);
+                setMinAddonPrice(null);
+            }
+        };
+        checkAddonsAndPrice();
+    }, [course.id, course.price]);
 
     useEffect(() => {
         const scrollContainer = isDashboardView 
@@ -84,7 +119,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     const renderMainButton = () => {
-        // 1. Everything Bought (Main + All Add-ons) -> "Let's Study" (Black)
+        // 1. Everything Bought -> "Let's Study"
         if (isFullyEnrolled && !isExpired) {
             return (
                 <Button 
@@ -92,13 +127,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
                     onClick={() => navigate('/dashboard')}
                 >
-                    Let's Study
+                    <Book className="w-4 h-4 mr-2" /> Let's Study
                 </Button>
             );
         }
 
-        // 2. Partial Purchase (Main Bought, but Add-ons exist) -> "Upgrade Enrollment" (Royal)
-        // Note: isMainCourseOwned must be true here, as isFullyEnrolled was false.
+        // 2. Partial Purchase -> "Upgrade Enrollment"
         if (isMainCourseOwned && !isExpired) {
             return (
                 <Button 
@@ -111,8 +145,22 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 3. Not Bought -> "Continue Enrollment" (Black)
-        // If free/custom handler exists (e.g. Free Direct Enroll)
+        // 3. New User + Has Paid Add-ons (Special Config Flow)
+        // If main course is free but it has paid addons, we likely want to send them to config page
+        // But for consistency with EnrollButton, we keep customEnrollHandler if provided.
+        if (hasAddons && !customEnrollHandler) {
+             return (
+                <Button
+                    size="lg"
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
+                    onClick={() => navigate(`/courses/${course.id}/configure`)}
+                >
+                    Configure Plan
+                </Button>
+             );
+        }
+
+        // 4. Custom Handler (e.g. Free Direct Enroll)
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -127,7 +175,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         } 
         
-        // Standard Paid Enrollment (Direct Buy)
+        // 5. Standard Paid Enrollment
         return (
             <EnrollButton
                 courseId={course.id}
@@ -140,6 +188,29 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         );
     };
 
+    // --- Price Rendering Logic ---
+    const renderPrice = () => {
+        // Case A: Free Base + Paid Addons => "Starts at ..."
+        if ((course.price === 0 || course.price === null) && minAddonPrice !== null) {
+            return (
+                <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+                    <span className="text-3xl font-bold text-[#1E3A8A]">₹{minAddonPrice.toLocaleString()}</span>
+                </div>
+            );
+        }
+
+        // Case B: Standard Price / Discount
+        return (
+            <div className="flex items-baseline">
+                <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
+                {course.discounted_price && (
+                    <span className="text-gray-500 line-through ml-2 font-normal">₹{course.price}</span>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div ref={cardRef}>
             <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
@@ -149,12 +220,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     </CardHeader>
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-baseline">
-                                <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
-                                {course.discounted_price && (
-                                    <span className="text-gray-500 line-through ml-2 font-normal">₹{course.price}</span>
-                                )}
-                            </div>
+                            {renderPrice()}
+                            
                             {course.discounted_price && (
                                 <div className="relative">
                                     <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
