@@ -4,8 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import NavBar from '@/components/NavBar';
-import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft, Check, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -98,40 +96,36 @@ const BatchConfiguration = () => {
     : [];
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden">
+    <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex items-center justify-center py-12">
       
-      {/* Background Gradient Blob (Fixed Bottom Right) */}
+      {/* Background Slope Effect */}
       <div 
-        className="fixed -bottom-[150px] -right-[100px] w-[800px] h-[400px] -z-0 pointer-events-none opacity-70 blur-[20px] hidden md:block"
+        className="fixed bottom-[-20%] right-[-10%] w-[120%] h-[60%] -z-0 pointer-events-none opacity-70 blur-[40px]"
         style={{
-            background: 'linear-gradient(110deg, rgba(246, 249, 252, 0) 20%, #ffcf4d 40%, #ff61d2 60%, #70e2ff 100%)',
-            transform: 'rotate(-10deg)',
-        }}
-      />
-      {/* Mobile background blob adjustment */}
-      <div 
-        className="fixed -bottom-[50px] -right-[50px] w-full h-[250px] -z-0 pointer-events-none opacity-70 blur-[20px] md:hidden"
-        style={{
-            background: 'linear-gradient(110deg, rgba(246, 249, 252, 0) 20%, #ffcf4d 40%, #ff61d2 60%, #70e2ff 100%)',
-            transform: 'rotate(-10deg)',
+            background: 'linear-gradient(110deg, rgba(246, 249, 252, 0) 0%, #ffcf4d 30%, #ff61d2 60%, #70e2ff 100%)',
+            transform: 'rotate(-8deg)',
+            transformOrigin: 'bottom right'
         }}
       />
 
-      <div className="relative z-10">
-        <NavBar />
+      <div className="relative z-10 w-full max-w-[1000px] px-5">
         
-        {/* Main Wrapper */}
-        <div className="max-w-[1000px] mx-auto px-5 py-8 md:py-16 flex flex-col md:flex-row gap-8 md:gap-[60px] items-start">
+        {/* Top Back Button */}
+        <div className="mb-8">
+            <button 
+                onClick={() => navigate(-1)}
+                className="flex items-center text-[#4f566b] hover:text-[#1a1f36] text-sm font-medium transition-colors"
+            >
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Course
+            </button>
+        </div>
+
+        {/* Main Grid: Centered Vertically on Desktop (items-center) */}
+        <div className="flex flex-col md:flex-row gap-8 md:gap-[60px] items-start md:items-center">
           
           {/* --- LEFT COLUMN: Configuration --- */}
           <div className="flex-[1.2] w-full">
             <div className="mb-6">
-                <button 
-                  onClick={() => navigate(-1)}
-                  className="flex items-center text-[#4f566b] hover:text-[#1a1f36] text-sm font-medium mb-4 transition-colors"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-2" /> Back
-                </button>
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
                 <p className="text-[#4f566b] mt-2">Select the subjects you want to include in your bundle.</p>
             </div>
@@ -145,7 +139,6 @@ const BatchConfiguration = () => {
                   className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-60 cursor-not-allowed select-none"
                 >
                   <div className="flex items-center flex-grow">
-                    {/* Fake Checkbox (Checked) */}
                     <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
                         <Check className="w-3 h-3 text-[#4f566b]" strokeWidth={3} />
                     </div>
@@ -197,9 +190,9 @@ const BatchConfiguration = () => {
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: Summary --- */}
-          <div className="md:flex-[0.8] w-full">
-            <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full sticky top-28">
+          {/* --- RIGHT COLUMN: Summary (Middle Aligned) --- */}
+          <div className="md:flex-[0.8] w-full flex flex-col justify-center">
+            <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm">
               <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Order Summary</h2>
 
               {/* Base Plan Line */}
@@ -233,7 +226,7 @@ const BatchConfiguration = () => {
               <button 
                 onClick={handlePayment}
                 disabled={processing}
-                className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+                className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-lg shadow-indigo-500/20"
               >
                 {processing ? (
                    <Loader2 className="w-5 h-5 animate-spin" />
