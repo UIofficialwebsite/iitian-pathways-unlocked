@@ -78,8 +78,9 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                       <div 
                         key={item.id}
                         className={cn(
-                          "flex items-center justify-between p-5", // Increased padding for bigger feel
-                          "bg-white border border-gray-200 rounded-xl", // Light color (White) & Rounded
+                          "flex items-center justify-between p-5",
+                          // Changed bg-white to bg-gray-50 for a light filled look
+                          "bg-gray-50 border border-gray-200 rounded-xl", 
                           "hover:border-black/20 transition-all duration-200 shadow-sm"
                         )}
                       >
