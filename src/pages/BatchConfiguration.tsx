@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, Lock } from 'lucide-react';
+import { Loader2, ArrowLeft, Check, Calendar, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BatchConfiguration = () => {
@@ -95,6 +95,16 @@ const BatchConfiguration = () => {
     ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
     : [];
 
+  // Date Formatting Helper
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'TBA';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex items-center justify-center py-12">
       
@@ -110,24 +120,61 @@ const BatchConfiguration = () => {
 
       <div className="relative z-10 w-full max-w-[1000px] px-5">
         
-        {/* Top Back Button */}
-        <div className="mb-8">
+        {/* Top Header Row */}
+        <div className="mb-10 flex items-center gap-6">
             <button 
                 onClick={() => navigate(-1)}
                 className="flex items-center text-[#4f566b] hover:text-[#1a1f36] text-sm font-medium transition-colors"
             >
-                <ArrowLeft className="w-4 h-4 mr-2" /> Back to Course
+                <ArrowLeft className="w-4 h-4 mr-2" /> Back
             </button>
+            
+            {/* Divider */}
+            <div className="h-5 w-px bg-slate-300"></div>
+
+            {/* Branding */}
+            <div className="flex items-center gap-3">
+                {/* Assuming logo path based on provided files - adjust if needed */}
+                <img 
+                  src="/lovable-uploads/logo_ui_new.png" 
+                  alt="UI Logo" 
+                  className="w-8 h-auto object-contain" 
+                />
+                <span className="font-['Inter',sans-serif] font-semibold text-[#1a1f36] text-lg tracking-tight">
+                    Unknown IITians
+                </span>
+            </div>
         </div>
 
-        {/* Main Grid: Centered Vertically on Desktop (items-center) */}
+        {/* Main Grid */}
         <div className="flex flex-col md:flex-row gap-8 md:gap-[60px] items-start md:items-center">
           
           {/* --- LEFT COLUMN: Configuration --- */}
           <div className="flex-[1.2] w-full">
-            <div className="mb-6">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
-                <p className="text-[#4f566b] mt-2">Select the subjects you want to include in your bundle.</p>
+            
+            <div className="mb-8">
+                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36] mb-4">Configure Your Plan</h1>
+                
+                {/* Batch Details Card */}
+                <div className="bg-white border border-[#e3e8ee] rounded-lg p-5 shadow-sm mb-2">
+                    <h3 className="font-bold text-lg text-[#1a1f36] mb-3">{course.title}</h3>
+                    <div className="flex flex-wrap gap-4 text-sm text-[#4f566b]">
+                        {course.start_date && (
+                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                                <Calendar className="w-3.5 h-3.5 text-[#1a1f36]" />
+                                <span>Starts: <span className="font-medium text-[#1a1f36]">{formatDate(course.start_date)}</span></span>
+                            </div>
+                        )}
+                        {course.end_date && (
+                             <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
+                                <Clock className="w-3.5 h-3.5 text-[#1a1f36]" />
+                                <span>Ends: <span className="font-medium text-[#1a1f36]">{formatDate(course.end_date)}</span></span>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                <p className="text-[#4f566b] mt-4 text-sm">Review included subjects and select additional add-ons below.</p>
             </div>
             
             <div className="flex flex-col gap-3">
@@ -136,7 +183,7 @@ const BatchConfiguration = () => {
               {coreSubjects.map((subject, idx) => (
                 <div 
                   key={`core-${idx}`}
-                  className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-60 cursor-not-allowed select-none"
+                  className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-70 cursor-not-allowed select-none"
                 >
                   <div className="flex items-center flex-grow">
                     <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
@@ -144,10 +191,10 @@ const BatchConfiguration = () => {
                     </div>
                     <div className="flex flex-col">
                         <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
-                        <span className="text-xs text-[#4f566b] flex items-center gap-1 mt-0.5"><Lock className="w-3 h-3"/> Core Subject</span>
+                        {/* "Core Subject" text removed as requested */}
                     </div>
                   </div>
-                  <span className="font-semibold text-[15px] text-[#22c55e]">INCLUDED</span>
+                  <span className="font-semibold text-[13px] text-[#22c55e] bg-green-50 px-2 py-1 rounded">INCLUDED</span>
                 </div>
               ))}
 
@@ -197,7 +244,10 @@ const BatchConfiguration = () => {
 
               {/* Base Plan Line */}
               <div className="flex justify-between mb-3 text-sm">
-                <span className="text-[#1a1f36] font-medium">Base Plan</span>
+                <div className="flex flex-col">
+                    <span className="text-[#1a1f36] font-medium">Base Plan</span>
+                    <span className="text-xs text-[#4f566b]">{course.title}</span>
+                </div>
                 {basePrice === 0 ? (
                     <span className="text-[#22c55e] font-bold">FREE</span>
                 ) : (
@@ -236,8 +286,8 @@ const BatchConfiguration = () => {
               </button>
 
               <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
-                Terms of Service and any terms are overridden <br className="hidden md:block"/>
-                and the <a href="#" className="text-[#635bff] no-underline font-medium hover:underline">Privacy of Service</a>.
+                By continuing, you agree to our <br className="hidden md:block"/>
+                <a href="#" className="text-[#635bff] no-underline font-medium hover:underline">Terms of Service</a> & Privacy Policy.
               </p>
             </div>
           </div>
