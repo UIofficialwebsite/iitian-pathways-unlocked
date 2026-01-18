@@ -125,8 +125,8 @@ const BatchConfiguration = () => {
             className="mb-10 w-fit cursor-pointer group flex items-center gap-4"
             onClick={() => navigate(-1)}
         >
-            {/* Arrow - Always visible */}
-            <ArrowLeft className="w-8 h-8 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
+            {/* Arrow - Always visible (Size Reduced) */}
+            <ArrowLeft className="w-5 h-5 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
 
             {/* Content Swapper */}
             <div className="grid place-items-start">
@@ -143,9 +143,9 @@ const BatchConfiguration = () => {
                     </span>
                 </div>
 
-                {/* Back Text (Hover Visible) */}
+                {/* Back Text (Hover Visible - Size Reduced) */}
                 <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
-                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight pl-1">
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">
                         Back
                     </span>
                 </div>
