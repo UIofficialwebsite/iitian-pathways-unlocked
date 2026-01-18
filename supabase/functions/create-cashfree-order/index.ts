@@ -32,7 +32,7 @@ serve(async (req: Request) => {
     const orderId = `order_${Date.now()}_${userId}`;
     const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
 
-    // Call Cashfree
+    // 1. Create Order with Cashfree
     const cashfreeResponse = await fetch(
       cashfreeEnv === "production" ? "https://api.cashfree.com/pg/orders" : "https://sandbox.cashfree.com/pg/orders", 
       {
@@ -66,21 +66,85 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
-    // Database Insert
+    // 2. Database Logic
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { error: dbError } = await supabase.rpc('enroll_student_with_addons', {
-      p_user_id: userId,
-      p_course_id: courseId,
-      p_addon_subjects: selectedSubjects || [], 
-      p_order_id: orderId,
-      p_payment_id: null, 
-      p_total_amount: amount,
-      p_status: 'pending'
+    // A. Fetch Add-on details
+    let addonsData: any[] = [];
+    if (selectedSubjects && selectedSubjects.length > 0) {
+      const { data: addons, error: addonsError } = await supabase
+        .from('course_addons')
+        .select('id, subject_name, price')
+        .in('id', selectedSubjects);
+
+      if (addonsError) throw new Error(`Failed to fetch addons: ${addonsError.message}`);
+      addonsData = addons || [];
+    }
+
+    // B. Check if a "Main Course" row already exists for this user/course
+    const { data: existingMainEnrollment, error: fetchError } = await supabase
+      .from('enrollments')
+      .select('id, amount')
+      .eq('user_id', userId)
+      .eq('course_id', courseId)
+      .is('subject_name', null) // subject_name IS NULL identifies the main batch row
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("Error fetching existing enrollment:", fetchError);
+    }
+
+    const enrollmentRows = [];
+
+    // C. Handle Main Course Logic
+    if (existingMainEnrollment) {
+      // UPDATE EXISTING: Sum up the price
+      const currentTotal = Number(existingMainEnrollment.amount) || 0;
+      const newTransactionAmount = Number(amount) || 0;
+      
+      const { error: updateError } = await supabase
+        .from('enrollments')
+        .update({ 
+          amount: currentTotal + newTransactionAmount,
+          // We DO NOT update status here to avoid blocking access if it was already 'success'
+        })
+        .eq('id', existingMainEnrollment.id);
+
+      if (updateError) throw new Error(`Failed to update existing course price: ${updateError.message}`);
+      
+    } else {
+      // CREATE NEW: User's first time buying this batch
+      enrollmentRows.push({
+        user_id: userId,
+        course_id: courseId,
+        order_id: orderId,
+        status: 'pending',
+        amount: amount, // Initial total
+        subject_name: null,
+        payment_id: null
+      });
+    }
+
+    // D. Handle Add-ons (Always insert new rows for specific subject tracking)
+    addonsData.forEach((addon) => {
+      enrollmentRows.push({
+        user_id: userId,
+        course_id: courseId,
+        order_id: orderId,
+        status: 'pending',
+        amount: addon.price, // Individual subject price
+        subject_name: addon.subject_name,
+        payment_id: null
+      });
     });
 
-    if (dbError) {
-      throw new Error(`DB Error: ${dbError.message}`);
+    // E. Perform Bulk Insert (Only if we have new rows to add)
+    if (enrollmentRows.length > 0) {
+      const { error: dbError } = await supabase
+        .from('enrollments')
+        .insert(enrollmentRows);
+
+      if (dbError) throw new Error(`DB Error: ${dbError.message}`);
     }
 
     return new Response(JSON.stringify({ 
@@ -94,13 +158,11 @@ serve(async (req: Request) => {
 
   } catch (error: any) {
     console.error("FULL ERROR DETAILS:", error);
-    
-    // RETURN 200 WITH ERROR FIELD (Prevents "non-2xx" generic error on frontend)
     return new Response(JSON.stringify({ 
       error: error.message, 
       details: error.stack 
     }), {
-      status: 200, // Return 200 so frontend can parse the JSON error
+      status: 200, 
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
