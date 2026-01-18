@@ -117,17 +117,13 @@ const CourseForm: React.FC<CourseFormProps> = ({ initialData, onSave, onClose, i
         setIsLoadingAddons(true);
         const { data: existingAddons } = await supabase
           .from('course_addons')
-          .select(`
-            child_course_id,
-            price,
-            courses:child_course_id (title)
-          `)
-          .eq('parent_course_id', initialData.id);
+          .select('id, subject_name, price')
+          .eq('course_id', initialData.id);
 
         if (existingAddons) {
-          const formatted = existingAddons.map((item: any) => ({
-            child_course_id: item.child_course_id,
-            child_course_title: item.courses?.title || 'Unknown Course',
+          const formatted = existingAddons.map((item) => ({
+            child_course_id: item.id,
+            child_course_title: item.subject_name || 'Unknown Subject',
             price: item.price
           }));
           setSelectedAddons(formatted);
@@ -215,15 +211,14 @@ const CourseForm: React.FC<CourseFormProps> = ({ initialData, onSave, onClose, i
         // This is a simple "Sync" strategy
         
         // A. Delete all existing addons for this course
-        await supabase.from('course_addons').delete().eq('parent_course_id', parentId);
+        await supabase.from('course_addons').delete().eq('course_id', parentId);
 
         // B. Insert new list
         if (selectedAddons.length > 0) {
           const addonsPayload = selectedAddons.map(addon => ({
-            parent_course_id: parentId,
-            child_course_id: addon.child_course_id,
-            price: addon.price,
-            display_order: 0
+            course_id: parentId,
+            subject_name: addon.child_course_title,
+            price: addon.price
           }));
           
           const { error: addonError } = await supabase.from('course_addons').insert(addonsPayload);
