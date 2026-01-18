@@ -133,7 +133,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
         <div className="flex-shrink-0">
           <div className="flex flex-col leading-tight">
             <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
-            <span className="text-3xl font-bold text-[#1E3A8A]">₹{minAddonPrice.toLocaleString()}</span>
+            <span className="text-3xl font-bold text-gray-900">₹{minAddonPrice.toLocaleString()}</span>
           </div>
           <p className="text-xs font-medium text-gray-500 mt-1">(Customize Batch)</p>
         </div>
@@ -163,7 +163,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
       return (
         <Button 
           onClick={() => navigate(`/courses/${id}/configure`)}
-          className="w-full font-bold bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white"
+          className="w-full font-bold bg-black hover:bg-black/90 text-white" // CHANGED TO BLACK
         >
           Buy Now
         </Button>
@@ -175,7 +175,7 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
         courseId={id}
         enrollmentLink={course.enroll_now_link || undefined}
         coursePrice={finalPriceValue}
-        className="w-full font-bold bg-royal hover:bg-royal/90"
+        className="w-full font-bold bg-black hover:bg-black/90 text-white" // CHANGED TO BLACK
       >
         Buy Now
       </EnrollButton>
