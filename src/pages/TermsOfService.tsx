@@ -172,12 +172,9 @@ const TermsOfService = () => {
                     </div>
                     <div className="p-4 rounded-lg border border-gray-100 bg-gray-50">
                       <h4 className="text-gray-900 font-semibold text-sm mb-2">Refund Policy</h4>
-                      <ul className="list-disc pl-5 space-y-1 text-xs text-gray-500">
-                        <li>Refunds may be requested within 7 days of course enrollment</li>
-                        <li>Refund eligibility depends on course progress and usage</li>
-                        <li>Processing fees may be deducted from refund amounts</li>
-                        <li>Refunds are processed within 7-14 business days</li>
-                      </ul>
+                      <p className="text-xs text-gray-500 leading-relaxed">
+                        All sales are final. We do not offer refunds, cancellations, or exchanges for any courses, subscriptions, or services purchased on the platform. Please review your selection carefully before making a payment.
+                      </p>
                     </div>
                   </div>
                 </section>
@@ -290,11 +287,8 @@ const TermsOfService = () => {
                       <span className="text-gray-400 block mb-1">Email</span>
                       <a href="mailto:support@unknowniitians.live" className="text-gray-900 hover:underline">support@unknowniitians.live</a>
                     </div>
+                    {/* Phone Number Section Removed */}
                     <div className="bg-gray-50 p-4 rounded border border-gray-100">
-                      <span className="text-gray-400 block mb-1">Phone</span>
-                      <span className="text-gray-900">+91 9876543210</span>
-                    </div>
-                    <div className="bg-gray-50 p-4 rounded border border-gray-100 md:col-span-2">
                       <span className="text-gray-400 block mb-1">Address</span>
                       <span className="text-gray-900">New Delhi, India</span>
                     </div>
