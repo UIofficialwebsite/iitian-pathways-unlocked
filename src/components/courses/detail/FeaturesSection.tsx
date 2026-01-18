@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FeaturesSectionProps {
   course: Course;
@@ -17,10 +18,9 @@ interface FeaturesSectionProps {
 
 const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useIsMobile();
 
-  // 1. Define Default Features (Rich objects)
-  // Note: We are now using a uniform star icon for all, but keeping the structure 
-  // in case you want to switch back to specific icons later.
+  // 1. Define Default Features
   const defaultFeatures = [
     {
       icon: Video,
@@ -55,14 +55,17 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
     ? course.features!.map((f) => ({ icon: Star, text: f }))
     : defaultFeatures;
 
-  // 3. Split into Initial (4) and Extra (Rest)
-  const initialFeatures = featuresList.slice(0, 4);
-  const extraFeatures = featuresList.slice(4);
+  // 3. Determine Initial Count (2 on mobile, 4 on desktop)
+  const initialCount = isMobile ? 2 : 4;
+
+  // 4. Split into Initial and Extra
+  const initialFeatures = featuresList.slice(0, initialCount);
+  const extraFeatures = featuresList.slice(initialCount);
   const hasMore = extraFeatures.length > 0;
 
   return (
     <section id="features" className="scroll-mt-24">
-      {/* Container "Holding" Section - White Background, Border, Rounded */}
+      {/* Container "Holding" Section */}
       <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
         
         {/* Heading */}
@@ -70,14 +73,14 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
           Batch Features
         </h2>
 
-        {/* --- Grid Layout (Stacks on mobile, 2 columns on desktop) --- */}
+        {/* --- Grid Layout --- */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Render Initial 4 Items */}
+          {/* Render Initial Items */}
           {initialFeatures.map((feature, idx) => (
             <FeatureCard key={`init-${idx}`} text={feature.text} />
           ))}
 
-          {/* Render Extra Items (Hidden/Shown based on state) */}
+          {/* Render Extra Items (Collapsible) */}
           <div className={cn(
             "col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-500 ease-in-out overflow-hidden",
             isExpanded ? "max-h-[1000px] opacity-100 mt-0" : "max-h-0 opacity-0"
@@ -94,14 +97,13 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
             onClick={() => setIsExpanded(!isExpanded)}
             className={cn(
               "w-full mt-4 bg-white p-4 rounded-lg",
-              // Updated border to be darker ('black a bit')
-              "border border-gray-800", 
+              "border border-gray-800", // Darker border as requested
               "text-[15px] font-semibold text-[#1a1f36] text-center cursor-pointer",
               "hover:bg-gray-50 transition-all duration-300 ease-out",
-              isExpanded ? "hidden pointer-events-none" : "block"
+              "block" // Always visible now
             )}
           >
-            More Features
+            {isExpanded ? "Show Less" : "More Features"}
           </button>
         )}
       </div>
@@ -110,7 +112,6 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
 };
 
 // --- Sub-Component for the Card Design ---
-// Updated to use the custom star image instead of dynamic icons
 const FeatureCard = ({ text }: { text: string }) => {
   return (
     <div className="group flex items-center gap-4 bg-white border border-[#e3e8ee] p-5 rounded-lg transition-colors duration-200 hover:border-black">
