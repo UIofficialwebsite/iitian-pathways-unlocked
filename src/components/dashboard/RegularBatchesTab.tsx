@@ -60,7 +60,7 @@ const CourseCard: React.FC<{
           }} 
           className="bg-black text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black/90 transition-colors"
         >
-          Buy Now
+          Enroll
         </button>
       );
     }
