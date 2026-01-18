@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
 import { SimpleAddon } from '@/components/courses/detail/BatchConfigurationModal';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, ArrowLeft, Check, Calendar, Clock } from 'lucide-react';
+import { Loader2, ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 const BatchConfiguration = () => {
@@ -152,28 +152,17 @@ const BatchConfiguration = () => {
           <div className="flex-[1.2] w-full">
             
             <div className="mb-8">
-                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36] mb-4">Configure Your Plan</h1>
+                <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
                 
-                {/* Batch Details Card */}
-                <div className="bg-white border border-[#e3e8ee] rounded-lg p-5 shadow-sm mb-2">
-                    <h3 className="font-bold text-lg text-[#1a1f36] mb-3">{course.title}</h3>
-                    <div className="flex flex-wrap gap-4 text-sm text-[#4f566b]">
-                        {course.start_date && (
-                            <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                                <Calendar className="w-3.5 h-3.5 text-[#1a1f36]" />
-                                <span>Starts: <span className="font-medium text-[#1a1f36]">{formatDate(course.start_date)}</span></span>
-                            </div>
-                        )}
-                        {course.end_date && (
-                             <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-100">
-                                <Clock className="w-3.5 h-3.5 text-[#1a1f36]" />
-                                <span>Ends: <span className="font-medium text-[#1a1f36]">{formatDate(course.end_date)}</span></span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-                
-                <p className="text-[#4f566b] mt-4 text-sm">Review included subjects and select additional add-ons below.</p>
+                {/* Batch Name & Dates (Plain Text) */}
+                <h2 className="text-xl font-semibold text-[#1a1f36] mt-4 mb-2">{course.title}</h2>
+                <p className="text-[#4f566b] font-medium text-sm mb-4">
+                    {course.start_date && <span>Starts on {formatDate(course.start_date)}</span>}
+                    {course.start_date && course.end_date && <span className="mx-2">•</span>}
+                    {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
+                </p>
+
+                <p className="text-[#4f566b] text-sm mt-4">Review included subjects and select additional add-ons below.</p>
             </div>
             
             <div className="flex flex-col gap-3">
