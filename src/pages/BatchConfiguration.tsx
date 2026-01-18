@@ -120,34 +120,36 @@ const BatchConfiguration = () => {
 
       <div className="relative z-10 w-full max-w-[1000px] px-5">
         
-        {/* Top Header Row with Smooth Back Animation */}
+        {/* Animated Swap Header */}
         <div 
-            className="mb-10 flex items-center gap-4 w-fit cursor-pointer group" 
+            className="mb-10 w-fit cursor-pointer group flex items-center gap-4"
             onClick={() => navigate(-1)}
         >
-            {/* Animated Back Button Container */}
-            <div className="flex items-center text-[#4f566b] transition-all duration-300 group-hover:text-[#1a1f36] group-hover:-translate-x-1">
-                <ArrowLeft className="w-5 h-5" />
-                <div className="grid grid-rows-[0fr] group-hover:grid-rows-[1fr] transition-all duration-300 ease-in-out">
-                    <span className="overflow-hidden font-medium text-sm ml-0 group-hover:ml-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+            {/* Arrow - Always visible */}
+            <ArrowLeft className="w-8 h-8 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
+
+            {/* Content Swapper */}
+            <div className="grid place-items-start">
+                
+                {/* Branding (Default Visible) */}
+                <div className="col-start-1 row-start-1 flex items-center gap-4 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2 group-hover:pointer-events-none">
+                    <img 
+                      src="https://i.ibb.co/kgdrjTby/UI-Logo.png" 
+                      alt="UI Logo" 
+                      className="w-14 h-14 object-contain drop-shadow-sm" 
+                    />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">
+                        Unknown IITians
+                    </span>
+                </div>
+
+                {/* Back Text (Hover Visible) */}
+                <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight pl-1">
                         Back
                     </span>
                 </div>
-            </div>
-            
-            {/* Divider */}
-            <div className="h-8 w-px bg-slate-300 mx-2"></div>
 
-            {/* Branding - Bigger Logo & Text */}
-            <div className="flex items-center gap-4">
-                <img 
-                  src="https://i.ibb.co/kgdrjTby/UI-Logo.png" 
-                  alt="UI Logo" 
-                  className="w-14 h-14 object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105" 
-                />
-                <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">
-                    Unknown IITians
-                </span>
             </div>
         </div>
 
@@ -158,7 +160,7 @@ const BatchConfiguration = () => {
           <div className="flex-[1.2] w-full">
             
             <div className="mb-8">
-                {/* Updated Heading */}
+                {/* Heading */}
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
                 
                 {/* Batch Name (Semi-bold Label, Normal Value) */}
@@ -171,8 +173,6 @@ const BatchConfiguration = () => {
                     {course.start_date && course.end_date && <span className="mx-2">•</span>}
                     {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
                 </p>
-
-                {/* Removed Review Paragraph as requested */}
             </div>
             
             <div className="flex flex-col gap-3">
@@ -237,7 +237,6 @@ const BatchConfiguration = () => {
           {/* --- RIGHT COLUMN: Summary (Middle Aligned via Flex) --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-center">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm">
-              {/* Updated Title */}
               <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Enrollment Summary</h2>
 
               {/* Base Plan Line */}
@@ -270,7 +269,7 @@ const BatchConfiguration = () => {
                 <span className="text-[24px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
               </div>
 
-              {/* Payment Button - Purple Shadow Removed */}
+              {/* Payment Button - No Shadow */}
               <button 
                 onClick={handlePayment}
                 disabled={processing}
