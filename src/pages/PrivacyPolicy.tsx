@@ -220,7 +220,7 @@ const PrivacyPolicy = () => {
                     <p className="text-gray-400 mb-2">If you wish to remove your contact information from all lists and newsletters, please contact us at:</p>
                     <div className="flex items-center gap-4">
                       <span className="text-gray-500 w-16">Email:</span>
-                      <a href="mailto:support@unknowniitians.live" className="text-white hover:underline">support@unknowniitians.com</a>
+                      <a href="mailto:support@unknowniitians.live" className="text-white hover:underline">support@unknowniitians.live</a>
                     </div>
                   </div>
                 </section>
