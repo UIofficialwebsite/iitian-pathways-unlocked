@@ -18,6 +18,16 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
   // State to track which batches are expanded
   const [expandedBatches, setExpandedBatches] = useState<Record<string, boolean>>({});
 
+  // Define a palette of light colors to cycle through
+  const scheduleColors = [
+    { bg: "bg-blue-50", border: "border-blue-100", hover: "hover:border-blue-300" },
+    { bg: "bg-yellow-50", border: "border-yellow-100", hover: "hover:border-yellow-300" },
+    { bg: "bg-green-50", border: "border-green-100", hover: "hover:border-green-300" },
+    { bg: "bg-purple-50", border: "border-purple-100", hover: "hover:border-purple-300" },
+    { bg: "bg-pink-50", border: "border-pink-100", hover: "hover:border-pink-300" },
+    { bg: "bg-orange-50", border: "border-orange-100", hover: "hover:border-orange-300" },
+  ];
+
   // Group schedule by batch_name
   const groupedSchedule = scheduleData.reduce((acc, item) => {
     const key = item.batch_name || "General"; 
@@ -74,34 +84,42 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = ({ scheduleData }) => {
                   
                   {/* List of Subjects */}
                   <div className="flex flex-col gap-3">
-                    {visibleItems.map((item) => (
-                      <div 
-                        key={item.id}
-                        className={cn(
-                          "flex items-center justify-between p-5",
-                          // Changed bg-white to bg-gray-50 for a light filled look
-                          "bg-gray-50 border border-gray-200 rounded-xl", 
-                          "hover:border-black/20 transition-all duration-200 shadow-sm"
-                        )}
-                      >
-                        {/* Subject Name */}
-                        <span className="text-[16px] text-[#1a1f36] font-medium leading-relaxed">
-                          {item.subject_name}
-                        </span>
-
-                        {/* Download Button - Big Type, Black Filled */}
-                        <Button
-                          onClick={() => handleDownload(item.file_link)}
+                    {visibleItems.map((item, idx) => {
+                      // Cycle through colors based on index
+                      const colorTheme = scheduleColors[idx % scheduleColors.length];
+                      
+                      return (
+                        <div 
+                          key={item.id}
                           className={cn(
-                            "ml-4 bg-black text-white hover:bg-black/90",
-                            "h-11 px-8 min-w-[140px]", // Bigger dimensions
-                            "text-base font-medium rounded-lg shadow-none"
+                            "flex items-center justify-between p-5",
+                            // Apply dynamic light colors
+                            colorTheme.bg,
+                            "border", colorTheme.border,
+                            "rounded-xl", 
+                            "transition-all duration-200 shadow-sm",
+                            colorTheme.hover // Subtle border darken on hover
                           )}
                         >
-                          Download
-                        </Button>
-                      </div>
-                    ))}
+                          {/* Subject Name */}
+                          <span className="text-[16px] text-[#1a1f36] font-medium leading-relaxed">
+                            {item.subject_name}
+                          </span>
+
+                          {/* Download Button - Big Type, Black Filled */}
+                          <Button
+                            onClick={() => handleDownload(item.file_link)}
+                            className={cn(
+                              "ml-4 bg-black text-white hover:bg-black/90",
+                              "h-11 px-8 min-w-[140px]", 
+                              "text-base font-medium rounded-lg shadow-none"
+                            )}
+                          >
+                            Download
+                          </Button>
+                        </div>
+                      );
+                    })}
                   </div>
 
                   {/* "More Subjects" Button */}
