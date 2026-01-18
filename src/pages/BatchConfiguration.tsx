@@ -139,7 +139,7 @@ const BatchConfiguration = () => {
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   
-  // Enrollment State
+  // New States for Partial Ownership
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
   const [ownedAddonIds, setOwnedAddonIds] = useState<string[]>([]);
   
@@ -175,27 +175,27 @@ const BatchConfiguration = () => {
         const fetchedAddons = addonsRes.data || [];
         setAddons(fetchedAddons);
         
-        // Enrollment Logic
+        // --- UPDATED ENROLLMENT LOGIC ---
         if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
             const enrollments = enrollmentsRes.data;
             
-            // Check Main Course Ownership (any row with null subject_name)
+            // 1. Check Main Course (records with NO subject_name)
             const mainOwned = enrollments.some(e => !e.subject_name);
             setIsMainCourseOwned(mainOwned);
 
-            // Check Addon Ownership (map subject names to addon IDs)
+            // 2. Check Add-ons (records WITH subject_name)
             const ownedSubjectNames = enrollments
                 .filter(e => e.subject_name)
                 .map(e => e.subject_name);
             
-            // Find IDs of addons that match the owned subject names
+            // Map the owned Subject Names back to Addon IDs
             const ownedIds = fetchedAddons
                 .filter(addon => ownedSubjectNames.includes(addon.subject_name))
                 .map(addon => addon.id);
             
             setOwnedAddonIds(ownedIds);
 
-            // If fully enrolled, redirect
+            // 3. Redirect only if EVERYTHING is owned
             const areAllAddonsOwned = fetchedAddons.every(addon => ownedSubjectNames.includes(addon.subject_name));
             if (mainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
                 toast.info("You are already fully enrolled in this batch.");
@@ -217,11 +217,11 @@ const BatchConfiguration = () => {
   }, [courseId, user, navigate]);
 
   // --- 2. Calculations ---
-  // If main course is owned, base price contribution is 0 for the upgrade
+  // If main course is owned, base price is effectively 0 for this transaction
   const basePrice = course?.discounted_price ?? course?.price ?? 0;
   const effectiveBasePrice = isMainCourseOwned ? 0 : basePrice;
   
-  // Only calculate total for selected addons that are NOT already owned
+  // Filter out owned add-ons from calculation
   const selectedAddonsList = useMemo(() => {
     return addons.filter(addon => 
         selectedAddonIds.includes(addon.id) && !ownedAddonIds.includes(addon.id)
@@ -233,7 +233,7 @@ const BatchConfiguration = () => {
 
   // --- 3. Handlers ---
   const toggleAddon = (addonId: string) => {
-    // Prevent toggling if already owned
+    // Prevent toggling if it's already owned
     if (ownedAddonIds.includes(addonId)) return;
 
     setSelectedAddonIds(prev => 
@@ -309,7 +309,7 @@ const BatchConfiguration = () => {
 
       console.log("Initiating Cashfree Payment...");
 
-      // Only send the NEWLY selected addons to the backend
+      // Filter out already owned add-ons before sending to backend
       const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
 
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
@@ -319,7 +319,7 @@ const BatchConfiguration = () => {
           userId: user.id,
           customerEmail: user.email, 
           customerPhone: phoneNumber,
-          selectedSubjects: newAddonIds // IMPORTANT: Only send new addons
+          selectedSubjects: newAddonIds // Only send NEW add-ons
         },
       });
 
@@ -508,6 +508,7 @@ const BatchConfiguration = () => {
             </div>
             
             <div className="flex flex-col gap-3">
+              {/* CORE SUBJECTS */}
               {coreSubjects.map((subject, idx) => (
                 <div key={`core-${idx}`} className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-80 cursor-not-allowed select-none">
                   <div className="flex items-center flex-grow">
@@ -522,9 +523,11 @@ const BatchConfiguration = () => {
                 </div>
               ))}
 
+              {/* ADD-ONS */}
               {addons.map((addon) => {
                 const isOwned = ownedAddonIds.includes(addon.id);
-                const isSelected = selectedAddonIds.includes(addon.id) || isOwned;
+                // It is checked if the user selects it OR if it's already owned
+                const isChecked = selectedAddonIds.includes(addon.id) || isOwned;
                 
                 return (
                   <label 
@@ -537,18 +540,18 @@ const BatchConfiguration = () => {
                   >
                     <div className="flex items-center flex-grow">
                       <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
-                        ${isSelected 
+                        ${isChecked 
                             ? 'bg-[#1a1f36] border-[#1a1f36]' 
                             : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'
                         }`}>
                          <input 
                             type="checkbox" 
                             className="hidden" 
-                            checked={isSelected} 
+                            checked={isChecked} 
                             disabled={isOwned}
                             onChange={() => toggleAddon(addon.id)} 
                          />
-                         {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
+                         {isChecked && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
                       </div>
                       <span className="font-medium text-[15px] text-[#1a1f36]">{addon.subject_name}</span>
                     </div>
