@@ -19,23 +19,60 @@ const BatchConfiguration = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
-  // --- 1. Fetch Data ---
+  // --- 1. Fetch Data & Check Enrollment ---
   useEffect(() => {
     const fetchData = async () => {
       if (!courseId) return;
       try {
-        const [courseRes, addonsRes] = await Promise.all([
+        // Fetch Course, Addons, and User Enrollments in parallel
+        const [courseRes, addonsRes, enrollmentsRes] = await Promise.all([
           supabase.from('courses').select('*').eq('id', courseId).single(),
-          supabase.from('course_addons').select('*').eq('course_id', courseId)
+          supabase.from('course_addons').select('*').eq('course_id', courseId),
+          user 
+            ? supabase
+                .from('enrollments')
+                .select('subject_name, status')
+                .eq('user_id', user.id)
+                .eq('course_id', courseId)
+                .neq('status', 'FAILED')
+            : Promise.resolve({ data: null, error: null })
         ]);
 
         if (courseRes.error) throw courseRes.error;
         setCourse(courseRes.data);
 
-        if (addonsRes.data) {
-          setAddons(addonsRes.data);
-          setSelectedAddonIds([]);
+        const fetchedAddons = addonsRes.data || [];
+        setAddons(fetchedAddons);
+        setSelectedAddonIds([]); // Start with none selected (except defaults if logic requires)
+
+        // --- Enrollment Check ---
+        if (enrollmentsRes.data && enrollmentsRes.data.length > 0) {
+            const enrollments = enrollmentsRes.data;
+            
+            // Check if Base Plan is owned (entry with null subject_name)
+            const isMainOwned = enrollments.some(e => !e.subject_name);
+            
+            // Get list of owned addon names
+            const ownedSubjectNames = enrollments
+                .filter(e => e.subject_name)
+                .map(e => e.subject_name);
+
+            // Check if ALL available addons are owned
+            const areAllAddonsOwned = fetchedAddons.every(addon => 
+                ownedSubjectNames.includes(addon.subject_name)
+            );
+
+            // If Main Course is owned AND (No addons exist OR All addons are owned) -> Fully Enrolled
+            if (isMainOwned && (fetchedAddons.length === 0 || areAllAddonsOwned)) {
+                toast.info("You are already fully enrolled in this batch.");
+                navigate(`/courses/${courseId}`); // Redirect to course detail
+                return;
+            }
+            
+            // Optional: If you want to disable already owned addons in the list, 
+            // you could process that here (e.g., set a state `ownedAddonIds`).
         }
+
       } catch (error) {
         console.error('Error fetching batch details:', error);
         toast.error('Failed to load batch details');
@@ -44,7 +81,7 @@ const BatchConfiguration = () => {
       }
     };
     fetchData();
-  }, [courseId]);
+  }, [courseId, user, navigate]);
 
   // --- 2. Calculations ---
   const basePrice = course?.discounted_price ?? course?.price ?? 0;
