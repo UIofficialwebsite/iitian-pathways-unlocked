@@ -284,7 +284,23 @@ const BatchConfiguration = () => {
 
               <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
                 By continuing, you agree to our <br className="hidden md:block"/>
-                <a href="#" className="text-[#635bff] no-underline font-medium hover:underline">Terms of Service</a> & Privacy Policy.
+                <a 
+                    href="/terms-of-service" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[#635bff] no-underline font-medium hover:underline"
+                >
+                    Terms of Service
+                </a> 
+                {' '}&{' '} 
+                <a 
+                    href="/privacy-policy" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[#635bff] no-underline font-medium hover:underline"
+                >
+                    Privacy Policy
+                </a>.
               </p>
             </div>
           </div>
