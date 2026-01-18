@@ -106,7 +106,7 @@ const BatchConfiguration = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex items-center justify-center py-12">
+    <div className="min-h-screen bg-[#f6f9fc] font-['Inter',sans-serif] text-[#1a1f36] relative overflow-hidden flex flex-col items-center py-12">
       
       {/* Background Slope Effect */}
       <div 
@@ -146,16 +146,16 @@ const BatchConfiguration = () => {
         </div>
 
         {/* Main Grid */}
-        <div className="flex flex-col md:flex-row gap-8 md:gap-[60px] items-start md:items-center">
+        <div className="flex flex-col md:flex-row gap-8 md:gap-[60px]">
           
-          {/* --- LEFT COLUMN: Configuration --- */}
+          {/* --- LEFT COLUMN: Configuration (Top Aligned) --- */}
           <div className="flex-[1.2] w-full">
             
             <div className="mb-8">
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Configure Your Plan</h1>
                 
                 {/* Batch Name & Dates (Plain Text) */}
-                <h2 className="text-xl font-semibold text-[#1a1f36] mt-4 mb-2">{course.title}</h2>
+                <h2 className="text-xl font-semibold text-[#1a1f36] mt-4 mb-2">Batch Name: {course.title}</h2>
                 <p className="text-[#4f566b] font-medium text-sm mb-4">
                     {course.start_date && <span>Starts on {formatDate(course.start_date)}</span>}
                     {course.start_date && course.end_date && <span className="mx-2">•</span>}
@@ -224,7 +224,7 @@ const BatchConfiguration = () => {
             </div>
           </div>
 
-          {/* --- RIGHT COLUMN: Summary (Middle Aligned) --- */}
+          {/* --- RIGHT COLUMN: Summary (Middle Aligned via Flex) --- */}
           <div className="md:flex-[0.8] w-full flex flex-col justify-center">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm">
               <h2 className="text-[20px] font-bold text-[#1a1f36] mb-6">Order Summary</h2>
