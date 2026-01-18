@@ -376,49 +376,50 @@ const BatchConfiguration = () => {
 
       {/* --- MOBILE DETAILS DRAWER (Overlay from Top) --- */}
       <div 
-        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-xl transition-transform duration-300 ease-out flex flex-col items-center pt-12 pb-8 px-6 rounded-b-3xl border-b border-gray-100 md:hidden ${
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
             showDetails ? 'translate-y-0' : '-translate-y-[120%]'
         }`}
       >
-        <button 
+        <div 
+            className="absolute top-6 right-6 text-[#697386] cursor-pointer"
             onClick={() => setShowDetails(false)}
-            className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full"
         >
-            <X className="w-5 h-5" />
-        </button>
+            <X className="w-6 h-6" />
+        </div>
 
-        <div className="w-full bg-gray-50/80 p-5 rounded-xl border border-gray-100 space-y-4">
+        <div className="flex flex-col gap-7 mt-4">
             
             {/* Batch Name */}
-            <div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Batch Name</span>
-                <span className="text-sm font-medium text-gray-900 leading-tight block">{course.title}</span>
+            <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch Name</span>
+                <span className="text-[22px] font-bold text-[#1a1f36] tracking-tight">{course.title}</span>
             </div>
 
-            {/* Dates */}
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Start Date</span>
-                    <span className="text-sm font-normal text-gray-700">{formatDate(course.start_date)}</span>
+            {/* Dates (Stacked on mobile as per design) */}
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Start Date</span>
+                    <span className="text-[16px] font-normal text-[#1a1f36]">{formatDate(course.start_date)}</span>
                 </div>
-                <div>
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">End Date</span>
-                    <span className="text-sm font-normal text-gray-700">{formatDate(course.end_date)}</span>
+                <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">End Date</span>
+                    <span className="text-[16px] font-normal text-[#1a1f36]">
+                        {course.end_date ? formatDate(course.end_date) : 'TBA'}
+                    </span>
                 </div>
             </div>
 
             {/* Batch ID */}
-            <div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Batch ID</span>
-                <span className="text-xs font-mono text-gray-500 break-all bg-white px-2 py-1 rounded border border-gray-100 inline-block">
+            <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch ID</span>
+                <span className="text-[14px] font-normal text-[#1a1f36] break-all leading-relaxed opacity-90">
                     {course.id}
                 </span>
             </div>
 
-            {/* Email */}
-            <div>
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-gray-400 block mb-1">Email Address</span>
-                <span className="text-sm font-medium text-gray-900 break-all">{user?.email || 'N/A'}</span>
+            {/* Email Address Bar */}
+            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md text-[15px] font-normal text-[#1a1f36] text-center mt-2">
+                {user?.email || 'N/A'}
             </div>
         </div>
       </div>
