@@ -376,25 +376,98 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* --- MOBILE HEADER --- */}
+      {/* --- RESTORED: MOBILE DETAILS DRAWER --- */}
+      <div 
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] rounded-b-[24px] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
+            showDetails ? 'translate-y-0' : '-translate-y-[120%]'
+        }`}
+      >
+        <div 
+            className="absolute top-6 right-6 text-[#697386] cursor-pointer"
+            onClick={() => setShowDetails(false)}
+        >
+            <X className="w-6 h-6" />
+        </div>
+
+        <div className="flex flex-col gap-7 mt-4">
+            <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch Name</span>
+                <span className="text-[22px] font-bold text-[#1a1f36] tracking-tight">{course.title}</span>
+            </div>
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Start Date</span>
+                    <span className="text-[16px] font-normal text-[#1a1f36]">{formatDate(course.start_date)}</span>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">End Date</span>
+                    <span className="text-[16px] font-normal text-[#1a1f36]">
+                        {course.end_date ? formatDate(course.end_date) : 'TBA'}
+                    </span>
+                </div>
+            </div>
+            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md text-[15px] font-normal text-[#1a1f36] text-center mt-2">
+                {user?.email || 'N/A'}
+            </div>
+        </div>
+      </div>
+      
+      {showDetails && (
+        <div 
+            className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
+            onClick={() => setShowDetails(false)}
+        />
+      )}
+
+      {/* --- RESTORED: MOBILE HEADER (WITH LOGO) --- */}
       <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
           <div className="px-5 py-4 flex items-center justify-between">
-            <div className="cursor-pointer group flex items-center gap-4" onClick={() => navigate(-1)}>
+            <div 
+                className="cursor-pointer group flex items-center gap-4"
+                onClick={() => navigate(-1)}
+            >
                 <ArrowLeft className="w-5 h-5 text-[#1a1f36]" />
-                <span className="font-bold text-[#1a1f36]">Back</span>
+                <div className="flex items-center gap-3">
+                    <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-8 h-8 object-contain drop-shadow-sm" />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight">Unknown IITians</span>
+                </div>
             </div>
           </div>
       </div>
 
       <div className="relative z-10 w-full max-w-[1000px] px-5 mt-4 md:mt-12 pb-20">
-        <div className="hidden md:flex mb-10 w-fit cursor-pointer group items-center gap-4" onClick={() => navigate(-1)}>
-            <ArrowLeft className="w-5 h-5 text-[#1a1f36]" />
-            <span className="font-bold text-[#1a1f36] text-lg">Back</span>
+        
+        {/* --- PC HEADER (UNCHANGED) --- */}
+        <div 
+            className="hidden md:flex mb-10 w-fit cursor-pointer group items-center gap-4"
+            onClick={() => navigate(-1)}
+        >
+            <ArrowLeft className="w-5 h-5 text-[#1a1f36] transition-transform duration-300 ease-in-out group-hover:-translate-x-1" />
+            <div className="grid place-items-start">
+                <div className="col-start-1 row-start-1 flex items-center gap-4 transition-all duration-300 ease-in-out group-hover:opacity-0 group-hover:-translate-y-2 group-hover:pointer-events-none">
+                    <img src="https://i.ibb.co/kgdrjTby/UI-Logo.png" alt="UI Logo" className="w-14 h-14 object-contain drop-shadow-sm" />
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-2xl tracking-tight">Unknown IITians</span>
+                </div>
+                <div className="col-start-1 row-start-1 flex items-center h-full transition-all duration-300 ease-in-out opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0">
+                    <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
+                </div>
+            </div>
+        </div>
+
+        {/* --- RESTORED: MOBILE DETAILS TOGGLE --- */}
+        <div className="flex justify-center mt-2 mb-6 md:hidden">
+            <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center justify-center gap-2 px-8 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50 shadow-sm"
+            >
+                <span className="font-normal text-sm">View Detail</span>
+                {showDetails ? <ChevronUp className="w-4 h-4 text-black" /> : <ChevronDown className="w-4 h-4 text-black" />}
+            </button>
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 md:gap-[60px]">
           <div className="flex-[1.2] w-full">
-            <div className="mb-8">
+            <div className="hidden md:block mb-8">
                 <h1 className="text-[28px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
                 <h2 className="text-xl text-[#1a1f36] mt-4 mb-2">
                     <span className="font-semibold">Batch Name:</span> <span className="font-normal">{course.title}</span>
@@ -405,15 +478,25 @@ const BatchConfiguration = () => {
                     {course.end_date && <span>Ends on {formatDate(course.end_date)}</span>}
                 </p>
             </div>
+
+            <div className="md:hidden mb-6">
+                 <h1 className="text-[24px] font-bold tracking-tight text-[#1a1f36]">Select Your Subjects</h1>
+                 <p className="text-[#4f566b] text-sm mt-1">Customize your learning path.</p>
+            </div>
             
             <div className="flex flex-col gap-3">
               {/* Core Subjects */}
               {coreSubjects.map((subject, idx) => (
                 <div key={`core-${idx}`} className="flex items-center justify-between bg-white border border-[#e3e8ee] p-[18px] px-6 rounded-lg opacity-80 cursor-not-allowed select-none">
                   <div className="flex items-center flex-grow">
-                    <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-[#4f566b]" strokeWidth={3} />
-                    </div>
+                    {isMainCourseOwned ? (
+                        /* Empty Spacer for Enrolled Items */
+                        <div className="w-5 h-5 mr-4" />
+                    ) : (
+                        <div className="w-5 h-5 bg-[#e3e8ee] border border-[#e3e8ee] rounded-[4px] mr-4 flex items-center justify-center">
+                            <Check className="w-3 h-3 text-[#4f566b]" strokeWidth={3} />
+                        </div>
+                    )}
                     <span className="font-medium text-[15px] text-[#1a1f36]">{subject}</span>
                   </div>
                   <span className="font-semibold text-[11px] text-[#22c55e] bg-green-50 px-2 py-1 rounded tracking-wide">
@@ -437,20 +520,26 @@ const BatchConfiguration = () => {
                         }`}
                   >
                     <div className="flex items-center flex-grow">
-                      <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
-                        ${isSelected 
-                            ? 'bg-[#1a1f36] border-[#1a1f36]' 
-                            : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'
-                        }`}>
-                         <input 
-                            type="checkbox" 
-                            className="hidden" 
-                            checked={isSelected} 
-                            disabled={isOwned}
-                            onChange={() => toggleAddon(addon.id)} 
-                         />
-                         {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
-                      </div>
+                      {isOwned ? (
+                          /* Empty Spacer for Enrolled Items */
+                          <div className="w-5 h-5 mr-4" />
+                      ) : (
+                          <div className={`w-5 h-5 border rounded-[4px] mr-4 flex items-center justify-center transition-colors duration-200 
+                            ${isSelected 
+                                ? 'bg-[#1a1f36] border-[#1a1f36]' 
+                                : 'bg-white border-[#e3e8ee] group-hover:border-[#b0b6c0]'
+                            }`}>
+                             <input 
+                                type="checkbox" 
+                                className="hidden" 
+                                checked={isSelected} 
+                                disabled={isOwned}
+                                onChange={() => toggleAddon(addon.id)} 
+                             />
+                             {isSelected && <Check className="w-3 h-3 text-white" strokeWidth={4} />}
+                          </div>
+                      )}
+                      
                       <span className={`font-medium text-[15px] ${isOwned ? 'text-gray-500' : 'text-[#1a1f36]'}`}>
                         {addon.subject_name}
                       </span>
@@ -506,6 +595,13 @@ const BatchConfiguration = () => {
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
               </button>
+              
+              <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
+                By continuing, you agree to our <br className="hidden md:block"/>
+                <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="text-[#635bff] no-underline font-medium hover:underline">Terms of Service</a> 
+                {' '}&{' '} 
+                <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#635bff] no-underline font-medium hover:underline">Privacy Policy</a>.
+              </p>
             </div>
           </div>
         </div>
