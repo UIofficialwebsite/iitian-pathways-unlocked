@@ -19,6 +19,8 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // 1. Define Default Features (Rich objects)
+  // Note: We are now using a uniform star icon for all, but keeping the structure 
+  // in case you want to switch back to specific icons later.
   const defaultFeatures = [
     {
       icon: Video,
@@ -63,7 +65,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
       {/* Container "Holding" Section - White Background, Border, Rounded */}
       <div className="bg-white border border-[#e3e8ee] rounded-xl p-6 md:p-10 w-full shadow-sm">
         
-        {/* Updated Heading */}
+        {/* Heading */}
         <h2 className="text-2xl md:text-3xl font-bold mb-8 text-[#1a1f36]">
           Batch Features
         </h2>
@@ -72,7 +74,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Render Initial 4 Items */}
           {initialFeatures.map((feature, idx) => (
-            <FeatureCard key={`init-${idx}`} icon={feature.icon} text={feature.text} />
+            <FeatureCard key={`init-${idx}`} text={feature.text} />
           ))}
 
           {/* Render Extra Items (Hidden/Shown based on state) */}
@@ -81,7 +83,7 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
             isExpanded ? "max-h-[1000px] opacity-100 mt-0" : "max-h-0 opacity-0"
           )}>
             {extraFeatures.map((feature, idx) => (
-              <FeatureCard key={`extra-${idx}`} icon={feature.icon} text={feature.text} />
+              <FeatureCard key={`extra-${idx}`} text={feature.text} />
             ))}
           </div>
         </div>
@@ -108,12 +110,17 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({ course }) => {
 };
 
 // --- Sub-Component for the Card Design ---
-const FeatureCard = ({ icon: Icon, text }: { icon: any, text: string }) => {
+// Updated to use the custom star image instead of dynamic icons
+const FeatureCard = ({ text }: { text: string }) => {
   return (
     <div className="group flex items-center gap-4 bg-white border border-[#e3e8ee] p-5 rounded-lg transition-colors duration-200 hover:border-black">
-      {/* Icon Circle */}
+      {/* Icon Circle with Custom Image */}
       <div className="min-w-[36px] h-9 w-9 bg-[#f8fafc] rounded-full flex items-center justify-center shrink-0">
-        <Icon className="h-4 w-4 text-gray-700" />
+        <img 
+          src="https://i.ibb.co/dstqH8V6/image.png" 
+          alt="Feature Star" 
+          className="w-5 h-5 object-contain"
+        />
       </div>
       
       {/* Text */}
