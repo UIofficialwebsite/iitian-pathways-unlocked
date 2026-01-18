@@ -7,8 +7,8 @@ import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
 import SlidersIcon from "@/components/ui/SliderIcon";
 import RefineBatchesModal from "./RefineBatchesModal"; 
-import EnrollButton from "@/components/EnrollButton"; // Added Import
-import { useNavigate } from "react-router-dom"; // Added Import
+import EnrollButton from "@/components/EnrollButton"; 
+import { useNavigate } from "react-router-dom"; 
 
 interface RegularBatchesTabProps {
   focusArea: string;
@@ -58,7 +58,7 @@ const CourseCard: React.FC<{
             e.stopPropagation();
             navigate(`/courses/${course.id}/configure`);
           }} 
-          className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors"
+          className="bg-black text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black/90 transition-colors"
         >
           Buy Now
         </button>
@@ -70,7 +70,7 @@ const CourseCard: React.FC<{
         courseId={course.id}
         coursePrice={course.discounted_price || course.price}
         enrollmentLink={course.enroll_now_link || undefined}
-        className="bg-[#1f2937] text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black transition-colors"
+        className="bg-black text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black/90 transition-colors"
       >
         Enroll
       </EnrollButton>
