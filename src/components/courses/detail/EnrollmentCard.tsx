@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Loader2, Book } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
@@ -92,7 +92,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
                     onClick={() => navigate('/dashboard')}
                 >
-                    <Book className="w-4 h-4 mr-2" /> Let's Study
+                    Let's Study
                 </Button>
             );
         }
