@@ -137,7 +137,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-royal hover:bg-royal/90"
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white" // Keep Black
                     onClick={customEnrollHandler} // Should go to Config Page
                 >
                     Upgrade Enrollment
@@ -146,8 +146,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         }
 
         // 3. New User + Has Paid Add-ons (Special Config Flow)
-        // If main course is free but it has paid addons, we likely want to send them to config page
-        // But for consistency with EnrollButton, we keep customEnrollHandler if provided.
         if (hasAddons && !customEnrollHandler) {
              return (
                 <Button
@@ -195,7 +193,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             return (
                 <div className="flex flex-col">
                     <span className="text-xs text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
-                    <span className="text-3xl font-bold text-[#1E3A8A]">₹{minAddonPrice.toLocaleString()}</span>
+                    <span className="text-3xl font-bold text-gray-900">₹{minAddonPrice.toLocaleString()}</span>
                 </div>
             );
         }
