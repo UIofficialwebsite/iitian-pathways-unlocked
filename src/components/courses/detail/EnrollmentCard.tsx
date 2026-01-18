@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Share2, Check, ArrowRight, Loader2, Book } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, ArrowRight, Loader2, Book } from 'lucide-react';
 import { toast } from 'sonner';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
+import { ShareButton } from '@/components/ShareButton';
 
 interface EnrollmentCardProps {
     course: Course;
@@ -31,7 +32,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     enrolling = false
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
-    const [copied, setCopied] = useState(false);
     
     // Logic for "Starts at" price
     const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
@@ -102,29 +102,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         return new Date(dateString).toLocaleDateString('en-GB', options);
     };
 
-    const handleShare = async () => {
-        const courseUrl = window.location.href;
-        try {
-            if (navigator.share) {
-                await navigator.share({ title: course.title, url: courseUrl });
-            } else {
-                await navigator.clipboard.writeText(courseUrl);
-                setCopied(true);
-                toast.success('Link copied to clipboard');
-                setTimeout(() => setCopied(false), 2000);
-            }
-        } catch (error) {
-            console.error('Error sharing:', error);
-        }
-    };
-
     const renderMainButton = () => {
         // 1. Everything Bought -> "Let's Study"
         if (isFullyEnrolled && !isExpired) {
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
                     onClick={() => navigate('/dashboard')}
                 >
                     <Book className="w-4 h-4 mr-2" /> Let's Study
@@ -137,7 +121,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white" // Keep Black
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11" // Keep Black
                     onClick={customEnrollHandler} // Should go to Config Page
                 >
                     Upgrade Enrollment
@@ -150,7 +134,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              return (
                 <Button
                     size="lg"
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
                     onClick={() => navigate(`/courses/${course.id}/configure`)}
                 >
                     Configure Plan
@@ -163,7 +147,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              return (
                 <Button 
                     size="lg" 
-                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
+                    className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
                     onClick={customEnrollHandler}
                     disabled={enrolling}
                 >
@@ -179,7 +163,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 courseId={course.id}
                 coursePrice={course.discounted_price || course.price}
                 enrollmentLink={course.enroll_now_link || undefined}
-                className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white"
+                className="flex-1 text-lg w-full bg-black hover:bg-black/90 text-white h-11"
             >
                 Continue Enrollment
             </EnrollButton>
@@ -258,12 +242,16 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
                         <Separator className="my-4" />
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-3 items-center">
                             {renderMainButton()}
-
-                            <Button size="lg" variant="outline" className="aspect-square p-0" onClick={handleShare}>
-                                {copied ? <Check className="h-5 w-5" /> : <Share2 className="h-5 w-5" />}
-                            </Button>
+                            
+                            <ShareButton 
+                                url={window.location.href}
+                                title={course.title}
+                                description={`Check out this course: ${course.title}`}
+                                variant="outline"
+                                className="shrink-0 aspect-square h-11 w-11 p-0 border-gray-300"
+                            />
                         </div>
                     </CardContent>
                 </Card>
