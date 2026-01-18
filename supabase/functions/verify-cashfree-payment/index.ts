@@ -15,38 +15,33 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Parse URL and Redirect URL
   const url = new URL(req.url);
   const orderId = url.searchParams.get("order_id");
   const passedRedirectUrl = url.searchParams.get("redirect_url");
-  
-  // Default fallback if no redirect URL passed
   const frontendUrl = passedRedirectUrl ? decodeURIComponent(passedRedirectUrl) : "https://preview.lovable.app";
 
   try {
     if (!orderId) {
-      console.error("Order ID not found in the return URL.");
+      console.error("Order ID not found.");
       return new Response(null, {
         status: 302,
         headers: { Location: `${frontendUrl}/dashboard?payment=error&message=missing_order_id` },
       });
     }
 
-    console.log(`Verifying payment for order: ${orderId}`);
-
     if (!cashfreeKey || !cashfreeSecret) {
-      console.error("Cashfree API Key or Secret is not configured.");
+      console.error("Cashfree API keys missing.");
       return new Response(null, {
         status: 302,
         headers: { Location: `${frontendUrl}/dashboard?payment=error&message=config_error` },
       });
     }
 
+    // 1. Verify with Cashfree
     const cashfreeApiUrl = cashfreeEnv === "production"
       ? "https://api.cashfree.com/pg/orders"
       : "https://sandbox.cashfree.com/pg/orders";
 
-    // 1. Call Cashfree to get the status
     const verifyResponse = await fetch(`${cashfreeApiUrl}/${orderId}`, {
       method: "GET",
       headers: {
@@ -57,7 +52,7 @@ serve(async (req: Request) => {
     });
 
     if (!verifyResponse.ok) {
-      console.error("Cashfree verification failed with status:", verifyResponse.status);
+      console.error("Cashfree verification failed");
       return new Response(null, {
         status: 302,
         headers: { Location: `${frontendUrl}/dashboard?payment=error&message=verification_failed` },
@@ -65,60 +60,74 @@ serve(async (req: Request) => {
     }
 
     const paymentData = await verifyResponse.json();
-    console.log("Cashfree Payment Data:", JSON.stringify(paymentData, null, 2));
-
-    // 2. Determine Status
     const finalStatus = paymentData.order_status === "PAID" ? "success" : "failed";
-    
-    // Extract User ID (We sent this as customer_id in the create step)
     const userId = paymentData.customer_details?.customer_id;
 
-    // 3. Initialize Supabase Client
+    // 2. Initialize Supabase
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // 4. Insert into the NEW 'payments' table
-    // We do this regardless of success/failure to have a log of the attempt
+    // 3. Fetch Course & Addon Details
+    // We join 'enrollments' with 'courses' to get the main batch title.
+    const { data: enrollmentData, error: enrollmentError } = await supabase
+      .from("enrollments")
+      .select(`
+        course_id,
+        subject_name,
+        courses (
+          title
+        )
+      `)
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    if (enrollmentError) {
+      console.error("Error fetching enrollment:", enrollmentError);
+    }
+
+    // Prepare data for the specific columns
+    const mainBatchName = enrollmentData?.courses?.title || "Unknown Batch";
+    const addonsNames = enrollmentData?.subject_name || ""; // This comes from course_addons logic stored in enrollments
+
+    // 4. Insert into 'payments' with new columns
     const { error: paymentInsertError } = await supabase
       .from("payments")
       .insert({
         order_id: orderId,
-        payment_id: paymentData.cf_order_id || null, // Cashfree's internal ID
+        payment_id: paymentData.cf_order_id || null,
         user_id: userId,
         amount: paymentData.order_amount,
         status: finalStatus,
-        payment_mode: paymentData.payment_session_id ? "session" : "unknown", // You can refine this if payment_group is available
-        raw_response: paymentData // Store full JSON for debugging
+        payment_mode: paymentData.payment_session_id ? "session" : "unknown",
+        raw_response: paymentData,
+        
+        // --- NEW COLUMNS POPULATED HERE ---
+        batch: mainBatchName,  // Main batch name from 'courses' table
+        courses: addonsNames   // Course/Addon names (stored in subject_name)
       });
 
     if (paymentInsertError) {
-      console.error("Error inserting into payments table:", paymentInsertError);
-      // We don't stop execution here, as the user might still need access to the course
+      console.error("Error inserting payment:", paymentInsertError);
     } else {
-      console.log(`Payment record inserted for order ${orderId}`);
+      console.log(`Payment saved: Batch=[${mainBatchName}], Courses=[${addonsNames}]`);
     }
 
-    // 5. Update the existing 'enrollments' table (Maintains course access logic)
-    const { data, error: updateError } = await supabase
+    // 5. Update Enrollments Status
+    const { error: updateError } = await supabase
       .from("enrollments")
       .update({
         status: finalStatus,
         payment_id: paymentData.cf_order_id,
       })
-      .eq("order_id", orderId)
-      .select();
+      .eq("order_id", orderId);
 
     if (updateError) {
-      console.error("Database update error (enrollments):", updateError);
-      return new Response(null, {
-        status: 302,
-        headers: { Location: `${frontendUrl}/dashboard?payment=error&message=db_error` },
-      });
+      console.error("Error updating enrollment:", updateError);
     }
 
-    // 6. Redirect to Frontend
+    // 6. Redirect
     const redirectUrl = finalStatus === "success"
       ? `${frontendUrl}/dashboard?payment=success`
       : `${frontendUrl}/dashboard?payment=failed`;
@@ -129,8 +138,7 @@ serve(async (req: Request) => {
     });
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-    console.error("Error in verify-cashfree-payment function:", errorMessage);
+    console.error("Function error:", error);
     return new Response(null, {
       status: 302,
       headers: { Location: `${frontendUrl}/dashboard?payment=error&message=unknown_error` },
