@@ -82,49 +82,66 @@ serve(async (req: Request) => {
       .select(`
         subject_name,
         course_id,
-        courses ( title )
+        courses ( title, subject )
       `)
       .eq("order_id", orderId);
 
     if (fetchError) console.error("⚠️ Enrollment Fetch Error:", fetchError);
 
-    // 7. Process Course and Addon Names
+    // 7. Process Course and Addon Names + Mandatory Subjects
     let mainBatchName = "Unknown Batch";
-    let addonNames: string[] = [];
+    let mandatorySubjects: string[] = [];
+    let addonSubjectNames: string[] = [];
 
     if (enrollments && enrollments.length > 0) {
-      // Get main batch name from the course
-      mainBatchName = enrollments[0]?.courses?.title || "Unknown Batch";
+      // Get the first enrollment's course data - handle Supabase join type
+      const firstEnrollment = enrollments[0];
+      const courseData = firstEnrollment?.courses as unknown as { title?: string; subject?: string } | null;
+      
+      // Extract batch name from course title
+      mainBatchName = courseData?.title || "Unknown Batch";
+      
+      // Extract mandatory subjects from course.subject column (comma-separated)
+      if (courseData?.subject) {
+        mandatorySubjects = courseData.subject
+          .split(',')
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+      }
 
-      // Collect all subject_name values (these could be addon IDs or names)
-      const subjectNames = enrollments
+      // Collect all subject_name values from enrollments (these could be addon names or IDs)
+      addonSubjectNames = enrollments
         .map(e => e.subject_name)
-        .filter(Boolean);
+        .filter(Boolean) as string[];
+    }
 
-      if (subjectNames.length > 0) {
-        // Check if they are UUIDs (addon IDs) - try to resolve them
-        const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        const addonIds = subjectNames.filter(s => uuidPattern.test(s));
+    // Resolve addon names if they are UUIDs
+    let resolvedAddonNames: string[] = [];
+    if (addonSubjectNames.length > 0) {
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const addonIds = addonSubjectNames.filter(s => uuidPattern.test(s));
+      
+      if (addonIds.length > 0) {
+        // Fetch addon names from course_addons table
+        const { data: addons } = await supabase
+          .from("course_addons")
+          .select("id, subject_name")
+          .in("id", addonIds);
+
+        const addonMap = new Map(addons?.map(a => [a.id, a.subject_name]) || []);
         
-        if (addonIds.length > 0) {
-          // Fetch addon names from course_addons table
-          const { data: addons } = await supabase
-            .from("course_addons")
-            .select("id, subject_name")
-            .in("id", addonIds);
-
-          const addonMap = new Map(addons?.map(a => [a.id, a.subject_name]) || []);
-          
-          // Map IDs to names, keep original if not found
-          addonNames = subjectNames.map(s => addonMap.get(s) || s);
-        } else {
-          // They're already names
-          addonNames = subjectNames;
-        }
+        // Map IDs to names, keep original if not found
+        resolvedAddonNames = addonSubjectNames.map(s => addonMap.get(s) || s);
+      } else {
+        // They're already names
+        resolvedAddonNames = addonSubjectNames;
       }
     }
 
-    const coursesString = addonNames.length > 0 ? [...new Set(addonNames)].join(", ") : "None";
+    // Combine mandatory subjects + addon subjects (unique values only)
+    const allSubjects = [...mandatorySubjects, ...resolvedAddonNames];
+    const uniqueSubjects = [...new Set(allSubjects)].filter(Boolean);
+    const coursesString = uniqueSubjects.length > 0 ? uniqueSubjects.join(", ") : "No subjects";
 
     // 8. Extract UTR from payment details
     let utr: string | null = null;
