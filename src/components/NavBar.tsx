@@ -43,13 +43,15 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import GoogleAuth from "@/components/auth/GoogleAuth";
-// import EmailAuth from "@/components/auth/EmailAuth"; // Commented out as email option is removed from view
 
+// --- LOGIN POPUP COMPONENT (Design matches Auth.tsx) ---
 const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
+    // [MATCHED DIMENSIONS] w-full max-w-[420px] rounded-[28px] px-6 pt-10 pb-8
     <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 pt-10 pb-8 text-center">
+      
       {/* Illustration Area */}
       <div className="mb-8 flex justify-center">
         <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
@@ -60,18 +62,18 @@ const LoginPopupContent = () => {
         </div>
       </div>
 
-      {/* [CHANGED] Updated Heading Text */}
+      {/* [UPDATED TEXT] Title */}
       <h2 className="text-[21px] font-bold text-[#1a1a1a] text-center mb-6 leading-tight">
         Please Sign in / Register to continue
       </h2>
 
       <div className="space-y-4">
         <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
-        {/* [CHANGED] Removed "Continue with email instead?" text/button */}
+        {/* Email option removed as requested */}
       </div>
 
-      {/* [CHANGED] Footer in 1 line (removed <br />) */}
-      <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
+      {/* [UPDATED TEXT] Footer single line */}
+      <div className="mt-14 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
     </div>
@@ -220,6 +222,7 @@ const NavBar = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
                 </DialogTrigger>
+                {/* [MATCHED DIMENSIONS] Removed default styling to let the inner card control size */}
                 <DialogContent className="p-0 bg-transparent border-none shadow-none max-w-[420px] focus:outline-none">
                   <LoginPopupContent />
                 </DialogContent>
