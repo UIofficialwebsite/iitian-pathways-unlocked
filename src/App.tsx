@@ -10,7 +10,7 @@ import { Suspense, lazy } from "react";
 
 // Lazy Load Pages for Performance
 const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
+// REMOVED: const Auth = lazy(() => import("./pages/Auth")); 
 const CourseListing = lazy(() => import("./pages/CourseListing"));
 const Courses = lazy(() => import("./pages/Courses"));
 const ExamPreparation = lazy(() => import("./pages/ExamPreparation"));
@@ -61,8 +61,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 
-                {/* Auth Routes */}
-                <Route path="/auth" element={<Auth />} />
+                {/* REMOVED: <Route path="/auth" element={<Auth />} /> */}
                 <Route path="/student/login" element={<StudentLogin />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 
