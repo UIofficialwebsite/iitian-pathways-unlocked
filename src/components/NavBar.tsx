@@ -49,28 +49,34 @@ const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    // [CHANGED] added h-[85vh] to increase height significantly as requested
-    <div className="bg-white w-full max-w-[420px] h-[85vh] rounded-[28px] relative px-6 pt-10 pb-8 text-center flex flex-col justify-center">
+    // [CHANGED] h-full to fill the DialogContent
+    <div className="bg-white w-full h-full relative px-8 pt-12 pb-8 text-center flex flex-col">
       
-      {/* Illustration Area */}
-      <div className="mb-8 flex justify-center">
-        <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
-          <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
-            <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
-            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
+      {/* Centered Content Block */}
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[400px] mx-auto">
+        
+        {/* Illustration Area */}
+        <div className="mb-10 flex justify-center transform scale-110">
+          <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
+            <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
+              <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
+            </div>
           </div>
+        </div>
+
+        {/* [CHANGED] Heading: Removed 'Please', faded black, Inter font */}
+        <h2 className="text-[26px] font-bold text-black/80 font-sans text-center mb-8 leading-tight">
+          Sign in / Register to continue
+        </h2>
+
+        <div className="w-full space-y-4">
+          <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
         </div>
       </div>
 
-      <h2 className="text-[21px] font-bold text-[#1a1a1a] text-center mb-6 leading-tight">
-        Please Sign in / Register to continue
-      </h2>
-
-      <div className="space-y-4">
-        <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
-      </div>
-
-      <div className="mt-14 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap">
+      {/* [CHANGED] Footer pushed to bottom */}
+      <div className="mt-auto pt-6 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
     </div>
@@ -218,8 +224,8 @@ const NavBar = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
                 </DialogTrigger>
-                {/* [MATCHED DIMENSIONS] Removed default styling to let the inner card control size */}
-                <DialogContent className="p-0 bg-transparent border-none shadow-none max-w-[420px] focus:outline-none">
+                {/* [CHANGED] Removed default styling to let the inner card control size */}
+                <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
                   <LoginPopupContent />
                 </DialogContent>
               </Dialog>
