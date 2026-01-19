@@ -42,14 +42,10 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-
-// Import Auth Components for the Popup
 import GoogleAuth from "@/components/auth/GoogleAuth";
-import EmailAuth from "@/components/auth/EmailAuth";
+// import EmailAuth from "@/components/auth/EmailAuth"; // Commented out as email option is removed from view
 
-// --- LOGIN POPUP COMPONENT (Matches Auth.tsx Design) ---
 const LoginPopupContent = () => {
-  const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   return (
@@ -64,36 +60,19 @@ const LoginPopupContent = () => {
         </div>
       </div>
 
-      <h2 className="text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
-        Sign in to your account <br /> using Google
+      {/* [CHANGED] Updated Heading Text */}
+      <h2 className="text-[21px] font-bold text-[#1a1a1a] text-center mb-6 leading-tight">
+        Please Sign in / Register to continue
       </h2>
 
       <div className="space-y-4">
         <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
-        
-        {!showEmailAuth ? (
-          <button 
-            onClick={() => setShowEmailAuth(true)}
-            className="text-[14px] font-semibold text-[#1d4ed8] hover:underline"
-          >
-            Continue with email instead?
-          </button>
-        ) : (
-          <div className="mt-4 animate-in fade-in duration-300">
-            <EmailAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
-            <button 
-              onClick={() => setShowEmailAuth(false)}
-              className="mt-4 text-[13px] text-gray-500 hover:underline"
-            >
-              Back to Google login
-            </button>
-          </div>
-        )}
+        {/* [CHANGED] Removed "Continue with email instead?" text/button */}
       </div>
 
+      {/* [CHANGED] Footer in 1 line (removed <br />) */}
       <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
-        By continuing you agree to our <br />
-        <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+        By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
     </div>
   );
@@ -237,14 +216,10 @@ const NavBar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              // [UPDATED] DESKTOP LOGIN BUTTON -> POPUP
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
                 </DialogTrigger>
-                {/* Using a simplified styling for DialogContent to remove default heavy borders/shadows 
-                  so our Custom Card design takes precedence.
-                */}
                 <DialogContent className="p-0 bg-transparent border-none shadow-none max-w-[420px] focus:outline-none">
                   <LoginPopupContent />
                 </DialogContent>
@@ -253,7 +228,7 @@ const NavBar = () => {
           </div>
         </div>
 
-        {/* --- MOBILE LAYOUT (UNCHANGED) --- */}
+        {/* --- MOBILE LAYOUT --- */}
         <div className="md:hidden flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if(!open) setActivePane("main"); }}>
