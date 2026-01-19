@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, LayoutDashboard, ClipboardCheck } from "lucide-react";
+import { LayoutDashboard, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SSPPortalSection: React.FC = () => {
@@ -11,8 +11,8 @@ const SSPPortalSection: React.FC = () => {
       description: "HD recordings available for unlimited replay.",
     },
     {
-      // Default Icon
-      icon: FileText,
+      // Updated Icon from IITM BS PYQ Section
+      iconUrl: "https://i.ibb.co/XkVT3SgT/image.png",
       title: "Study Materials",
       description: "PDFs, notes, and practice sheets vault.",
     },
