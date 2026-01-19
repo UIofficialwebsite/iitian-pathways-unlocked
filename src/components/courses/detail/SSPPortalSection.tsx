@@ -7,69 +7,89 @@ const SSPPortalSection: React.FC = () => {
     {
       icon: Video,
       title: "Recorded Lectures",
-      description: "High-definition recordings for every class, available for unlimited replay anytime.",
-      color: "bg-teal-50"
+      description: "HD recordings available for unlimited replay.",
     },
     {
       icon: FileText,
       title: "Study Materials",
-      description: "Access structured PDFs, handwritten notes, and curated practice sheets in our central vault.",
-      color: "bg-rose-50"
+      description: "PDFs, notes, and practice sheets vault.",
     },
     {
       icon: LayoutDashboard,
-      title: "Personalized Dashboard",
-      description: "A customized workspace to manage your schedule and track your daily learning goals.",
-      color: "bg-purple-50"
+      title: "Student Dashboard",
+      description: "Track goals and manage your schedule.",
     },
     {
       icon: BarChart3,
       title: "Progress Tracking",
-      description: "Monitor performance with data-driven insights and personalized reports to stay ahead.",
-      color: "bg-blue-50"
+      description: "Data-driven insights on your performance.",
     },
     {
       icon: MessageCircle,
       title: "Doubt Resolution",
-      description: "Get rapid resolutions to all your technical queries from our expert subject instructors.",
-      color: "bg-amber-50"
+      description: "Rapid answers from expert instructors.",
     },
     {
       icon: ClipboardCheck,
       title: "Test & Practice",
-      description: "Validate your knowledge with periodic assignments and simulated mock examinations.",
-      color: "bg-emerald-50"
+      description: "Assignments and simulated mock exams.",
     }
   ];
 
+  // Identical Gradients to SubjectsSection
+  const gradients = [
+    "bg-gradient-to-b from-[#f0f7ff] to-[#e0f2fe]", // Blue
+    "bg-gradient-to-b from-[#f5f3ff] to-[#ede9fe]", // Purple
+    "bg-gradient-to-b from-[#ecfdf5] to-[#d1fae5]", // Emerald
+    "bg-gradient-to-b from-[#fffbeb] to-[#fef3c7]", // Amber
+    "bg-gradient-to-b from-[#fff1f2] to-[#ffe4e6]", // Rose
+    "bg-gradient-to-b from-[#eef2ff] to-[#e0e7ff]", // Indigo
+  ];
+
   return (
-    <section id="ssp" className="scroll-mt-24 bg-white border border-slate-100 rounded-3xl p-8 md:p-10 w-full shadow-sm">
-      <h2 className="text-3xl font-extrabold mb-10 text-slate-900 tracking-tight">Student Service Portal</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {features.map((feature, idx) => {
-           const Icon = feature.icon;
-           return (
-             <div 
-               key={idx} 
-               className={cn(
-                 "group flex flex-col p-6 rounded-xl border border-black/5 transition-colors duration-200 cursor-pointer hover:border-black h-full",
-                 feature.color
-               )}
-             >
-               <div className="flex items-center gap-3.5 mb-4">
-                 <div className="w-[42px] h-[42px] bg-white rounded-[10px] flex items-center justify-center shrink-0 shadow-[0_2px_5px_rgba(0,0,0,0.03)]">
-                   <Icon className="w-5 h-5 text-black stroke-[2.2]" />
+    <section id="ssp" className="scroll-mt-24 w-full font-['Inter',sans-serif]">
+       {/* Container matching SubjectsSection style */}
+       <div className="bg-white rounded-[24px] p-5 md:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 max-w-[850px] mx-auto">
+         
+         <h2 className="text-[20px] md:text-[22px] font-semibold text-black mb-6 md:mb-8 tracking-tight">
+           Student Service Portal
+         </h2>
+         
+         {/* 2-Column Grid on Mobile & Desktop */}
+         <div className="grid grid-cols-2 gap-3">
+            {features.map((feature, idx) => {
+               const Icon = feature.icon;
+               const gradientClass = gradients[idx % gradients.length];
+               
+               return (
+                 <div 
+                   key={idx} 
+                   className={cn(
+                     // Layout & Shape
+                     "group flex flex-col justify-start px-4 py-4 md:px-6 md:py-5 rounded-lg cursor-pointer h-full",
+                     "border-[1.2px] border-transparent transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                     // Hover Effects (Same as Subjects)
+                     "hover:bg-white hover:border-black hover:shadow-sm",
+                     gradientClass
+                   )}
+                 >
+                   {/* Header: Icon + Title */}
+                   <div className="flex items-center gap-2 mb-2">
+                     <Icon className="w-4 h-4 md:w-5 md:h-5 text-black/70 group-hover:text-black transition-colors" />
+                     <h3 className="text-[13px] md:text-[15px] font-semibold text-black leading-tight">
+                        {feature.title}
+                     </h3>
+                   </div>
+                   
+                   {/* Description (Short & Professional) */}
+                   <p className="text-[11px] md:text-[13px] text-black/60 leading-relaxed font-medium">
+                     {feature.description}
+                   </p>
                  </div>
-                 <h3 className="text-[17px] font-bold text-black tracking-tight">{feature.title}</h3>
-               </div>
-               <p className="text-sm leading-relaxed text-black/80 m-0">
-                 {feature.description}
-               </p>
-             </div>
-           )
-        })}
-      </div>
+               )
+            })}
+         </div>
+       </div>
     </section>
   );
 };
