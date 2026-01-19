@@ -6,9 +6,10 @@ interface GoogleAuthProps {
   isSignUp?: boolean;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  onSuccess?: () => void;
 }
 
-const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading }) => {
+const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSuccess }) => {
   const { toast } = useToast();
 
   const handleGoogleAuth = async () => {
@@ -17,10 +18,13 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading }) => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/google-callback`,
+          // Redirect back to the current page after auth
+          redirectTo: window.location.href,
         },
       });
       if (error) throw error;
+      // If onSuccess is provided, call it (for non-redirect flows)
+      onSuccess?.();
     } catch (error: any) {
       toast({
         title: "Authentication failed",
