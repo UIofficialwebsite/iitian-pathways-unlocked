@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -159,7 +158,7 @@ const EmailAuth: React.FC<EmailAuthProps> = ({ isSignUp, isLoading, setIsLoading
         className="w-full bg-royal hover:bg-royal-dark"
         disabled={isLoading}
       >
-        {isLoading ? "Processing..." : isSignUp ? "Create Account" : "Sign In"}
+        {isLoading ? "Processing..." : isSignUp ? "Create Account" : "Sign in / Register"}
       </Button>
     </form>
   );
