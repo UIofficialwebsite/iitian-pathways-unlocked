@@ -22,7 +22,7 @@ import CareerOpportunities from "./pages/CareerOpportunities";
 import JobDetails from "./pages/JobDetails";
 import About from "./pages/About";
 import CourseDetail from "./pages/CourseDetail";
-import BatchConfiguration from "./pages/BatchConfiguration"; // NEW IMPORT
+import BatchConfiguration from "./pages/BatchConfiguration"; 
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import ProfileComplete from "./pages/ProfileComplete";
@@ -59,7 +59,7 @@ const App = () => (
               <Route path="/courses/category/:examCategory" element={<Courses />} />
               <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
               <Route path="/courses/:courseId" element={<CourseDetail />} />
-              <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} /> {/* NEW ROUTE */}
+              <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
               
               <Route path="/exam-preparation" element={<ExamPreparation />} />
               <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
@@ -78,7 +78,10 @@ const App = () => (
               <Route path="/career/job/:jobId" element={<JobDetails />} />
               
               <Route path="/about" element={<About />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* DASHBOARD ROUTE - UPDATED TO ACCEPT TABS */}
+              <Route path="/dashboard/:tab?" element={<Dashboard />} />
+              
               <Route path="/profile/complete" element={<ProfileComplete />} />
               <Route path="/auth/callback" element={<GoogleCallback />} />
               <Route path="/auth/student/callback" element={<StudentGoogleCallback />} />
