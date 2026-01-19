@@ -39,28 +39,33 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import GoogleAuth from "@/components/auth/GoogleAuth";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // --- LOGIN POPUP COMPONENT ---
 const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <div className="bg-white w-full h-full relative px-8 pt-4 pb-8 text-center flex flex-col font-sans">
+    <div className="bg-white w-full h-auto min-h-[500px] flex flex-col font-sans px-4 pb-8">
       
       {/* Centered Content Block */}
-      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto pt-4">
         
-        {/* [CHANGED] Image Section: Removed hover/scale effects for static blending */}
+        {/* Image Section */}
         <div className="mb-4 flex justify-center w-full">
           <img 
             src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
             alt="Login Illustration" 
-            // Removed hover:scale-105 and transitions
-            className="h-[280px] md:h-[350px] w-auto object-contain" 
+            className="h-[200px] md:h-[280px] w-auto object-contain" 
           />
         </div>
 
@@ -83,8 +88,8 @@ const LoginPopupContent = () => {
         </div>
       </div>
 
-      {/* Footer pushed to bottom */}
-      <div className="mt-auto pt-6 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50">
+      {/* Footer */}
+      <div className="mt-8 text-center text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50 pt-6">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
     </div>
@@ -94,9 +99,11 @@ const LoginPopupContent = () => {
 const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
+  const isMobile = useIsMobile();
   
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -228,14 +235,30 @@ const NavBar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
-                </DialogTrigger>
-                <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
-                  <LoginPopupContent />
-                </DialogContent>
-              </Dialog>
+              // RESPONSIVE LOGIN MODAL
+              isMobile ? (
+                <Drawer open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                  <DrawerTrigger asChild>
+                    <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
+                  </DrawerTrigger>
+                  <DrawerContent>
+                     {/* Mobile Drawer Content */}
+                     <LoginPopupContent />
+                  </DrawerContent>
+                </Drawer>
+              ) : (
+                <Dialog open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
+                  </DialogTrigger>
+                  <DialogContent 
+                    // [CHANGED] Custom animation to slide in from bottom on PC
+                    className="data-[state=open]:slide-in-from-bottom-[50%] data-[state=closed]:slide-out-to-bottom-[50%] data-[state=open]:slide-in-from-top-auto data-[state=closed]:slide-out-to-top-auto transition-all duration-500"
+                  >
+                    <LoginPopupContent />
+                  </DialogContent>
+                </Dialog>
+              )
             )}
           </div>
         </div>
@@ -307,11 +330,19 @@ const NavBar = () => {
 
                 {!user && (
                   <div className="p-6 bg-white border-t border-[#eeeeee] flex justify-center mt-auto">
-                    <Link to="/auth" className="w-full flex justify-center" onClick={() => setIsSheetOpen(false)}>
-                      <Button className="w-[200px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-bold shadow-none">
-                        Login/Register
-                      </Button>
-                    </Link>
+                    {/* Mobile Login Trigger uses Drawer via parent conditional logic or explicit here */}
+                    {/* Since this is inside the Sheet, we need to trigger the Login Drawer from here */}
+                    <div className="w-full flex justify-center">
+                       <Button 
+                         onClick={() => {
+                            setIsSheetOpen(false); // Close menu
+                            setTimeout(() => setIsLoginOpen(true), 150); // Open login
+                         }}
+                         className="w-[200px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-bold shadow-none"
+                       >
+                         Login/Register
+                       </Button>
+                    </div>
                   </div>
                 )}
               </SheetContent>
@@ -329,9 +360,22 @@ const NavBar = () => {
                 </Avatar>
               </Link>
             ) : (
-              <Link to="/auth">
-                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login/Register</Button>
-              </Link>
+               <Button 
+                 size="sm" 
+                 onClick={() => setIsLoginOpen(true)}
+                 className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold"
+                >
+                 Login/Register
+               </Button>
+            )}
+            
+            {/* INVISIBLE MOBILE DRAWER (Controlled by State) */}
+            {isMobile && (
+               <Drawer open={isLoginOpen} onOpenChange={setIsLoginOpen}>
+                  <DrawerContent>
+                     <LoginPopupContent />
+                  </DrawerContent>
+               </Drawer>
             )}
           </div>
         </div>
