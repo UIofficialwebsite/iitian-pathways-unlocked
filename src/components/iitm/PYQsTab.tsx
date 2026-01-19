@@ -17,10 +17,17 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
   const levelSlug = level.toLowerCase();
   
   const filteredPYQs = pyqs.filter(pyq => {
+    // Ensure we are only looking at IITM BS papers
+    if (pyq.exam_type !== 'IITM_BS') return false;
+
     const matchesProgram = pyq.branch === branchSlug && pyq.level === levelSlug;
-    // Multi-Select Logic: If array is empty, include all. Else, check if included.
+    
+    // Multi-Select Logic
     const matchesYear = years.length === 0 || (pyq.year && years.includes(pyq.year.toString()));
-    const matchesType = examTypes.length === 0 || (pyq.exam_type && examTypes.includes(pyq.exam_type));
+    
+    // [UPDATED] Check 'session' (Quiz 1, End Term) instead of 'exam_type'
+    const matchesType = examTypes.length === 0 || (pyq.session && examTypes.includes(pyq.session));
+    
     const matchesSubject = subjects.length === 0 || (pyq.subject && subjects.includes(pyq.subject));
     
     return matchesProgram && matchesYear && matchesType && matchesSubject;
@@ -69,11 +76,12 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                     {pyq.title}
                   </h3>
 
-                  {/* Tags Block - Rectangular Round Grey Blocks */}
+                  {/* Tags Block */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {pyq.exam_type && (
+                    {/* [UPDATED] Show Session (Quiz 1) instead of generic 'IITM_BS' */}
+                    {pyq.session && (
                         <span className="bg-gray-100 text-gray-600 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
-                            {pyq.exam_type}
+                            {pyq.session}
                         </span>
                     )}
                     {pyq.year && (
@@ -93,7 +101,6 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                   </p>
                 </div>
 
-                {/* Action Buttons: Rectangular with Royal Blue Theme */}
                 <div className="flex space-x-3 mt-auto font-sans">
                   <button 
                     className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
