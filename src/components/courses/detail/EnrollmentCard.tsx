@@ -3,14 +3,15 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, ArrowRight, Loader2, Book } from 'lucide-react';
-import { toast } from 'sonner';
+import { MapPin, Calendar, BookOpen, Loader2, Book } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { ShareButton } from '@/components/ShareButton';
+import { cn } from "@/lib/utils";
 
-interface EnrollmentCardProps {
+// Exported interface so MobileEnrollmentBar can use it
+export interface EnrollmentCardProps {
     course: Course;
     isDashboardView?: boolean;
     customEnrollHandler?: () => void;
@@ -19,6 +20,9 @@ interface EnrollmentCardProps {
     ownedAddons?: string[];
     isFreeCourse?: boolean;
     enrolling?: boolean;
+    // New props for customization
+    className?: string;
+    forceExpanded?: boolean;
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
@@ -29,7 +33,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     isFullyEnrolled = false,
     ownedAddons = [],
     isFreeCourse = false,
-    enrolling = false
+    enrolling = false,
+    className,
+    forceExpanded = false
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     
@@ -78,6 +84,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     }, [course.id, course.price]);
 
     useEffect(() => {
+        // If forceExpanded is true (e.g. mobile drawer), we don't need scroll listeners
+        if (forceExpanded) {
+            setDetailsVisible(true);
+            return;
+        }
+
         const scrollContainer = isDashboardView 
             ? cardRef.current?.closest('.overflow-y-auto') || window 
             : window;
@@ -94,7 +106,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         handleScroll();
 
         return () => scrollContainer.removeEventListener('scroll', handleScroll);
-    }, [isDashboardView]);
+    }, [isDashboardView, forceExpanded]);
 
     const formatDate = (dateString: string) => {
         if (!dateString) return "TBD";
@@ -103,12 +115,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     const renderMainButton = () => {
-        // Shared classes for all main buttons to ensure consistent mobile layout
-        // flex-1: Takes remaining space
-        // min-w-0: Allows shrinking below content size if necessary (prevents overflow)
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
 
-        // 1. Everything Bought -> "Let's Study"
         if (isFullyEnrolled && !isExpired) {
             return (
                 <Button 
@@ -121,7 +129,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 2. Partial Purchase -> "Upgrade Enrollment"
         if (isMainCourseOwned && !isExpired) {
             return (
                 <Button 
@@ -134,7 +141,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 3. New User + Has Paid Add-ons (Special Config Flow)
         if (hasAddons && !customEnrollHandler) {
              return (
                 <Button
@@ -147,7 +153,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              );
         }
 
-        // 4. Custom Handler (e.g. Free Direct Enroll)
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -157,13 +162,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     disabled={enrolling}
                 >
                     {enrolling ? <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" /> : null}
-                    <span className="sm:hidden truncate">Continue to Enroll</span>
-                    <span className="hidden sm:inline truncate">Continue with Enrollment</span>
+                    <span className="truncate">Continue Enrollment</span>
                 </Button>
             );
         } 
         
-        // 5. Standard Paid Enrollment
         return (
             <EnrollButton
                 courseId={course.id}
@@ -171,15 +174,12 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 enrollmentLink={course.enroll_now_link || undefined}
                 className={btnClasses}
             >
-                <span className="sm:hidden truncate">Continue to Enroll</span>
-                <span className="hidden sm:inline truncate">Continue Enrollment</span>
+                <span className="truncate">Continue Enrollment</span>
             </EnrollButton>
         );
     };
 
-    // --- Price Rendering Logic ---
     const renderPrice = () => {
-        // Case A: Free Base + Paid Addons => "Starts at ..."
         if ((course.price === 0 || course.price === null) && minAddonPrice !== null) {
             return (
                 <div className="flex flex-col">
@@ -189,7 +189,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // Case B: Standard Price / Discount
         return (
             <div className="flex items-baseline">
                 <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
@@ -201,9 +200,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     return (
-        <div ref={cardRef} className="lg:scale-95 lg:origin-top">
-            <div className="rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl">
-                <Card className="overflow-hidden rounded-lg font-sans bg-white">
+        <div ref={cardRef} className={cn("lg:scale-95 lg:origin-top", className)}>
+            <div className={cn("rounded-xl bg-gradient-to-b from-neutral-200 to-transparent p-0.5 shadow-xl", className ? "bg-none p-0 shadow-none" : "")}>
+                <Card className={cn("overflow-hidden rounded-lg font-sans bg-white", className ? "border-none shadow-none" : "")}>
                     <CardHeader className="p-0">
                         <img src={course.image_url || '/placeholder.svg'} alt={course.title} className="w-full h-auto object-cover aspect-video" />
                     </CardHeader>
@@ -224,7 +223,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '200px' : '0',
+                                maxHeight: detailsVisible ? '500px' : '0', // Increased max-height for safety
                                 opacity: detailsVisible ? 1 : 0,
                             }}
                         >
