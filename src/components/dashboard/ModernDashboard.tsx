@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Loader2, ArrowLeft } from "lucide-react"; 
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom"; // [CHANGED] Added useParams
 import { useToast } from "@/components/ui/use-toast";
 
 import FocusAreaModal from "./FocusAreaModal";
@@ -17,7 +17,7 @@ import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
 import RegularBatchesTab from "./RegularBatchesTab";
-import FastTrackBatchesTab from "./FastTrackBatchesTab"; // New Import
+import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
 import CourseDetail from "@/pages/CourseDetail";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -47,8 +47,11 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // View State
-  const [activeView, setActiveView] = useState<ActiveView>("studyPortal");
+  // [CHANGED] Get the tab param from the URL
+  const { tab } = useParams<{ tab?: string }>();
+  
+  // View State - Initialize based on URL param if present
+  const [activeView, setActiveView] = useState<ActiveView>((tab as ActiveView) || "studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
   // Floating Detail State
@@ -61,6 +64,21 @@ const ModernDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+
+  // [CHANGED] Effect to sync state when URL changes (e.g. back button or direct navigation)
+  useEffect(() => {
+    const targetView = (tab as ActiveView) || "studyPortal";
+    
+    if (targetView !== activeView) {
+      setIsViewLoading(true);
+      setActiveView(targetView);
+      setSelectedCourseId(null); // Reset detail view on tab change
+      
+      // Simulate loading delay for smooth transition
+      const timer = setTimeout(() => setIsViewLoading(false), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [tab, activeView]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -104,15 +122,14 @@ const ModernDashboard: React.FC = () => {
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
+  // [CHANGED] Update handleViewChange to navigate instead of setting state
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) {
       setSelectedCourseId(null);
       return; 
     }
-    setIsViewLoading(true);
-    setSelectedCourseId(null);
-    setActiveView(view);
-    setTimeout(() => setIsViewLoading(false), 800);
+    // Navigate to the new URL - the useEffect above will handle the state update and loading
+    navigate(`/dashboard/${view}`);
   };
 
   const isLoading = authLoading || loadingProfile;
