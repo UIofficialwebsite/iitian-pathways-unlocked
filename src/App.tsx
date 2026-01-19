@@ -8,7 +8,7 @@ import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper"
 import ScrollPersistence from "@/components/ScrollPersistence";
 import { Suspense, lazy } from "react";
 
-// Lazy Load Pages for Performance
+// Lazy Load Pages
 const Index = lazy(() => import("./pages/Index"));
 // REMOVED: const Auth = lazy(() => import("./pages/Auth")); 
 const CourseListing = lazy(() => import("./pages/CourseListing"));
@@ -52,16 +52,11 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollPersistence />
-            
-            <Suspense fallback={
-              <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">
-                Loading...
-              </div>
-            }>
+            <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">Loading...</div>}>
               <Routes>
                 <Route path="/" element={<Index />} />
                 
-                {/* REMOVED: <Route path="/auth" element={<Auth />} /> */}
+                {/* REMOVED: Route path="/auth" element={<Auth />} */}
                 <Route path="/student/login" element={<StudentLogin />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 
@@ -91,10 +86,10 @@ const App = () => (
                 
                 <Route path="/about" element={<About />} />
                 
-                {/* DASHBOARD ROUTE */}
+                {/* DASHBOARD */}
                 <Route path="/dashboard/:tab?" element={<Dashboard />} />
                 
-                {/* Callbacks & Verification */}
+                {/* Callbacks */}
                 <Route path="/profile/complete" element={<ProfileComplete />} />
                 <Route path="/auth/callback" element={<GoogleCallback />} />
                 <Route path="/auth/student/callback" element={<StudentGoogleCallback />} />
@@ -110,7 +105,6 @@ const App = () => (
                 <Route path="/terms-of-service" element={<TermsOfService />} />
                 <Route path="/faq" element={<FAQ />} />
                 
-                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
