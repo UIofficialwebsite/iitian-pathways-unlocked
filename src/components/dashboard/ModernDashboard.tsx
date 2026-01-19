@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
 import { Loader2, ArrowLeft } from "lucide-react"; 
-import { useNavigate, useLocation, useParams } from "react-router-dom"; // [CHANGED] Added useParams
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 import FocusAreaModal from "./FocusAreaModal";
@@ -47,10 +47,10 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // [CHANGED] Get the tab param from the URL
+  // Get the tab param from the URL
   const { tab } = useParams<{ tab?: string }>();
   
-  // View State - Initialize based on URL param if present
+  // Initialize state based on URL param
   const [activeView, setActiveView] = useState<ActiveView>((tab as ActiveView) || "studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
@@ -65,20 +65,25 @@ const ModernDashboard: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // [CHANGED] Effect to sync state when URL changes (e.g. back button or direct navigation)
+  // CORRECTED useEffect: Removed 'activeView' from dependency array
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
     
+    // If the URL tab is different from current view, trigger transition
     if (targetView !== activeView) {
       setIsViewLoading(true);
       setActiveView(targetView);
       setSelectedCourseId(null); // Reset detail view on tab change
       
-      // Simulate loading delay for smooth transition
-      const timer = setTimeout(() => setIsViewLoading(false), 800);
+      const timer = setTimeout(() => {
+        setIsViewLoading(false);
+      }, 800);
+
+      // Cleanup function only runs if tab changes again rapidly
       return () => clearTimeout(timer);
     }
-  }, [tab, activeView]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]); // Only re-run when URL 'tab' changes
 
   useEffect(() => {
     if (authLoading) return;
@@ -122,13 +127,12 @@ const ModernDashboard: React.FC = () => {
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
-  // [CHANGED] Update handleViewChange to navigate instead of setting state
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) {
       setSelectedCourseId(null);
       return; 
     }
-    // Navigate to the new URL - the useEffect above will handle the state update and loading
+    // Update URL, let useEffect handle the state and loading
     navigate(`/dashboard/${view}`);
   };
 
