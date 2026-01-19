@@ -61,10 +61,11 @@ const Auth = () => {
       {/* Background container */}
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
-        {/* THE MODAL CARD - Refactored for responsiveness */}
-        <div className="bg-white w-full max-w-md rounded-3xl relative px-6 py-10 text-center shadow-xl transition-all duration-300">
+        {/* THE MODAL CARD */}
+        {/* Restored max-w-[420px] to ensure it doesn't look like generic modals, while keeping w-full for small screens */}
+        <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
           
-          {/* Illustration Area */}
+          {/* Illustration Area - Responsive dimensions */}
           <div className="mb-8 flex justify-center">
             <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
               <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
@@ -74,7 +75,7 @@ const Auth = () => {
             </div>
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
+          <h2 className="text-xl md:text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
             Sign in to your account <br /> using Google
           </h2>
 
@@ -103,7 +104,7 @@ const Auth = () => {
           </div>
 
           {/* FOOTER TERMS */}
-          <div className="mt-14 text-xs md:text-sm text-[#717171] leading-relaxed">
+          <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
             By continuing you agree to our <br />
             <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
           </div>
