@@ -54,12 +54,13 @@ const LoginPopupContent = () => {
       {/* Centered Content Block */}
       <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
         
-        {/* [CHANGED] New Image Section */}
+        {/* [CHANGED] Image Size Increased significantly */}
         <div className="mb-6 flex justify-center w-full">
           <img 
             src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
             alt="Login Illustration" 
-            className="h-[180px] w-auto object-contain hover:scale-105 transition-transform duration-300" 
+            // Changed from h-[180px] to h-[280px] (mobile) and h-[350px] (desktop)
+            className="h-[280px] md:h-[350px] w-auto object-contain hover:scale-105 transition-transform duration-300" 
           />
         </div>
 
