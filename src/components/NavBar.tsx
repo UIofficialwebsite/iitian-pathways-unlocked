@@ -44,13 +44,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import GoogleAuth from "@/components/auth/GoogleAuth";
 
-// --- LOGIN POPUP COMPONENT (Design matches Auth.tsx) ---
+// --- LOGIN POPUP COMPONENT ---
 const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    // [MATCHED DIMENSIONS] w-full max-w-[420px] rounded-[28px] px-6 pt-10 pb-8
-    <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 pt-10 pb-8 text-center">
+    // [CHANGED] added h-[85vh] to increase height significantly as requested
+    <div className="bg-white w-full max-w-[420px] h-[85vh] rounded-[28px] relative px-6 pt-10 pb-8 text-center flex flex-col justify-center">
       
       {/* Illustration Area */}
       <div className="mb-8 flex justify-center">
@@ -62,17 +62,14 @@ const LoginPopupContent = () => {
         </div>
       </div>
 
-      {/* [UPDATED TEXT] Title */}
       <h2 className="text-[21px] font-bold text-[#1a1a1a] text-center mb-6 leading-tight">
         Please Sign in / Register to continue
       </h2>
 
       <div className="space-y-4">
         <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
-        {/* Email option removed as requested */}
       </div>
 
-      {/* [UPDATED TEXT] Footer single line */}
       <div className="mt-14 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
@@ -84,7 +81,6 @@ const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
   
-  // Mobile state management
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
