@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -10,7 +9,7 @@ export interface IITMPyqData {
   subject?: string;
   branch?: string;
   level?: string;
-  session?: string;
+  session?: string; // This is where "Quiz 1", "End Term" goes
   shift?: string;
   file_link?: string;
   content_url?: string;
@@ -30,10 +29,10 @@ export const useIITMPyqsManager = () => {
           description: pyqData.description,
           year: pyqData.year,
           subject: pyqData.subject,
-          exam_type: 'IITM_BS',
+          exam_type: 'IITM_BS', // Hardcoded as the main category
           branch: pyqData.branch,
           level: pyqData.level,
-          session: pyqData.session,
+          session: pyqData.session, // Sub-exam name stored here
           shift: pyqData.shift,
           file_link: pyqData.file_link,
           content_url: pyqData.content_url,
@@ -69,6 +68,7 @@ export const useIITMPyqsManager = () => {
     }
   }, [toast]);
 
+  // ... rest of update/delete functions (same as before) ...
   const updateIITMPyq = useCallback(async (pyqId: string, updateData: Partial<IITMPyqData>): Promise<boolean> => {
     setLoading(true);
     try {
