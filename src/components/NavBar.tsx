@@ -49,24 +49,22 @@ const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    // [CHANGED] h-full ensures content stretches to fill the tall dialog
-    <div className="bg-white w-full h-full relative px-8 pt-12 pb-8 text-center flex flex-col font-sans">
+    <div className="bg-white w-full h-full relative px-8 pt-4 pb-8 text-center flex flex-col font-sans">
       
       {/* Centered Content Block */}
       <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
         
-        {/* Illustration Area */}
-        <div className="mb-10 flex justify-center transform scale-125">
-          <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
-            <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
-              <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
-              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
-            </div>
-          </div>
+        {/* [CHANGED] New Image Section */}
+        <div className="mb-6 flex justify-center w-full">
+          <img 
+            src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
+            alt="Login Illustration" 
+            className="h-[180px] w-auto object-contain hover:scale-105 transition-transform duration-300" 
+          />
         </div>
 
-        {/* [CHANGED] Heading Row with PILL ICON */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 w-full">
+        {/* Heading Row with PILL ICON */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full">
             <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
               Sign in / Register to continue
             </h2>
@@ -84,7 +82,7 @@ const LoginPopupContent = () => {
         </div>
       </div>
 
-      {/* [CHANGED] Footer pushed to bottom */}
+      {/* Footer pushed to bottom */}
       <div className="mt-auto pt-6 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
@@ -233,7 +231,6 @@ const NavBar = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
                 </DialogTrigger>
-                {/* [CHANGED] Passed p-0 and border-none to let inner card control layout */}
                 <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
                   <LoginPopupContent />
                 </DialogContent>
