@@ -16,12 +16,16 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
     return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  // Custom Icons
+  const calendarIcon = "https://i.ibb.co/S482HQ1X/image.png";
+  const studentIcon = "https://i.ibb.co/zh2tG4Yk/image.png";
+
   return (
     <div className="relative w-full overflow-hidden font-['Inter',sans-serif] bg-gradient-to-br from-[#f0f4ff] via-[#e6e9ff] to-[#f9f7ff]">
       {/* Light Rays Effect */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.8)_0%,transparent_40%)]" />
 
-      {/* Main Content Container: Reduced internal padding py-6 md:py-8 to prevent 'lagging' look */}
+      {/* Main Content Container */}
       <div className="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-6 md:py-8">
         
         {/* Breadcrumbs */}
@@ -46,12 +50,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
             {course.title}
         </h1>
 
-        {/* Info Rows (Using Emojis) */}
+        {/* Info Rows (Using Custom Images) */}
         <div className="flex flex-col gap-3 mb-6">
             {/* Target Audience Row */}
             <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
-               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center text-[14px] shrink-0">
-                 🎓
+               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">
+                 <img src={studentIcon} alt="Target Audience" className="w-full h-full object-contain" />
                </div>
                <span>
                  For {course.exam_category || "All"} Aspirants
@@ -60,8 +64,8 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
 
             {/* Dates Row */}
             <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
-               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center text-[14px] shrink-0">
-                 📅
+               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">
+                 <img src={calendarIcon} alt="Calendar" className="w-full h-full object-contain" />
                </div>
                <div className="flex flex-wrap gap-x-2 gap-y-1">
                  <span>Starts on {formatDate(course.start_date || "")}</span>
@@ -71,21 +75,21 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
             </div>
         </div>
 
-        {/* Extra Details (Grey Blocks) - Enrolled Student Count REMOVED */}
+        {/* Extra Details (Purple/Violet Blocks with Light Black Border) */}
         <div className="flex flex-wrap gap-3 mt-2">
             {/* Rating */}
-            <div className="bg-[#f1f3f6] border border-[#e0e0e0] rounded-md px-3 py-1.5 text-[13px] text-black font-normal">
+            <div className="bg-[#ede9fe] border border-black/10 rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
                Rating: {course.rating || "4.8"}/5
             </div>
             
             {/* Language */}
-            <div className="bg-[#f1f3f6] border border-[#e0e0e0] rounded-md px-3 py-1.5 text-[13px] text-black font-normal">
+            <div className="bg-[#ede9fe] border border-black/10 rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
                Language: {course.language || "English"}
             </div>
              
              {/* Bestseller Tag */}
              {course.bestseller && (
-                <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-md px-3 py-1.5 text-[13px] text-black font-normal">
+                <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
                   Bestseller
                 </div>
              )}
