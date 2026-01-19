@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import NavBar from "@/components/NavBar";
 import GoogleAuth from "@/components/auth/GoogleAuth";
@@ -14,6 +14,10 @@ const Auth = () => {
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Get the return URL from location state (if redirected by AuthWrapper) or default to home
+  const from = location.state?.from?.pathname || "/";
 
   useEffect(() => {
     const checkProfileStatus = async () => {
@@ -26,7 +30,8 @@ const Auth = () => {
             .single();
 
           if (profile?.profile_completed) {
-            navigate('/');
+            // Redirect back to the original page
+            navigate(from, { replace: true });
           } else {
             setShowProfileSetup(true);
           }
@@ -40,7 +45,7 @@ const Auth = () => {
     if (!authLoading) {
       checkProfileStatus();
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, from]);
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">Loading...</div>;
 
@@ -49,7 +54,7 @@ const Auth = () => {
       <>
         <NavBar />
         <div className="min-h-screen flex items-center justify-center bg-white p-4 pt-24 font-['Inter',sans-serif]">
-          <ProfileSetup onComplete={() => navigate('/')} />
+          <ProfileSetup onComplete={() => navigate(from, { replace: true })} />
         </div>
       </>
     );
@@ -62,10 +67,10 @@ const Auth = () => {
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
         {/* THE MODAL CARD */}
-        {/* Restored max-w-[420px] to ensure it doesn't look like generic modals, while keeping w-full for small screens */}
+        {/* max-w-[420px] ensures the specific popup width you requested on PC */}
         <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
           
-          {/* Illustration Area - Responsive dimensions */}
+          {/* Illustration Area */}
           <div className="mb-8 flex justify-center">
             <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
               <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
