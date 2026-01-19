@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 // Injecting the user's specific CSS styles
 const customStyles = `
@@ -167,6 +168,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [manualPhone, setManualPhone] = useState("");
   const { toast } = useToast();
+  const { openLogin } = useLoginModal();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -186,8 +188,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
   const handleEnrollClick = async () => {
     if (isAuthenticated === false) {
-      localStorage.setItem('authRedirectUrl', window.location.pathname);
-      window.location.href = '/auth';
+      // Open the global login modal instead of redirecting
+      openLogin();
       return;
     }
 
@@ -200,7 +202,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        window.location.href = '/auth';
+        openLogin();
         return;
       }
 

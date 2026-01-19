@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper";
+import { LoginModalProvider } from "@/context/LoginModalContext";
+import GlobalLoginModal from "@/components/auth/GlobalLoginModal";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import { Suspense, lazy } from "react";
 
@@ -51,70 +53,73 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <ScrollPersistence />
-            
-            <Suspense fallback={
-              <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">
-                Loading...
-              </div>
-            }>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                
-                {/* Auth Routes */}
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/student/login" element={<StudentLogin />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                
-                {/* Courses */}
-                <Route path="/courses" element={<Courses />} />
-                <Route path="/courses/category/:examCategory" element={<Courses />} />
-                <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
-                <Route path="/courses/:courseId" element={<CourseDetail />} />
-                <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
-                
-                {/* Exam Prep */}
-                <Route path="/exam-preparation" element={<ExamPreparation />} />
-                <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
-                <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
-                
-                {/* IITM BS ROUTES */}
-                <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
-                <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
-                <Route path="/news/:newsId" element={<NewsDetail />} />
-                
-                <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
-                
-                {/* CAREER ROUTES */}
-                <Route path="/career" element={<Career />} />
-                <Route path="/career/openings" element={<CareerOpportunities />} />
-                <Route path="/career/job/:jobId" element={<JobDetails />} />
-                
-                <Route path="/about" element={<About />} />
-                
-                {/* DASHBOARD ROUTE */}
-                <Route path="/dashboard/:tab?" element={<Dashboard />} />
-                
-                {/* Callbacks & Verification */}
-                <Route path="/profile/complete" element={<ProfileComplete />} />
-                <Route path="/auth/callback" element={<GoogleCallback />} />
-                <Route path="/auth/student/callback" element={<StudentGoogleCallback />} />
-                <Route path="/auth/admin/callback" element={<AdminGoogleCallback />} />
-                
-                {/* Admin */}
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                
-                {/* Footer / Legal */}
-                <Route path="/intern-verification" element={<InternVerification />} />
-                <Route path="/employee-verification" element={<EmployeeVerification />} />
-                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/faq" element={<FAQ />} />
-                
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <LoginModalProvider>
+              <ScrollPersistence />
+              <GlobalLoginModal />
+              
+              <Suspense fallback={
+                <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">
+                  Loading...
+                </div>
+              }>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  
+                  {/* Auth Routes */}
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/student/login" element={<StudentLogin />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  
+                  {/* Courses */}
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/category/:examCategory" element={<Courses />} />
+                  <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
+                  <Route path="/courses/:courseId" element={<CourseDetail />} />
+                  <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
+                  
+                  {/* Exam Prep */}
+                  <Route path="/exam-preparation" element={<ExamPreparation />} />
+                  <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
+                  <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
+                  
+                  {/* IITM BS ROUTES */}
+                  <Route path="/exam-preparation/iitm-bs/notes/:branch/:level/:subjectSlug" element={<IITMBSSubjectNotesPage />} />
+                  <Route path="/exam-preparation/iitm-bs/*" element={<IITMBSPrep />} />
+                  <Route path="/news/:newsId" element={<NewsDetail />} />
+                  
+                  <Route path="/iitm-tools/:tool?/:branch?/:level?" element={<IITMCalculators />} />
+                  
+                  {/* CAREER ROUTES */}
+                  <Route path="/career" element={<Career />} />
+                  <Route path="/career/openings" element={<CareerOpportunities />} />
+                  <Route path="/career/job/:jobId" element={<JobDetails />} />
+                  
+                  <Route path="/about" element={<About />} />
+                  
+                  {/* DASHBOARD ROUTE */}
+                  <Route path="/dashboard/:tab?" element={<Dashboard />} />
+                  
+                  {/* Callbacks & Verification */}
+                  <Route path="/profile/complete" element={<ProfileComplete />} />
+                  <Route path="/auth/callback" element={<GoogleCallback />} />
+                  <Route path="/auth/student/callback" element={<StudentGoogleCallback />} />
+                  <Route path="/auth/admin/callback" element={<AdminGoogleCallback />} />
+                  
+                  {/* Admin */}
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  
+                  {/* Footer / Legal */}
+                  <Route path="/intern-verification" element={<InternVerification />} />
+                  <Route path="/employee-verification" element={<EmployeeVerification />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </LoginModalProvider>
           </BrowserRouter>
         </TooltipProvider>
       </BackendIntegratedWrapper>
