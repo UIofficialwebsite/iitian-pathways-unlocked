@@ -18,6 +18,7 @@ const Auth = () => {
   // Redirect back to where the user came from, or default to home
   const from = location.state?.from?.pathname || "/";
 
+  // Check if user is logged in. If so, redirect or show profile setup.
   useEffect(() => {
     const checkProfileStatus = async () => {
       if (user) {
@@ -47,6 +48,7 @@ const Auth = () => {
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">Loading...</div>;
 
+  // If the user is logged in but hasn't completed their profile, show setup.
   if (showProfileSetup) {
     return (
       <>
@@ -58,16 +60,17 @@ const Auth = () => {
     );
   }
 
+  // RENDER POPUP ONLY IF NOT LOGGED IN
   return (
     <>
       <NavBar />
       {/* Background container */}
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
-        {/* THE MODAL CARD - Increased max-width to 480px to match the design source */}
+        {/* THE MODAL CARD */}
         <div className="bg-white w-full max-w-[480px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
           
-          {/* IMAGE SECTION (Updated to match NavBar popup) */}
+          {/* IMAGE SECTION */}
           <div className="mb-4 flex justify-center w-full">
             <img 
               src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
@@ -76,7 +79,7 @@ const Auth = () => {
             />
           </div>
 
-          {/* HEADER SECTION (Updated with Pill Icon) */}
+          {/* HEADER SECTION with Pill Icon */}
           <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full">
             <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
               Sign in / Register to continue
