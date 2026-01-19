@@ -122,8 +122,9 @@ const IITMBSPrep = () => {
     Array.from(new Set(currentProgramPyqs.map(p => p.year?.toString()).filter(Boolean))).sort((a, b) => Number(b) - Number(a))
   , [currentProgramPyqs]);
 
+  // [UPDATED] Uses 'session' instead of 'exam_type' to get Quiz 1, End Term, etc.
   const dynamicExamTypes = useMemo(() => 
-    Array.from(new Set(currentProgramPyqs.map(p => p.exam_type).filter(Boolean))).sort()
+    Array.from(new Set(currentProgramPyqs.map(p => p.session).filter(Boolean))).sort()
   , [currentProgramPyqs]);
 
   const dynamicPyqSubjects = useMemo(() => 
