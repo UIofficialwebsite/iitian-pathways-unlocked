@@ -14,7 +14,7 @@ import {
 import { toast } from 'sonner';
 
 import NavBar from '@/components/NavBar';
-import Footer from '@/components/Footer'; // Import Footer
+import Footer from '@/components/Footer'; 
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
@@ -106,7 +106,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // Check Enrollment Status (Simple Check)
+        // Check Enrollment Status
         if (user) {
           const { data: userEnrollments } = await supabase
             .from('enrollments')
