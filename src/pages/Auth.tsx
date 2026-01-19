@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-import { X } from "lucide-react";
 import NavBar from "@/components/NavBar";
 import GoogleAuth from "@/components/auth/GoogleAuth";
 import EmailAuth from "@/components/auth/EmailAuth";
@@ -65,22 +64,31 @@ const Auth = () => {
       {/* Background container */}
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
-        {/* THE MODAL CARD - Uses responsive classes instead of fixed pixels */}
-        <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
+        {/* THE MODAL CARD - Increased max-width to 480px to match the design source */}
+        <div className="bg-white w-full max-w-[480px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
           
-          {/* Illustration Area - Responsive dimensions */}
-          <div className="mb-8 flex justify-center">
-            <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
-              <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
-                <div className="absolute top-1.5 w-4 h-1 bg-[#1a1a1a] rounded-sm" />
-                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
-              </div>
-            </div>
+          {/* IMAGE SECTION (Updated to match NavBar popup) */}
+          <div className="mb-4 flex justify-center w-full">
+            <img 
+              src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
+              alt="Login Illustration" 
+              className="h-[200px] md:h-[280px] w-auto object-contain" 
+            />
           </div>
 
-          <h2 className="text-xl md:text-2xl font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
-            Sign in to your account <br /> using Google
-          </h2>
+          {/* HEADER SECTION (Updated with Pill Icon) */}
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full">
+            <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
+              Sign in / Register to continue
+            </h2>
+            
+            {/* The Pill Icon */}
+            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full cursor-default shadow-sm">
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+            </div>
+          </div>
 
           <div className="space-y-4">
             <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
