@@ -1,103 +1,298 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Course } from '@/components/admin/courses/types';
+import { cn } from "@/lib/utils";
 
-interface CourseHeaderProps {
-  course: Course;
-  isDashboardView?: boolean;
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+
+import NavBar from '@/components/NavBar';
+import Footer from '@/components/Footer'; 
+import StickyTabNav from '@/components/courses/detail/StickyTabNav';
+import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
+import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
+import CourseHeader from '@/components/courses/detail/CourseHeader';
+import FeaturesSection from '@/components/courses/detail/FeaturesSection';
+import AboutSection from '@/components/courses/detail/AboutSection';
+import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
+import ScheduleSection from '@/components/courses/detail/ScheduleSection';
+import SSPPortalSection from '@/components/courses/detail/SSPPortalSection';
+import FAQSection from '@/components/courses/detail/FAQSection';
+import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
+import SubjectsSection from '@/components/courses/detail/SubjectsSection';
+import { useAuth } from '@/hooks/useAuth';
+
+interface SimpleAddon {
+  id: string;
+  subject_name: string;
+  price: number;
 }
 
-const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) => {
-  const navigate = useNavigate();
+interface BatchScheduleItem {
+  id: string;
+  course_id: string;
+  batch_name: string;
+  subject_name: string;
+  file_link: string;
+}
 
-  // Helper to format dates
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "TBD";
-    return new Date(dateString).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+interface CourseFaq {
+  question: string;
+  answer: string;
+}
+
+const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
+  const { courseId: urlCourseId } = useParams<{ courseId: string }>();
+  const courseId = customCourseId || urlCourseId;
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [course, setCourse] = useState<Course | null>(null);
+  const [addons, setAddons] = useState<SimpleAddon[]>([]); 
+  const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
+  const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
+  
+  const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
+  const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [enrolling, setEnrolling] = useState(false);
+
+  const sectionRefs = {
+    features: useRef<HTMLDivElement>(null),
+    curriculum: useRef<HTMLDivElement>(null),
+    about: useRef<HTMLDivElement>(null),
+    moreDetails: useRef<HTMLDivElement>(null),
+    schedule: useRef<HTMLDivElement>(null),
+    ssp: useRef<HTMLDivElement>(null),
+    access: useRef<HTMLDivElement>(null),
+    faqs: useRef<HTMLDivElement>(null),
   };
 
-  // Custom Icons
-  const calendarIcon = "https://i.ibb.co/S482HQ1X/image.png";
-  const studentIcon = "https://i.ibb.co/zh2tG4Yk/image.png";
+  useEffect(() => {
+    const fetchCourseData = async () => {
+      if (!courseId) {
+        setError('Course ID is missing.');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const [courseResult, addonsResult, scheduleResult, faqResult] = await Promise.all([
+          supabase.from('courses').select('*').eq('id', courseId).maybeSingle(),
+          supabase.from('course_addons').select('*').eq('course_id', courseId),
+          supabase.from('batch_schedule').select('*').eq('course_id', courseId),
+          supabase.from('course_faqs').select('question, answer').eq('course_id', courseId),
+        ]);
+
+        if (courseResult.error) throw courseResult.error;
+        if (!courseResult.data) { setError("Course not found"); return; }
+        
+        const fetchedCourse = courseResult.data as Course;
+        setCourse(fetchedCourse);
+
+        if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
+        if (faqResult.data) setFaqs(faqResult.data as any);
+        if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
+
+        if (user) {
+          const { data: userEnrollments } = await supabase
+            .from('enrollments')
+            .select('subject_name, status')
+            .eq('user_id', user.id)
+            .eq('course_id', courseId)
+            .neq('status', 'FAILED');
+
+          if (userEnrollments && userEnrollments.length > 0) {
+            const ownedSubjects: string[] = [];
+            let mainOwned = false;
+
+            userEnrollments.forEach(enrollment => {
+              const status = enrollment.status?.toLowerCase() || '';
+              const isSuccess = status === 'success' || status === 'paid' || status === 'active';
+
+              if (isSuccess) {
+                if (enrollment.subject_name) {
+                  ownedSubjects.push(enrollment.subject_name);
+                } else {
+                  mainOwned = true;
+                }
+              }
+            });
+
+            setOwnedAddons(ownedSubjects);
+            setIsMainCourseOwned(mainOwned);
+          }
+        }
+
+      } catch (err: any) {
+        console.error("Fetch Error", err);
+        setError(err.message || 'An unexpected error occurred.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourseData();
+  }, [courseId, user]);
+
+  const hasOptionalItems = addons.length > 0;
+
+  const isFullyEnrolled = useMemo(() => {
+    if (!isMainCourseOwned) return false;
+    if (!hasOptionalItems) return true; 
+    return addons.every(addon => ownedAddons.includes(addon.subject_name));
+  }, [isMainCourseOwned, addons, ownedAddons, hasOptionalItems]);
+  
+  const handleConfigClick = () => {
+    navigate(`/courses/${courseId}/configure`);
+  };
+
+  const handleFreeEnroll = async () => {
+    if (!user) {
+      toast.error("Please login to enroll.");
+      navigate('/auth');
+      return;
+    }
+
+    if (!course) return;
+
+    try {
+      setEnrolling(true);
+      
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: course.id,
+          amount: 0,
+          status: 'active',
+          payment_id: 'free_enrollment',
+          subject_name: null 
+        });
+
+      if (enrollError) throw enrollError;
+
+      toast.success("Successfully enrolled in the batch!");
+      setIsMainCourseOwned(true);
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast.error("Enrollment failed. Please try again.");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  let customEnrollHandler: (() => void) | undefined = undefined;
+
+  if (hasOptionalItems) {
+    customEnrollHandler = handleConfigClick;
+  } else if (course && (course.price === 0 || course.price === null)) {
+    customEnrollHandler = handleFreeEnroll;
+  }
+
+  if (loading) {
+    return (
+      <div className={cn("min-h-screen bg-background", !isDashboardView && "pt-20")}>
+        {!isDashboardView && <NavBar />}
+        <div className="max-w-[1440px] mx-auto px-4 py-12 space-y-8">
+          <Skeleton className="h-12 w-3/4" />
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8"><Skeleton className="h-64 w-full" /></div>
+            <div className="lg:col-span-1"><Skeleton className="h-96 w-full" /></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !course) {
+    return (
+      <div className={cn("min-h-screen bg-background flex items-center justify-center", !isDashboardView && "pt-20")}>
+        {!isDashboardView && <NavBar />}
+        <Alert variant="destructive" className="max-w-lg mx-auto">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'features', label: 'Features' },
+    ...((course.subject || addons.length > 0) ? [{ id: 'curriculum', label: 'Subjects' }] : []),
+    { id: 'about', label: 'About' },
+    { id: 'moreDetails', label: 'More Details' },
+    { id: 'schedule', label: 'Schedule' },
+    { id: 'ssp', label: 'SSP Portal' },
+    { id: 'access', label: 'Course Access' },
+    { id: 'faqs', label: 'FAQs' },
+  ];
+
+  const commonEnrollmentProps = {
+    course,
+    isDashboardView,
+    isMainCourseOwned,
+    isFullyEnrolled,
+    ownedAddons,
+    customEnrollHandler,
+    isFreeCourse: course.price === 0 || course.price === null,
+    enrolling
+  };
 
   return (
-    <div className="relative w-full overflow-hidden font-['Inter',sans-serif] bg-gradient-to-br from-[#f0f4ff] via-[#e6e9ff] to-[#f9f7ff]">
-      {/* Light Rays Effect */}
-      <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.8)_0%,transparent_40%)]" />
+    // Changed pt-20 to pt-16 to reduce space above header
+    <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-16")}>
+       {!isDashboardView && <NavBar />}
+       
+       <main className="w-full">
+         <CourseHeader course={course} isDashboardView={isDashboardView} />
 
-      {/* Main Content Container */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-6 md:py-8">
-        
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#4b4b4b] mb-4 font-medium flex-wrap">
-             <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/')}>
-                <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-             </span>
-             <span className="text-[#b0b0b0]">&rsaquo;</span>
-             <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/courses')}>Courses</span>
-             {course.exam_category && (
-               <>
-                 <span className="text-[#b0b0b0]">&rsaquo;</span>
-                 <span className="uppercase">{course.exam_category}</span>
-               </>
-             )}
-             <span className="text-[#b0b0b0]">&rsaquo;</span>
-             <span className="text-black/60 truncate max-w-[200px] sm:max-w-none">{course.title}</span>
-        </nav>
+         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
-        {/* Hero Title */}
-        <h1 className="text-3xl md:text-[40px] font-[800] text-[#2d2d2d] leading-[1.2] mb-5 tracking-tight max-w-5xl">
-            {course.title}
-        </h1>
-
-        {/* Info Rows (Using Custom Images) */}
-        <div className="flex flex-col gap-3 mb-6">
-            {/* Target Audience Row */}
-            <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
-               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">
-                 <img src={studentIcon} alt="Target Audience" className="w-full h-full object-contain" />
-               </div>
-               <span>
-                 For {course.exam_category || "All"} Aspirants
-               </span>
-            </div>
-
-            {/* Dates Row */}
-            <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
-               <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">
-                 <img src={calendarIcon} alt="Calendar" className="w-full h-full object-contain" />
-               </div>
-               <div className="flex flex-wrap gap-x-2 gap-y-1">
-                 <span>Starts on {formatDate(course.start_date || "")}</span>
-                 <span className="text-[#ccc]">|</span>
-                 <span>Ends on {formatDate(course.end_date || "")}</span>
-               </div>
-            </div>
-        </div>
-
-        {/* Extra Details (Purple/Violet Blocks with Light Black Border) */}
-        <div className="flex flex-wrap gap-3 mt-2">
-            {/* Rating */}
-            <div className="bg-[#ede9fe] border border-black/10 rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
-               Rating: {course.rating || "4.8"}/5
-            </div>
-            
-            {/* Language */}
-            <div className="bg-[#ede9fe] border border-black/10 rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
-               Language: {course.language || "English"}
-            </div>
+         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24 lg:pb-10">
+           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
              
-             {/* Bestseller Tag */}
-             {course.bestseller && (
-                <div className="bg-[#fffbeb] border border-[#fef3c7] rounded-md px-3 py-1.5 text-[13px] text-black font-medium">
-                  Bestseller
+             <div className="lg:col-span-7 space-y-8">
+               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
+               <div ref={sectionRefs.curriculum}>
+                  <SubjectsSection course={course} addons={addons} />
+               </div>
+               <div ref={sectionRefs.about}><AboutSection course={course} /></div>
+               <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
+               <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
+               <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
+               <div ref={sectionRefs.access}><CourseAccessGuide /></div>
+               <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
+             </div>
+             
+             {/* Desktop Sidebar */}
+             <aside className="hidden lg:block lg:col-span-5 relative">
+                <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
+                  <EnrollmentCard {...commonEnrollmentProps} />
                 </div>
-             )}
-        </div>
+             </aside>
 
-      </div>
+             {/* Mobile Fixed Bottom Bar */}
+             <div className="lg:hidden block">
+               <MobileEnrollmentBar {...commonEnrollmentProps} />
+             </div>
+
+           </div>
+         </div>
+       </main>
+       
+       {!isDashboardView && <Footer />}
     </div>
   );
 };
 
-export default CourseHeader;
+export default CourseDetail;
