@@ -14,7 +14,7 @@ import Footer from '@/components/Footer';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
-import CourseHeader from '@/components/courses/detail/CourseHeader'; // Imported here
+import CourseHeader from '@/components/courses/detail/CourseHeader';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -249,11 +249,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   };
 
   return (
-    <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-20")}>
+    // Changed pt-20 to pt-16 to reduce space above header
+    <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-16")}>
        {!isDashboardView && <NavBar />}
        
        <main className="w-full">
-         {/* Clean Course Header Component */}
          <CourseHeader course={course} isDashboardView={isDashboardView} />
 
          <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
@@ -274,14 +274,14 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
              </div>
              
-             {/* Desktop Sidebar - Hidden on Mobile */}
+             {/* Desktop Sidebar */}
              <aside className="hidden lg:block lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
                   <EnrollmentCard {...commonEnrollmentProps} />
                 </div>
              </aside>
 
-             {/* Mobile Fixed Bottom Bar - Hidden on Desktop */}
+             {/* Mobile Fixed Bottom Bar */}
              <div className="lg:hidden block">
                <MobileEnrollmentBar {...commonEnrollmentProps} />
              </div>
