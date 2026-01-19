@@ -55,41 +55,46 @@ const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    <div className="bg-white w-full h-auto min-h-[500px] flex flex-col font-sans px-4 pb-8">
+    // [CHANGED] Added overflow-y-auto for zoom safety and h-full to fill the container
+    <div className="bg-white w-full h-full flex flex-col font-sans px-4 pb-6 overflow-y-auto no-scrollbar">
       
       {/* Centered Content Block */}
-      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto pt-4">
+      {/* [CHANGED] min-h-0 allows flex child to shrink properly on zoom */}
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto py-6">
         
         {/* Image Section */}
-        <div className="mb-4 flex justify-center w-full">
+        <div className="mb-6 flex justify-center w-full shrink-0">
           <img 
             src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
             alt="Login Illustration" 
-            className="h-[200px] md:h-[280px] w-auto object-contain" 
+            // [CHANGED] Reduced desktop height (md:h-[220px]) to keep it "less big"
+            className="h-[180px] md:h-[220px] w-auto object-contain" 
           />
         </div>
 
         {/* Heading Row with PILL ICON */}
-        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full">
-            <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full shrink-0">
+            <h2 className="text-[22px] md:text-[26px] font-bold text-black/80 font-sans leading-tight text-center">
               Sign in / Register to continue
             </h2>
             
             {/* The Pill Icon Implementation */}
-            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full cursor-default shadow-sm">
+            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full cursor-default shadow-sm shrink-0">
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
             </div>
         </div>
 
-        <div className="w-full space-y-4 px-4">
+        {/* Auth Buttons Area */}
+        <div className="w-full space-y-4 px-2 sm:px-4 shrink-0">
           <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
         </div>
       </div>
 
       {/* Footer */}
-      <div className="mt-8 text-center text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50 pt-6">
+      {/* [CHANGED] Text size adjusted for mobile (text-[10px]) to prevent bad wrapping */}
+      <div className="mt-auto pt-4 text-center text-[10px] xs:text-[11px] sm:text-[13px] text-[#717171] leading-tight border-t border-gray-100/50 shrink-0">
         By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
       </div>
     </div>
@@ -252,8 +257,7 @@ const NavBar = () => {
                     <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
                   </DialogTrigger>
                   <DialogContent 
-                    // [CHANGED] Custom animation to slide in from bottom on PC
-                    className="data-[state=open]:slide-in-from-bottom-[50%] data-[state=closed]:slide-out-to-bottom-[50%] data-[state=open]:slide-in-from-top-auto data-[state=closed]:slide-out-to-top-auto transition-all duration-500"
+                    className="data-[state=open]:slide-in-from-bottom-[50%] data-[state=closed]:slide-out-to-bottom-[50%] data-[state=open]:slide-in-from-top-auto data-[state=closed]:slide-out-to-top-auto transition-all duration-500 max-h-[90vh]"
                   >
                     <LoginPopupContent />
                   </DialogContent>
@@ -330,8 +334,6 @@ const NavBar = () => {
 
                 {!user && (
                   <div className="p-6 bg-white border-t border-[#eeeeee] flex justify-center mt-auto">
-                    {/* Mobile Login Trigger uses Drawer via parent conditional logic or explicit here */}
-                    {/* Since this is inside the Sheet, we need to trigger the Login Drawer from here */}
                     <div className="w-full flex justify-center">
                        <Button 
                          onClick={() => {
