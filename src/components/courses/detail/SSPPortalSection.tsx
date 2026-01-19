@@ -1,35 +1,41 @@
 import React from 'react';
-import { Video, FileText, LayoutDashboard, BarChart3, MessageCircle, ClipboardCheck } from "lucide-react";
+import { FileText, LayoutDashboard, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SSPPortalSection: React.FC = () => {
   const features = [
     {
-      icon: Video,
+      // Custom Icon Provided
+      iconUrl: "https://i.ibb.co/Jw0JZThT/image.png",
       title: "Recorded Lectures",
       description: "HD recordings available for unlimited replay.",
     },
     {
+      // Default Icon
       icon: FileText,
       title: "Study Materials",
       description: "PDFs, notes, and practice sheets vault.",
     },
     {
+      // Default Icon
       icon: LayoutDashboard,
       title: "Student Dashboard",
       description: "Track goals and manage your schedule.",
     },
     {
-      icon: BarChart3,
+      // Custom Icon Provided
+      iconUrl: "https://i.ibb.co/ynmGbf4Y/image.png",
       title: "Progress Tracking",
       description: "Data-driven insights on your performance.",
     },
     {
-      icon: MessageCircle,
+      // Custom Icon Provided
+      iconUrl: "https://i.ibb.co/8DJp3Yj1/image.png",
       title: "Doubt Resolution",
       description: "Rapid answers from expert instructors.",
     },
     {
+      // Default Icon
       icon: ClipboardCheck,
       title: "Test & Practice",
       description: "Assignments and simulated mock exams.",
@@ -72,7 +78,15 @@ const SSPPortalSection: React.FC = () => {
                    <div>
                      {/* Icon in White Circular Frame */}
                      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-white flex items-center justify-center shadow-sm mb-3 group-hover:shadow-md transition-shadow">
-                        <Icon className="w-4 h-4 md:w-5 md:h-5 text-black/80" />
+                        {feature.iconUrl ? (
+                          <img 
+                            src={feature.iconUrl} 
+                            alt={feature.title} 
+                            className="w-5 h-5 md:w-6 md:h-6 object-contain"
+                          />
+                        ) : (
+                          Icon && <Icon className="w-4 h-4 md:w-5 md:h-5 text-black/80" />
+                        )}
                      </div>
 
                      <h3 className="text-[13px] md:text-[15px] font-semibold text-black leading-tight mb-1.5">
