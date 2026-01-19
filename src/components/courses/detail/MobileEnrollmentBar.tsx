@@ -68,21 +68,20 @@ export function MobileEnrollmentBar({
       {/* Pricing Info */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
-          {/* Reduced font size: text-xl (was 2xl) */}
-          <span className="text-xl font-extrabold tracking-tight text-blue-800">
+          {/* Changed font-extrabold to font-medium */}
+          <span className="text-xl font-medium tracking-tight text-blue-800">
             ₹{price.toLocaleString()}
           </span>
           {hasDiscount && (
-            // Reduced font size: text-xs (was sm)
-            <span className="text-xs text-slate-500 line-through font-medium opacity-80">
+            <span className="text-xs text-slate-500 line-through font-normal opacity-80">
               ₹{originalPrice.toLocaleString()}
             </span>
           )}
         </div>
         
         {hasDiscount && (
-          // Reduced font size and padding
-          <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 w-fit uppercase tracking-wide">
+          {/* Changed font-bold to font-medium */}
+          <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 w-fit uppercase tracking-wide">
             <Tag className="w-2.5 h-2.5 fill-green-700" />
             {discountPercentage}% Off
           </div>
@@ -93,8 +92,8 @@ export function MobileEnrollmentBar({
       <Button
         onClick={handleAction}
         disabled={enrolling}
-        // Reduced font size: text-sm (was lg) and adjusted padding
-        className="bg-blue-800 hover:bg-blue-900 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-semibold shadow-sm transition-all active:scale-[0.98]"
+        {/* Changed font-semibold to font-medium */}
+        className="bg-blue-800 hover:bg-blue-900 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
       >
         {enrolling ? (
           <>
