@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Award, BarChart3, MessageCircle, FileText, Video, Users } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const SSPPortalSection: React.FC = () => {
   const portalFeatures = [
@@ -37,26 +38,54 @@ const SSPPortalSection: React.FC = () => {
   ];
 
   return (
-    <section id="ssp" className="py-12 scroll-mt-24 bg-gradient-to-br from-primary/5 to-primary/10 -mx-4 px-4 rounded-2xl">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-3">Student Success Portal (SSP)</h2>
-        <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Your all-in-one learning companion with exclusive features designed to accelerate your success
+    <section id="ssp" className="py-12 scroll-mt-24 bg-white -mx-4 px-4 rounded-2xl border border-slate-100 shadow-sm">
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-bold mb-3 text-slate-900">Student Success Portal (SSP)</h2>
+        <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          Your all-in-one learning companion with exclusive features designed to accelerate your success.
         </p>
       </div>
       
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {portalFeatures.map((feature, idx) => {
           const Icon = feature.icon;
+          const isStudyMaterial = feature.title === "Study Materials";
+          
+          // Theme Logic: 
+          // "Study Materials" -> Red Theme
+          // Others -> "Peace/Positive" (Emerald) Theme
+          
+          const cardBg = isStudyMaterial ? "bg-red-50" : "bg-emerald-50";
+          const cardBorder = isStudyMaterial ? "border-red-100" : "border-emerald-100";
+          const hoverBorder = isStudyMaterial ? "hover:border-red-200" : "hover:border-emerald-200";
+          
+          const iconColor = isStudyMaterial ? "text-red-600" : "text-emerald-600";
+          const titleColor = isStudyMaterial ? "text-red-900" : "text-emerald-900";
+          const descColor = isStudyMaterial ? "text-red-700/80" : "text-emerald-800/80";
+
           return (
-            <Card key={idx} className="border-primary/20 hover:shadow-lg transition-shadow bg-background/80 backdrop-blur">
+            <Card key={idx} className={cn(
+                "border transition-all duration-300 hover:shadow-md hover:-translate-y-1",
+                cardBg,
+                cardBorder,
+                hoverBorder
+            )}>
               <CardContent className="p-6">
-                <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                    <Icon className="h-6 w-6 text-primary" />
+                <div className="space-y-4">
+                  {/* Icon Box */}
+                  <div className="p-3 rounded-xl bg-white w-fit shadow-sm">
+                    <Icon className={cn("h-6 w-6", iconColor)} />
                   </div>
-                  <h3 className="font-semibold text-lg">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                  
+                  {/* Text Content */}
+                  <div>
+                    <h3 className={cn("font-bold text-lg mb-1.5", titleColor)}>
+                      {feature.title}
+                    </h3>
+                    <p className={cn("text-sm leading-relaxed font-medium", descColor)}>
+                      {feature.description}
+                    </p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -64,20 +93,21 @@ const SSPPortalSection: React.FC = () => {
         })}
       </div>
 
-      <div className="mt-8 p-6 bg-background/60 backdrop-blur rounded-xl border border-primary/20">
-        <h3 className="text-xl font-semibold mb-3 text-center">How SSP Portal Helps You</h3>
-        <div className="grid md:grid-cols-3 gap-6 text-center">
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">100%</p>
-            <p className="text-sm text-muted-foreground">Course Content Access</p>
+      {/* Stats / Benefits Footer */}
+      <div className="mt-10 p-8 bg-slate-50 rounded-2xl border border-slate-100">
+        <h3 className="text-xl font-bold mb-8 text-center text-slate-800">How SSP Portal Helps You</h3>
+        <div className="grid md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-200">
+          <div className="pt-6 md:pt-0">
+            <p className="text-4xl font-extrabold text-emerald-600 mb-2 tracking-tight">100%</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Content Access</p>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">24/7</p>
-            <p className="text-sm text-muted-foreground">Learning Availability</p>
+          <div className="pt-6 md:pt-0">
+            <p className="text-4xl font-extrabold text-blue-600 mb-2 tracking-tight">24/7</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Learning Availability</p>
           </div>
-          <div>
-            <p className="text-3xl font-bold text-primary mb-2">∞</p>
-            <p className="text-sm text-muted-foreground">Practice Resources</p>
+          <div className="pt-6 md:pt-0">
+            <p className="text-4xl font-extrabold text-purple-600 mb-2 tracking-tight">∞</p>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Practice Resources</p>
           </div>
         </div>
       </div>
