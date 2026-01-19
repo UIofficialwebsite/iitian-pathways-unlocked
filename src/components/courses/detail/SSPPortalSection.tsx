@@ -1,115 +1,74 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Award, BarChart3, MessageCircle, FileText, Video, Users } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BarChart3, MessageCircle, ClipboardCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SSPPortalSection: React.FC = () => {
-  const portalFeatures = [
+  const features = [
     {
       icon: Video,
       title: "Recorded Lectures",
-      description: "Access all class recordings anytime for revision"
+      description: "High-definition recordings for every class, available for unlimited replay anytime.",
+      color: "bg-teal-50"
     },
     {
       icon: FileText,
       title: "Study Materials",
-      description: "Download PDFs, notes, and practice questions"
+      description: "Access structured PDFs, handwritten notes, and curated practice sheets in our central vault.",
+      color: "bg-rose-50"
+    },
+    {
+      icon: LayoutDashboard,
+      title: "Personalized Dashboard",
+      description: "A customized workspace to manage your schedule and track your daily learning goals.",
+      color: "bg-purple-50"
     },
     {
       icon: BarChart3,
       title: "Progress Tracking",
-      description: "Monitor your performance with detailed analytics"
+      description: "Monitor performance with data-driven insights and personalized reports to stay ahead.",
+      color: "bg-blue-50"
     },
     {
       icon: MessageCircle,
       title: "Doubt Resolution",
-      description: "Ask questions and get answers from instructors"
+      description: "Get rapid resolutions to all your technical queries from our expert subject instructors.",
+      color: "bg-amber-50"
     },
     {
-      icon: Users,
-      title: "Peer Learning",
-      description: "Collaborate with fellow students in discussion forums"
-    },
-    {
-      icon: Award,
-      title: "Assignments & Tests",
-      description: "Practice with regular assignments and mock tests"
+      icon: ClipboardCheck,
+      title: "Test & Practice",
+      description: "Validate your knowledge with periodic assignments and simulated mock examinations.",
+      color: "bg-emerald-50"
     }
   ];
 
   return (
-    <section id="ssp" className="py-12 scroll-mt-24 bg-white -mx-4 px-4 rounded-2xl border border-slate-100 shadow-sm">
-      <div className="text-center mb-10">
-        <h2 className="text-3xl font-bold mb-3 text-slate-900">Student Success Portal (SSP)</h2>
-        <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
-          Your all-in-one learning companion with exclusive features designed to accelerate your success.
-        </p>
-      </div>
+    <section id="ssp" className="scroll-mt-24 bg-white border border-slate-100 rounded-3xl p-8 md:p-10 w-full shadow-sm">
+      <h2 className="text-3xl font-extrabold mb-10 text-slate-900 tracking-tight">Student Service Portal</h2>
       
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {portalFeatures.map((feature, idx) => {
-          const Icon = feature.icon;
-          const isStudyMaterial = feature.title === "Study Materials";
-          
-          // Theme Logic: 
-          // "Study Materials" -> Red Theme
-          // Others -> "Peace/Positive" (Emerald) Theme
-          
-          const cardBg = isStudyMaterial ? "bg-red-50" : "bg-emerald-50";
-          const cardBorder = isStudyMaterial ? "border-red-100" : "border-emerald-100";
-          const hoverBorder = isStudyMaterial ? "hover:border-red-200" : "hover:border-emerald-200";
-          
-          const iconColor = isStudyMaterial ? "text-red-600" : "text-emerald-600";
-          const titleColor = isStudyMaterial ? "text-red-900" : "text-emerald-900";
-          const descColor = isStudyMaterial ? "text-red-700/80" : "text-emerald-800/80";
-
-          return (
-            <Card key={idx} className={cn(
-                "border transition-all duration-300 hover:shadow-md hover:-translate-y-1",
-                cardBg,
-                cardBorder,
-                hoverBorder
-            )}>
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  {/* Icon Box */}
-                  <div className="p-3 rounded-xl bg-white w-fit shadow-sm">
-                    <Icon className={cn("h-6 w-6", iconColor)} />
-                  </div>
-                  
-                  {/* Text Content */}
-                  <div>
-                    <h3 className={cn("font-bold text-lg mb-1.5", titleColor)}>
-                      {feature.title}
-                    </h3>
-                    <p className={cn("text-sm leading-relaxed font-medium", descColor)}>
-                      {feature.description}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {features.map((feature, idx) => {
+           const Icon = feature.icon;
+           return (
+             <div 
+               key={idx} 
+               className={cn(
+                 "group flex flex-col p-6 rounded-xl border border-black/5 transition-colors duration-200 cursor-pointer hover:border-black h-full",
+                 feature.color
+               )}
+             >
+               <div className="flex items-center gap-3.5 mb-4">
+                 <div className="w-[42px] h-[42px] bg-white rounded-[10px] flex items-center justify-center shrink-0 shadow-[0_2px_5px_rgba(0,0,0,0.03)]">
+                   <Icon className="w-5 h-5 text-black stroke-[2.2]" />
+                 </div>
+                 <h3 className="text-[17px] font-bold text-black tracking-tight">{feature.title}</h3>
+               </div>
+               <p className="text-sm leading-relaxed text-black/80 m-0">
+                 {feature.description}
+               </p>
+             </div>
+           )
         })}
-      </div>
-
-      {/* Stats / Benefits Footer */}
-      <div className="mt-10 p-8 bg-slate-50 rounded-2xl border border-slate-100">
-        <h3 className="text-xl font-bold mb-8 text-center text-slate-800">How SSP Portal Helps You</h3>
-        <div className="grid md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-slate-200">
-          <div className="pt-6 md:pt-0">
-            <p className="text-4xl font-extrabold text-emerald-600 mb-2 tracking-tight">100%</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Course Content Access</p>
-          </div>
-          <div className="pt-6 md:pt-0">
-            <p className="text-4xl font-extrabold text-blue-600 mb-2 tracking-tight">24/7</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Learning Availability</p>
-          </div>
-          <div className="pt-6 md:pt-0">
-            <p className="text-4xl font-extrabold text-purple-600 mb-2 tracking-tight">∞</p>
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Practice Resources</p>
-          </div>
-        </div>
       </div>
     </section>
   );
