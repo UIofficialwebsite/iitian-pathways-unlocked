@@ -1,17 +1,14 @@
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { FcGoogle } from "react-icons/fc";
 import NavBar from "@/components/NavBar";
-import Footer from "@/components/Footer";
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
@@ -30,7 +27,6 @@ const StudentLogin = () => {
 
     try {
       if (isSignUp) {
-        // Check if user already exists with this email
         const { data: existingUsers, error: checkError } = await supabase
           .from('profiles')
           .select('email')
@@ -39,7 +35,6 @@ const StudentLogin = () => {
           
         if (checkError) throw checkError;
         
-        // If email already exists, prevent signup
         if (existingUsers && existingUsers.length > 0) {
           toast({
             title: "Email already registered",
@@ -50,23 +45,16 @@ const StudentLogin = () => {
           return;
         }
 
-        // Prepare user metadata for signup
-        const userMetadata: any = {
-          exam: examType
-        };
-
-        // Add IITM BS specific data if selected
+        const userMetadata: any = { exam: examType };
         if (examType === 'IITM-BS') {
           userMetadata.branch = branch;
           userMetadata.level = level;
         }
 
-        const { data, error } = await supabase.auth.signUp({
+        const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            data: userMetadata
-          }
+          options: { data: userMetadata }
         });
         
         if (error) throw error;
@@ -75,8 +63,6 @@ const StudentLogin = () => {
           title: "Registration successful!",
           description: "Please check your email for verification.",
         });
-        
-        // Redirect to profile completion
         navigate("/profile/complete");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -91,9 +77,8 @@ const StudentLogin = () => {
           description: "Welcome back!",
         });
         
-        // Check if profile is complete
         try {
-          const { data: profile, error: profileError } = await supabase
+          const { data: profile } = await supabase
             .from('profiles')
             .select('full_name, phone')
             .eq('id', data.user.id)
@@ -105,7 +90,6 @@ const StudentLogin = () => {
             navigate("/");
           }
         } catch (error) {
-          console.error("Error checking profile:", error);
           navigate("/profile/complete");
         }
       }
@@ -129,12 +113,11 @@ const StudentLogin = () => {
           redirectTo: `${window.location.origin}/auth/google-callback`,
         },
       });
-
       if (error) throw error;
     } catch (error: any) {
       toast({
         title: "Login failed",
-        description: error.message || "An error occurred during Google login",
+        description: error.message,
         variant: "destructive",
       });
       setIsLoading(false);
@@ -144,23 +127,31 @@ const StudentLogin = () => {
   return (
     <>
       <NavBar />
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4 pt-24">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center font-bold">
-              {isSignUp ? "Create an Account" : "Login to Your Account"}
-            </CardTitle>
-            <CardDescription className="text-center">
-              {isSignUp
-                ? "Sign up to access all our study materials and features"
-                : "Login to access premium study resources"}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      {/* Background container matches Auth.tsx */}
+      <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
+        
+        {/* THE MODAL CARD */}
+        <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
+          
+          {/* Illustration Area */}
+          <div className="mb-8 flex justify-center">
+            <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
+              <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
+                <div className="absolute top-1.5 w-4 h-1 bg-[#1a1a1a] rounded-sm" />
+                <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
+              </div>
+            </div>
+          </div>
+
+          <h2 className="text-xl md:text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
+            {isSignUp ? "Create your account" : "Sign in to your account"}
+          </h2>
+
+          <div className="space-y-4 text-left">
             <Button 
               variant="outline" 
               type="button" 
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-gray-300 hover:bg-gray-50 hover:text-black transition-all"
               onClick={handleGoogleLogin}
               disabled={isLoading}
             >
@@ -187,27 +178,27 @@ const StudentLogin = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)} 
                   required
+                  className="h-11 rounded-xl"
                 />
               </div>
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input 
                   id="password" 
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)} 
                   required
+                  className="h-11 rounded-xl"
                 />
               </div>
 
               {isSignUp && (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="space-y-2">
-                    <Label htmlFor="exam">Which exam are you preparing for?</Label>
+                    <Label htmlFor="exam">Preparing for</Label>
                     <Select value={examType} onValueChange={setExamType} required>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 rounded-xl">
                         <SelectValue placeholder="Select exam type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -223,7 +214,7 @@ const StudentLogin = () => {
                       <div className="space-y-2">
                         <Label htmlFor="branch">Branch</Label>
                         <Select value={branch} onValueChange={setBranch} required>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 rounded-xl">
                             <SelectValue placeholder="Select branch" />
                           </SelectTrigger>
                           <SelectContent>
@@ -236,7 +227,7 @@ const StudentLogin = () => {
                       <div className="space-y-2">
                         <Label htmlFor="level">Level</Label>
                         <Select value={level} onValueChange={setLevel} required>
-                          <SelectTrigger>
+                          <SelectTrigger className="h-11 rounded-xl">
                             <SelectValue placeholder="Select level" />
                           </SelectTrigger>
                           <SelectContent>
@@ -252,26 +243,29 @@ const StudentLogin = () => {
                 </div>
               )}
 
-              <Button type="submit" className="w-full bg-royal hover:bg-royal-dark" disabled={isLoading}>
-                {isLoading ? "Processing..." : (isSignUp ? "Sign Up" : "Login")}
+              <Button type="submit" className="w-full bg-royal hover:bg-royal-dark h-11 rounded-xl" disabled={isLoading}>
+                {isLoading ? "Processing..." : (isSignUp ? "Sign Up" : "Sign in / Register")}
               </Button>
             </form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-2">
-            <div className="text-center text-sm">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}
-              <Button 
-                variant="link" 
-                className="pl-1 underline text-royal"
-                onClick={() => setIsSignUp(!isSignUp)}
-              >
-                {isSignUp ? "Login" : "Sign Up"}
-              </Button>
-            </div>
-          </CardFooter>
-        </Card>
+          </div>
+
+          {/* Footer toggle */}
+          <div className="mt-8 text-sm text-center">
+            {isSignUp ? "Already have an account?" : "Don't have an account?"}
+            <button 
+              className="ml-1 text-[#1d4ed8] font-semibold hover:underline"
+              onClick={() => setIsSignUp(!isSignUp)}
+            >
+              {isSignUp ? "Sign in" : "Sign up"}
+            </button>
+          </div>
+
+          <div className="mt-8 text-[13px] text-[#717171] leading-relaxed">
+            By continuing you agree to our <br />
+            <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+          </div>
+        </div>
       </div>
-      <Footer />
     </>
   );
 };
