@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
+import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar'; // Import the new component
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -119,9 +120,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
             userEnrollments.forEach(enrollment => {
               const status = enrollment.status?.toLowerCase() || '';
-              // Treat pending same as active for ownership check to avoid double buy? 
-              // User said "don't show pending anything", implies if they bought, they bought.
-              // We'll rely on Success/Paid/Active logic.
               const isSuccess = status === 'success' || status === 'paid' || status === 'active';
 
               if (isSuccess) {
@@ -248,6 +246,17 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     { id: 'faqs', label: 'FAQs' },
   ];
 
+  const commonEnrollmentProps = {
+    course,
+    isDashboardView,
+    isMainCourseOwned,
+    isFullyEnrolled,
+    ownedAddons,
+    customEnrollHandler,
+    isFreeCourse: course.price === 0 || course.price === null,
+    enrolling
+  };
+
   return (
     <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-20")}>
        {!isDashboardView && <NavBar />}
@@ -278,7 +287,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
          <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
-         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10">
+         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24 lg:pb-10">
            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
              
              <div className="lg:col-span-7 space-y-8">
@@ -294,20 +303,18 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
                <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
              </div>
              
-             <aside className="lg:col-span-5 relative">
+             {/* Desktop Sidebar - Hidden on Mobile */}
+             <aside className="hidden lg:block lg:col-span-5 relative">
                 <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
-                  <EnrollmentCard 
-                      course={course} 
-                      isDashboardView={isDashboardView}
-                      isMainCourseOwned={isMainCourseOwned}
-                      isFullyEnrolled={isFullyEnrolled}
-                      ownedAddons={ownedAddons}
-                      customEnrollHandler={customEnrollHandler} 
-                      isFreeCourse={course.price === 0 || course.price === null}
-                      enrolling={enrolling}
-                  />
+                  <EnrollmentCard {...commonEnrollmentProps} />
                 </div>
              </aside>
+
+             {/* Mobile Fixed Bottom Bar - Hidden on Desktop */}
+             <div className="lg:hidden block">
+               <MobileEnrollmentBar {...commonEnrollmentProps} />
+             </div>
+
            </div>
          </div>
        </main>
