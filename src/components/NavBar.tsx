@@ -42,7 +42,54 @@ import {
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
-import LoginCard from "@/components/auth/LoginCard"; // Import the shared component
+import GoogleAuth from "@/components/auth/GoogleAuth";
+
+// --- LOGIN POPUP COMPONENT ---
+const LoginPopupContent = () => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  return (
+    <div className="bg-white w-full h-full relative px-8 pt-4 pb-8 text-center flex flex-col font-sans">
+      
+      {/* Centered Content Block */}
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
+        
+        {/* [CHANGED] Image Section: Removed hover/scale effects for static blending */}
+        <div className="mb-4 flex justify-center w-full">
+          <img 
+            src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
+            alt="Login Illustration" 
+            // Removed hover:scale-105 and transitions
+            className="h-[280px] md:h-[350px] w-auto object-contain" 
+          />
+        </div>
+
+        {/* Heading Row with PILL ICON */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-8 w-full">
+            <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
+              Sign in / Register to continue
+            </h2>
+            
+            {/* The Pill Icon Implementation */}
+            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full cursor-default shadow-sm">
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+            </div>
+        </div>
+
+        <div className="w-full space-y-4 px-4">
+          <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
+        </div>
+      </div>
+
+      {/* Footer pushed to bottom */}
+      <div className="mt-auto pt-6 text-[13px] text-[#717171] leading-relaxed whitespace-nowrap border-t border-gray-100/50">
+        By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+      </div>
+    </div>
+  );
+};
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
@@ -185,9 +232,8 @@ const NavBar = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
                 </DialogTrigger>
-                {/* REPLACED THE OLD CONTENT WITH THE SHARED CARD */}
-                <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none max-w-[480px]">
-                  <LoginCard />
+                <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
+                  <LoginPopupContent />
                 </DialogContent>
               </Dialog>
             )}
@@ -261,17 +307,11 @@ const NavBar = () => {
 
                 {!user && (
                   <div className="p-6 bg-white border-t border-[#eeeeee] flex justify-center mt-auto">
-                    {/* CHANGED: Removed link to /auth, now just a trigger for the dialog would be ideal, but for mobile simply directing them to a page wrapper or keeping the button is fine. Since we deleted the page, let's use the Dialog trigger pattern if possible, or just keep it simple: */}
-                     <Dialog>
-                        <DialogTrigger asChild>
-                          <Button className="w-[200px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-bold shadow-none">
-                            Login/Register
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none max-w-[480px]">
-                            <LoginCard />
-                        </DialogContent>
-                      </Dialog>
+                    <Link to="/auth" className="w-full flex justify-center" onClick={() => setIsSheetOpen(false)}>
+                      <Button className="w-[200px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-bold shadow-none">
+                        Login/Register
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </SheetContent>
@@ -289,14 +329,9 @@ const NavBar = () => {
                 </Avatar>
               </Link>
             ) : (
-              <Dialog>
-                <DialogTrigger asChild>
-                   <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login/Register</Button>
-                </DialogTrigger>
-                <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none max-w-[480px]">
-                    <LoginCard />
-                </DialogContent>
-              </Dialog>
+              <Link to="/auth">
+                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login/Register</Button>
+              </Link>
             )}
           </div>
         </div>
