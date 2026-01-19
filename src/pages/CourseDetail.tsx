@@ -14,9 +14,10 @@ import {
 import { toast } from 'sonner';
 
 import NavBar from '@/components/NavBar';
+import Footer from '@/components/Footer'; // Import Footer
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
-import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar'; // Import the new component
+import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -318,6 +319,8 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
            </div>
          </div>
        </main>
+       
+       {!isDashboardView && <Footer />}
     </div>
   );
 };
