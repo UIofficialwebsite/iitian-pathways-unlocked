@@ -54,13 +54,13 @@ const LoginPopupContent = () => {
       {/* Centered Content Block */}
       <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
         
-        {/* [CHANGED] Image Size Increased significantly */}
-        <div className="mb-6 flex justify-center w-full">
+        {/* [CHANGED] Image Section: Removed hover/scale effects for static blending */}
+        <div className="mb-4 flex justify-center w-full">
           <img 
             src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
             alt="Login Illustration" 
-            // Changed from h-[180px] to h-[280px] (mobile) and h-[350px] (desktop)
-            className="h-[280px] md:h-[350px] w-auto object-contain hover:scale-105 transition-transform duration-300" 
+            // Removed hover:scale-105 and transitions
+            className="h-[280px] md:h-[350px] w-auto object-contain" 
           />
         </div>
 
@@ -71,7 +71,7 @@ const LoginPopupContent = () => {
             </h2>
             
             {/* The Pill Icon Implementation */}
-            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full hover:opacity-90 transition-opacity cursor-pointer shadow-sm">
+            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full cursor-default shadow-sm">
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
                 <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
