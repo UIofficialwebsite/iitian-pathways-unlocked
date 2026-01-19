@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown, LogIn, User, LayoutDashboard, LogOut } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { 
+  Menu, 
+  X, 
+  Atom, 
+  Stethoscope, 
+  GraduationCap, 
+  BookOpen,
+  ChevronRight,
+  ArrowLeft
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,293 +20,335 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTrigger,
+  SheetClose,
+} from "@/components/ui/sheet";
+import {
   Dialog,
   DialogContent,
   DialogTrigger,
-  DialogTitle, 
-  DialogDescription,
 } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import EmailAuth from "@/components/auth/EmailAuth";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useAuth } from "@/hooks/useAuth";
+import { useBackend } from "@/components/BackendIntegratedWrapper";
+
+// Import Auth Components for the Popup
 import GoogleAuth from "@/components/auth/GoogleAuth";
+import EmailAuth from "@/components/auth/EmailAuth";
+
+// --- LOGIN POPUP COMPONENT (Matches Auth.tsx Design) ---
+const LoginPopupContent = () => {
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  return (
+    <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 pt-10 pb-8 text-center">
+      {/* Illustration Area */}
+      <div className="mb-8 flex justify-center">
+        <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
+          <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
+            <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
+            <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
+        Sign in to your account <br /> using Google
+      </h2>
+
+      <div className="space-y-4">
+        <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
+        
+        {!showEmailAuth ? (
+          <button 
+            onClick={() => setShowEmailAuth(true)}
+            className="text-[14px] font-semibold text-[#1d4ed8] hover:underline"
+          >
+            Continue with email instead?
+          </button>
+        ) : (
+          <div className="mt-4 animate-in fade-in duration-300">
+            <EmailAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
+            <button 
+              onClick={() => setShowEmailAuth(false)}
+              className="mt-4 text-[13px] text-gray-500 hover:underline"
+            >
+              Back to Google login
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
+        By continuing you agree to our <br />
+        <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+      </div>
+    </div>
+  );
+};
 
 const NavBar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const navLinks = [
-    { name: "Home", path: "/" },
-    { name: "About", path: "/about" },
-    { name: "Courses", path: "/courses" },
-    { name: "Job Portal", path: "/career-opportunities" },
-    { name: "Contact", path: "/#contact" },
-  ];
-
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsOpen(false);
-  }, [location]);
+  const { courses } = useBackend();
+  
+  // Mobile state management
+  const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
-    navigate("/");
+    window.location.href = '/';
   };
 
-  // Helper component for the Login Modal Content
-  const LoginPopupContent = () => (
-    <div className="flex flex-col gap-6 py-2 px-2">
-      <div className="flex flex-col space-y-2 text-center">
-        {/* Hidden Title for Accessibility/Screen Readers */}
-        <DialogTitle className="text-2xl font-bold tracking-tight text-gray-900">
-          Welcome Back
-        </DialogTitle>
-        <DialogDescription className="text-sm text-gray-500">
-          Enter your email to sign in to your account
-        </DialogDescription>
-      </div>
+  const courseCategories = useMemo(() => {
+    const categories = new Set<string>();
+    if (courses && courses.length > 0) {
+      courses.forEach(course => {
+        if (course.exam_category) {
+          categories.add(course.exam_category);
+        }
+      });
+    }
+    return Array.from(categories).sort();
+  }, [courses]);
 
-      <div className="grid gap-6">
-        <GoogleAuth />
-        
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-200" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">
-              Or continue with email
-            </span>
-          </div>
-        </div>
+  const getCategoryStyle = (category: string) => {
+    const normalize = category.toLowerCase();
+    if (normalize.includes('jee')) return { icon: Atom, color: "text-[#3B82F6]", slug: 'jee' };
+    if (normalize.includes('neet')) return { icon: Stethoscope, color: "text-[#EF4444]", slug: 'neet' };
+    if (normalize.includes('iitm') || normalize.includes('bs')) return { icon: GraduationCap, color: "text-[#2ecc71]", slug: 'iitm-bs' };
+    return { icon: BookOpen, color: "text-gray-600", slug: category.toLowerCase().replace(/\s+/g, '-') };
+  };
 
-        <EmailAuth />
-      </div>
-
-      <p className="px-8 text-center text-xs text-gray-500 mt-4">
-        By clicking continue, you agree to our{" "}
-        <Link 
-          to="/terms" 
-          onClick={() => setIsLoginModalOpen(false)} 
-          className="underline underline-offset-4 hover:text-royal text-gray-700"
-        >
-          Terms of Service
-        </Link>{" "}
-        and{" "}
-        <Link 
-          to="/privacy-policy" 
-          onClick={() => setIsLoginModalOpen(false)} 
-          className="underline underline-offset-4 hover:text-royal text-gray-700"
-        >
-          Privacy Policy
-        </Link>
-        .
-      </p>
-    </div>
-  );
+  const examPrepItems = [
+    { title: "IIT JEE", path: "/exam-preparation/jee", icon: Atom, color: "text-[#3B82F6]" },
+    { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
+    { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
+  ];
 
   return (
-    <nav className="fixed w-full bg-white/90 backdrop-blur-md z-[5000] border-b border-gray-100 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16 items-center">
-          
-          {/* --- LOGO SECTION --- */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
-            <div className="relative overflow-hidden rounded-lg transition-transform duration-300 group-hover:scale-105">
-              <img 
-                src="/lovable-uploads/UI_logo.png" 
-                alt="Logo" 
-                className="h-9 w-auto md:h-10 object-contain" 
-              />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-bold text-lg md:text-xl tracking-tight text-royal leading-none group-hover:text-royal-light transition-colors">
-                IITIANS PATHWAY
-              </span>
-              <span className="text-[10px] md:text-[11px] font-medium text-gray-500 tracking-wider uppercase">
-                Unlock Your Potential
-              </span>
-            </div>
-          </Link>
-
-          {/* --- DESKTOP NAVIGATION --- */}
-          <div className="hidden md:flex items-center space-x-1 lg:space-x-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 
-                  ${location.pathname === link.path 
-                    ? "text-royal bg-royal/5 font-semibold" 
-                    : "text-gray-600 hover:text-royal hover:bg-gray-50"
-                  }`}
-              >
-                {link.name}
-              </Link>
-            ))}
-
-            <div className="ml-4 pl-4 border-l border-gray-200 flex items-center gap-3">
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      className="relative h-10 w-10 rounded-full border border-gray-200 hover:border-royal/30 transition-all focus:ring-2 focus:ring-royal/20"
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
-                        <AvatarFallback className="bg-royal/10 text-royal font-bold">
-                          {user.email?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 mt-2 p-2">
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none text-gray-900">My Account</p>
-                        <p className="text-xs leading-none text-gray-500 truncate">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem 
-                      onClick={() => navigate("/dashboard")}
-                      className="cursor-pointer gap-2 focus:bg-royal/5 focus:text-royal"
-                    >
-                      <LayoutDashboard className="w-4 h-4" />
-                      <span>Dashboard</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => navigate("/dashboard/profile")}
-                      className="cursor-pointer gap-2 focus:bg-royal/5 focus:text-royal"
-                    >
-                      <User className="w-4 h-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem 
-                      onClick={handleSignOut}
-                      className="cursor-pointer gap-2 text-red-600 focus:bg-red-50 focus:text-red-700"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign out</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Dialog open={isLoginModalOpen} onOpenChange={setIsLoginModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button 
-                      className="bg-royal hover:bg-royal-light text-white px-6 py-2 shadow-sm hover:shadow-md transition-all duration-200 font-semibold"
-                    >
-                      Login
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[420px] bg-white p-0 gap-0 overflow-hidden rounded-xl border-none shadow-2xl">
-                     {/* Decorative Header Bar */}
-                     <div className="h-2 w-full bg-gradient-to-r from-royal via-purple-600 to-royal-light" />
-                     <div className="p-6 md:p-8">
-                        <LoginPopupContent />
-                     </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </div>
+    <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[10000] h-16 font-['Inter',sans-serif]">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
+        
+        {/* --- DESKTOP LAYOUT --- */}
+        <div className="hidden md:flex justify-between items-center h-full">
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-10 w-auto" />
+            </Link>
           </div>
 
-          {/* --- MOBILE MENU BUTTON --- */}
-          <div className="md:hidden flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-royal hover:bg-royal/5 transition-colors"
-            >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
+          <div className="flex items-center justify-center space-x-8">
+            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Home</Link>
+            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">About</Link>
+            
+            <NavigationMenu className="static">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
+                    Courses
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                       <div className="grid grid-cols-2 gap-3">
+                          {courseCategories.map((category) => {
+                            const style = getCategoryStyle(category);
+                            const IconComponent = style.icon;
+                            return (
+                              <NavigationMenuLink key={category} asChild>
+                                <Link to={`/courses/category/${style.slug}`} className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black transition-all">
+                                  <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                                    <IconComponent className={`w-full h-full ${style.color}`} />
+                                  </div>
+                                  <span className="text-base font-semibold text-[#1a1a1a] font-sans">{category}</span>
+                                </Link>
+                              </NavigationMenuLink>
+                            );
+                          })}
+                       </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            
+            <NavigationMenu className="static">
+              <NavigationMenuList>
+                <NavigationMenuItem>
+                  <NavigationMenuTrigger className="bg-transparent text-gray-700 hover:text-royal hover:bg-transparent focus:bg-transparent text-base font-medium h-auto p-0 transition-colors font-sans">
+                    Exam Prep
+                  </NavigationMenuTrigger>
+                  <NavigationMenuContent className="!fixed !top-16 left-0 right-0 w-full flex justify-center z-[10001] !mt-0 bg-transparent border-none shadow-none p-0">
+                    <div className="w-[700px] bg-white border border-[#e2e2e2] border-t-0 rounded-b-xl shadow-[0_10px_25px_rgba(0,0,0,0.1)] p-5">
+                       <div className="grid grid-cols-2 gap-3">
+                          {examPrepItems.map((item) => (
+                            <NavigationMenuLink key={item.path} asChild>
+                              <Link to={item.path} className="flex items-center gap-4 p-4 bg-white border border-[#e2e2e2] rounded cursor-pointer hover:border-black transition-all">
+                                <div className="w-10 h-10 flex items-center justify-center shrink-0">
+                                  <item.icon className={`w-full h-full ${item.color}`} />
+                                </div>
+                                <span className="text-base font-semibold text-[#1a1a1a] font-sans">{item.title}</span>
+                              </Link>
+                            </NavigationMenuLink>
+                          ))}
+                       </div>
+                    </div>
+                  </NavigationMenuContent>
+                </NavigationMenuItem>
+              </NavigationMenuList>
+            </NavigationMenu>
+            
+            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Career</Link>
+          </div>
+
+          <div className="flex items-center">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="focus:outline-none">
+                    <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-[#1d4ed8] transition-all">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-white z-[10002]">
+                  <DropdownMenuLabel className="font-normal text-sm text-gray-500 truncate">{user.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer font-medium">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer font-medium">
+                    Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              // [UPDATED] DESKTOP LOGIN BUTTON -> POPUP
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
+                </DialogTrigger>
+                {/* Using a simplified styling for DialogContent to remove default heavy borders/shadows 
+                  so our Custom Card design takes precedence.
+                */}
+                <DialogContent className="p-0 bg-transparent border-none shadow-none max-w-[420px] focus:outline-none">
+                  <LoginPopupContent />
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
+        </div>
+
+        {/* --- MOBILE LAYOUT (UNCHANGED) --- */}
+        <div className="md:hidden flex items-center justify-between h-full">
+          <div className="flex items-center gap-3">
+            <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if(!open) setActivePane("main"); }}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="p-0 hover:bg-transparent">
+                  <Menu className="h-7 w-7 text-black" />
+                </Button>
+              </SheetTrigger>
+              
+              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[10001] border-none font-['Inter',sans-serif] bg-white">
+                <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
+                  <div className="flex items-center gap-4">
+                    {activePane === "main" ? (
+                      <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" />
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => setActivePane("main")} className="text-black">
+                          <ArrowLeft className="h-7 w-7 stroke-[2.5]" />
+                        </button>
+                        <span className="text-[19px] font-bold text-[#1a1a1a]">
+                          {activePane === "courses" ? "Courses" : "Exam Preparation"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <SheetClose asChild>
+                    <button className="text-black p-1"><X className="h-8 w-8 stroke-[2.5]" /></button>
+                  </SheetClose>
+                </SheetHeader>
+
+                <div className="flex-1 overflow-y-auto bg-white flex flex-col">
+                  {activePane === "main" && (
+                    <div className="flex flex-col animate-in slide-in-from-right duration-200">
+                      <Link to="/" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Home</Link>
+                      <Link to="/about" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>About Us</Link>
+                      <button onClick={() => setActivePane("courses")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
+                        All Courses <ChevronRight className="h-4 w-4 text-[#333]" />
+                      </button>
+                      <button onClick={() => setActivePane("examprep")} className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] flex items-center justify-between border-b border-[#f0f0f0] text-left">
+                        Exam Preparation <ChevronRight className="h-4 w-4 text-[#333]" />
+                      </button>
+                      <Link to="/career" className="px-5 py-5 text-[16px] font-medium text-[#1a1a1a] border-b border-[#f0f0f0]" onClick={() => setIsSheetOpen(false)}>Career</Link>
+                    </div>
+                  )}
+
+                  {(activePane === "courses" || activePane === "examprep") && (
+                    <div className="p-5 grid grid-cols-2 gap-4 animate-in slide-in-from-left duration-200">
+                      {(activePane === "courses" ? courseCategories : examPrepItems).map((item: any) => {
+                        const style = activePane === "courses" ? getCategoryStyle(item) : item;
+                        const label = activePane === "courses" ? item : item.title;
+                        const path = activePane === "courses" ? `/courses/category/${style.slug}` : item.path;
+                        return (
+                          <Link key={label} to={path} className="flex items-center gap-3 px-3 py-4 bg-white border border-[#e2e2e2] rounded-[4px] hover:border-black transition-all" onClick={() => setIsSheetOpen(false)}>
+                            <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                              <style.icon className={`w-full h-full ${style.color || 'text-black'}`} />
+                            </div>
+                            <span className="text-[14px] font-semibold text-[#1a1a1a] leading-tight">{label}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {!user && (
+                  <div className="p-6 bg-white border-t border-[#eeeeee] flex justify-center mt-auto">
+                    <Link to="/auth" className="w-full flex justify-center" onClick={() => setIsSheetOpen(false)}>
+                      <Button className="w-[200px] h-12 bg-[#1d4ed8] hover:bg-[#1d4ed8] text-white rounded-lg text-[16px] font-bold shadow-none">
+                        Login/Register
+                      </Button>
+                    </Link>
+                  </div>
+                )}
+              </SheetContent>
+            </Sheet>
+            
+            <Link to="/"><img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-9 w-auto" /></Link>
+          </div>
+          
+          <div className="flex items-center">
+            {user ? (
+              <Link to="/dashboard">
+                <Avatar className="h-9 w-9 border border-gray-100">
+                  <AvatarImage src={user.user_metadata?.avatar_url} />
+                  <AvatarFallback className="font-bold">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </Link>
+            ) : (
+              <Link to="/auth">
+                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login</Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
-
-      {/* --- MOBILE MENU OVERLAY --- */}
-      {isOpen && (
-        <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-gray-100 shadow-lg animate-in slide-in-from-top-5 duration-200 z-40">
-          <div className="px-4 py-6 space-y-3">
-            {navLinks.map((link) => (
-              <Link
-                key={link.name}
-                to={link.path}
-                className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
-                  location.pathname === link.path
-                    ? "text-royal bg-royal/5"
-                    : "text-gray-600 hover:text-royal hover:bg-gray-50"
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.name}
-              </Link>
-            ))}
-            
-            <div className="pt-4 mt-4 border-t border-gray-100">
-              {user ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3 px-4 mb-4">
-                    <Avatar className="h-10 w-10 border border-gray-200">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-royal/10 text-royal font-bold">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-semibold text-gray-900">My Account</span>
-                      <span className="text-xs text-gray-500 truncate max-w-[200px]">{user.email}</span>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    variant="outline" 
-                    className="w-full justify-start gap-2 h-11 text-gray-700 border-gray-200"
-                    onClick={() => {
-                      navigate("/dashboard");
-                      setIsOpen(false);
-                    }}
-                  >
-                    <LayoutDashboard className="w-4 h-4" /> Dashboard
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start gap-2 h-11 text-red-600 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => {
-                      handleSignOut();
-                      setIsOpen(false);
-                    }}
-                  >
-                    <LogOut className="w-4 h-4" /> Sign Out
-                  </Button>
-                </div>
-              ) : (
-                // For Mobile, we usually redirect to page rather than popup for better UX,
-                // but you can use the Dialog here too if preferred. 
-                // Currently set to redirect to standard /login page for mobile simplicity.
-                <Button 
-                  className="w-full bg-royal hover:bg-royal-light text-white h-11 font-semibold text-base shadow-sm"
-                  onClick={() => {
-                    navigate("/login");
-                    setIsOpen(false);
-                  }}
-                >
-                  Log In
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
