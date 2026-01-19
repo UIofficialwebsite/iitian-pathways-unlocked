@@ -58,23 +58,23 @@ const Auth = () => {
   return (
     <>
       <NavBar />
-      {/* Background container matches your modal backdrop */}
+      {/* Background container */}
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
-        {/* THE MODAL CARD */}
-        <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 pt-10 pb-8 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)]">
+        {/* THE MODAL CARD - Refactored for responsiveness */}
+        <div className="bg-white w-full max-w-md rounded-3xl relative px-6 py-10 text-center shadow-xl transition-all duration-300">
           
           {/* Illustration Area */}
           <div className="mb-8 flex justify-center">
-            <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
-              <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
-                <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
+            <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
+              <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
+                <div className="absolute top-1.5 w-4 h-1 bg-[#1a1a1a] rounded-sm" />
                 <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-[9px] text-white font-bold">PW</div>
               </div>
             </div>
           </div>
 
-          <h2 className="text-[21px] font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
+          <h2 className="text-xl md:text-2xl font-bold text-[#1a1a1a] text-left mb-6 leading-tight">
             Sign in to your account <br /> using Google
           </h2>
 
@@ -85,16 +85,16 @@ const Auth = () => {
             {!showEmailAuth ? (
               <button 
                 onClick={() => setShowEmailAuth(true)}
-                className="text-[14px] font-semibold text-[#1d4ed8] hover:underline"
+                className="text-sm font-semibold text-[#1d4ed8] hover:underline transition-colors"
               >
                 Continue with email instead?
               </button>
             ) : (
-              <div className="mt-4 animate-in fade-in duration-300">
+              <div className="mt-4 animate-in fade-in slide-in-from-top-4 duration-300">
                 <EmailAuth isSignUp={false} isLoading={isLoading} setIsLoading={setIsLoading} />
                 <button 
                   onClick={() => setShowEmailAuth(false)}
-                  className="mt-4 text-[13px] text-gray-500 hover:underline"
+                  className="mt-4 text-sm text-gray-500 hover:underline transition-colors"
                 >
                   Back to Google login
                 </button>
@@ -103,7 +103,7 @@ const Auth = () => {
           </div>
 
           {/* FOOTER TERMS */}
-          <div className="mt-14 text-[13px] text-[#717171] leading-relaxed">
+          <div className="mt-14 text-xs md:text-sm text-[#717171] leading-relaxed">
             By continuing you agree to our <br />
             <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
           </div>
