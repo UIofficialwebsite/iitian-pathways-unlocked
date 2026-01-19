@@ -230,7 +230,7 @@ const NavBar = () => {
             ) : (
               <Dialog>
                 <DialogTrigger asChild>
-                  <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
+                  <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In/Register</Button>
                 </DialogTrigger>
                 <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
                   <LoginPopupContent />
@@ -330,7 +330,7 @@ const NavBar = () => {
               </Link>
             ) : (
               <Link to="/auth">
-                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login</Button>
+                <Button size="sm" className="bg-[#1d4ed8] text-white px-4 h-9 text-sm font-bold">Login/Register</Button>
               </Link>
             )}
           </div>
