@@ -6,11 +6,7 @@ import { cn } from "@/lib/utils";
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, AlertCircle, Star, Users, Calendar 
-} from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import NavBar from '@/components/NavBar';
@@ -18,6 +14,7 @@ import Footer from '@/components/Footer';
 import StickyTabNav from '@/components/courses/detail/StickyTabNav';
 import EnrollmentCard from '@/components/courses/detail/EnrollmentCard';
 import { MobileEnrollmentBar } from '@/components/courses/detail/MobileEnrollmentBar';
+import CourseHeader from '@/components/courses/detail/CourseHeader'; // Imported here
 import FeaturesSection from '@/components/courses/detail/FeaturesSection';
 import AboutSection from '@/components/courses/detail/AboutSection';
 import MoreDetailsSection from '@/components/courses/detail/MoreDetailsSection';
@@ -58,7 +55,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   
-  // Enrollment States
   const [ownedAddons, setOwnedAddons] = useState<string[]>([]);
   const [isMainCourseOwned, setIsMainCourseOwned] = useState(false);
   
@@ -106,7 +102,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         if (faqResult.data) setFaqs(faqResult.data as any);
         if (addonsResult.data) setAddons(addonsResult.data as SimpleAddon[]);
 
-        // Check Enrollment Status
         if (user) {
           const { data: userEnrollments } = await supabase
             .from('enrollments')
@@ -149,12 +144,9 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   const hasOptionalItems = addons.length > 0;
 
-  // Calculate if the user has bought EVERYTHING (Main + All Addons)
   const isFullyEnrolled = useMemo(() => {
     if (!isMainCourseOwned) return false;
-    if (!hasOptionalItems) return true; // Main owned, no addons exist -> Fully enrolled
-
-    // Check if every addon available is in the owned list
+    if (!hasOptionalItems) return true; 
     return addons.every(addon => ownedAddons.includes(addon.subject_name));
   }, [isMainCourseOwned, addons, ownedAddons, hasOptionalItems]);
   
@@ -162,7 +154,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     navigate(`/courses/${courseId}/configure`);
   };
 
-  // --- FREE ENROLLMENT LOGIC ---
   const handleFreeEnroll = async () => {
     if (!user) {
       toast.error("Please login to enroll.");
@@ -181,15 +172,15 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
           user_id: user.id,
           course_id: course.id,
           amount: 0,
-          status: 'active', // Direct success for free
+          status: 'active',
           payment_id: 'free_enrollment',
-          subject_name: null // Main course
+          subject_name: null 
         });
 
       if (enrollError) throw enrollError;
 
       toast.success("Successfully enrolled in the batch!");
-      setIsMainCourseOwned(true); // Update UI immediately
+      setIsMainCourseOwned(true);
       
     } catch (err: any) {
       console.error("Free Enrollment Error:", err);
@@ -199,7 +190,6 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
     }
   };
 
-  // Handler Logic
   let customEnrollHandler: (() => void) | undefined = undefined;
 
   if (hasOptionalItems) {
@@ -263,28 +253,8 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
        {!isDashboardView && <NavBar />}
        
        <main className="w-full">
-         <div className="border-b border-slate-200 bg-white shadow-sm">
-            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-                <div className="max-w-4xl">
-                   {!isDashboardView && (
-                      <Button onClick={() => navigate('/courses')} variant="ghost" size="sm" className="mb-4 -ml-2 text-slate-500 hover:text-royal">
-                        <ArrowLeft className="h-4 w-4 mr-2" /> Back to Courses
-                      </Button>
-                    )}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {course.exam_category && <Badge variant="secondary" className="bg-blue-100 text-blue-700">{course.exam_category}</Badge>}
-                      {course.bestseller && <Badge className="bg-amber-500 text-white border-none">⭐ Best Seller</Badge>}
-                    </div>
-                    <h1 className="text-3xl md:text-5xl font-bold text-slate-900 mb-4 tracking-tight">{course.title}</h1>
-                    <p className="text-lg text-slate-600 mb-6 leading-relaxed">{course.description}</p>
-                    <div className="flex flex-wrap gap-6 text-sm font-medium text-slate-500">
-                      <div className="flex items-center gap-2 text-amber-600"><Star className="h-5 w-5 fill-amber-500 text-amber-500" /> {course.rating || 4.0}</div>
-                      <div className="flex items-center gap-2"><Users className="h-5 w-5 text-royal" /> {course.students_enrolled || 0} students</div>
-                      <div className="flex items-center gap-2"><Calendar className="h-5 w-5 text-royal" /> Starts: {new Date(course.start_date || "").toLocaleDateString()}</div>
-                    </div>
-                </div>
-            </div>
-         </div>
+         {/* Clean Course Header Component */}
+         <CourseHeader course={course} isDashboardView={isDashboardView} />
 
          <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
