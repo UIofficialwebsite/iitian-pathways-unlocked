@@ -21,11 +21,11 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
       {/* Light Rays Effect */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.8)_0%,transparent_40%)]" />
 
-      {/* Main Content Container - Removed flex/justify-between as we only have one main block now */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-8 md:py-10">
+      {/* Main Content Container: Reduced internal padding py-6 md:py-8 to prevent 'lagging' look */}
+      <div className="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-6 md:py-8">
         
         {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#4b4b4b] mb-6 font-medium flex-wrap">
+        <nav className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#4b4b4b] mb-4 font-medium flex-wrap">
              <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/')}>
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
              </span>
@@ -42,12 +42,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
         </nav>
 
         {/* Hero Title */}
-        <h1 className="text-3xl md:text-[42px] font-[800] text-[#2d2d2d] leading-[1.2] mb-6 tracking-tight max-w-5xl">
+        <h1 className="text-3xl md:text-[40px] font-[800] text-[#2d2d2d] leading-[1.2] mb-5 tracking-tight max-w-5xl">
             {course.title}
         </h1>
 
         {/* Info Rows (Using Emojis) */}
-        <div className="flex flex-col gap-4 mb-8">
+        <div className="flex flex-col gap-3 mb-6">
             {/* Target Audience Row */}
             <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
                <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center text-[14px] shrink-0">
@@ -71,7 +71,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
             </div>
         </div>
 
-        {/* Extra Details (Grey Blocks) - Removed Enrolled Count */}
+        {/* Extra Details (Grey Blocks) - Enrolled Student Count REMOVED */}
         <div className="flex flex-wrap gap-3 mt-2">
             {/* Rating */}
             <div className="bg-[#f1f3f6] border border-[#e0e0e0] rounded-md px-3 py-1.5 text-[13px] text-black font-normal">
