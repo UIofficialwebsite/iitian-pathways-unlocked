@@ -49,14 +49,14 @@ const LoginPopupContent = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   return (
-    // [CHANGED] h-full to fill the DialogContent
-    <div className="bg-white w-full h-full relative px-8 pt-12 pb-8 text-center flex flex-col">
+    // [CHANGED] h-full ensures content stretches to fill the tall dialog
+    <div className="bg-white w-full h-full relative px-8 pt-12 pb-8 text-center flex flex-col font-sans">
       
       {/* Centered Content Block */}
-      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[400px] mx-auto">
+      <div className="flex-1 flex flex-col justify-center items-center w-full max-w-[480px] mx-auto">
         
         {/* Illustration Area */}
-        <div className="mb-10 flex justify-center transform scale-110">
+        <div className="mb-10 flex justify-center transform scale-125">
           <div className="w-[140px] h-[140px] bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)]">
             <div className="w-[50px] h-[80px] bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
               <div className="absolute top-[6px] w-[15px] h-[3px] bg-[#1a1a1a] rounded-sm" />
@@ -65,12 +65,21 @@ const LoginPopupContent = () => {
           </div>
         </div>
 
-        {/* [CHANGED] Heading: Removed 'Please', faded black, Inter font */}
-        <h2 className="text-[26px] font-bold text-black/80 font-sans text-center mb-8 leading-tight">
-          Sign in / Register to continue
-        </h2>
+        {/* [CHANGED] Heading Row with PILL ICON */}
+        <div className="flex flex-wrap items-center justify-center gap-3 mb-10 w-full">
+            <h2 className="text-[24px] md:text-[26px] font-bold text-black/80 font-sans leading-tight">
+              Sign in / Register to continue
+            </h2>
+            
+            {/* The Pill Icon Implementation */}
+            <div className="flex items-center justify-center gap-[4px] px-4 py-2 bg-[#FFE082] border-[1.5px] border-[#4a4a4a] rounded-full hover:opacity-90 transition-opacity cursor-pointer shadow-sm">
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+                <div className="w-[6px] h-[6px] bg-white rounded-full"></div>
+            </div>
+        </div>
 
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-4 px-4">
           <GoogleAuth isLoading={isLoading} setIsLoading={setIsLoading} />
         </div>
       </div>
@@ -224,7 +233,7 @@ const NavBar = () => {
                 <DialogTrigger asChild>
                   <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium">Sign In</Button>
                 </DialogTrigger>
-                {/* [CHANGED] Removed default styling to let the inner card control size */}
+                {/* [CHANGED] Passed p-0 and border-none to let inner card control layout */}
                 <DialogContent className="p-0 bg-transparent border-none shadow-none focus:outline-none">
                   <LoginPopupContent />
                 </DialogContent>
