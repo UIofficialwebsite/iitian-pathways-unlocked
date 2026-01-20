@@ -62,6 +62,7 @@ const MyProfile = () => {
 
   const getStatusText = () => {
     if (profile?.student_status) return `Student: ${profile.student_status}`;
+    if (profile?.level) return `Student: ${profile.level}`;
     return "Student";
   };
 
@@ -69,7 +70,8 @@ const MyProfile = () => {
   if (!profile) return null;
 
   return (
-    <div className="font-['Inter',sans-serif] bg-gray-50/50 min-h-screen py-4 px-3 sm:py-8 sm:px-6">
+    // Added px-4 for slight space on left/right on mobile
+    <div className="font-['Inter',sans-serif] bg-gray-50/50 min-h-screen py-4 px-4 sm:py-8 sm:px-6">
       
       <ProfileEditModal 
         isOpen={isEditModalOpen} 
@@ -108,30 +110,32 @@ const MyProfile = () => {
         {/* --- MAIN CONTENT --- */}
         <main className="p-5 md:p-12 bg-white">
           
-          {/* Overview Box - UPDATED */}
-          <section className="bg-[#F0F7FF] rounded-xl p-6 mb-10 border border-blue-50">
-            <div className="text-[16px] font-bold text-gray-900 mb-4 flex items-center justify-between">
+          {/* Overview Box */}
+          <section className="bg-blue-50/50 rounded-xl p-4 sm:p-5 mb-8 border border-blue-100/50">
+            <div className="text-[14px] sm:text-[15px] font-bold text-gray-900 mb-4 flex items-center justify-between">
               Level up overview
             </div>
             
-            {/* Single Card Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> 
-              {/* Only Total Enrollments Card */}
-              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm flex flex-col justify-center min-h-[90px]">
-                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                  TOTAL ENROLLMENTS
+            {/* Grid for Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              
+              {/* Card: Total Enrollments (Clean, No Info Icon) */}
+              <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-center">
+                <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight mb-1.5">
+                  Total Enrollments
                 </div>
-                <div className="text-[18px] font-medium text-gray-900">
+                <div className="text-[13px] sm:text-[14px] font-medium text-gray-900">
                   0 Courses
                 </div>
               </div>
+
             </div>
           </section>
 
-          <h1 className="text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
+          <h1 className="text-[18px] sm:text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
 
           {/* Identity Information */}
-          <section className="mb-10">
+          <section className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="text-[15px] font-bold text-gray-900">Identity information</div>
               <button 
