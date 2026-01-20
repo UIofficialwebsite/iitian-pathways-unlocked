@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,16 +30,35 @@ const GoogleCallback = () => {
             });
             
             if (!profile || !profile.profile_completed) {
+              // If profile is incomplete, force them to the auth/profile setup page
               navigate("/auth");
             } else {
-              navigate("/");
+              // --- REDIRECT LOGIC START ---
+              // 1. Check for 'next' parameter in the URL (priority)
+              const params = new URLSearchParams(window.location.search);
+              const nextParam = params.get('next');
+              
+              // 2. Check for the stored fallback URL
+              const storageRedirect = sessionStorage.getItem('loginRedirectUrl');
+              
+              // 3. Clean up storage
+              sessionStorage.removeItem('loginRedirectUrl');
+
+              if (nextParam) {
+                 navigate(decodeURIComponent(nextParam));
+              } else if (storageRedirect) {
+                 navigate(storageRedirect);
+              } else {
+                 navigate("/"); // Default fallback
+              }
+              // --- REDIRECT LOGIC END ---
             }
           } catch (error) {
             console.error("Error checking profile:", error);
             navigate("/auth");
           }
         } else {
-          throw new Error("No session found");
+          // No session found yet (could be waiting for hash processing)
         }
       } catch (error: any) {
         toast({
