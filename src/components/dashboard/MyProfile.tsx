@@ -73,7 +73,6 @@ const MyProfile = () => {
   // --- UPDATED STATUS TEXT ("Student" instead of "Class") ---
   const getStatusText = () => {
     if (profile?.student_status) return `Student: ${profile.student_status}`;
-    if (profile?.level) return `Student: ${profile.level}`;
     return "Student";
   };
 
