@@ -104,12 +104,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* FIXED: 
-         - w-[90%] prevents it from touching mobile screen edges 
-         - max-w-[420px] keeps it nice on desktop
-         - rounded-lg gives it standard rounded corners (not too sharp, not too round)
+      {/* w-[90%]: Ensures side margins on mobile so it doesn't touch edges
+        max-w-[420px]: Prevents it from getting too wide on desktop
       */}
-      <DialogContent className="w-[90%] max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-lg gap-0 font-['Inter',sans-serif]">
+      <DialogContent className="w-[90%] sm:max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-lg gap-0 font-['Inter',sans-serif]">
         
         <DialogHeader className="px-5 py-4 border-b border-[#f0f0f0] bg-white flex flex-row items-center justify-between">
           <DialogTitle className="text-[16px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
@@ -120,8 +118,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
         <form onSubmit={handleMainSave} className="p-6 space-y-5">
           
-          {/* Row 1: Name */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Row 1: Name 
+              grid-cols-1: stacks vertically on mobile (1 input per row)
+              sm:grid-cols-2: side-by-side on tablet/desktop
+          */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">First Name</label>
               <input 
