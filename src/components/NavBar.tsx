@@ -13,7 +13,8 @@ import {
   ChevronDown,
   CircleUser,
   PencilLine,
-  Monitor
+  Monitor,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +46,91 @@ import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
+
+// --- STABLE PROFILE MENU COMPONENT (Defined Outside NavBar) ---
+const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: any) => {
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email?.charAt(0).toUpperCase() || "U";
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <button className="focus:outline-none flex items-center gap-2 group outline-none">
+          <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
+            <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
+            <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-[#1d4ed8] transition-colors" />
+        </button>
+      </DropdownMenuTrigger>
+      
+      <DropdownMenuContent 
+        align="end" 
+        className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2"
+      >
+        <DropdownMenuLabel className="font-normal px-5 pb-2">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none text-[#344054]">{profile?.full_name || "User"}</p>
+            <p className="text-xs leading-none text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        
+        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+        
+        <DropdownMenuGroup className="flex flex-col">
+          <DropdownMenuItem 
+            onClick={() => navigate("/dashboard/profile")} 
+            className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+          >
+            <CircleUser className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+            <span className="text-[16px] font-medium tracking-tight">My Profile</span>
+          </DropdownMenuItem>
+
+          {!isDashboard ? (
+             <>
+               <DropdownMenuItem 
+                 onClick={() => navigate("/dashboard")} 
+                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+               >
+                 <PencilLine className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                 <span className="text-[16px] font-medium tracking-tight">Study</span>
+               </DropdownMenuItem>
+
+               <DropdownMenuItem 
+                 onClick={() => navigate("/dashboard/regularBatches")} 
+                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+               >
+                 <Monitor className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                 <span className="text-[16px] font-medium tracking-tight">Batches</span>
+               </DropdownMenuItem>
+             </>
+          ) : (
+             <DropdownMenuItem 
+               onClick={() => navigate("/dashboard/enrollments")} 
+               className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+             >
+               <BookOpen className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+               <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
+             </DropdownMenuItem>
+          )}
+        </DropdownMenuGroup>
+        
+        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+        
+        <DropdownMenuItem 
+          onClick={handleSignOut} 
+          className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
+        >
+          <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+          <span className="text-[16px] font-medium tracking-tight">Logout</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
@@ -104,100 +190,6 @@ const NavBar = () => {
     { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
     { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
   ];
-
-  const initials = profile?.full_name
-    ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : user?.email?.charAt(0).toUpperCase() || "U";
-
-  const ProfileMenu = () => (
-    // FIX: modal={false} prevents the body scroll lock, stopping the page shift and white bar
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <button className="focus:outline-none flex items-center gap-2 group">
-          <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
-            <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
-            <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-          <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-[#1d4ed8] transition-colors" />
-        </button>
-      </DropdownMenuTrigger>
-      
-      {/* Z-index increased to 10005 to sit above the fixed NavBar (z-10000).
-         Styling matches your requested "Inter" aesthetics.
-      */}
-      <DropdownMenuContent 
-        align="end" 
-        className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2"
-      >
-        <DropdownMenuLabel className="font-normal px-5 pb-2">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-[#344054]">{profile?.full_name || "User"}</p>
-            <p className="text-xs leading-none text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </DropdownMenuLabel>
-        
-        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
-        
-        <DropdownMenuGroup className="flex flex-col">
-          {/* 1. My Profile (Always visible) */}
-          <DropdownMenuItem 
-            onClick={() => navigate("/dashboard/profile")} 
-            className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-          >
-            <CircleUser className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-            <span className="text-[16px] font-medium tracking-tight">My Profile</span>
-          </DropdownMenuItem>
-
-          {!isDashboard ? (
-             <>
-               {/* 2. Study -> Dashboard (Study Portal) */}
-               <DropdownMenuItem 
-                 onClick={() => navigate("/dashboard")} 
-                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-               >
-                 <PencilLine className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                 <span className="text-[16px] font-medium tracking-tight">Study</span>
-               </DropdownMenuItem>
-
-               {/* 3. Batches -> Regular Batches */}
-               <DropdownMenuItem 
-                 onClick={() => navigate("/dashboard/regularBatches")} 
-                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-               >
-                 <Monitor className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                 <span className="text-[16px] font-medium tracking-tight">Batches</span>
-               </DropdownMenuItem>
-             </>
-          ) : (
-             <>
-                {/* Dashboard Specific Items */}
-                <DropdownMenuItem 
-                  onClick={() => navigate("/dashboard/enrollments")} 
-                  className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-                >
-                  <BookOpen className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                  <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
-                </DropdownMenuItem>
-             </>
-          )}
-
-        </DropdownMenuGroup>
-        
-        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
-        
-        {/* Logout - Red Color */}
-        <DropdownMenuItem 
-          onClick={handleSignOut} 
-          className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
-        >
-          <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-          <span className="text-[16px] font-medium tracking-tight">Logout</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[10000] h-16 font-['Inter',sans-serif]">
@@ -276,7 +268,13 @@ const NavBar = () => {
 
           <div className="flex items-center">
             {user ? (
-              <ProfileMenu />
+              <ProfileMenu 
+                user={user} 
+                profile={profile} 
+                handleSignOut={handleSignOut} 
+                navigate={navigate} 
+                isDashboard={isDashboard} 
+              />
             ) : (
               <Button 
                 onClick={openLogin}
@@ -378,7 +376,13 @@ const NavBar = () => {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <ProfileMenu />
+              <ProfileMenu 
+                user={user} 
+                profile={profile} 
+                handleSignOut={handleSignOut} 
+                navigate={navigate} 
+                isDashboard={isDashboard} 
+              />
             ) : (
               <Button 
                 size="sm" 
