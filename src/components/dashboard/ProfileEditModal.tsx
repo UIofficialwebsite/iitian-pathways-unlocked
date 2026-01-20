@@ -1,300 +1,225 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { User, BookOpen, GraduationCap } from "lucide-react";
-
-interface UserProfile {
-  program_type: string;
-  branch?: string;
-  level?: string;
-  exam_type?: string;
-  student_status?: string;
-  subjects?: string[];
-  student_name?: string;
-}
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profile: UserProfile | null;
-  onProfileUpdate: (profile: UserProfile) => void;
+  profile: any;
+  onProfileUpdate: () => void;
 }
 
-const ProfileEditModal: React.FC<ProfileEditModalProps> = ({
-  isOpen,
-  onClose,
-  profile,
-  onProfileUpdate
-}) => {
-  const { user } = useAuth();
+const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) => {
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
-  
-  // Form state
-  const [studentName, setStudentName] = useState('');
-  const [programType, setProgramType] = useState('');
-  const [branch, setBranch] = useState('');
-  const [level, setLevel] = useState('');
-  const [examType, setExamType] = useState('');
-  const [studentStatus, setStudentStatus] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize form with current profile data
+  // Form State
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("Male");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState("");
+  const [city, setCity] = useState("");
+
+  // Initialize form with profile data
   useEffect(() => {
     if (profile) {
-      setStudentName(profile.student_name || '');
-      setProgramType(profile.program_type || '');
+      const fullName = profile.student_name || profile.full_name || "";
+      const nameParts = fullName.split(" ");
+      setFirstName(nameParts[0] || "");
+      setLastName(nameParts.slice(1).join(" ") || "");
       
-      // Map database branch values to display values
-      if (profile.branch === 'data-science') {
-        setBranch('Data Science and Applications');
-      } else if (profile.branch === 'electronic-systems') {
-        setBranch('Electronic Systems');
-      } else {
-        setBranch(profile.branch || '');
-      }
-      
-      setLevel(profile.level || '');
-      setExamType(profile.exam_type || '');
-      setStudentStatus(profile.student_status || '');
+      setGender(profile.gender || "Male");
+      setPhone(profile.phone || "");
+      setEmail(profile.email || "");
+      // Note: State and City are not in the profile schema shown previously, 
+      // but we include them in the UI as requested.
+      setState("Bihar"); 
+      setCity("Patna");
     }
-  }, [profile]);
+  }, [profile, isOpen]);
 
-  const handleSave = async () => {
-    if (!user) return;
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
 
-    setLoading(true);
     try {
-      // Map display branch values to database values
-      let dbBranch = branch;
-      if (branch === 'Data Science and Applications') {
-        dbBranch = 'data-science';
-      } else if (branch === 'Electronic Systems') {
-        dbBranch = 'electronic-systems';
-      }
-
-      // First, save to updated_profiles for history
-      const historyData = {
-        user_id: user.id,
-        student_name: studentName,
-        program_type: programType,
-        branch: programType === 'IITM_BS' ? dbBranch : null,
-        level: programType === 'IITM_BS' ? level : null,
-        exam_type: programType === 'COMPETITIVE_EXAM' ? examType : null,
-        student_status: programType === 'COMPETITIVE_EXAM' ? studentStatus : null,
-        full_name: studentName,
-        email: user.email,
-        role: 'student'
-      };
-
-      const { error: historyError } = await supabase
-        .from('updated_profiles')
-        .insert(historyData);
-
-      if (historyError) {
-        console.warn('History insert failed:', historyError);
-      }
-
-      // Then update the main profiles table
-      const updateData: any = {
-        student_name: studentName,
-        program_type: programType,
-      };
-
-      if (programType === 'IITM_BS') {
-        updateData.branch = dbBranch;
-        updateData.level = level;
-        updateData.exam_type = null;
-        updateData.student_status = null;
-        updateData.subjects = null;
-      } else if (programType === 'COMPETITIVE_EXAM') {
-        updateData.exam_type = examType;
-        updateData.student_status = studentStatus;
-        updateData.branch = null;
-        updateData.level = null;
-        updateData.subjects = null;
-      }
+      const fullName = `${firstName} ${lastName}`.trim();
 
       const { error } = await supabase
         .from('profiles')
-        .update(updateData)
-        .eq('id', user.id);
+        .update({
+          student_name: fullName,
+          phone: phone,
+          gender: gender,
+          // If state/city columns exist in your DB, add them here:
+          // state: state,
+          // city: city
+        })
+        .eq('id', profile.id);
 
       if (error) throw error;
 
-      // Update local profile state with display values
-      const updatedProfile = {
-        ...profile,
-        student_name: studentName,
-        program_type: programType,
-        branch: programType === 'IITM_BS' ? branch : undefined,
-        level: programType === 'IITM_BS' ? level : undefined,
-        exam_type: programType === 'COMPETITIVE_EXAM' ? examType : undefined,
-        student_status: programType === 'COMPETITIVE_EXAM' ? studentStatus : undefined,
-      } as UserProfile;
-      
-      onProfileUpdate(updatedProfile);
-      
       toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
+        title: "Success",
+        description: "Profile details updated successfully.",
       });
-      
+      onProfileUpdate();
       onClose();
     } catch (error: any) {
-      console.error('Error updating profile:', error);
       toast({
-        title: "Update Failed",
-        description: error.message || "Failed to update profile.",
-        variant: "destructive"
+        title: "Error",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5" />
-            Edit Profile
-          </DialogTitle>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden bg-white border border-[#ddd] shadow-[0_4px_15px_rgba(0,0,0,0.1)] rounded-lg gap-0 font-sans">
+        
+        {/* Header */}
+        <DialogHeader className="px-5 py-4 border-b border-[#f0f0f0] flex flex-row items-center justify-between space-y-0">
+          <DialogTitle className="text-[18px] font-semibold text-[#333]">Edit Details</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Basic Information */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Basic Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="student-name">Full Name</Label>
-                <Input
-                  id="student-name"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Enter your full name"
-                />
+        {/* Body */}
+        <form onSubmit={handleSave} className="p-5 space-y-5">
+          
+          {/* First Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">First Name</label>
+            <input 
+              type="text" 
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              className="w-full px-3 py-2.5 border border-[#ccc] rounded-md text-sm text-[#444] outline-none focus:border-[#2563eb]"
+            />
+          </div>
+
+          {/* Last Name */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">Last Name</label>
+            <input 
+              type="text" 
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="w-full px-3 py-2.5 border border-[#ccc] rounded-md text-sm text-[#444] outline-none focus:border-[#2563eb]"
+            />
+          </div>
+
+          {/* Gender */}
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-5">
+              <span className="text-[15px] font-bold text-[#222]">Gender</span>
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setGender('Male')}>
+                <div className={`w-[18px] h-[18px] border-2 rounded-full relative flex items-center justify-center ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc]'}`}>
+                  {gender === 'Male' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
+                </div>
+                <span className="text-sm text-[#333]">Male</span>
               </div>
-
-              <div>
-                <Label htmlFor="program-type">Program Type</Label>
-                <Select value={programType} onValueChange={setProgramType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select program type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IITM_BS">IITM BS Degree</SelectItem>
-                    <SelectItem value="COMPETITIVE_EXAM">Competitive Exam</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center gap-2 cursor-pointer" onClick={() => setGender('Female')}>
+                <div className={`w-[18px] h-[18px] border-2 rounded-full relative flex items-center justify-center ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc]'}`}>
+                  {gender === 'Female' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
+                </div>
+                <span className="text-sm text-[#333]">Female</span>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* IITM BS Configuration */}
-          {programType === 'IITM_BS' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4" />
-                  IITM BS Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="branch">Branch</Label>
-                  <Select value={branch} onValueChange={setBranch}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select branch" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Data Science and Applications">Data Science and Applications</SelectItem>
-                      <SelectItem value="Electronic Systems">Electronic Systems</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* Mobile Number */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">Mobile Number</label>
+            <div className="flex items-center border border-[#ccc] rounded-md bg-[#f9f9f9] px-3 overflow-hidden">
+              <div className="flex items-center gap-1.5 pr-2.5 border-r border-[#ddd] text-sm text-[#666]">
+                <span>IN +91</span>
+                <span className="text-[10px]">▼</span>
+              </div>
+              <input 
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none px-2.5 py-2.5 text-sm text-[#444]"
+              />
+              <button type="button" className="text-[13px] font-medium text-[#2563eb] hover:underline whitespace-nowrap">
+                Update Number
+              </button>
+            </div>
+          </div>
 
-                <div>
-                  <Label htmlFor="level">Level</Label>
-                  <Select value={level} onValueChange={setLevel}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="qualifier">Qualifier</SelectItem>
-                      <SelectItem value="foundation">Foundation</SelectItem>
-                      <SelectItem value="diploma">Diploma</SelectItem>
-                      <SelectItem value="degree">Degree</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {/* Email */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">Email</label>
+            <input 
+              type="email" 
+              value={email}
+              readOnly 
+              className="w-full px-3 py-2.5 border border-[#ccc] rounded-md text-sm text-[#444] outline-none bg-gray-50 cursor-not-allowed"
+            />
+          </div>
 
-          {/* Competitive Exam Configuration */}
-          {programType === 'COMPETITIVE_EXAM' && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <BookOpen className="h-4 w-4" />
-                  Competitive Exam Details
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="exam-type">Exam Type</Label>
-                  <Select value={examType} onValueChange={setExamType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select exam type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="JEE">JEE</SelectItem>
-                      <SelectItem value="NEET">NEET</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+          {/* State (UI Only) */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">State</label>
+            <Select value={state} onValueChange={setState}>
+              <SelectTrigger className="w-full px-3 py-2.5 h-auto border border-[#ccc] rounded-md text-sm text-[#444] focus:ring-0 focus:border-[#2563eb]">
+                <SelectValue placeholder="Select State" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Bihar">Bihar</SelectItem>
+                <SelectItem value="Delhi">Delhi</SelectItem>
+                <SelectItem value="Maharashtra">Maharashtra</SelectItem>
+                <SelectItem value="West Bengal">West Bengal</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-                <div>
-                  <Label htmlFor="student-status">Student Status</Label>
-                  <Select value={studentStatus} onValueChange={setStudentStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Class 11">Class 11</SelectItem>
-                      <SelectItem value="Class 12">Class 12</SelectItem>
-                      <SelectItem value="Dropper">Dropper</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+          {/* City (UI Only) */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-[#666] block">City</label>
+            <Select value={city} onValueChange={setCity}>
+              <SelectTrigger className="w-full px-3 py-2.5 h-auto border border-[#ccc] rounded-md text-sm text-[#444] focus:ring-0 focus:border-[#2563eb]">
+                <SelectValue placeholder="Select City" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Patna">Patna</SelectItem>
+                <SelectItem value="Gaya">Gaya</SelectItem>
+                <SelectItem value="Muzaffarpur">Muzaffarpur</SelectItem>
+                <SelectItem value="Kolkata">Kolkata</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex justify-end gap-2 pt-4">
-          <Button variant="outline" onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : 'Save Changes'}
-          </Button>
-        </div>
+          {/* Footer Buttons */}
+          <div className="flex justify-end gap-3 pt-2">
+            <Button 
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="px-6 py-2.5 h-auto text-sm font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-md"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit"
+              disabled={isLoading}
+              className="px-6 py-2.5 h-auto text-sm font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-md border-none"
+            >
+              {isLoading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+              Save Changes
+            </Button>
+          </div>
+
+        </form>
       </DialogContent>
     </Dialog>
   );
