@@ -142,7 +142,7 @@ const NavBar = () => {
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
 
   const isDashboard = location.pathname.startsWith("/dashboard");
 
@@ -151,10 +151,12 @@ const NavBar = () => {
       if (user) {
         const { data } = await supabase
           .from("profiles")
-          .select("full_name, avatar_url")
+          .select("full_name")
           .eq("id", user.id)
           .single();
-        setProfile(data);
+        if (data) {
+          setProfile({ full_name: data.full_name });
+        }
       }
     };
     getProfile();
