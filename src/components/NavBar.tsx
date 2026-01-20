@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
   Menu, 
   X, 
@@ -49,12 +49,16 @@ const NavBar = () => {
   const { courses } = useBackend();
   const { openLogin } = useLoginModal();
   const navigate = useNavigate();
+  const location = useLocation(); // Needed to check current path
   
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   // Profile State
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  // Check if we are currently on a dashboard page
+  const isDashboard = location.pathname.startsWith("/dashboard");
 
   // Fetch Profile Data (for Avatar/Name)
   useEffect(() => {
@@ -129,20 +133,29 @@ const NavBar = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
-            <LayoutDashboard className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
-          </DropdownMenuItem>
+          {/* 1. My Profile (Always First) */}
           <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
             <span>My Profile</span>
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer">
-            <BookOpen className="mr-2 h-4 w-4" />
-            <span>My Enrollments</span>
-          </DropdownMenuItem>
+
+          {/* 2. Conditional Item: 'Study Batches' (Non-Dash) OR 'My Enrollments' (In-Dash) */}
+          {!isDashboard ? (
+             <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
+               <LayoutDashboard className="mr-2 h-4 w-4" />
+               <span>Study Batches</span>
+             </DropdownMenuItem>
+          ) : (
+             <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer">
+               <BookOpen className="mr-2 h-4 w-4" />
+               <span>My Enrollments</span>
+             </DropdownMenuItem>
+          )}
+
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
+        
+        {/* 3. Logout (Always Last) */}
         <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:text-red-600">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
