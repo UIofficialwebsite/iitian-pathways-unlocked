@@ -14,23 +14,16 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
-    
-    // 1. Capture the current page the user is on (e.g., /courses/123)
-    const currentPath = window.location.pathname + window.location.search;
-    
-    // 2. Store it in session storage as a fallback mechanism
-    sessionStorage.setItem('loginRedirectUrl', currentPath);
-
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // 3. Redirect to the callback route, passing the current path as the 'next' parameter
-          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(currentPath)}`,
+          // Redirect back to the current page after auth
+          redirectTo: window.location.href,
         },
       });
       if (error) throw error;
-      // If onSuccess is provided, call it (for non-redirect flows or immediate feedback)
+      // If onSuccess is provided, call it (for non-redirect flows)
       onSuccess?.();
     } catch (error: any) {
       toast({
