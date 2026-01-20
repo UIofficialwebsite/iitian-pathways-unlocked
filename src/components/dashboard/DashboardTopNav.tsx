@@ -49,6 +49,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
+    // Ensure sticky header has a z-index lower than the dropdown content
     <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         
@@ -92,17 +93,20 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
             Hi, {userName}
           </span>
           
-          <DropdownMenu>
+          {/* FIX 1: modal={false} prevents the "glitchy" open/close behavior */}
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none">
-                <Avatar className="h-8 w-8">
+              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none focus:outline-none">
+                <Avatar className="h-8 w-8 border border-gray-200">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
                   <AvatarFallback>{userInitial}</AvatarFallback>
                 </Avatar>
                 <ChevronDown className="h-4 w-4 text-gray-500" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            
+            {/* FIX 2: z-[10005] ensures it sits above the navbar (z-40) */}
+            <DropdownMenuContent align="end" className="w-56 z-[10005] bg-white">
               <DropdownMenuLabel>
                 <p className="text-sm font-medium truncate">{userName}</p>
                 <p className="text-xs text-gray-500 truncate">{userEmail}</p>
