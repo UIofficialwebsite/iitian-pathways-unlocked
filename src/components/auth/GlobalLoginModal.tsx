@@ -16,7 +16,7 @@ const LoginPopupContent: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
         {/* Image Section */}
         <div className="mb-6 flex justify-center w-full shrink-0">
           <img 
-            src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
+            src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768895615/image-removebg-preview_1_1_wvewxg.png" 
             alt="Login Illustration" 
             className="h-[180px] md:h-[220px] w-auto object-contain" 
           />
