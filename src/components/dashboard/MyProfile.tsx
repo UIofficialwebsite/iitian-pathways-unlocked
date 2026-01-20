@@ -2,23 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Camera, Edit3, Info } from 'lucide-react';
+import { Loader2, Camera, Edit3 } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
 import ProfileEditModal from './ProfileEditModal';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 // Define profile type
 type UserProfile = Tables<'profiles'> & {
   gender?: string | null; 
 };
 
-// --- SWAPPED AVATARS (Fixed Gender Mismatch) ---
-// Swapped seeds as requested: Male gets 'Aneka', Female gets 'Felix' if they were reversed previously.
+// --- CONSTANT AVATARS ---
 const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka"; 
 const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
 
@@ -61,18 +54,15 @@ const MyProfile = () => {
     fetchProfile();
   }, [user, toast]);
 
-  // --- FIXED AVATAR LOGIC ---
   const getAvatarSrc = () => {
     if (profile?.gender === 'Male') return MALE_AVATAR;
     if (profile?.gender === 'Female') return FEMALE_AVATAR;
-    
-    // Fallback based on name
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.student_name || 'User'}`;
   };
 
-  // --- UPDATED STATUS TEXT ("Student" instead of "Class") ---
   const getStatusText = () => {
     if (profile?.student_status) return `Student: ${profile.student_status}`;
+    if (profile?.level) return `Student: ${profile.level}`;
     return "Student";
   };
 
@@ -82,7 +72,6 @@ const MyProfile = () => {
   return (
     <div className="font-['Inter',sans-serif] bg-gray-50/50 min-h-screen py-4 px-3 sm:py-8 sm:px-6">
       
-      {/* Edit Modal Component */}
       <ProfileEditModal 
         isOpen={isEditModalOpen} 
         onClose={() => setIsEditModalOpen(false)} 
@@ -95,7 +84,6 @@ const MyProfile = () => {
         {/* --- LEFT SIDEBAR --- */}
         <aside className="p-6 sm:p-8 border-r border-slate-100 text-center flex flex-col items-center bg-white">
           <div className="relative inline-block mb-4 sm:mb-5">
-            {/* Avatar Image */}
             <img 
               src={getAvatarSrc()} 
               alt="User avatar" 
@@ -113,7 +101,6 @@ const MyProfile = () => {
             {profile.student_name || "Welcome User"}
           </h2>
           
-          {/* UPDATED: Yellow Tag says "Student" */}
           <div className="bg-yellow-50 text-yellow-800 text-[11px] sm:text-[12px] font-semibold py-1.5 sm:py-2 px-4 rounded-lg w-full max-w-[200px] border border-yellow-100">
             {getStatusText()}
           </div>
@@ -122,70 +109,30 @@ const MyProfile = () => {
         {/* --- MAIN CONTENT --- */}
         <main className="p-5 md:p-12 bg-white">
           
-          {/* Overview Box */}
-          <section className="bg-blue-50/50 rounded-xl p-4 sm:p-5 mb-8 border border-blue-100/50">
-            <div className="text-[14px] sm:text-[15px] font-bold text-gray-900 mb-4 flex items-center justify-between">
+          {/* Overview Box - UPDATED */}
+          <section className="bg-[#F0F7FF] rounded-xl p-6 mb-10 border border-blue-50">
+            <div className="text-[16px] font-bold text-gray-900 mb-4 flex items-center justify-between">
               Level up overview
             </div>
             
-            {/* FORCE 2 COLUMNS ON MOBILE */}
-            <div className="grid grid-cols-2 gap-3">
-              
-              {/* Card 1: XP */}
-              <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-between">
-                <div className="flex justify-between items-start w-full">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight pr-4">
-                    Total XP Level
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <div className="cursor-pointer -mt-1 -mr-1 p-1">
-                          <Info className="h-3 w-3 text-gray-400 hover:text-blue-600 transition-colors" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" align="end" className="max-w-[240px] bg-slate-900 text-white border-none text-[11px] p-3 leading-relaxed z-[50]">
-                        <p className="mb-2">Each <span className="text-yellow-400 font-bold">authenticated share</span> (link tracked & opened by &gt;5 unique people) counts as <span className="font-bold">0.5 XP</span>.</p>
-                        <p className="opacity-90">Note: Just clicking share doesn't count. We track actual engagement.</p>
-                        <div className="mt-2 pt-2 border-t border-slate-700 font-medium text-blue-200">
-                          Reward: Top 2 percentile users get FREE course access!
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+            {/* Single Card Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4"> 
+              {/* Only Total Enrollments Card */}
+              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm flex flex-col justify-center min-h-[90px]">
+                <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                  TOTAL ENROLLMENTS
                 </div>
-                <div className="text-[13px] sm:text-[14px] font-medium text-gray-900 mt-1">0 XP</div>
-              </div>
-
-              {/* Card 2: Enrollments */}
-              <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-between">
-                <div className="flex justify-between items-start w-full">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight pr-4">
-                    Total Enrollments
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip delayDuration={0}>
-                      <TooltipTrigger asChild>
-                        <div className="cursor-pointer -mt-1 -mr-1 p-1">
-                          <Info className="h-3 w-3 text-gray-400 hover:text-blue-600 transition-colors" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" align="end" className="max-w-[180px] bg-slate-900 text-white border-none text-[11px] p-3 z-[50]">
-                        Total number of active courses or batches you have enrolled in.
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                <div className="text-[18px] font-medium text-gray-900">
+                  0 Courses
                 </div>
-                <div className="text-[13px] sm:text-[14px] font-medium text-gray-900 mt-1">0 Courses</div>
               </div>
-
             </div>
           </section>
 
-          <h1 className="text-[18px] sm:text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
+          <h1 className="text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
 
           {/* Identity Information */}
-          <section className="mb-8">
+          <section className="mb-10">
             <div className="flex items-center justify-between mb-4">
               <div className="text-[15px] font-bold text-gray-900">Identity information</div>
               <button 
