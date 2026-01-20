@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,8 +22,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [gender, setGender] = useState("Male");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [state, setState] = useState("");
-  const [city, setCity] = useState("");
 
   useEffect(() => {
     if (profile) {
@@ -37,8 +33,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setGender(profile.gender || "Male");
       setPhone(profile.phone || "");
       setEmail(profile.email || "");
-      setState("Bihar"); // Default for now
-      setCity("Patna");  // Default for now
     }
   }, [profile, isOpen]);
 
@@ -79,29 +73,31 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* Tweaked: max-w-[420px], rounded-[6px] for compact look */}
-      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#ddd] shadow-lg rounded-[6px] gap-0 font-['Inter',sans-serif]">
+      {/* - max-w-[420px]: Controls width
+          - rounded-[4px]: sharper corners 
+          - p-0: Full control over padding
+      */}
+      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[4px] gap-0 font-['Inter',sans-serif]">
         
-        {/* Compact Header */}
-        <DialogHeader className="px-4 py-3 border-b border-[#f0f0f0] flex flex-row items-center justify-between space-y-0 bg-white">
-          <DialogTitle className="text-[16px] font-semibold text-[#333]">Edit Details</DialogTitle>
-          <button onClick={onClose} className="text-[#888] hover:text-[#333] transition-colors outline-none">
-            <X size={18} />
-          </button>
+        {/* Header */}
+        <DialogHeader className="px-5 py-3 border-b border-[#f0f0f0] bg-white">
+          <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
+          {/* Default Close button from DialogContent will appear here automatically */}
         </DialogHeader>
 
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-5 space-y-4">
           
           {/* Row 1: Name (Split) */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">First Name</label>
               <input 
                 type="text" 
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all"
+                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                placeholder="First Name"
               />
             </div>
             <div className="space-y-1">
@@ -110,24 +106,25 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 type="text" 
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all"
+                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                placeholder="Last Name"
               />
             </div>
           </div>
 
           {/* Row 2: Gender (Compact Radio) */}
-          <div className="space-y-1">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide block">Gender</label>
             <div className="flex items-center gap-6">
-              <span className="text-[13px] font-bold text-[#333]">Gender</span>
               <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Male')}>
                 <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Male' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
+                  {gender === 'Male' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
                 </div>
                 <span className="text-[13px] text-[#444]">Male</span>
               </div>
               <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Female')}>
                 <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Female' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
+                  {gender === 'Female' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
                 </div>
                 <span className="text-[13px] text-[#444]">Female</span>
               </div>
@@ -147,10 +144,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="flex-1 bg-transparent border-none outline-none px-2.5 text-[13px] text-[#333] h-full"
+                placeholder="1234567890"
               />
-              <button type="button" className="text-[11px] font-bold text-[#2563eb] hover:underline whitespace-nowrap px-1">
-                Update
-              </button>
             </div>
           </div>
 
@@ -165,52 +160,20 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             />
           </div>
 
-          {/* Row 5: State & City */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">State</label>
-              <Select value={state} onValueChange={setState}>
-                <SelectTrigger className="w-full px-2.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] focus:ring-0 focus:border-[#2563eb]">
-                  <SelectValue placeholder="Select State" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Bihar">Bihar</SelectItem>
-                  <SelectItem value="Delhi">Delhi</SelectItem>
-                  <SelectItem value="Maharashtra">Maharashtra</SelectItem>
-                  <SelectItem value="West Bengal">West Bengal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">City</label>
-              <Select value={city} onValueChange={setCity}>
-                <SelectTrigger className="w-full px-2.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] focus:ring-0 focus:border-[#2563eb]">
-                  <SelectValue placeholder="Select City" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Patna">Patna</SelectItem>
-                  <SelectItem value="Gaya">Gaya</SelectItem>
-                  <SelectItem value="Muzaffarpur">Muzaffarpur</SelectItem>
-                  <SelectItem value="Kolkata">Kolkata</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-[#f5f5f5]">
+          <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-[#f5f5f5]">
             <Button 
               type="button"
               variant="outline"
               onClick={onClose}
-              className="px-5 h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
+              className="px-4 h-8 text-[12px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
               disabled={isLoading}
-              className="px-5 h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all"
+              className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
               Save Changes
