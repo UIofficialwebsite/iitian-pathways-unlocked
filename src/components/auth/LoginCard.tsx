@@ -60,7 +60,21 @@ const LoginCard = () => {
       {/* FOOTER TERMS */}
       <div className="mt-14 text-xs md:text-sm text-[#717171] leading-relaxed">
         By continuing you agree to our <br />
-        <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+        <Link 
+          to="/terms" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-[#0284c7] font-semibold hover:underline"
+        >
+          Terms of use
+        </Link> & <Link 
+          to="/privacy" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-[#0284c7] font-semibold hover:underline"
+        >
+          Privacy Policy
+        </Link>
       </div>
     </div>
   );
