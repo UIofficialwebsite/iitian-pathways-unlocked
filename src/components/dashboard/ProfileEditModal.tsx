@@ -104,15 +104,20 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* Container spacing */}
-      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[6px] gap-0 font-['Inter',sans-serif]">
+      {/* FIXED: 
+         - w-[90%] prevents it from touching mobile screen edges 
+         - max-w-[420px] keeps it nice on desktop
+         - rounded-lg gives it standard rounded corners (not too sharp, not too round)
+      */}
+      <DialogContent className="w-[90%] max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-lg gap-0 font-['Inter',sans-serif]">
         
         <DialogHeader className="px-5 py-4 border-b border-[#f0f0f0] bg-white flex flex-row items-center justify-between">
           <DialogTitle className="text-[16px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
-          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors"><X size={20}/></button>
+          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors focus:outline-none">
+            <X size={20}/>
+          </button>
         </DialogHeader>
 
-        {/* Increased vertical spacing (space-y-5) to match layout in image_bd19bf.png */}
         <form onSubmit={handleMainSave} className="p-6 space-y-5">
           
           {/* Row 1: Name */}
@@ -187,7 +192,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
               <button 
                 type="button" 
                 onClick={handlePhoneBtnClick}
-                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
+                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer ml-2"
               >
                 {isPhoneEditable ? "Update" : "Update Number"}
               </button>
