@@ -17,6 +17,10 @@ type UserProfile = Tables<'profiles'> & {
   gender?: string | null; 
 };
 
+// --- CONSTANT AVATARS (One for Male, One for Female) ---
+const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
+const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka";
+
 // --- STATIC INFO ROW ---
 const ProfileInfoRow = ({ label, value }: { label: string, value: string | null }) => (
   <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] py-3 border-b border-gray-50 items-center min-h-[48px]">
@@ -56,25 +60,13 @@ const MyProfile = () => {
     fetchProfile();
   }, [user, toast]);
 
-  // --- STABLE AVATAR LOGIC (DiceBear v7) ---
+  // --- FIXED SINGLE AVATAR LOGIC ---
   const getAvatarSrc = () => {
-    const name = profile?.student_name || "User";
-    // Using v7 which is very stable for 'avataaars' style
-    const baseUrl = "https://api.dicebear.com/7.x/avataaars/svg";
-    const seed = encodeURIComponent(name);
-
-    if (profile?.gender === 'Male') {
-      // Male: Short hair, optional facial hair
-      return `${baseUrl}?seed=${seed}&top=shortHair,theCaesar,shortFlat,shortRound,shaggyMullet&facialHair=beardLight,beardMedium,mustacheFancy,none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&eyes=default,happy,wink&eyebrows=default,defaultNatural`;
-    } 
+    if (profile?.gender === 'Male') return MALE_AVATAR;
+    if (profile?.gender === 'Female') return FEMALE_AVATAR;
     
-    if (profile?.gender === 'Female') {
-      // Female: Long hair, no facial hair
-      return `${baseUrl}?seed=${seed}&top=longHair,longHairBob,longHairCurly,longHairStraight,longHairNotTooLong&facialHair=none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&eyes=default,happy&eyebrows=default,defaultNatural`;
-    }
-    
-    // Default fallback
-    return `${baseUrl}?seed=${seed}&eyes=default,happy`;
+    // Fallback for 'Other' or 'Not Set' - generates based on name
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.student_name || 'User'}`;
   };
 
   const getStatusText = () => {
@@ -102,13 +94,12 @@ const MyProfile = () => {
         {/* --- LEFT SIDEBAR --- */}
         <aside className="p-6 sm:p-8 border-r border-slate-100 text-center flex flex-col items-center bg-white">
           <div className="relative inline-block mb-4 sm:mb-5">
-            {/* Illustrated Avatar Image with Fallback */}
+            {/* Avatar Image */}
             <img 
               src={getAvatarSrc()} 
               alt="User avatar" 
               className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
               onError={(e) => {
-                // Strong Fallback to UI-Avatars if DiceBear fails
                 e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.student_name || 'User')}&background=random&color=fff&size=128`;
               }}
             />
