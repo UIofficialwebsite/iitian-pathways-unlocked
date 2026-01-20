@@ -104,24 +104,25 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* w-[90%]: Ensures standard margins on mobile
-         max-w-[420px]: Prevents excessive width on desktop
-         rounded-lg: Matches the visual style requested
+      {/* CRITICAL FIXES:
+        - w-[95%]: Forces margins on very small mobile screens.
+        - max-w-[400px]: Keeps it constrained.
+        - rounded-xl: Standard rounding.
       */}
-      <DialogContent className="w-[90%] sm:max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-lg gap-0 font-['Inter',sans-serif]">
+      <DialogContent className="w-[95%] max-w-[400px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-xl gap-0 font-['Inter',sans-serif]">
         
         <DialogHeader className="px-5 py-4 border-b border-[#f0f0f0] bg-white flex flex-row items-center justify-between">
           <DialogTitle className="text-[16px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
-          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors focus:outline-none">
+          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors focus:outline-none p-1">
             <X size={20}/>
           </button>
         </DialogHeader>
 
-        <form onSubmit={handleMainSave} className="p-5 sm:p-6 space-y-5">
+        <form onSubmit={handleMainSave} className="p-5 space-y-4">
           
           {/* Row 1: Name 
-              grid-cols-1: Forces vertical stacking (1 input per row) on mobile
-              sm:grid-cols-2: Restores side-by-side layout on tablets/desktop
+             - grid-cols-1: STACKS VERTICALLY ON MOBILE (This fixes the side-by-side cutoff)
+             - sm:grid-cols-2: Side-by-side on desktop
           */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -130,7 +131,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 type="text" 
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[4px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[6px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
                 placeholder="First Name"
               />
             </div>
@@ -140,7 +141,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 type="text" 
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[4px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[6px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
                 placeholder="Last Name"
               />
             </div>
@@ -168,7 +169,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           {/* Row 3: Mobile Number */}
           <div className="space-y-1.5">
             <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
-            <div className={`flex items-center border rounded-[4px] bg-[#f9fafb] px-3 h-10 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#d1d5db]'}`}>
+            <div className={`flex items-center border rounded-[6px] bg-[#f9fafb] px-3 h-10 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#d1d5db]'}`}>
               <div className="flex items-center gap-1 pr-2 border-r border-[#e5e7eb] h-full -ml-3 pl-3 mr-3 bg-gray-50">
                 <input 
                   type="text"
@@ -181,7 +182,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 <span className="text-[10px] text-[#999]">▼</span>
               </div>
 
-              {/* min-w-0 ensures the input shrinks properly on small screens so the button doesn't overflow */}
               <input 
                 ref={phoneInputRef}
                 type="text"
@@ -195,9 +195,9 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
               <button 
                 type="button" 
                 onClick={handlePhoneBtnClick}
-                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer ml-2 flex-shrink-0"
+                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer ml-1"
               >
-                {isPhoneEditable ? "Update" : "Update Number"}
+                {isPhoneEditable ? "Update" : "Edit"}
               </button>
             </div>
           </div>
@@ -209,24 +209,28 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
               type="email" 
               value={email}
               readOnly 
-              className="w-full px-3 py-2 h-10 border border-[#e5e7eb] rounded-[4px] text-[14px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
+              className="w-full px-3 py-2 h-10 border border-[#e5e7eb] rounded-[6px] text-[14px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
             />
           </div>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-[#f5f5f5]">
+          {/* Footer Buttons 
+             - flex-col-reverse: Stacks buttons vertically on mobile (Save on top, Cancel bottom)
+             - sm:flex-row: Side by side on desktop
+             This prevents "Save Changes" from being cut off.
+          */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 mt-2 border-t border-[#f5f5f5]">
             <Button 
               type="button"
               variant="outline"
               onClick={onClose}
-              className="px-4 sm:px-5 h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
+              className="w-full sm:w-auto px-5 h-10 sm:h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[6px] transition-colors"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
               disabled={isLoading || isPhoneEditable}
-              className="px-4 sm:px-5 h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
+              className="w-full sm:w-auto px-5 h-10 sm:h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[6px] border-none shadow-sm transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
               Save Changes
