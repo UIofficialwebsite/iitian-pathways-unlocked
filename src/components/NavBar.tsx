@@ -9,10 +9,11 @@ import {
   BookOpen,
   ChevronRight,
   ArrowLeft,
-  User,
-  LayoutDashboard,
   LogOut,
-  ChevronDown // Import ChevronDown for the arrow
+  ChevronDown,
+  CircleUser,
+  PencilLine,
+  Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -111,7 +112,6 @@ const NavBar = () => {
   const ProfileMenu = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {/* Added flex container to hold Avatar + Arrow */}
         <button className="focus:outline-none flex items-center gap-2 group">
           <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
             <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
@@ -119,54 +119,90 @@ const NavBar = () => {
               {initials}
             </AvatarFallback>
           </Avatar>
-          {/* Always show chevron/arrow */}
           <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-[#1d4ed8] transition-colors" />
         </button>
       </DropdownMenuTrigger>
-      {/* Increased z-index to 10005 to sit above the fixed NavBar (z-10000) */}
-      <DropdownMenuContent align="end" className="w-56 bg-white z-[10005] mt-2 shadow-lg border-gray-200">
-        <DropdownMenuLabel className="font-normal">
+      
+      {/* Using custom styles to match the provided HTML/CSS requirements:
+          - Width: 250px
+          - Shadow: 0 4px 20px rgba(0, 0, 0, 0.08)
+          - Border radius: 12px
+      */}
+      <DropdownMenuContent 
+        align="end" 
+        className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2"
+      >
+        {/* Optional: User Info Header (kept minimal) */}
+        <DropdownMenuLabel className="font-normal px-5 pb-2">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{profile?.full_name || "User"}</p>
+            <p className="text-sm font-medium leading-none text-[#344054]">{profile?.full_name || "User"}</p>
             <p className="text-xs leading-none text-muted-foreground truncate">{user?.email}</p>
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          {/* My Profile */}
-          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer font-normal text-gray-700">
-            <User className="mr-2 h-4 w-4" />
-            <span>My Profile</span>
+        
+        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+        
+        <DropdownMenuGroup className="flex flex-col">
+          {/* Item Style: 
+              - Padding: 14px 20px 
+              - Text: #344054, 16px, Medium
+              - Hover: #f9fafb
+              - Icon: 22px, stroke 1.8, margin-right 16px
+          */}
+          
+          {/* 1. My Profile (Always visible) */}
+          <DropdownMenuItem 
+            onClick={() => navigate("/dashboard/profile")} 
+            className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+          >
+            <CircleUser className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+            <span className="text-[16px] font-medium tracking-tight">My Profile</span>
           </DropdownMenuItem>
 
-          {/* Logic: 
-              If NOT Dashboard: Show "Study Batches" (Regular Batches) AND "My Enrollments".
-              If Dashboard: Show "My Enrollments".
-          */}
           {!isDashboard ? (
              <>
-               <DropdownMenuItem onClick={() => navigate("/dashboard/regularBatches")} className="cursor-pointer font-normal text-gray-700">
-                 <LayoutDashboard className="mr-2 h-4 w-4" />
-                 <span>Study Batches</span>
+               {/* 2. Study -> Dashboard (Study Portal) */}
+               <DropdownMenuItem 
+                 onClick={() => navigate("/dashboard")} 
+                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+               >
+                 <PencilLine className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                 <span className="text-[16px] font-medium tracking-tight">Study</span>
                </DropdownMenuItem>
-               <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer font-normal text-gray-700">
-                 <BookOpen className="mr-2 h-4 w-4" />
-                 <span>My Enrollments</span>
+
+               {/* 3. Batches -> Regular Batches */}
+               <DropdownMenuItem 
+                 onClick={() => navigate("/dashboard/regularBatches")} 
+                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+               >
+                 <Monitor className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                 <span className="text-[16px] font-medium tracking-tight">Batches</span>
                </DropdownMenuItem>
              </>
           ) : (
-             <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer font-normal text-gray-700">
-               <BookOpen className="mr-2 h-4 w-4" />
-               <span>My Enrollments</span>
-             </DropdownMenuItem>
+             <>
+                {/* Dashboard Specific Items */}
+                <DropdownMenuItem 
+                  onClick={() => navigate("/dashboard/enrollments")} 
+                  className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+                >
+                  <BookOpen className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                  <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
+                </DropdownMenuItem>
+             </>
           )}
 
         </DropdownMenuGroup>
-        <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:text-red-600 font-normal">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+        
+        {/* Logout - Red Color */}
+        <DropdownMenuItem 
+          onClick={handleSignOut} 
+          className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
+        >
+          <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+          <span className="text-[16px] font-medium tracking-tight">Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
