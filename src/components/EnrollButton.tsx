@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useLoginModal } from "@/context/LoginModalContext";
@@ -76,7 +76,7 @@ const customStyles = `
 
   /* Form Styling */
   .form-group {
-    margin-bottom: 28px;
+    margin-bottom: 20px;
     text-align: left;
   }
 
@@ -104,12 +104,27 @@ const customStyles = `
     color: #aaaaaa;
   }
 
+  /* Error Message Styling */
+  .error-message {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #ef4444; /* Red-500 */
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 8px;
+    background-color: #fef2f2;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #fee2e2;
+  }
+
   /* Modal Footer Buttons */
   .modal-actions {
     display: flex;
-    justify-content: flex-end; /* Keep right aligned or change to space-between if needed */
+    justify-content: flex-end;
     gap: 12px;
-    margin-top: 10px;
+    margin-top: 24px;
   }
 
   .btn {
@@ -127,7 +142,7 @@ const customStyles = `
   .btn-primary {
     background: #000000;
     color: #ffffff;
-    width: 100%; /* Make Verify button full width for better UX on mobile/modal */
+    width: 100%;
   }
 
   .btn-primary:hover {
@@ -171,6 +186,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [manualPhone, setManualPhone] = useState("");
+  const [inlineError, setInlineError] = useState<string | null>(null); // New state for inline errors
+  
   const { toast } = useToast();
   const { openLogin } = useLoginModal();
   const isMobile = useIsMobile();
@@ -192,8 +209,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   }, []);
 
   const handleEnrollClick = async () => {
+    setInlineError(null); // Clear errors
     if (isAuthenticated === false) {
-      // Open the global login modal instead of redirecting
       openLogin();
       return;
     }
@@ -231,12 +248,10 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   };
 
   const handlePhoneSubmit = async () => {
+    setInlineError(null); // Clear previous errors
+
     if (manualPhone.length < 10) {
-      toast({ 
-        title: "Invalid Phone", 
-        description: "Please enter a valid 10-digit number", 
-        variant: "destructive" 
-      });
+      setInlineError("Please enter a valid 10-digit number.");
       return;
     }
 
@@ -255,16 +270,20 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         }
       }
       
-      setShowPhoneDialog(false);
+      // Don't close dialog yet, wait for payment init
       await processPayment(manualPhone);
-    } catch (error) {
+      // Only close if successful (handled inside processPayment or after)
+      setShowPhoneDialog(false); 
+    } catch (error: any) {
       setIsProcessing(false);
-      console.error(error);
+      setInlineError(error.message || "Something went wrong. Please try again.");
     }
   };
 
   const processPayment = async (phoneNumber: string) => {
     setIsProcessing(true);
+    setInlineError(null);
+
     try {
       if (!courseId) throw new Error("Course information is missing");
 
@@ -290,7 +309,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         try {
            const body = JSON.parse(error.message);
            errorMessage = body.error || errorMessage;
-           if (body.details) console.error("Backend Details:", body.details);
         } catch (e) {
            if (error.message) errorMessage = error.message;
         }
@@ -320,11 +338,16 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
     } catch (error: any) {
       console.error("Enrollment error:", error);
-      toast({
-        title: "Enrollment Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      // SHOW ERROR INSIDE THE MODAL IF OPEN, ELSE TOAST
+      if (showPhoneDialog) {
+        setInlineError(error.message);
+      } else {
+        toast({
+          title: "Enrollment Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
       setIsProcessing(false);
     }
   };
@@ -352,12 +375,22 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
           className="form-input" 
           placeholder="e.g., 9876543210"
           value={manualPhone}
-          onChange={(e) => setManualPhone(e.target.value)}
+          onChange={(e) => {
+            setManualPhone(e.target.value);
+            if (inlineError) setInlineError(null); // Clear error on type
+          }}
         />
+        
+        {/* INLINE ERROR MESSAGE */}
+        {inlineError && (
+          <div className="error-message">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{inlineError}</span>
+          </div>
+        )}
       </div>
 
       <div className="modal-actions">
-        {/* Cancel button removed as per request */}
         <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
           {isProcessing ? "Verifying..." : "Verify"}
         </button>
