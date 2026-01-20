@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { useLoginModal } from '@/context/LoginModalContext';
 
 // Custom Styles for the Phone Number Modal
 const customStyles = `
@@ -119,6 +120,7 @@ const BatchConfiguration = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { openLogin } = useLoginModal();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
@@ -233,7 +235,7 @@ const BatchConfiguration = () => {
   // --- Payment Logic ---
   const handlePayment = async () => {
     if (!user) {
-      toast.error("Please login to continue");
+      openLogin();
       return;
     }
 
