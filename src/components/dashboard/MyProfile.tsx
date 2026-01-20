@@ -56,24 +56,25 @@ const MyProfile = () => {
     fetchProfile();
   }, [user, toast]);
 
-  // --- DYNAMIC ILLUSTRATED AVATARS ---
+  // --- FIXED AVATAR LOGIC ---
   const getAvatarSrc = () => {
-    const name = profile?.student_name || "User";
-    const seed = encodeURIComponent(name); // Ensure name is URL safe
-    const baseUrl = "https://api.dicebear.com/7.x/avataaars/svg";
+    const name = profile?.student_name || "Student";
+    const seed = encodeURIComponent(name);
+    // Updated to v9.x for stability
+    const baseUrl = "https://api.dicebear.com/9.x/avataaars/svg";
 
     if (profile?.gender === 'Male') {
-      // Configuration for Male: Short hair types, potential facial hair, masculine clothes
-      return `${baseUrl}?seed=${seed}&top=shortHair,theCaesar,shortFlat,shortRound,shaggyMullet,shaggy,curvy&facialHair=beardLight,beardMedium,mustacheFancy,none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&eyes=default,happy,wink`;
+      // Male configuration: Short hair, optional facial hair
+      return `${baseUrl}?seed=${seed}&top=shortHair,theCaesar,shortFlat,shortRound&facialHair=beardLight,beardMedium,mustacheFancy,none&clothing=blazerAndShirt,collarAndSweater&eyes=default,happy`;
     } 
     
     if (profile?.gender === 'Female') {
-      // Configuration for Female: Long hair types, no facial hair
-      return `${baseUrl}?seed=${seed}&top=longHair,longHairBob,longHairCurly,longHairStraight,longHairNotTooLong,longHairMiaWallace&facialHair=none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&accessories=none&eyes=default,happy`;
+      // Female configuration: Long hair styles, no facial hair
+      return `${baseUrl}?seed=${seed}&top=longHair,longHairBob,longHairCurly,longHairStraight&facialHair=none&clothing=blazerAndShirt,collarAndSweater&eyes=default,happy`;
     }
     
-    // Fallback / Other
-    return `${baseUrl}?seed=${seed}`;
+    // Default fallback (Mixed styles)
+    return `${baseUrl}?seed=${seed}&eyes=default,happy`;
   };
 
   const getStatusText = () => {
@@ -106,6 +107,10 @@ const MyProfile = () => {
               src={getAvatarSrc()} 
               alt="User avatar" 
               className="w-[120px] h-[120px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
+              onError={(e) => {
+                // Fallback to simple initials if DiceBear fails
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.student_name}&background=random`;
+              }}
             />
             <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full border-[3px] border-white shadow-sm cursor-pointer flex items-center justify-center hover:bg-blue-700 transition-colors">
               <Camera size={14} />
