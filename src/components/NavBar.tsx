@@ -110,7 +110,8 @@ const NavBar = () => {
     : user?.email?.charAt(0).toUpperCase() || "U";
 
   const ProfileMenu = () => (
-    <DropdownMenu>
+    // FIX: modal={false} prevents the body scroll lock, stopping the page shift and white bar
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <button className="focus:outline-none flex items-center gap-2 group">
           <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
@@ -123,16 +124,13 @@ const NavBar = () => {
         </button>
       </DropdownMenuTrigger>
       
-      {/* Using custom styles to match the provided HTML/CSS requirements:
-          - Width: 250px
-          - Shadow: 0 4px 20px rgba(0, 0, 0, 0.08)
-          - Border radius: 12px
+      {/* Z-index increased to 10005 to sit above the fixed NavBar (z-10000).
+         Styling matches your requested "Inter" aesthetics.
       */}
       <DropdownMenuContent 
         align="end" 
         className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2"
       >
-        {/* Optional: User Info Header (kept minimal) */}
         <DropdownMenuLabel className="font-normal px-5 pb-2">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none text-[#344054]">{profile?.full_name || "User"}</p>
@@ -143,13 +141,6 @@ const NavBar = () => {
         <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
         
         <DropdownMenuGroup className="flex flex-col">
-          {/* Item Style: 
-              - Padding: 14px 20px 
-              - Text: #344054, 16px, Medium
-              - Hover: #f9fafb
-              - Icon: 22px, stroke 1.8, margin-right 16px
-          */}
-          
           {/* 1. My Profile (Always visible) */}
           <DropdownMenuItem 
             onClick={() => navigate("/dashboard/profile")} 
