@@ -24,11 +24,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   // Phone State
   const [countryCode, setCountryCode] = useState("+91");
   const [localPhone, setLocalPhone] = useState("");
-  const [isPhoneEditable, setIsPhoneEditable] = useState(false); // Separate state for phone editing
+  const [isPhoneEditable, setIsPhoneEditable] = useState(false);
+  const [isPhoneUpdating, setIsPhoneUpdating] = useState(false);
   
   const [email, setEmail] = useState("");
-  
-  // Ref for auto-focusing
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -40,58 +39,85 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       setGender(profile.gender || "Male");
       
-      // Parse Phone Number
+      // Phone Parsing
       const rawPhone = profile.phone || "";
-      if (rawPhone.includes(" ")) {
-        const [code, ...rest] = rawPhone.split(" ");
-        setCountryCode(code || "+91");
-        setLocalPhone(rest.join(""));
-      } else if (rawPhone.startsWith("+") && rawPhone.length > 4) {
-        // Heuristic: Assume code is first 3-4 chars if no space, but default to +91 logic
-        // For simplicity/safety with user data, defaulting to +91 check
-        if(rawPhone.startsWith("+91")) {
-             setCountryCode("+91");
-             setLocalPhone(rawPhone.replace("+91", ""));
-        } else {
-             // Fallback
-             setCountryCode("+91");
-             setLocalPhone(rawPhone);
-        }
+      // Simple parsing logic: if it starts with +91, split it, else default
+      if(rawPhone.startsWith("+91")) {
+         setCountryCode("+91");
+         setLocalPhone(rawPhone.replace("+91", "").trim());
+      } else if (rawPhone.length > 0) {
+         setCountryCode("+91");
+         setLocalPhone(rawPhone);
       } else {
-        setCountryCode("+91");
-        setLocalPhone(rawPhone);
+         setCountryCode("+91");
+         setLocalPhone("");
       }
       
       setEmail(profile.email || "");
-      setIsPhoneEditable(false); // Reset lock on open
+      setIsPhoneEditable(false);
     }
   }, [profile, isOpen]);
 
-  const handleUpdateNumberClick = (e: React.MouseEvent) => {
+  // Handle "Edit" -> "Update" toggle logic
+  const handlePhoneBtnClick = async (e: React.MouseEvent) => {
     e.preventDefault();
-    setIsPhoneEditable(true);
-    // Slight delay to ensure render happens before focus
-    setTimeout(() => {
+    e.stopPropagation();
+
+    // State 1: Locked -> Unlock it
+    if (!isPhoneEditable) {
+      setIsPhoneEditable(true);
+      setTimeout(() => {
         if (phoneInputRef.current) {
-            phoneInputRef.current.focus();
+          phoneInputRef.current.focus();
         }
-    }, 50);
+      }, 50);
+      return;
+    }
+
+    // State 2: Unlocked -> Save (Update) it
+    setIsPhoneUpdating(true);
+    try {
+      const fullPhone = `${countryCode}${localPhone}`.trim();
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone: fullPhone })
+        .eq('id', profile.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Phone Updated",
+        description: "Your phone number has been updated successfully.",
+      });
+      
+      onProfileUpdate(); // Refresh parent data
+      setIsPhoneEditable(false); // Lock fields again
+    } catch (error: any) {
+      toast({
+        title: "Update Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsPhoneUpdating(false);
+    }
   };
 
-  const handleSave = async (e: React.FormEvent) => {
+  // Main Form Save (Name, Gender, etc.)
+  const handleMainSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
-      // Ensure phone format is clean
-      const fullPhone = `${countryCode} ${localPhone}`.trim();
-
+      // We don't save phone here to avoid conflicts, or we can save it again to be safe.
+      // Since phone has its own button, we primarily save Name/Gender here.
+      
       const { error } = await supabase
         .from('profiles')
         .update({
           student_name: fullName,
-          phone: fullPhone,
           gender: gender,
         })
         .eq('id', profile.id);
@@ -99,8 +125,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       if (error) throw error;
 
       toast({
-        title: "Success",
-        description: "Profile updated successfully.",
+        title: "Profile Updated",
+        description: "Your details have been saved.",
       });
       onProfileUpdate();
       onClose();
@@ -119,13 +145,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[4px] gap-0 font-['Inter',sans-serif]">
         
-        {/* Header */}
         <DialogHeader className="px-5 py-3 border-b border-[#f0f0f0] bg-white">
           <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
         </DialogHeader>
 
-        {/* Form Body */}
-        <form onSubmit={handleSave} className="p-5 space-y-4">
+        <form onSubmit={handleMainSave} className="p-5 space-y-4">
           
           {/* Row 1: Name */}
           <div className="grid grid-cols-2 gap-3">
@@ -170,12 +194,12 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </div>
           </div>
 
-          {/* Row 3: Mobile Number (With Separate Update Logic) */}
+          {/* Row 3: Mobile Number (Separate Update Logic) */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
             <div className={`flex items-center border rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#ccc]'}`}>
               
-              {/* Editable Country Code Block */}
+              {/* Editable Country Code */}
               <div className="flex items-center gap-1 pr-2 border-r border-[#eee] h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
                 <input 
                   type="text"
@@ -199,20 +223,19 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 disabled={!isPhoneEditable}
               />
               
-              {/* Update Button (Triggers Edit Mode) */}
-              {!isPhoneEditable && (
-                <button 
-                  type="button" 
-                  onClick={handleUpdateNumberClick}
-                  className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
-                >
-                  Update Number
-                </button>
-              )}
+              {/* Action Button: Edit -> Update */}
+              <button 
+                type="button" 
+                onClick={handlePhoneBtnClick}
+                disabled={isPhoneUpdating}
+                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer disabled:opacity-50"
+              >
+                {isPhoneUpdating ? "Updating..." : (isPhoneEditable ? "Update" : "Edit")}
+              </button>
             </div>
           </div>
 
-          {/* Row 4: Email (Read-only) */}
+          {/* Row 4: Email */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Email</label>
             <input 
