@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, X } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -109,11 +109,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       */}
       <DialogContent className="w-[94vw] max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-xl gap-0 font-['Inter',sans-serif]">
         
-        <DialogHeader className="px-4 py-3.5 border-b border-[#f0f0f0] bg-white flex flex-row items-center justify-between">
+        <DialogHeader className="px-4 py-3.5 border-b border-[#f0f0f0] bg-white">
           <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
-          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors focus:outline-none p-1">
-            <X size={18}/>
-          </button>
         </DialogHeader>
 
         {/* Reduced padding for more input space */}
