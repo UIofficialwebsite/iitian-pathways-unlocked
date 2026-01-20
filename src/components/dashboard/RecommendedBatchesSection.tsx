@@ -11,9 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Tables } from "@/integrations/supabase/types";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"; // Using Radix UI ScrollArea if available
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
-type Course = Tables<'courses'>; 
+type Course = Tables<'courses'>;
 
 interface RecommendedBatchesSectionProps {
   recommendedCourses: Course[];
@@ -27,8 +27,8 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
   const hasRecommendations = !loading && recommendedCourses && recommendedCourses.length > 0;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader>
+    <Card className="overflow-hidden border-none shadow-none lg:border lg:shadow-sm">
+      <CardHeader className="px-6">
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="text-2xl font-bold text-gray-900">
@@ -42,7 +42,6 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
                 : "Check out our most popular courses"}
             </p>
           </div>
-          {/* Move the View All button to the header for better UX with horizontal scrolls */}
           {!loading && hasRecommendations && (
             <Link to="/courses" className="hidden sm:block">
               <Button variant="ghost" className="text-blue-600 hover:text-blue-700 font-semibold">
@@ -53,34 +52,37 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
         </div>
       </CardHeader>
       
-      <CardContent className="p-0"> {/* Remove padding to allow full-width scroll */}
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex w-max space-x-6 p-6">
+      <CardContent className="p-0 relative">
+        <ScrollArea className="w-full">
+          {/* Container with padding and flex-nowrap to prevent vertical stacking */}
+          <div className="flex flex-nowrap gap-6 p-6 min-w-full">
             {loading ? (
               <>
-                <div className="w-[300px] md:w-[350px]"><CourseCardSkeleton /></div>
-                <div className="w-[300px] md:w-[350px]"><CourseCardSkeleton /></div>
-                <div className="w-[300px] md:w-[350px]"><CourseCardSkeleton /></div>
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="w-[280px] sm:w-[320px] md:w-[350px] shrink-0">
+                    <CourseCardSkeleton />
+                  </div>
+                ))}
               </>
             ) : hasRecommendations ? (
               recommendedCourses.map((course: any) => (
-                <div key={course.id} className="w-[300px] md:w-[380px] shrink-0">
+                <div key={course.id} className="w-[280px] sm:w-[320px] md:w-[380px] shrink-0">
                   <RecommendedBatchCard course={course} />
                 </div>
               ))
             ) : (
-              <div className="w-full text-center text-gray-500 py-8 px-6">
+              <div className="w-full text-center text-gray-500 py-12">
                 No courses available at the moment.
                 <br />
                 Please check back later or explore all courses.
               </div>
             )}
           </div>
-          <ScrollBar orientation="horizontal" />
+          <ScrollBar orientation="horizontal" className="bg-gray-100/50" />
         </ScrollArea>
       </CardContent>
 
-      <CardFooter className="flex justify-center pt-4 sm:hidden">
+      <CardFooter className="flex justify-center pt-2 pb-6 sm:hidden">
         <Link to="/courses">
           <Button 
             size="lg" 
