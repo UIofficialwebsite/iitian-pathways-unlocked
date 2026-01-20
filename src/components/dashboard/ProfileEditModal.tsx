@@ -30,8 +30,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [email, setEmail] = useState("");
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize form when modal opens
+  // Dependent only on [isOpen] to prevents form reset if parent profile updates while editing
   useEffect(() => {
-    if (profile) {
+    if (isOpen && profile) {
       const fullName = profile.student_name || profile.full_name || "";
       const nameParts = fullName.split(" ");
       setFirstName(nameParts[0] || "");
@@ -39,14 +41,18 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       setGender(profile.gender || "Male");
       
-      // Phone Parsing
+      // Parse Phone Number
       const rawPhone = profile.phone || "";
       // Simple parsing logic: if it starts with +91, split it, else default
       if(rawPhone.startsWith("+91")) {
          setCountryCode("+91");
          setLocalPhone(rawPhone.replace("+91", "").trim());
+      } else if (rawPhone.length > 0 && rawPhone.includes(" ")) {
+         const parts = rawPhone.split(" ");
+         setCountryCode(parts[0]);
+         setLocalPhone(parts.slice(1).join(""));
       } else if (rawPhone.length > 0) {
-         setCountryCode("+91");
+         setCountryCode("+91"); // Default code if none detected
          setLocalPhone(rawPhone);
       } else {
          setCountryCode("+91");
@@ -56,9 +62,9 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setEmail(profile.email || "");
       setIsPhoneEditable(false);
     }
-  }, [profile, isOpen]);
+  }, [isOpen]); // Only run on open to preserve unsaved changes during phone update
 
-  // Handle "Edit" -> "Update" toggle logic
+  // Handle "Edit" -> "Update" toggle for PHONE ONLY
   const handlePhoneBtnClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -74,10 +80,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       return;
     }
 
-    // State 2: Unlocked -> Save (Update) it
+    // State 2: Unlocked -> Update DB immediately
     setIsPhoneUpdating(true);
     try {
-      const fullPhone = `${countryCode}${localPhone}`.trim();
+      const fullPhone = `${countryCode} ${localPhone}`.trim();
       
       const { error } = await supabase
         .from('profiles')
@@ -91,8 +97,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
         description: "Your phone number has been updated successfully.",
       });
       
-      onProfileUpdate(); // Refresh parent data
-      setIsPhoneEditable(false); // Lock fields again
+      onProfileUpdate(); // Update parent data in background
+      setIsPhoneEditable(false); // Lock field again
     } catch (error: any) {
       toast({
         title: "Update Failed",
@@ -104,15 +110,13 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
     }
   };
 
-  // Main Form Save (Name, Gender, etc.)
+  // Main Form Save (Name, Gender) -> Closes Modal
   const handleMainSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
-      // We don't save phone here to avoid conflicts, or we can save it again to be safe.
-      // Since phone has its own button, we primarily save Name/Gender here.
       
       const { error } = await supabase
         .from('profiles')
@@ -205,8 +209,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                   type="text"
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
-                  className={`w-[36px] bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
-                  maxLength={4}
+                  className={`w-[40px] bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
+                  maxLength={5}
                   disabled={!isPhoneEditable}
                 />
                 <span className="text-[9px] text-[#999]">▼</span>
@@ -258,8 +262,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </Button>
             <Button 
               type="submit"
-              disabled={isLoading}
-              className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all"
+              disabled={isLoading || isPhoneEditable} // Disable Save if phone is being edited to avoid confusion
+              className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
               Save Changes
