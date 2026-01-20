@@ -163,6 +163,71 @@ const customStyles = `
   }
 `;
 
+// --- SEPARATE COMPONENT TO FIX CURSOR GLITCH ---
+interface VerificationContentProps {
+  isDrawer?: boolean;
+  manualPhone: string;
+  setManualPhone: (val: string) => void;
+  inlineError: string | null;
+  setInlineError: (val: string | null) => void;
+  handlePhoneSubmit: () => void;
+  isProcessing: boolean;
+  onClose: () => void;
+}
+
+const VerificationContent: React.FC<VerificationContentProps> = ({
+  isDrawer = false,
+  manualPhone,
+  setManualPhone,
+  inlineError,
+  setInlineError,
+  handlePhoneSubmit,
+  isProcessing,
+  onClose
+}) => (
+  <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
+    {!isDrawer && (
+      <button className="close-icon" onClick={onClose}>&times;</button>
+    )}
+
+    <div className="loading-container">
+      <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+    </div>
+
+    <h2 className="modal-title">Contact Details Required</h2>
+    <p className="modal-description">
+      Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+    </p>
+
+    <div className="form-group">
+      <label className="form-label">Phone Number (with Country Code)</label>
+      <input 
+        type="tel" 
+        className="form-input" 
+        placeholder="e.g., +91 9876543210"
+        value={manualPhone}
+        onChange={(e) => {
+          setManualPhone(e.target.value);
+          if (inlineError) setInlineError(null); 
+        }}
+      />
+      
+      {inlineError && (
+        <div className="error-message">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{inlineError}</span>
+        </div>
+      )}
+    </div>
+
+    <div className="modal-actions">
+      <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
+        {isProcessing ? "Verifying..." : "Verify"}
+      </button>
+    </div>
+  </div>
+);
+
 interface EnrollButtonProps {
   courseId?: string;
   enrollmentLink?: string;
@@ -186,7 +251,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [manualPhone, setManualPhone] = useState("");
-  const [inlineError, setInlineError] = useState<string | null>(null); // New state for inline errors
+  const [inlineError, setInlineError] = useState<string | null>(null);
   
   const { toast } = useToast();
   const { openLogin } = useLoginModal();
@@ -209,7 +274,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   }, []);
 
   const handleEnrollClick = async () => {
-    setInlineError(null); // Clear errors
+    setInlineError(null);
     if (isAuthenticated === false) {
       openLogin();
       return;
@@ -234,7 +299,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         .eq('id', user.id)
         .single();
 
-      if (profile?.phone && profile.phone.length >= 10) {
+      // Check if phone exists and has at least 7 digits (International standard minimum)
+      if (profile?.phone && profile.phone.length >= 7) {
         processPayment(profile.phone);
       } else {
         setIsProcessing(false);
@@ -248,10 +314,14 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   };
 
   const handlePhoneSubmit = async () => {
-    setInlineError(null); // Clear previous errors
+    setInlineError(null);
 
-    if (manualPhone.length < 10) {
-      setInlineError("Please enter a valid 10-digit number.");
+    // Validation for International Numbers: 
+    // Allow +, -, spaces, and digits. Min length 7, Max length 15.
+    const cleanPhone = manualPhone.replace(/[^0-9+]/g, '');
+    
+    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+      setInlineError("Please enter a valid phone number (7-15 digits).");
       return;
     }
 
@@ -270,9 +340,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         }
       }
       
-      // Don't close dialog yet, wait for payment init
       await processPayment(manualPhone);
-      // Only close if successful (handled inside processPayment or after)
       setShowPhoneDialog(false); 
     } catch (error: any) {
       setIsProcessing(false);
@@ -338,7 +406,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
     } catch (error: any) {
       console.error("Enrollment error:", error);
-      // SHOW ERROR INSIDE THE MODAL IF OPEN, ELSE TOAST
       if (showPhoneDialog) {
         setInlineError(error.message);
       } else {
@@ -351,52 +418,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       setIsProcessing(false);
     }
   };
-
-  // Shared content for both Dialog (Desktop) and Drawer (Mobile)
-  const VerificationContent = ({ isDrawer = false }) => (
-    <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
-      {!isDrawer && (
-        <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
-      )}
-
-      <div className="loading-container">
-        <div className="dot"></div><div className="dot"></div><div className="dot"></div>
-      </div>
-
-      <h2 className="modal-title">Contact Details Required</h2>
-      <p className="modal-description">
-        Please provide your phone number to generate your payment receipt and finalize your enrollment process.
-      </p>
-
-      <div className="form-group">
-        <label className="form-label">Phone Number</label>
-        <input 
-          type="tel" 
-          className="form-input" 
-          placeholder="e.g., 9876543210"
-          value={manualPhone}
-          onChange={(e) => {
-            setManualPhone(e.target.value);
-            if (inlineError) setInlineError(null); // Clear error on type
-          }}
-        />
-        
-        {/* INLINE ERROR MESSAGE */}
-        {inlineError && (
-          <div className="error-message">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{inlineError}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="modal-actions">
-        <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
-          {isProcessing ? "Verifying..." : "Verify"}
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <>
@@ -420,13 +441,31 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       {isMobile ? (
         <Drawer open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
           <DrawerContent>
-            <VerificationContent isDrawer={true} />
+            <VerificationContent 
+              isDrawer={true} 
+              manualPhone={manualPhone}
+              setManualPhone={setManualPhone}
+              inlineError={inlineError}
+              setInlineError={setInlineError}
+              handlePhoneSubmit={handlePhoneSubmit}
+              isProcessing={isProcessing}
+              onClose={() => setShowPhoneDialog(false)}
+            />
           </DrawerContent>
         </Drawer>
       ) : (
         <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
           <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
-            <VerificationContent />
+            <VerificationContent 
+              isDrawer={false} 
+              manualPhone={manualPhone}
+              setManualPhone={setManualPhone}
+              inlineError={inlineError}
+              setInlineError={setInlineError}
+              handlePhoneSubmit={handlePhoneSubmit}
+              isProcessing={isProcessing}
+              onClose={() => setShowPhoneDialog(false)}
+            />
           </DialogContent>
         </Dialog>
       )}
