@@ -2,14 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2, Edit, Save, X, User } from 'lucide-react'; // Removed Camera
-import { Tables } from '@/integrations/supabase/types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from '@/components/ui/separator'; // Import Separator
+import { Loader2, Camera, Edit3, Save, X, Check } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
 
 // Define profile type
 type UserProfile = Tables<'profiles'> & {
@@ -17,104 +14,101 @@ type UserProfile = Tables<'profiles'> & {
 };
 
 // --- PLACEHOLDER AVATARS ---
-const MALE_AVATAR = "https://placehold.co/400x400/EBF4FF/1E40AF?text=User&font=inter";
-const FEMALE_AVATAR = "https://placehold.co/400x400/FCE7F3/DB2777?text=User&font=inter";
-const DEFAULT_AVATAR = "https://placehold.co/400x400/F3F4F6/6B7280?text=User&font=inter";
+const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
+const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka";
+const DEFAULT_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=User";
 
-// Helper component for editable text fields
-const EditableField = ({ label, value, onSave, type = 'text' }: { label: string, value: string | null, onSave: (newValue: string) => Promise<void>, type?: string }) => {
+// --- CUSTOM EDITABLE ROW COMPONENT ---
+// Matches the "Info Row" design: Label (200px) | Value
+const ProfileInfoRow = ({ 
+  label, 
+  value, 
+  onSave, 
+  type = 'text', 
+  isSelect = false, 
+  options = [] 
+}: { 
+  label: string, 
+  value: string | null, 
+  onSave?: (newValue: string) => Promise<void>, 
+  type?: string,
+  isSelect?: boolean,
+  options?: {value: string, label: string}[]
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentValue, setCurrentValue] = useState(value || "");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
+    if (!onSave) return;
     setIsLoading(true);
     await onSave(currentValue);
     setIsLoading(false);
     setIsEditing(false);
   };
 
-  return (
-    <div className="py-4">
-      <label className="text-sm font-medium text-gray-500">{label}</label>
-      {isEditing ? (
-        <div className="flex items-center gap-2 mt-1">
-          <Input 
-            type={type}
-            value={currentValue}
-            onChange={(e) => setCurrentValue(e.target.value)}
-            className="flex-1"
-          />
-          <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} disabled={isLoading}>
-            <X className="h-4 w-4" />
-          </Button>
-          <Button size="icon" onClick={handleSave} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between mt-1">
-          <p className="text-gray-900 font-medium">{value || "Not set"}</p>
-          <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Helper component for editable select fields
-const EditableSelect = ({ label, value, onSave, options }: { label: string, value: string | null, onSave: (newValue: string) => Promise<void>, options: {value: string, label: string}[] }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentValue, setCurrentValue] = useState(value || "");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleSave = async () => {
-    setIsLoading(true);
-    await onSave(currentValue);
-    setIsLoading(false);
+  const handleCancel = () => {
     setIsEditing(false);
+    setCurrentValue(value || "");
   };
 
   return (
-    <div className="py-4">
-      <label className="text-sm font-medium text-gray-500">{label}</label>
-      {isEditing ? (
-        <div className="flex items-center gap-2 mt-1">
-          <Select value={currentValue} onValueChange={setCurrentValue}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
-            </SelectTrigger>
-            <SelectContent>
-              {options.map(option => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button size="icon" variant="ghost" onClick={() => setIsEditing(false)} disabled={isLoading}>
-            <X className="h-4 w-4" />
-          </Button>
-          <Button size="icon" onClick={handleSave} disabled={isLoading}>
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          </Button>
-        </div>
-      ) : (
-        <div className="flex items-center justify-between mt-1">
-          <p className="text-gray-900 font-medium">{value || "Not set"}</p>
-          <Button size="icon" variant="ghost" onClick={() => { setIsEditing(true); setCurrentValue(value || ""); }}>
-            <Edit className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] py-3 border-b border-gray-50 items-center min-h-[48px] group">
+      {/* Label */}
+      <div className="text-sm text-gray-500 font-medium">{label}</div>
+      
+      {/* Value Area */}
+      <div className="flex items-center justify-between w-full">
+        {isEditing ? (
+          <div className="flex items-center gap-2 w-full max-w-md animate-in fade-in duration-200">
+            {isSelect ? (
+              <Select value={currentValue} onValueChange={setCurrentValue}>
+                <SelectTrigger className="h-9 bg-white text-sm">
+                  <SelectValue placeholder={`Select ${label}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input 
+                type={type}
+                value={currentValue}
+                onChange={(e) => setCurrentValue(e.target.value)}
+                className="h-9 bg-white text-sm"
+              />
+            )}
+            <div className="flex gap-1 shrink-0">
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-green-600 hover:bg-green-50" onClick={handleSave} disabled={isLoading}>
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:bg-red-50" onClick={handleCancel} disabled={isLoading}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <span className="text-[14px] font-normal text-gray-900 truncate pr-4">
+              {value || <span className="text-gray-300 italic">Not set</span>}
+            </span>
+            {onSave && (
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 text-blue-600 hover:bg-blue-50 rounded"
+              >
+                <Edit3 className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 };
 
-
-// Main Profile Component
 const MyProfile = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -125,7 +119,6 @@ const MyProfile = () => {
     { value: 'Male', label: 'Male' },
     { value: 'Female', label: 'Female' },
     { value: 'Other', label: 'Other' },
-    { value: 'Prefer not to say', label: 'Prefer not to say' },
   ];
 
   useEffect(() => {
@@ -152,7 +145,6 @@ const MyProfile = () => {
   const handleUpdate = async (field: keyof UserProfile, value: string) => {
     if (!user || !profile) return;
     try {
-      // Use 'gender' as keyof UserProfile for the gender field
       const updateData = { [field]: value, updated_at: new Date().toISOString() };
       
       const { data, error } = await supabase
@@ -164,140 +156,162 @@ const MyProfile = () => {
 
       if (error) throw error;
       
-      setProfile(data as UserProfile); // Update local state with new profile data
-      toast({ title: "Success", description: `${String(field).replace('_', ' ')} updated.` });
+      setProfile(data as UserProfile);
+      toast({ title: "Success", description: "Profile updated successfully." });
     } catch (error: any) {
-      toast({ title: "Error", description: `Failed to update ${String(field)}. ${error.message}`, variant: "destructive" });
+      toast({ title: "Error", description: `Failed to update. ${error.message}`, variant: "destructive" });
     }
   };
 
   const getAvatarSrc = () => {
     if (profile?.gender === 'Male') return MALE_AVATAR;
     if (profile?.gender === 'Female') return FEMALE_AVATAR;
-    return DEFAULT_AVATAR;
+    // Use DiceBear with the user's name as a seed for consistent distinct avatars
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.student_name || 'User'}`;
   };
-  
+
+  const getStatusText = () => {
+    if (profile?.student_status) return `Status: ${profile.student_status}`;
+    if (profile?.level) return `Class: ${profile.level}`;
+    return "Student";
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-royal" />
+      <div className="flex items-center justify-center min-h-[500px]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Not Found</CardTitle>
-          <CardDescription>We couldn't load your profile. Please try again later.</CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
+  if (!profile) return null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      {/* New Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-        <p className="text-gray-600">View and edit your personal information and academic focus.</p>
-      </div>
-
-      {/* New Two-Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="font-['Inter',sans-serif] bg-gray-50/50 min-h-screen py-8 px-4 sm:px-6">
+      
+      {/* Main Container */}
+      <div className="max-w-[1000px] mx-auto bg-white border border-slate-100 rounded-xl grid grid-cols-1 lg:grid-cols-[280px_1fr] min-h-[80vh] shadow-[0_4px_10px_rgba(0,0,0,0.03)] overflow-hidden">
         
-        {/* Left Column: Avatar */}
-        <div className="lg:col-span-1">
-          <Card className="p-6 flex flex-col items-center text-center">
-            <div className="relative mb-4">
-              <Avatar className="h-32 w-32 border-4 border-white shadow-lg">
-                <AvatarImage src={getAvatarSrc()} alt={profile.student_name || "User"} />
-                <AvatarFallback className="text-4xl">
-                  {profile.student_name?.charAt(0).toUpperCase() || <User />}
-                </AvatarFallback>
-              </Avatar>
-              {/* --- CAMERA BUTTON REMOVED --- */}
+        {/* --- LEFT SIDEBAR --- */}
+        <aside className="p-10 border-r border-slate-100 text-center flex flex-col items-center bg-white">
+          <div className="relative inline-block mb-6">
+            <img 
+              src={getAvatarSrc()} 
+              alt="User avatar" 
+              className="w-[130px] h-[130px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
+            />
+            {/* Camera Button */}
+            <div className="absolute bottom-1.5 right-1.5 bg-blue-600 text-white p-2 rounded-full border-[3px] border-white shadow-sm cursor-pointer flex items-center justify-center hover:bg-blue-700 transition-colors">
+              <Camera size={16} />
             </div>
-            <h2 className="text-2xl font-semibold text-gray-900">{profile.student_name || "Update Name"}</h2>
-            <p className="text-gray-500">{profile.email}</p>
-          </Card>
-        </div>
+          </div>
+          
+          <h2 className="text-[19px] font-bold text-gray-900 mb-4 tracking-tight leading-snug">
+            {profile.student_name || "Welcome User"}
+          </h2>
+          
+          <div className="bg-yellow-50 text-yellow-800 text-[13px] font-semibold py-2.5 px-4 rounded-lg w-full border border-yellow-100">
+            {getStatusText()}
+          </div>
+        </aside>
 
-        {/* Right Column: Info Cards (Combined into ONE) */}
-        <div className="lg:col-span-2">
-          {/* --- ONE SINGLE CARD --- */}
-          <Card>
-            {/* Personal Information Section */}
-            <CardHeader>
-              <CardTitle>Personal Information</CardTitle>
-            </CardHeader>
-            <CardContent className="divide-y divide-gray-200">
-              <EditableField 
-                label="Full Name" 
+        {/* --- MAIN CONTENT --- */}
+        <main className="p-8 md:p-12 bg-white">
+          
+          {/* Overview Box */}
+          <section className="bg-blue-50/50 rounded-xl p-6 mb-10 border border-blue-100/50">
+            <div className="text-[16px] font-bold text-gray-900 mb-4 flex items-center justify-between">
+              Level up overview
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Total experience points</div>
+                <div className="text-[15px] font-normal text-gray-900">0 XP</div>
+              </div>
+              <div className="bg-white p-5 rounded-lg border border-slate-100 shadow-sm">
+                <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">Total enrollments</div>
+                <div className="text-[15px] font-normal text-gray-900">0 Courses</div>
+              </div>
+            </div>
+          </section>
+
+          <h1 className="text-[22px] font-extrabold text-gray-900 mb-8 tracking-tight">Profile detail</h1>
+
+          {/* Identity Information */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[16px] font-bold text-gray-900">Identity information</div>
+              {/* This link is decorative/functional if you want a global edit mode, 
+                  but individual row editing is enabled */}
+              <button className="text-blue-600 text-[13px] font-bold flex items-center gap-1.5 hover:text-blue-700 transition-colors">
+                <Edit3 size={14} /> Edit profile
+              </button>
+            </div>
+
+            <div className="w-full">
+              <ProfileInfoRow 
+                label="Full name" 
                 value={profile.student_name || profile.full_name} 
-                onSave={(value) => handleUpdate('student_name', value)} 
+                onSave={(val) => handleUpdate('student_name', val)} 
               />
-              <EditableField 
-                label="Phone" 
+              <ProfileInfoRow 
+                label="Mobile number" 
                 value={profile.phone} 
-                onSave={(value) => handleUpdate('phone', value)} 
+                onSave={(val) => handleUpdate('phone', val)} 
                 type="tel"
               />
-              <EditableSelect
-                label="Gender"
-                value={profile.gender || null}
-                onSave={(value) => handleUpdate('gender' as keyof UserProfile, value)}
+              <ProfileInfoRow 
+                label="Email address" 
+                value={profile.email} 
+                // Email is usually read-only
+              />
+              <ProfileInfoRow 
+                label="Gender" 
+                value={profile.gender} 
+                onSave={(val) => handleUpdate('gender' as keyof UserProfile, val)}
+                isSelect
                 options={genderOptions}
               />
-              <div className="py-4">
-                <label className="text-sm font-medium text-gray-500">Email</label>
-                <p className="text-gray-900 font-medium mt-1">{profile.email}</p>
-              </div>
-            </CardContent>
+            </div>
+          </section>
 
-            {/* --- SEPARATOR --- */}
-            <Separator className="my-6" />
+          {/* Divider */}
+          <div className="h-px bg-slate-100 w-full my-10"></div>
 
-            {/* Academic Program Section (Read-Only) */}
-            <CardHeader>
-              <CardTitle>Academic Program</CardTitle>
-              <CardDescription>
-                To edit your focus area, please use the "My Focus Area" button in the sidebar.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="py-2">
-                <label className="text-sm font-medium text-gray-500">Program Type</label>
-                <p className="text-gray-900 font-medium">{profile.program_type || "Not set"}</p>
-              </div>
-              {profile.program_type === 'IITM_BS' && (
+          {/* Academic Information */}
+          <section>
+            <div className="text-[16px] font-bold text-gray-900 mb-4">Academic information</div>
+            
+            <div className="w-full">
+              <ProfileInfoRow 
+                label="Program type" 
+                value={profile.program_type ? profile.program_type.replace(/_/g, ' ') : "Not set"} 
+                // Assuming program type is set elsewhere or read-only here
+              />
+              
+              {profile.program_type === 'IITM_BS' ? (
                 <>
-                  <div className="py-2">
-                    <label className="text-sm font-medium text-gray-500">Branch</label>
-                    <p className="text-gray-900 font-medium capitalize">{profile.branch || "Not set"}</p>
-                  </div>
-                  <div className="py-2">
-                    <label className="text-sm font-medium text-gray-500">Level</label>
-                    <p className="text-gray-900 font-medium capitalize">{profile.level || "Not set"}</p>
-                  </div>
+                  <ProfileInfoRow label="Branch" value={profile.branch} />
+                  <ProfileInfoRow label="Current Level" value={profile.level} />
+                </>
+              ) : (
+                <>
+                  <ProfileInfoRow label="Current class" value={profile.level} />
+                  <ProfileInfoRow label="Target examination" value={profile.exam_type} />
                 </>
               )}
-              {profile.program_type === 'COMPETITIVE_EXAM' && (
-                <>
-                  <div className="py-2">
-                    <label className="text-sm font-medium text-gray-500">Exam Type</label>
-                    <p className="text-gray-900 font-medium">{profile.exam_type || "Not set"}</p>
-                  </div>
-                  <div className="py-2">
-                    <label className="text-sm font-medium text-gray-500">Student Status</label>
-                    <p className="text-gray-900 font-medium">{profile.student_status || "Not set"}</p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              
+              {/* Placeholder for Education Board as it wasn't in original data type, 
+                  but is in the design requirements */}
+              <ProfileInfoRow 
+                label="Education board" 
+                value="CBSE" 
+                // Static for now as requested by design, or add 'board' to DB later
+              />
+            </div>
+          </section>
+
+        </main>
       </div>
     </div>
   );
