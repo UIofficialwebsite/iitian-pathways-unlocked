@@ -56,24 +56,24 @@ const MyProfile = () => {
     fetchProfile();
   }, [user, toast]);
 
-  // --- FIXED AVATAR LOGIC ---
+  // --- STABLE AVATAR LOGIC (DiceBear v7) ---
   const getAvatarSrc = () => {
-    const name = profile?.student_name || "Student";
+    const name = profile?.student_name || "User";
+    // Using v7 which is very stable for 'avataaars' style
+    const baseUrl = "https://api.dicebear.com/7.x/avataaars/svg";
     const seed = encodeURIComponent(name);
-    // Updated to v9.x for stability
-    const baseUrl = "https://api.dicebear.com/9.x/avataaars/svg";
 
     if (profile?.gender === 'Male') {
-      // Male configuration: Short hair, optional facial hair
-      return `${baseUrl}?seed=${seed}&top=shortHair,theCaesar,shortFlat,shortRound&facialHair=beardLight,beardMedium,mustacheFancy,none&clothing=blazerAndShirt,collarAndSweater&eyes=default,happy`;
+      // Male: Short hair, optional facial hair
+      return `${baseUrl}?seed=${seed}&top=shortHair,theCaesar,shortFlat,shortRound,shaggyMullet&facialHair=beardLight,beardMedium,mustacheFancy,none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&eyes=default,happy,wink&eyebrows=default,defaultNatural`;
     } 
     
     if (profile?.gender === 'Female') {
-      // Female configuration: Long hair styles, no facial hair
-      return `${baseUrl}?seed=${seed}&top=longHair,longHairBob,longHairCurly,longHairStraight&facialHair=none&clothing=blazerAndShirt,collarAndSweater&eyes=default,happy`;
+      // Female: Long hair, no facial hair
+      return `${baseUrl}?seed=${seed}&top=longHair,longHairBob,longHairCurly,longHairStraight,longHairNotTooLong&facialHair=none&clothing=blazerAndShirt,collarAndSweater,shirtCrewNeck&eyes=default,happy&eyebrows=default,defaultNatural`;
     }
     
-    // Default fallback (Mixed styles)
+    // Default fallback
     return `${baseUrl}?seed=${seed}&eyes=default,happy`;
   };
 
@@ -100,16 +100,16 @@ const MyProfile = () => {
       <div className="max-w-[1000px] mx-auto bg-white border border-slate-100 rounded-xl grid grid-cols-1 lg:grid-cols-[280px_1fr] min-h-[80vh] shadow-[0_4px_10px_rgba(0,0,0,0.03)] overflow-hidden">
         
         {/* --- LEFT SIDEBAR --- */}
-        <aside className="p-8 border-r border-slate-100 text-center flex flex-col items-center bg-white">
-          <div className="relative inline-block mb-5">
-            {/* Illustrated Avatar Image */}
+        <aside className="p-6 sm:p-8 border-r border-slate-100 text-center flex flex-col items-center bg-white">
+          <div className="relative inline-block mb-4 sm:mb-5">
+            {/* Illustrated Avatar Image with Fallback */}
             <img 
               src={getAvatarSrc()} 
               alt="User avatar" 
-              className="w-[120px] h-[120px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
+              className="w-[100px] h-[100px] sm:w-[120px] sm:h-[120px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
               onError={(e) => {
-                // Fallback to simple initials if DiceBear fails
-                e.currentTarget.src = `https://ui-avatars.com/api/?name=${profile.student_name}&background=random`;
+                // Strong Fallback to UI-Avatars if DiceBear fails
+                e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.student_name || 'User')}&background=random&color=fff&size=128`;
               }}
             />
             <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full border-[3px] border-white shadow-sm cursor-pointer flex items-center justify-center hover:bg-blue-700 transition-colors">
@@ -117,11 +117,11 @@ const MyProfile = () => {
             </div>
           </div>
           
-          <h2 className="text-[18px] font-bold text-gray-900 mb-3 tracking-tight leading-snug">
+          <h2 className="text-[17px] sm:text-[18px] font-bold text-gray-900 mb-2 sm:mb-3 tracking-tight leading-snug px-2">
             {profile.student_name || "Welcome User"}
           </h2>
           
-          <div className="bg-yellow-50 text-yellow-800 text-[12px] font-semibold py-2 px-4 rounded-lg w-full border border-yellow-100">
+          <div className="bg-yellow-50 text-yellow-800 text-[11px] sm:text-[12px] font-semibold py-1.5 sm:py-2 px-4 rounded-lg w-full max-w-[200px] border border-yellow-100">
             {getStatusText()}
           </div>
         </aside>
@@ -130,58 +130,66 @@ const MyProfile = () => {
         <main className="p-5 md:p-12 bg-white">
           
           {/* Overview Box */}
-          <section className="bg-blue-50/50 rounded-xl p-5 mb-8 border border-blue-100/50">
-            <div className="text-[15px] font-bold text-gray-900 mb-4 flex items-center justify-between">
+          <section className="bg-blue-50/50 rounded-xl p-4 sm:p-5 mb-8 border border-blue-100/50">
+            <div className="text-[14px] sm:text-[15px] font-bold text-gray-900 mb-4 flex items-center justify-between">
               Level up overview
             </div>
             
+            {/* FORCE 2 COLUMNS ON MOBILE */}
             <div className="grid grid-cols-2 gap-3">
               
               {/* Card 1: XP */}
-              <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm relative">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight">Total XP Level</div>
+              <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-between">
+                <div className="flex justify-between items-start w-full">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight pr-4">
+                    Total XP Level
+                  </div>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
-                        <div className="cursor-pointer p-0.5 -mt-1 -mr-1">
-                          <Info className="h-3.5 w-3.5 text-gray-400 hover:text-blue-600 transition-colors" />
+                        <div className="cursor-pointer -mt-1 -mr-1 p-1">
+                          <Info className="h-3 w-3 text-gray-400 hover:text-blue-600 transition-colors" />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-[220px] bg-slate-900 text-white border-none text-[11px] p-3 leading-relaxed">
-                        <p>Each authenticated share (link opened by &gt;5 people) counts as <span className="text-yellow-400 font-bold">0.5 XP</span>.</p>
-                        <p className="mt-1 opacity-90">Top 2 percentile users get free access to courses.</p>
+                      <TooltipContent side="bottom" align="end" className="max-w-[240px] bg-slate-900 text-white border-none text-[11px] p-3 leading-relaxed z-[50]">
+                        <p className="mb-2">Each <span className="text-yellow-400 font-bold">authenticated share</span> (link tracked & opened by &gt;5 unique people) counts as <span className="font-bold">0.5 XP</span>.</p>
+                        <p className="opacity-90">Note: Just clicking share doesn't count. We track actual engagement.</p>
+                        <div className="mt-2 pt-2 border-t border-slate-700 font-medium text-blue-200">
+                          Reward: Top 2 percentile users get FREE course access!
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="text-[14px] font-medium text-gray-900">0 XP</div>
+                <div className="text-[13px] sm:text-[14px] font-medium text-gray-900 mt-1">0 XP</div>
               </div>
 
               {/* Card 2: Enrollments */}
-              <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm relative">
-                <div className="flex justify-between items-start mb-1">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight">Total enrollments</div>
+              <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-between">
+                <div className="flex justify-between items-start w-full">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight pr-4">
+                    Total Enrollments
+                  </div>
                   <TooltipProvider>
                     <Tooltip delayDuration={0}>
                       <TooltipTrigger asChild>
-                        <div className="cursor-pointer p-0.5 -mt-1 -mr-1">
-                          <Info className="h-3.5 w-3.5 text-gray-400 hover:text-blue-600 transition-colors" />
+                        <div className="cursor-pointer -mt-1 -mr-1 p-1">
+                          <Info className="h-3 w-3 text-gray-400 hover:text-blue-600 transition-colors" />
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent className="max-w-[180px] bg-slate-900 text-white border-none text-[11px] p-3">
+                      <TooltipContent side="bottom" align="end" className="max-w-[180px] bg-slate-900 text-white border-none text-[11px] p-3 z-[50]">
                         Total number of active courses or batches you have enrolled in.
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="text-[14px] font-medium text-gray-900">0 Courses</div>
+                <div className="text-[13px] sm:text-[14px] font-medium text-gray-900 mt-1">0 Courses</div>
               </div>
 
             </div>
           </section>
 
-          <h1 className="text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
+          <h1 className="text-[18px] sm:text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
 
           {/* Identity Information */}
           <section className="mb-8">
