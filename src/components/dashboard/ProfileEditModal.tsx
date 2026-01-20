@@ -31,10 +31,8 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setLastName(nameParts.slice(1).join(" ") || "");
       
       setGender(profile.gender || "Male");
-      
-      // Default to +91 if phone is empty, otherwise show existing phone
-      setPhone(profile.phone || "+91 ");
-      
+      // Use the profile phone or default to empty string (user types distinct number)
+      setPhone(profile.phone || "");
       setEmail(profile.email || "");
     }
   }, [profile, isOpen]);
@@ -133,15 +131,20 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
             <div className="flex items-center border border-[#ccc] rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all focus-within:border-[#2563eb] focus-within:ring-1 focus-within:ring-[#2563eb]/20">
-              {/* Removed the 'IN' prefix block. The input now contains the code. */}
+              {/* RESTORED: Country Code Block */}
+              <div className="flex items-center gap-1.5 pr-2.5 border-r border-[#eee] text-[13px] text-[#555] font-medium select-none h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
+                <span>IN +91</span>
+                <span className="text-[9px] text-[#999]">▼</span>
+              </div>
               <input 
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none px-0 text-[13px] text-[#333] h-full font-medium"
-                placeholder="+91 9876543210"
+                className="flex-1 bg-transparent border-none outline-none px-0 text-[13px] text-[#333] h-full"
+                placeholder="1234567890"
               />
-              <button type="button" className="text-[11px] font-bold text-[#2563eb] hover:underline whitespace-nowrap px-1">
+              {/* UPDATED: Non-bold text (font-medium) */}
+              <button type="button" className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1">
                 Update Number
               </button>
             </div>
