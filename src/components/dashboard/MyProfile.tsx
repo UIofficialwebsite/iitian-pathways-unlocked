@@ -17,9 +17,10 @@ type UserProfile = Tables<'profiles'> & {
   gender?: string | null; 
 };
 
-// --- CONSTANT AVATARS (One for Male, One for Female) ---
-const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
-const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka";
+// --- SWAPPED AVATARS (Fixed Gender Mismatch) ---
+// Swapped seeds as requested: Male gets 'Aneka', Female gets 'Felix' if they were reversed previously.
+const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka"; 
+const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
 
 // --- STATIC INFO ROW ---
 const ProfileInfoRow = ({ label, value }: { label: string, value: string | null }) => (
@@ -60,18 +61,19 @@ const MyProfile = () => {
     fetchProfile();
   }, [user, toast]);
 
-  // --- FIXED SINGLE AVATAR LOGIC ---
+  // --- FIXED AVATAR LOGIC ---
   const getAvatarSrc = () => {
     if (profile?.gender === 'Male') return MALE_AVATAR;
     if (profile?.gender === 'Female') return FEMALE_AVATAR;
     
-    // Fallback for 'Other' or 'Not Set' - generates based on name
+    // Fallback based on name
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.student_name || 'User'}`;
   };
 
+  // --- UPDATED STATUS TEXT ("Student" instead of "Class") ---
   const getStatusText = () => {
-    if (profile?.student_status) return `Status: ${profile.student_status}`;
-    if (profile?.level) return `Class: ${profile.level}`;
+    if (profile?.student_status) return `Student: ${profile.student_status}`;
+    if (profile?.level) return `Student: ${profile.level}`;
     return "Student";
   };
 
@@ -112,6 +114,7 @@ const MyProfile = () => {
             {profile.student_name || "Welcome User"}
           </h2>
           
+          {/* UPDATED: Yellow Tag says "Student" */}
           <div className="bg-yellow-50 text-yellow-800 text-[11px] sm:text-[12px] font-semibold py-1.5 sm:py-2 px-4 rounded-lg w-full max-w-[200px] border border-yellow-100">
             {getStatusText()}
           </div>
