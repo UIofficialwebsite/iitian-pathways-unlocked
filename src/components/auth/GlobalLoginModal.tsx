@@ -51,14 +51,14 @@ const LoginPopupContent: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
         By continuing you agree to our <Link 
           to="/terms" 
           target="_blank" 
-          rel="noopener noreferrer" 
+          rel="noopener noreferrer"
           className="text-[#0284c7] font-semibold hover:underline"
         >
           Terms of use
         </Link> & <Link 
           to="/privacy" 
           target="_blank" 
-          rel="noopener noreferrer" 
+          rel="noopener noreferrer"
           className="text-[#0284c7] font-semibold hover:underline"
         >
           Privacy Policy
@@ -85,7 +85,8 @@ const GlobalLoginModal: React.FC = () => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && closeLogin()}>
       <DialogContent 
-        className="data-[state=open]:slide-in-from-bottom-[50%] data-[state=closed]:slide-out-to-bottom-[50%] data-[state=open]:slide-in-from-top-auto data-[state=closed]:slide-out-to-top-auto transition-all duration-500 max-h-[90vh]"
+        // FIXED: Added h-[90vh] here to explicitly KEEP the login modal tall
+        className="data-[state=open]:slide-in-from-bottom-[50%] data-[state=closed]:slide-out-to-bottom-[50%] data-[state=open]:slide-in-from-top-auto data-[state=closed]:slide-out-to-top-auto transition-all duration-500 max-h-[90vh] h-[90vh]"
       >
         <LoginPopupContent onSuccess={closeLogin} />
       </DialogContent>
