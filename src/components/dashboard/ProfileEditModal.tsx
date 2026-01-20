@@ -1,249 +1,226 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Camera, Edit3, Info } from 'lucide-react';
+import { Tables } from '@/integrations/supabase/types';
+import ProfileEditModal from './ProfileEditModal';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-interface ProfileEditModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  profile: any;
-  onProfileUpdate: () => void;
-}
+// Define profile type
+type UserProfile = Tables<'profiles'> & {
+  gender?: string | null; 
+};
 
-const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) => {
+// --- PLACEHOLDER AVATARS ---
+const MALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix";
+const FEMALE_AVATAR = "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka";
+
+// --- STATIC INFO ROW ---
+const ProfileInfoRow = ({ label, value }: { label: string, value: string | null }) => (
+  <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] py-3 border-b border-gray-50 items-center min-h-[48px]">
+    <div className="text-[13px] text-gray-500 font-medium">{label}</div>
+    <div className="text-[14px] font-normal text-gray-900 truncate">
+      {value || <span className="text-gray-300 italic">Not set</span>}
+    </div>
+  </div>
+);
+
+const MyProfile = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-  // Form State
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState("Male");
-  
-  // Phone State
-  const [countryCode, setCountryCode] = useState("+91");
-  const [localPhone, setLocalPhone] = useState("");
-  const [isPhoneEditable, setIsPhoneEditable] = useState(false);
-  
-  const [email, setEmail] = useState("");
-  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const fetchProfile = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      setProfile(data as UserProfile);
+    } catch (error: any) {
+      toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (isOpen && profile) {
-      const fullName = profile.student_name || profile.full_name || "";
-      const nameParts = fullName.split(" ");
-      setFirstName(nameParts[0] || "");
-      setLastName(nameParts.slice(1).join(" ") || "");
-      
-      setGender(profile.gender || "Male");
-      
-      // Parse Phone Number
-      const rawPhone = profile.phone || "";
-      if(rawPhone.startsWith("+91")) {
-         setCountryCode("+91");
-         setLocalPhone(rawPhone.replace("+91", "").trim());
-      } else if (rawPhone.length > 0 && rawPhone.includes(" ")) {
-         const parts = rawPhone.split(" ");
-         setCountryCode(parts[0]);
-         setLocalPhone(parts.slice(1).join(""));
-      } else if (rawPhone.length > 0) {
-         setCountryCode("+91"); 
-         setLocalPhone(rawPhone);
-      } else {
-         setCountryCode("+91");
-         setLocalPhone("");
-      }
-      
-      setEmail(profile.email || "");
-      setIsPhoneEditable(false);
-    }
-  }, [isOpen]);
+    fetchProfile();
+  }, [user, toast]);
 
-  // Handle "Edit" -> "Update" toggle (Local Confirmation Only)
-  const handlePhoneBtnClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isPhoneEditable) {
-      // Unlock Field
-      setIsPhoneEditable(true);
-      setTimeout(() => {
-        if (phoneInputRef.current) {
-          phoneInputRef.current.focus();
-        }
-      }, 50);
-    } else {
-      // Lock Field (Confirm Locally)
-      setIsPhoneEditable(false);
-    }
+  const getAvatarSrc = () => {
+    if (profile?.gender === 'Male') return MALE_AVATAR;
+    if (profile?.gender === 'Female') return FEMALE_AVATAR;
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.student_name || 'User'}`;
   };
 
-  // Main Form Save - Saves Everything (Name, Gender, Phone)
-  const handleMainSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      const fullPhone = `${countryCode} ${localPhone}`.trim();
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          student_name: fullName,
-          gender: gender,
-          phone: fullPhone,
-        })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile Updated",
-        description: "Your details have been saved successfully.",
-      });
-      onProfileUpdate();
-      onClose();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const getStatusText = () => {
+    if (profile?.student_status) return `Status: ${profile.student_status}`;
+    if (profile?.level) return `Class: ${profile.level}`;
+    return "Student";
   };
+
+  if (loading) return <div className="flex items-center justify-center min-h-[500px]"><Loader2 className="h-8 w-8 animate-spin text-blue-600" /></div>;
+  if (!profile) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[4px] gap-0 font-['Inter',sans-serif]">
+    <div className="font-['Inter',sans-serif] bg-gray-50/50 min-h-screen py-4 px-3 sm:py-8 sm:px-6">
+      
+      {/* Edit Modal Component */}
+      <ProfileEditModal 
+        isOpen={isEditModalOpen} 
+        onClose={() => setIsEditModalOpen(false)} 
+        profile={profile}
+        onProfileUpdate={fetchProfile}
+      />
+
+      <div className="max-w-[1000px] mx-auto bg-white border border-slate-100 rounded-xl grid grid-cols-1 lg:grid-cols-[280px_1fr] min-h-[80vh] shadow-[0_4px_10px_rgba(0,0,0,0.03)] overflow-hidden">
         
-        <DialogHeader className="px-5 py-3 border-b border-[#f0f0f0] bg-white">
-          <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleMainSave} className="p-5 space-y-4">
+        {/* --- LEFT SIDEBAR --- */}
+        <aside className="p-8 border-r border-slate-100 text-center flex flex-col items-center bg-white">
+          <div className="relative inline-block mb-5">
+            <img 
+              src={getAvatarSrc()} 
+              alt="User avatar" 
+              className="w-[120px] h-[120px] rounded-full object-cover border border-slate-100 p-1 bg-white shadow-sm"
+            />
+            <div className="absolute bottom-1 right-1 bg-blue-600 text-white p-1.5 rounded-full border-[3px] border-white shadow-sm cursor-pointer flex items-center justify-center hover:bg-blue-700 transition-colors">
+              <Camera size={14} />
+            </div>
+          </div>
           
-          {/* Row 1: Name */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">First Name</label>
-              <input 
-                type="text" 
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
-                placeholder="First Name"
-              />
-            </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Last Name</label>
-              <input 
-                type="text" 
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
-                placeholder="Last Name"
-              />
-            </div>
+          <h2 className="text-[18px] font-bold text-gray-900 mb-3 tracking-tight leading-snug">
+            {profile.student_name || "Welcome User"}
+          </h2>
+          
+          <div className="bg-yellow-50 text-yellow-800 text-[12px] font-semibold py-2 px-4 rounded-lg w-full border border-yellow-100">
+            {getStatusText()}
           </div>
+        </aside>
 
-          {/* Row 2: Gender */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide block">Gender</label>
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Male')}>
-                <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Male' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
-                </div>
-                <span className="text-[13px] text-[#444]">Male</span>
-              </div>
-              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Female')}>
-                <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Female' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
-                </div>
-                <span className="text-[13px] text-[#444]">Female</span>
-              </div>
+        {/* --- MAIN CONTENT --- */}
+        <main className="p-5 md:p-12 bg-white">
+          
+          {/* Overview Box */}
+          <section className="bg-blue-50/50 rounded-xl p-5 mb-8 border border-blue-100/50">
+            <div className="text-[15px] font-bold text-gray-900 mb-4 flex items-center justify-between">
+              Level up overview
             </div>
-          </div>
-
-          {/* Row 3: Mobile Number (Confirm Only) */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
-            <div className={`flex items-center border rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#ccc]'}`}>
+            
+            {/* Grid forced to 2 columns on mobile too */}
+            <div className="grid grid-cols-2 gap-3">
               
-              {/* Editable Country Code */}
-              <div className="flex items-center gap-1 pr-2 border-r border-[#eee] h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
-                <input 
-                  type="text"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className={`w-[40px] bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
-                  maxLength={5}
-                  disabled={!isPhoneEditable}
-                />
-                <span className="text-[9px] text-[#999]">▼</span>
+              {/* Card 1: XP */}
+              <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm relative">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight">Total XP Level</div>
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-pointer p-0.5 -mt-1 -mr-1">
+                          <Info className="h-3.5 w-3.5 text-gray-400 hover:text-blue-600 transition-colors" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[220px] bg-slate-900 text-white border-none text-[11px] p-3 leading-relaxed">
+                        <p>Each authenticated share (link opened by &gt;5 people) counts as <span className="text-yellow-400 font-bold">0.5 XP</span>.</p>
+                        <p className="mt-1 opacity-90">Top 2 percentile users get free access to courses.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="text-[14px] font-medium text-gray-900">0 XP</div>
               </div>
 
-              {/* Local Number Input */}
-              <input 
-                ref={phoneInputRef}
-                type="text"
-                value={localPhone}
-                onChange={(e) => setLocalPhone(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none px-0 text-[13px] h-full ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
-                placeholder="1234567890"
-                disabled={!isPhoneEditable}
-              />
-              
-              {/* Toggle Button */}
+              {/* Card 2: Enrollments */}
+              <div className="bg-white p-4 rounded-lg border border-slate-100 shadow-sm relative">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight">Total enrollments</div>
+                  <TooltipProvider>
+                    <Tooltip delayDuration={0}>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-pointer p-0.5 -mt-1 -mr-1">
+                          <Info className="h-3.5 w-3.5 text-gray-400 hover:text-blue-600 transition-colors" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-[180px] bg-slate-900 text-white border-none text-[11px] p-3">
+                        Total number of active courses or batches you have enrolled in.
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="text-[14px] font-medium text-gray-900">0 Courses</div>
+              </div>
+
+            </div>
+          </section>
+
+          <h1 className="text-[20px] font-extrabold text-gray-900 mb-6 tracking-tight">Profile detail</h1>
+
+          {/* Identity Information */}
+          <section className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[15px] font-bold text-gray-900">Identity information</div>
+              {/* TRIGGER MODAL ON CLICK */}
               <button 
-                type="button" 
-                onClick={handlePhoneBtnClick}
-                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
+                onClick={() => setIsEditModalOpen(true)}
+                className="text-blue-600 text-[12px] font-bold flex items-center gap-1.5 hover:text-blue-700 transition-colors"
               >
-                {isPhoneEditable ? "Update" : "Edit"}
+                <Edit3 size={13} /> Edit profile
               </button>
             </div>
-          </div>
 
-          {/* Row 4: Email */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Email</label>
-            <input 
-              type="email" 
-              value={email}
-              readOnly 
-              className="w-full px-2.5 py-1.5 h-9 border border-[#eee] rounded-[4px] text-[13px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
-            />
-          </div>
+            <div className="w-full">
+              <ProfileInfoRow label="Full name" value={profile.student_name || profile.full_name} />
+              <ProfileInfoRow label="Mobile number" value={profile.phone} />
+              <ProfileInfoRow label="Email address" value={profile.email} />
+              <ProfileInfoRow label="Gender" value={profile.gender} />
+            </div>
+          </section>
 
-          {/* Footer Buttons */}
-          <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-[#f5f5f5]">
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="px-4 h-8 text-[12px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="submit"
-              disabled={isLoading || isPhoneEditable} // Don't allow saving while phone is being edited
-              className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
-            >
-              {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
-              Save Changes
-            </Button>
-          </div>
+          <div className="h-px bg-slate-100 w-full my-8"></div>
 
-        </form>
-      </DialogContent>
-    </Dialog>
+          {/* Academic Information (Read-only) */}
+          <section>
+            <div className="text-[15px] font-bold text-gray-900 mb-4">Academic information</div>
+            
+            <div className="w-full">
+              <ProfileInfoRow 
+                label="Program type" 
+                value={profile.program_type ? profile.program_type.replace(/_/g, ' ') : "Not set"} 
+              />
+              
+              {profile.program_type === 'IITM_BS' ? (
+                <>
+                  <ProfileInfoRow label="Branch" value={profile.branch} />
+                  <ProfileInfoRow label="Current Level" value={profile.level} />
+                </>
+              ) : (
+                <>
+                  <ProfileInfoRow label="Current class" value={profile.level} />
+                  <ProfileInfoRow label="Target examination" value={profile.exam_type} />
+                </>
+              )}
+              
+              <ProfileInfoRow label="Education board" value="CBSE" />
+            </div>
+          </section>
+
+        </main>
+      </div>
+    </div>
   );
 };
 
-export default ProfileEditModal;
+export default MyProfile;
