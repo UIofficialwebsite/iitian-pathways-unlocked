@@ -31,7 +31,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setLastName(nameParts.slice(1).join(" ") || "");
       
       setGender(profile.gender || "Male");
-      setPhone(profile.phone || "");
+      
+      // Default to +91 if phone is empty, otherwise show existing phone
+      setPhone(profile.phone || "+91 ");
+      
       setEmail(profile.email || "");
     }
   }, [profile, isOpen]);
@@ -73,16 +76,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* - max-w-[420px]: Controls width
-          - rounded-[4px]: sharper corners 
-          - p-0: Full control over padding
-      */}
       <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[4px] gap-0 font-['Inter',sans-serif]">
         
         {/* Header */}
         <DialogHeader className="px-5 py-3 border-b border-[#f0f0f0] bg-white">
           <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
-          {/* Default Close button from DialogContent will appear here automatically */}
         </DialogHeader>
 
         {/* Form Body */}
@@ -135,17 +133,17 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
             <div className="flex items-center border border-[#ccc] rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all focus-within:border-[#2563eb] focus-within:ring-1 focus-within:ring-[#2563eb]/20">
-              <div className="flex items-center gap-1.5 pr-2.5 border-r border-[#eee] text-[13px] text-[#555] font-medium select-none h-full bg-[#f8f8f8] -ml-2.5 pl-2.5">
-                <span>IN +91</span>
-                <span className="text-[9px] text-[#999]">▼</span>
-              </div>
+              {/* Removed the 'IN' prefix block. The input now contains the code. */}
               <input 
                 type="text"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none px-2.5 text-[13px] text-[#333] h-full"
-                placeholder="1234567890"
+                className="flex-1 bg-transparent border-none outline-none px-0 text-[13px] text-[#333] h-full font-medium"
+                placeholder="+91 9876543210"
               />
+              <button type="button" className="text-[11px] font-bold text-[#2563eb] hover:underline whitespace-nowrap px-1">
+                Update Number
+              </button>
             </div>
           </div>
 
