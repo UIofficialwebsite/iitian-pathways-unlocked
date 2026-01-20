@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,7 +38,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       setGender(profile.gender || "Male");
       
-      // Parse Phone Number
       const rawPhone = profile.phone || "";
       if(rawPhone.startsWith("+91")) {
          setCountryCode("+91");
@@ -60,26 +59,20 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
     }
   }, [isOpen]);
 
-  // Handle "Edit" -> "Update" toggle (Local Confirmation Only)
   const handlePhoneBtnClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     if (!isPhoneEditable) {
-      // Unlock Field
       setIsPhoneEditable(true);
       setTimeout(() => {
-        if (phoneInputRef.current) {
-          phoneInputRef.current.focus();
-        }
+        if (phoneInputRef.current) phoneInputRef.current.focus();
       }, 50);
     } else {
-      // Lock Field (Confirm Locally)
       setIsPhoneEditable(false);
     }
   };
 
-  // Main Form Save - Saves Everything (Name, Gender, Phone)
   const handleMainSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -99,18 +92,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
       if (error) throw error;
 
-      toast({
-        title: "Profile Updated",
-        description: "Your details have been saved successfully.",
-      });
+      toast({ title: "Profile Updated", description: "Your details have been saved successfully." });
       onProfileUpdate();
       onClose();
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -118,122 +104,121 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[4px] gap-0 font-['Inter',sans-serif]">
+      {/* Container spacing */}
+      <DialogContent className="sm:max-w-[420px] w-full p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-[6px] gap-0 font-['Inter',sans-serif]">
         
-        <DialogHeader className="px-5 py-3 border-b border-[#f0f0f0] bg-white">
-          <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
+        <DialogHeader className="px-5 py-4 border-b border-[#f0f0f0] bg-white flex flex-row items-center justify-between">
+          <DialogTitle className="text-[16px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
+          <button onClick={onClose} className="text-gray-400 hover:text-black transition-colors"><X size={20}/></button>
         </DialogHeader>
 
-        <form onSubmit={handleMainSave} className="p-5 space-y-4">
+        {/* Increased vertical spacing (space-y-5) to match layout in image_bd19bf.png */}
+        <form onSubmit={handleMainSave} className="p-6 space-y-5">
           
           {/* Row 1: Name */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">First Name</label>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">First Name</label>
               <input 
                 type="text" 
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[4px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
                 placeholder="First Name"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Last Name</label>
+            <div className="space-y-1.5">
+              <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">Last Name</label>
               <input 
                 type="text" 
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-2.5 py-1.5 h-9 border border-[#ccc] rounded-[4px] text-[13px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
+                className="w-full px-3 py-2 h-10 border border-[#d1d5db] rounded-[4px] text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
                 placeholder="Last Name"
               />
             </div>
           </div>
 
           {/* Row 2: Gender */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide block">Gender</label>
+          <div className="space-y-2">
+            <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide block">Gender</label>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Male')}>
-                <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Male' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
+                <div className={`w-[18px] h-[18px] border rounded-full flex items-center justify-center transition-all ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
+                  {gender === 'Male' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
                 </div>
-                <span className="text-[13px] text-[#444]">Male</span>
+                <span className="text-[14px] text-[#444]">Male</span>
               </div>
               <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Female')}>
-                <div className={`w-[16px] h-[16px] border rounded-full flex items-center justify-center transition-all ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Female' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
+                <div className={`w-[18px] h-[18px] border rounded-full flex items-center justify-center transition-all ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
+                  {gender === 'Female' && <div className="w-2.5 h-2.5 bg-[#2563eb] rounded-full" />}
                 </div>
-                <span className="text-[13px] text-[#444]">Female</span>
+                <span className="text-[14px] text-[#444]">Female</span>
               </div>
             </div>
           </div>
 
-          {/* Row 3: Mobile Number (Confirm Only) */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
-            <div className={`flex items-center border rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#ccc]'}`}>
-              
-              {/* Editable Country Code */}
-              <div className="flex items-center gap-1 pr-2 border-r border-[#eee] h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
+          {/* Row 3: Mobile Number */}
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
+            <div className={`flex items-center border rounded-[4px] bg-[#f9fafb] px-3 h-10 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#d1d5db]'}`}>
+              <div className="flex items-center gap-1 pr-2 border-r border-[#e5e7eb] h-full -ml-3 pl-3 mr-3 bg-gray-50">
                 <input 
                   type="text"
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
-                  className={`w-[40px] bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
+                  className={`w-[42px] bg-transparent border-none outline-none text-[14px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
                   maxLength={5}
                   disabled={!isPhoneEditable}
                 />
-                <span className="text-[9px] text-[#999]">▼</span>
+                <span className="text-[10px] text-[#999]">▼</span>
               </div>
 
-              {/* Local Number Input */}
               <input 
                 ref={phoneInputRef}
                 type="text"
                 value={localPhone}
                 onChange={(e) => setLocalPhone(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none px-0 text-[13px] h-full ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
+                className={`flex-1 bg-transparent border-none outline-none px-0 text-[14px] h-full ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
                 placeholder="1234567890"
                 disabled={!isPhoneEditable}
               />
               
-              {/* Toggle Button */}
               <button 
                 type="button" 
                 onClick={handlePhoneBtnClick}
-                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
+                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
               >
-                {isPhoneEditable ? "Update" : "Edit"}
+                {isPhoneEditable ? "Update" : "Update Number"}
               </button>
             </div>
           </div>
 
           {/* Row 4: Email */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Email</label>
+          <div className="space-y-1.5">
+            <label className="text-[12px] font-semibold text-[#555] uppercase tracking-wide">Email</label>
             <input 
               type="email" 
               value={email}
               readOnly 
-              className="w-full px-2.5 py-1.5 h-9 border border-[#eee] rounded-[4px] text-[13px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
+              className="w-full px-3 py-2 h-10 border border-[#e5e7eb] rounded-[4px] text-[14px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
             />
           </div>
 
           {/* Footer Buttons */}
-          <div className="flex justify-end gap-2.5 pt-4 mt-2 border-t border-[#f5f5f5]">
+          <div className="flex justify-end gap-3 pt-4 mt-2 border-t border-[#f5f5f5]">
             <Button 
               type="button"
               variant="outline"
               onClick={onClose}
-              className="px-4 h-8 text-[12px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
+              className="px-5 h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
-              disabled={isLoading || isPhoneEditable} // Don't allow saving while phone is being edited
-              className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
+              disabled={isLoading || isPhoneEditable}
+              className="px-5 h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
               Save Changes
