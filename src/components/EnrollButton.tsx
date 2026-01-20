@@ -4,7 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Injecting the user's specific CSS styles
 const customStyles = `
@@ -19,6 +21,15 @@ const customStyles = `
     position: relative;
     box-shadow: 0 10px 25px rgba(0,0,0,0.05);
     margin: 0 auto;
+  }
+  
+  /* Mobile Drawer Specific Override */
+  .mobile-drawer-wrapper {
+    font-family: 'Inter', sans-serif !important;
+    background: #ffffff;
+    width: 100%;
+    padding: 24px;
+    position: relative;
   }
 
   /* THREE DOTS HORIZONTAL LOADING ANIMATION */
@@ -96,8 +107,9 @@ const customStyles = `
   /* Modal Footer Buttons */
   .modal-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-end; /* Keep right aligned or change to space-between if needed */
     gap: 12px;
+    margin-top: 10px;
   }
 
   .btn {
@@ -112,18 +124,10 @@ const customStyles = `
     border-radius: 0;
   }
 
-  .btn-secondary {
-    background: #ffffff;
-    color: #000000;
-  }
-
-  .btn-secondary:hover {
-    background: #f5f5f5;
-  }
-
   .btn-primary {
     background: #000000;
     color: #ffffff;
+    width: 100%; /* Make Verify button full width for better UX on mobile/modal */
   }
 
   .btn-primary:hover {
@@ -169,6 +173,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [manualPhone, setManualPhone] = useState("");
   const { toast } = useToast();
   const { openLogin } = useLoginModal();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -212,8 +217,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         .eq('id', user.id)
         .single();
 
-      // FIX: Validate the phone number from the profile. 
-      // If it's too short (e.g. "123"), ask for it again.
       if (profile?.phone && profile.phone.length >= 10) {
         processPayment(profile.phone);
       } else {
@@ -281,25 +284,19 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         },
       });
 
-      // BETTER ERROR HANDLING
       if (error) {
         console.error("Supabase Invoke Error:", error);
-        
         let errorMessage = "Payment initialization failed";
         try {
-           // Try to read the JSON body if available
            const body = JSON.parse(error.message);
            errorMessage = body.error || errorMessage;
            if (body.details) console.error("Backend Details:", body.details);
         } catch (e) {
-           // Fallback to raw message
            if (error.message) errorMessage = error.message;
         }
-        
         throw new Error(errorMessage);
       }
 
-      // Handle "Soft Errors" where status was 200 but body contains error
       if (data?.error) {
          throw new Error(data.error);
       }
@@ -332,6 +329,42 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     }
   };
 
+  // Shared content for both Dialog (Desktop) and Drawer (Mobile)
+  const VerificationContent = ({ isDrawer = false }) => (
+    <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
+      {!isDrawer && (
+        <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
+      )}
+
+      <div className="loading-container">
+        <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+      </div>
+
+      <h2 className="modal-title">Contact Details Required</h2>
+      <p className="modal-description">
+        Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+      </p>
+
+      <div className="form-group">
+        <label className="form-label">Phone Number</label>
+        <input 
+          type="tel" 
+          className="form-input" 
+          placeholder="e.g., 9876543210"
+          value={manualPhone}
+          onChange={(e) => setManualPhone(e.target.value)}
+        />
+      </div>
+
+      <div className="modal-actions">
+        {/* Cancel button removed as per request */}
+        <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
+          {isProcessing ? "Verifying..." : "Verify"}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
@@ -351,40 +384,19 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         )}
       </Button>
 
-      <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
-        <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
-          <div className="custom-modal-wrapper">
-            <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
-
-            <div className="loading-container">
-              <div className="dot"></div><div className="dot"></div><div className="dot"></div>
-            </div>
-
-            <h2 className="modal-title">Contact Details Required</h2>
-            <p className="modal-description">
-              Please provide your phone number to generate your payment receipt and finalize your enrollment process.
-            </p>
-
-            <div className="form-group">
-              <label className="form-label">Phone Number</label>
-              <input 
-                type="tel" 
-                className="form-input" 
-                placeholder="e.g., 9876543210"
-                value={manualPhone}
-                onChange={(e) => setManualPhone(e.target.value)}
-              />
-            </div>
-
-            <div className="modal-actions">
-              <button className="btn btn-secondary" onClick={() => setShowPhoneDialog(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
-                {isProcessing ? "Saving..." : "Continue to Enroll"}
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {isMobile ? (
+        <Drawer open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
+          <DrawerContent>
+            <VerificationContent isDrawer={true} />
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={showPhoneDialog} onOpenChange={setShowPhoneDialog}>
+          <DialogContent className="p-0 border-none bg-transparent shadow-none max-w-none w-auto [&>button]:hidden">
+            <VerificationContent />
+          </DialogContent>
+        </Dialog>
+      )}
     </>
   );
 };
