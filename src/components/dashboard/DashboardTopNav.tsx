@@ -49,8 +49,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
   const userInitial = userName.charAt(0).toUpperCase();
 
   return (
-    // Ensure sticky header has a z-index lower than the dropdown content
-    <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200">
+    <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200 font-['Inter',sans-serif]">
       <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
         
         {/* Left: Mobile Menu & Logo */}
@@ -68,7 +67,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
                   profile={profile as any} 
                   onProfileUpdate={onProfileUpdate} 
                   onViewChange={onViewChange}
-                  activeView={activeView} // Pass activeView to mobile sidebar
+                  activeView={activeView} 
                 />
               </div>
             </SheetContent>
@@ -93,37 +92,55 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
             Hi, {userName}
           </span>
           
-          {/* FIX 1: modal={false} prevents the "glitchy" open/close behavior */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none focus:outline-none">
-                <Avatar className="h-8 w-8 border border-gray-200">
+              <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none focus:outline-none group">
+                <Avatar className="h-8 w-8 border border-gray-200 group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
                   <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
-                  <AvatarFallback>{userInitial}</AvatarFallback>
+                  <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{userInitial}</AvatarFallback>
                 </Avatar>
-                <ChevronDown className="h-4 w-4 text-gray-500" />
+                <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-[#1d4ed8] transition-colors" />
               </button>
             </DropdownMenuTrigger>
             
-            {/* FIX 2: z-[10005] ensures it sits above the navbar (z-40) */}
-            <DropdownMenuContent align="end" className="w-56 z-[10005] bg-white">
-              <DropdownMenuLabel>
-                <p className="text-sm font-medium truncate">{userName}</p>
-                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+            {/* Same Styles as NavBar.tsx */}
+            <DropdownMenuContent 
+              align="end" 
+              className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2 font-['Inter',sans-serif]"
+            >
+              <DropdownMenuLabel className="font-normal px-5 pb-2">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none text-[#344054] truncate">{userName}</p>
+                  <p className="text-xs leading-none text-muted-foreground truncate">{userEmail}</p>
+                </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => onViewChange('profile')} className="cursor-pointer">
-                <User className="h-4 w-4 mr-2" />
-                My Profile
+              
+              <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+              
+              <DropdownMenuItem 
+                onClick={() => onViewChange('profile')} 
+                className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+              >
+                <User className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                <span className="text-[16px] font-medium tracking-tight">My Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onViewChange('enrollments')} className="cursor-pointer">
-                <LayoutGrid className="h-4 w-4 mr-2" />
-                My Enrollments
+
+              <DropdownMenuItem 
+                onClick={() => onViewChange('enrollments')} 
+                className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
+              >
+                <LayoutGrid className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              
+              <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
+              
+              <DropdownMenuItem 
+                onClick={handleLogout} 
+                className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
+              >
+                <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
+                <span className="text-[16px] font-medium tracking-tight">Logout</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
