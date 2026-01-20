@@ -104,8 +104,9 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* w-[90%]: Ensures side margins on mobile so it doesn't touch edges
-        max-w-[420px]: Prevents it from getting too wide on desktop
+      {/* w-[90%]: Ensures standard margins on mobile
+         max-w-[420px]: Prevents excessive width on desktop
+         rounded-lg: Matches the visual style requested
       */}
       <DialogContent className="w-[90%] sm:max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-lg gap-0 font-['Inter',sans-serif]">
         
@@ -116,11 +117,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           </button>
         </DialogHeader>
 
-        <form onSubmit={handleMainSave} className="p-6 space-y-5">
+        <form onSubmit={handleMainSave} className="p-5 sm:p-6 space-y-5">
           
           {/* Row 1: Name 
-              grid-cols-1: stacks vertically on mobile (1 input per row)
-              sm:grid-cols-2: side-by-side on tablet/desktop
+              grid-cols-1: Forces vertical stacking (1 input per row) on mobile
+              sm:grid-cols-2: Restores side-by-side layout on tablets/desktop
           */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -180,12 +181,13 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 <span className="text-[10px] text-[#999]">▼</span>
               </div>
 
+              {/* min-w-0 ensures the input shrinks properly on small screens so the button doesn't overflow */}
               <input 
                 ref={phoneInputRef}
                 type="text"
                 value={localPhone}
                 onChange={(e) => setLocalPhone(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none px-0 text-[14px] h-full ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
+                className={`flex-1 bg-transparent border-none outline-none px-0 text-[14px] h-full min-w-0 ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
                 placeholder="1234567890"
                 disabled={!isPhoneEditable}
               />
@@ -193,7 +195,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
               <button 
                 type="button" 
                 onClick={handlePhoneBtnClick}
-                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer ml-2"
+                className="text-[12px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer ml-2 flex-shrink-0"
               >
                 {isPhoneEditable ? "Update" : "Update Number"}
               </button>
@@ -217,14 +219,14 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
               type="button"
               variant="outline"
               onClick={onClose}
-              className="px-5 h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
+              className="px-4 sm:px-5 h-9 text-[13px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-[4px] transition-colors"
             >
               Cancel
             </Button>
             <Button 
               type="submit"
               disabled={isLoading || isPhoneEditable}
-              className="px-5 h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
+              className="px-4 sm:px-5 h-9 text-[13px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
               Save Changes
