@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // Import useLocation
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -11,9 +12,28 @@ interface GoogleAuthProps {
 
 const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSuccess }) => {
   const { toast } = useToast();
+  const location = useLocation(); // Get current location
 
   const handleGoogleAuth = async () => {
     setIsLoading(true);
+    
+    // --- NEW LOGIC: Save the return URL ---
+    let returnTo = window.location.pathname + window.location.search;
+    
+    // If we are currently on the specific Auth/Login page, we want to know 
+    // where the user came from (e.g. redirected from a protected route)
+    if (['/auth', '/student-login', '/admin-login'].includes(window.location.pathname)) {
+        if (location.state?.from?.pathname) {
+            returnTo = location.state.from.pathname + (location.state.from.search || '');
+        } else {
+            // Default to home if visited /auth directly
+            returnTo = '/';
+        }
+    }
+    
+    localStorage.setItem('auth_return_url', returnTo);
+    // --------------------------------------
+
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
