@@ -48,7 +48,21 @@ const LoginPopupContent: React.FC<{ onSuccess?: () => void }> = ({ onSuccess }) 
 
       {/* Footer */}
       <div className="mt-auto pt-4 text-center text-[10px] xs:text-[11px] sm:text-[13px] text-[#717171] leading-tight border-t border-gray-100/50 shrink-0">
-        By continuing you agree to our <Link to="/terms" className="text-[#0284c7] font-semibold hover:underline">Terms of use</Link> & <Link to="/privacy" className="text-[#0284c7] font-semibold hover:underline">Privacy Policy</Link>
+        By continuing you agree to our <Link 
+          to="/terms" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-[#0284c7] font-semibold hover:underline"
+        >
+          Terms of use
+        </Link> & <Link 
+          to="/privacy" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-[#0284c7] font-semibold hover:underline"
+        >
+          Privacy Policy
+        </Link>
       </div>
     </div>
   );
