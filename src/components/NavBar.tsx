@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   User,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  ChevronDown // Import ChevronDown for the arrow
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,18 +50,15 @@ const NavBar = () => {
   const { courses } = useBackend();
   const { openLogin } = useLoginModal();
   const navigate = useNavigate();
-  const location = useLocation(); // Needed to check current path
+  const location = useLocation();
   
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
-  // Profile State
   const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
 
-  // Check if we are currently on a dashboard page
   const isDashboard = location.pathname.startsWith("/dashboard");
 
-  // Fetch Profile Data (for Avatar/Name)
   useEffect(() => {
     const getProfile = async () => {
       if (user) {
@@ -106,25 +104,27 @@ const NavBar = () => {
     { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
   ];
 
-  // Helper: Profile Initials
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.charAt(0).toUpperCase() || "U";
 
-  // Reusable Profile Dropdown Menu
   const ProfileMenu = () => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="focus:outline-none rounded-full">
-          <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-[#1d4ed8] transition-all">
+        {/* Added flex container to hold Avatar + Arrow */}
+        <button className="focus:outline-none flex items-center gap-2 group">
+          <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
             <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
             <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">
               {initials}
             </AvatarFallback>
           </Avatar>
+          {/* Always show chevron/arrow */}
+          <ChevronDown className="h-4 w-4 text-gray-600 group-hover:text-[#1d4ed8] transition-colors" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-white z-[10002]">
+      {/* Increased z-index to 10005 to sit above the fixed NavBar (z-10000) */}
+      <DropdownMenuContent align="end" className="w-56 bg-white z-[10005] mt-2 shadow-lg border-gray-200">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{profile?.full_name || "User"}</p>
@@ -133,20 +133,29 @@ const NavBar = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          {/* 1. My Profile (Always First) */}
-          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer">
+          {/* My Profile */}
+          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer font-normal text-gray-700">
             <User className="mr-2 h-4 w-4" />
             <span>My Profile</span>
           </DropdownMenuItem>
 
-          {/* 2. Conditional Item: 'Study Batches' (Non-Dash) OR 'My Enrollments' (In-Dash) */}
+          {/* Logic: 
+              If NOT Dashboard: Show "Study Batches" (Regular Batches) AND "My Enrollments".
+              If Dashboard: Show "My Enrollments".
+          */}
           {!isDashboard ? (
-             <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
-               <LayoutDashboard className="mr-2 h-4 w-4" />
-               <span>Study Batches</span>
-             </DropdownMenuItem>
+             <>
+               <DropdownMenuItem onClick={() => navigate("/dashboard/regularBatches")} className="cursor-pointer font-normal text-gray-700">
+                 <LayoutDashboard className="mr-2 h-4 w-4" />
+                 <span>Study Batches</span>
+               </DropdownMenuItem>
+               <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer font-normal text-gray-700">
+                 <BookOpen className="mr-2 h-4 w-4" />
+                 <span>My Enrollments</span>
+               </DropdownMenuItem>
+             </>
           ) : (
-             <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer">
+             <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer font-normal text-gray-700">
                <BookOpen className="mr-2 h-4 w-4" />
                <span>My Enrollments</span>
              </DropdownMenuItem>
@@ -155,8 +164,7 @@ const NavBar = () => {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         
-        {/* 3. Logout (Always Last) */}
-        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:text-red-600">
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:text-red-600 font-normal">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>
@@ -333,9 +341,6 @@ const NavBar = () => {
                     </div>
                   </div>
                 )}
-                
-                {/* REMOVED the "Dashboard/Logout" block from here. 
-                    It is now handled by the top-right profile icon on mobile. */}
               </SheetContent>
             </Sheet>
 
@@ -346,7 +351,6 @@ const NavBar = () => {
 
           <div className="flex items-center gap-3">
             {user ? (
-              // This ProfileMenu now contains the dropdown for Mobile too
               <ProfileMenu />
             ) : (
               <Button 
