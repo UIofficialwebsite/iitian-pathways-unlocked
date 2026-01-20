@@ -20,7 +20,11 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("Male");
-  const [phone, setPhone] = useState("");
+  
+  // Split phone state
+  const [countryCode, setCountryCode] = useState("+91");
+  const [localPhone, setLocalPhone] = useState("");
+  
   const [email, setEmail] = useState("");
 
   useEffect(() => {
@@ -31,8 +35,24 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setLastName(nameParts.slice(1).join(" ") || "");
       
       setGender(profile.gender || "Male");
-      // Use the profile phone or default to empty string (user types distinct number)
-      setPhone(profile.phone || "");
+      
+      // Phone Parsing Logic
+      // Assumes phone is stored as "+91 9876543210" or just "9876543210"
+      const rawPhone = profile.phone || "";
+      if (rawPhone.includes(" ")) {
+        const [code, ...rest] = rawPhone.split(" ");
+        setCountryCode(code || "+91");
+        setLocalPhone(rest.join(""));
+      } else if (rawPhone.startsWith("+")) {
+        // If it's like "+919876543210" without space, heuristic split (first 3 chars)
+        setCountryCode(rawPhone.slice(0, 3));
+        setLocalPhone(rawPhone.slice(3));
+      } else {
+        // No code, assume local
+        setCountryCode("+91");
+        setLocalPhone(rawPhone);
+      }
+      
       setEmail(profile.email || "");
     }
   }, [profile, isOpen]);
@@ -43,12 +63,13 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
+      const fullPhone = `${countryCode} ${localPhone}`.trim();
 
       const { error } = await supabase
         .from('profiles')
         .update({
           student_name: fullName,
-          phone: phone,
+          phone: fullPhone,
           gender: gender,
         })
         .eq('id', profile.id);
@@ -131,19 +152,29 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
             <div className="flex items-center border border-[#ccc] rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all focus-within:border-[#2563eb] focus-within:ring-1 focus-within:ring-[#2563eb]/20">
-              {/* RESTORED: Country Code Block */}
-              <div className="flex items-center gap-1.5 pr-2.5 border-r border-[#eee] text-[13px] text-[#555] font-medium select-none h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
-                <span>IN +91</span>
+              
+              {/* Editable Country Code Block */}
+              <div className="flex items-center gap-1 pr-2 border-r border-[#eee] h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
+                <input 
+                  type="text"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  className="w-[36px] bg-transparent border-none outline-none text-[13px] text-[#555] font-medium text-center p-0"
+                  maxLength={4}
+                />
                 <span className="text-[9px] text-[#999]">▼</span>
               </div>
+
+              {/* Local Number Input */}
               <input 
                 type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={localPhone}
+                onChange={(e) => setLocalPhone(e.target.value)}
                 className="flex-1 bg-transparent border-none outline-none px-0 text-[13px] text-[#333] h-full"
                 placeholder="1234567890"
               />
-              {/* UPDATED: Non-bold text (font-medium) */}
+              
+              {/* Update Button (Non-bold) */}
               <button type="button" className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1">
                 Update Number
               </button>
