@@ -173,18 +173,18 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+      <DialogContent className="w-[94vw] max-w-[420px] p-0 gap-0 rounded-xl overflow-hidden">
+        <DialogHeader className="px-4 py-3 border-b bg-muted/30">
+          <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">{description}</DialogDescription>
         </DialogHeader>
 
         {isFetchingOptions || isLoading ? (
-          <div className="flex justify-center items-center h-40">
-            <Loader2 className="h-8 w-8 animate-spin" />
+          <div className="flex justify-center items-center h-32">
+            <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : (
-          <div className="space-y-4 pt-4">
+          <div className="space-y-2.5 px-4 py-4">
             {currentOptions.length > 0 ? (
               currentOptions.map(option => {
                 const Icon = iconMap[option.icon || 'default'] || iconMap.default;
@@ -192,27 +192,29 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
                   <Button
                     key={option.id}
                     variant={selectedValue === option.value_to_save ? "default" : "outline"}
-                    className="w-full justify-between h-16 text-left"
+                    className="w-full justify-between h-12 text-left text-sm"
                     onClick={() => handleOptionClick(option)}
                   >
                     <div className="flex items-center">
-                      <Icon className="h-6 w-6 mr-3" />
+                      <Icon className="h-5 w-5 mr-2.5" />
                       <div>
-                        <p className="font-semibold">{option.label}</p>
+                        <p className="font-medium text-[13px]">{option.label}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 group-hover:animate-bounce-horizontal" />
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 );
               })
             ) : (
-              <p className="text-center text-gray-500">No options available for this selection.</p>
+              <p className="text-center text-muted-foreground text-sm">No options available for this selection.</p>
             )}
 
             {/* Back Button */}
             {currentStepParentId !== null && (
               <Button
                 variant="ghost"
+                size="sm"
+                className="mt-2"
                 onClick={() => {
                   const newPath = [...selectionPath.slice(0, -1)];
                   setSelectionPath(newPath);

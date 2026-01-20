@@ -250,7 +250,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
 
   return (
     // Changed pt-20 to pt-16 to reduce space above header
-    <div className={cn("bg-slate-50", !isDashboardView && "min-h-screen pt-16")}>
+    <div className={cn("bg-background", !isDashboardView && "min-h-screen pt-16")}>
        {!isDashboardView && <NavBar />}
        
        <main className="w-full">
