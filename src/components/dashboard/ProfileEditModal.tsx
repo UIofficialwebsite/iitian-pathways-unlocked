@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -21,11 +21,15 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [lastName, setLastName] = useState("");
   const [gender, setGender] = useState("Male");
   
-  // Split phone state
+  // Phone State
   const [countryCode, setCountryCode] = useState("+91");
   const [localPhone, setLocalPhone] = useState("");
+  const [isPhoneEditable, setIsPhoneEditable] = useState(false); // Separate state for phone editing
   
   const [email, setEmail] = useState("");
+  
+  // Ref for auto-focusing
+  const phoneInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (profile) {
@@ -36,26 +40,43 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       setGender(profile.gender || "Male");
       
-      // Phone Parsing Logic
-      // Assumes phone is stored as "+91 9876543210" or just "9876543210"
+      // Parse Phone Number
       const rawPhone = profile.phone || "";
       if (rawPhone.includes(" ")) {
         const [code, ...rest] = rawPhone.split(" ");
         setCountryCode(code || "+91");
         setLocalPhone(rest.join(""));
-      } else if (rawPhone.startsWith("+")) {
-        // If it's like "+919876543210" without space, heuristic split (first 3 chars)
-        setCountryCode(rawPhone.slice(0, 3));
-        setLocalPhone(rawPhone.slice(3));
+      } else if (rawPhone.startsWith("+") && rawPhone.length > 4) {
+        // Heuristic: Assume code is first 3-4 chars if no space, but default to +91 logic
+        // For simplicity/safety with user data, defaulting to +91 check
+        if(rawPhone.startsWith("+91")) {
+             setCountryCode("+91");
+             setLocalPhone(rawPhone.replace("+91", ""));
+        } else {
+             // Fallback
+             setCountryCode("+91");
+             setLocalPhone(rawPhone);
+        }
       } else {
-        // No code, assume local
         setCountryCode("+91");
         setLocalPhone(rawPhone);
       }
       
       setEmail(profile.email || "");
+      setIsPhoneEditable(false); // Reset lock on open
     }
   }, [profile, isOpen]);
+
+  const handleUpdateNumberClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsPhoneEditable(true);
+    // Slight delay to ensure render happens before focus
+    setTimeout(() => {
+        if (phoneInputRef.current) {
+            phoneInputRef.current.focus();
+        }
+    }, 50);
+  };
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +84,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
+      // Ensure phone format is clean
       const fullPhone = `${countryCode} ${localPhone}`.trim();
 
       const { error } = await supabase
@@ -105,7 +127,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
         {/* Form Body */}
         <form onSubmit={handleSave} className="p-5 space-y-4">
           
-          {/* Row 1: Name (Split) */}
+          {/* Row 1: Name */}
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">First Name</label>
@@ -129,7 +151,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </div>
           </div>
 
-          {/* Row 2: Gender (Compact Radio) */}
+          {/* Row 2: Gender */}
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide block">Gender</label>
             <div className="flex items-center gap-6">
@@ -148,10 +170,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </div>
           </div>
 
-          {/* Row 3: Mobile Number */}
+          {/* Row 3: Mobile Number (With Separate Update Logic) */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
-            <div className="flex items-center border border-[#ccc] rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all focus-within:border-[#2563eb] focus-within:ring-1 focus-within:ring-[#2563eb]/20">
+            <div className={`flex items-center border rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#ccc]'}`}>
               
               {/* Editable Country Code Block */}
               <div className="flex items-center gap-1 pr-2 border-r border-[#eee] h-full bg-[#f8f8f8] -ml-2.5 pl-2.5 mr-2">
@@ -159,25 +181,34 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                   type="text"
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
-                  className="w-[36px] bg-transparent border-none outline-none text-[13px] text-[#555] font-medium text-center p-0"
+                  className={`w-[36px] bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
                   maxLength={4}
+                  disabled={!isPhoneEditable}
                 />
                 <span className="text-[9px] text-[#999]">▼</span>
               </div>
 
               {/* Local Number Input */}
               <input 
+                ref={phoneInputRef}
                 type="text"
                 value={localPhone}
                 onChange={(e) => setLocalPhone(e.target.value)}
-                className="flex-1 bg-transparent border-none outline-none px-0 text-[13px] text-[#333] h-full"
+                className={`flex-1 bg-transparent border-none outline-none px-0 text-[13px] h-full ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
                 placeholder="1234567890"
+                disabled={!isPhoneEditable}
               />
               
-              {/* Update Button (Non-bold) */}
-              <button type="button" className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1">
-                Update Number
-              </button>
+              {/* Update Button (Triggers Edit Mode) */}
+              {!isPhoneEditable && (
+                <button 
+                  type="button" 
+                  onClick={handleUpdateNumberClick}
+                  className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
+                >
+                  Update Number
+                </button>
+              )}
             </div>
           </div>
 
