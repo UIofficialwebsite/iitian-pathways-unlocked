@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,9 +30,19 @@ const GoogleCallback = () => {
             });
             
             if (!profile || !profile.profile_completed) {
+              // Profile incomplete, send to auth page (which shows Setup)
+              // NOTE: We do NOT remove the 'auth_return_url' yet, Auth.tsx will handle it after setup
               navigate("/auth");
             } else {
-              navigate("/");
+              // --- NEW LOGIC: Retrieve return URL ---
+              const returnUrl = localStorage.getItem('auth_return_url');
+              if (returnUrl) {
+                localStorage.removeItem('auth_return_url');
+                navigate(returnUrl);
+              } else {
+                navigate("/");
+              }
+              // --------------------------------------
             }
           } catch (error) {
             console.error("Error checking profile:", error);
