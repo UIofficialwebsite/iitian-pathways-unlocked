@@ -757,7 +757,12 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <Book className="h-8 w-8 text-blue-600 mb-4 group-hover:scale-110 transition-transform" />
+                {/* Updated Study Material icon */}
+                <img 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944106/image-removebg-preview_2_1_rr5o71.png" 
+                  alt="Study Material" 
+                  className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
+                />
                 <h3 className="text-lg font-semibold text-gray-900">Digital Library</h3>
                 <p className="text-gray-600 text-sm mt-1">Access all your free study material here</p>
               </div>
@@ -768,7 +773,12 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <Users className="h-8 w-8 text-purple-600 mb-4 group-hover:scale-110 transition-transform" />
+                {/* Updated Mentorship icon */}
+                <img 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944412/mentor-icon-simple-training-career-vector-removebg-preview_v3kclf.png" 
+                  alt="Mentorship" 
+                  className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
+                />
                 <h3 className="text-lg font-semibold text-gray-900">Mentorship</h3>
                 <p className="text-gray-600 text-sm mt-1">Get personalised guidance from the best ones related to academic and careers</p>
               </div>
@@ -779,7 +789,16 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                {/* Conditional PDF Bank logo based on IITM BS status */}
+                {profile?.program_type === 'IITM_BS' ? (
+                  <img 
+                    src="/lovable-uploads/logo_ui_new.png" 
+                    alt="IITM BS Notes" 
+                    className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
+                  />
+                ) : (
+                  <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
+                )}
                 <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
                 <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
               </div>
@@ -1020,7 +1039,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const isLoading = dataLoading || contentLoading;
 
   return (
-    /* Removed max-w-7xl mx-auto here */
     <div className="w-full">
       {isLoading && !hasEnrollments ? (
          <div className="flex items-center justify-center min-h-[400px]">
