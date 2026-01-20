@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useMemo, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Menu, 
   X, 
@@ -8,12 +8,16 @@ import {
   GraduationCap, 
   BookOpen,
   ChevronRight,
-  ArrowLeft
+  ArrowLeft,
+  User,
+  LayoutDashboard,
+  LogOut
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -38,18 +42,38 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const NavBar = () => {
   const { user, signOut } = useAuth();
   const { courses } = useBackend();
   const { openLogin } = useLoginModal();
+  const navigate = useNavigate();
   
   const [activePane, setActivePane] = useState<"main" | "courses" | "examprep">("main");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  
+  // Profile State
+  const [profile, setProfile] = useState<{ full_name: string | null; avatar_url: string | null } | null>(null);
+
+  // Fetch Profile Data (for Avatar/Name)
+  useEffect(() => {
+    const getProfile = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name, avatar_url")
+          .eq("id", user.id)
+          .single();
+        setProfile(data);
+      }
+    };
+    getProfile();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
-    window.location.href = '/';
+    navigate("/");
   };
 
   const courseCategories = useMemo(() => {
@@ -77,6 +101,55 @@ const NavBar = () => {
     { title: "NEET", path: "/exam-preparation/neet", icon: Stethoscope, color: "text-[#EF4444]" },
     { title: "IITM BS", path: "/exam-preparation/iitm-bs", icon: GraduationCap, color: "text-[#2ecc71]" }
   ];
+
+  // Helper: Profile Initials
+  const initials = profile?.full_name
+    ? profile.full_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+    : user?.email?.charAt(0).toUpperCase() || "U";
+
+  // Reusable Profile Dropdown Menu
+  const ProfileMenu = () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="focus:outline-none rounded-full">
+          <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-[#1d4ed8] transition-all">
+            <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
+            <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 bg-white z-[10002]">
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">{profile?.full_name || "User"}</p>
+            <p className="text-xs leading-none text-muted-foreground truncate">{user?.email}</p>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={() => navigate("/dashboard")} className="cursor-pointer">
+            <LayoutDashboard className="mr-2 h-4 w-4" />
+            <span>Dashboard</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>My Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="cursor-pointer">
+            <BookOpen className="mr-2 h-4 w-4" />
+            <span>My Enrollments</span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer focus:text-red-600">
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[10000] h-16 font-['Inter',sans-serif]">
@@ -155,27 +228,7 @@ const NavBar = () => {
 
           <div className="flex items-center">
             {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="focus:outline-none">
-                    <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer hover:ring-2 hover:ring-[#1d4ed8] transition-all">
-                      <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-white z-[10002]">
-                  <DropdownMenuLabel className="font-normal text-sm text-gray-500 truncate">{user.email}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="cursor-pointer font-medium">Dashboard</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer font-medium">
-                    Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ProfileMenu />
             ) : (
               <Button 
                 onClick={openLogin}
@@ -267,28 +320,9 @@ const NavBar = () => {
                     </div>
                   </div>
                 )}
-
-                {user && (
-                  <div className="p-4 bg-white border-t border-[#eeeeee] mt-auto">
-                    <div className="flex items-center gap-4 mb-4">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.user_metadata?.avatar_url} />
-                        <AvatarFallback className="font-bold bg-[#1d4ed8] text-white text-lg">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium text-[#1a1a1a] text-[15px]">{user.email}</p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                       <Link to="/dashboard" className="w-full h-11 bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-lg text-[14px] font-bold flex items-center justify-center" onClick={() => setIsSheetOpen(false)}>
-                          Dashboard
-                       </Link>
-                       <Button onClick={handleSignOut} variant="outline" className="w-full h-11 rounded-lg text-[14px] font-bold border-gray-300 text-red-600 hover:bg-red-50 hover:text-red-700">
-                          Log Out
-                       </Button>
-                    </div>
-                  </div>
-                )}
+                
+                {/* REMOVED the "Dashboard/Logout" block from here. 
+                    It is now handled by the top-right profile icon on mobile. */}
               </SheetContent>
             </Sheet>
 
@@ -299,12 +333,8 @@ const NavBar = () => {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <Link to="/dashboard">
-                <Avatar className="h-9 w-9 border border-gray-200">
-                  <AvatarImage src={user.user_metadata?.avatar_url} />
-                  <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{user.email?.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </Link>
+              // This ProfileMenu now contains the dropdown for Mobile too
+              <ProfileMenu />
             ) : (
               <Button 
                 size="sm" 
