@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
 import ProfileSetup from "@/components/profile/ProfileSetup";
-import LoginCard from "@/components/auth/LoginCard"; // Import the new component
+import LoginCard from "@/components/auth/LoginCard"; 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -12,7 +12,14 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || "/";
+  // --- NEW LOGIC: Determine destination ---
+  // Priority: 1. LocalStorage (saved before Google Login) 2. Location State (redirect from protected route) 3. Home
+  const getDestination = () => {
+    const storedUrl = localStorage.getItem('auth_return_url');
+    if (storedUrl) return storedUrl;
+    return location.state?.from?.pathname || "/";
+  };
+  // ----------------------------------------
 
   // Check if user is logged in
   useEffect(() => {
@@ -26,7 +33,10 @@ const Auth = () => {
             .single();
 
           if (profile?.profile_completed) {
-            navigate(from, { replace: true });
+            // Retrieve destination and clean up storage
+            const destination = getDestination();
+            localStorage.removeItem('auth_return_url');
+            navigate(destination, { replace: true });
           } else {
             setShowProfileSetup(true);
           }
@@ -40,7 +50,13 @@ const Auth = () => {
     if (!authLoading) {
       checkProfileStatus();
     }
-  }, [user, authLoading, navigate, from]);
+  }, [user, authLoading, navigate, location]);
+
+  const handleProfileComplete = () => {
+    const destination = getDestination();
+    localStorage.removeItem('auth_return_url');
+    navigate(destination, { replace: true });
+  };
 
   if (authLoading) return <div className="min-h-screen flex items-center justify-center font-['Inter',sans-serif]">Loading...</div>;
 
@@ -49,7 +65,7 @@ const Auth = () => {
       <>
         <NavBar />
         <div className="min-h-screen flex items-center justify-center bg-white p-4 pt-24 font-['Inter',sans-serif]">
-          <ProfileSetup onComplete={() => navigate(from, { replace: true })} />
+          <ProfileSetup onComplete={handleProfileComplete} />
         </div>
       </>
     );
