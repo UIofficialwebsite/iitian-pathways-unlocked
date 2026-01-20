@@ -25,13 +25,10 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [countryCode, setCountryCode] = useState("+91");
   const [localPhone, setLocalPhone] = useState("");
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
-  const [isPhoneUpdating, setIsPhoneUpdating] = useState(false);
   
   const [email, setEmail] = useState("");
   const phoneInputRef = useRef<HTMLInputElement>(null);
 
-  // Initialize form when modal opens
-  // Dependent only on [isOpen] to prevents form reset if parent profile updates while editing
   useEffect(() => {
     if (isOpen && profile) {
       const fullName = profile.student_name || profile.full_name || "";
@@ -43,7 +40,6 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       // Parse Phone Number
       const rawPhone = profile.phone || "";
-      // Simple parsing logic: if it starts with +91, split it, else default
       if(rawPhone.startsWith("+91")) {
          setCountryCode("+91");
          setLocalPhone(rawPhone.replace("+91", "").trim());
@@ -52,7 +48,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
          setCountryCode(parts[0]);
          setLocalPhone(parts.slice(1).join(""));
       } else if (rawPhone.length > 0) {
-         setCountryCode("+91"); // Default code if none detected
+         setCountryCode("+91"); 
          setLocalPhone(rawPhone);
       } else {
          setCountryCode("+91");
@@ -62,67 +58,42 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       setEmail(profile.email || "");
       setIsPhoneEditable(false);
     }
-  }, [isOpen]); // Only run on open to preserve unsaved changes during phone update
+  }, [isOpen]);
 
-  // Handle "Edit" -> "Update" toggle for PHONE ONLY
-  const handlePhoneBtnClick = async (e: React.MouseEvent) => {
+  // Handle "Edit" -> "Update" toggle (Local Confirmation Only)
+  const handlePhoneBtnClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // State 1: Locked -> Unlock it
     if (!isPhoneEditable) {
+      // Unlock Field
       setIsPhoneEditable(true);
       setTimeout(() => {
         if (phoneInputRef.current) {
           phoneInputRef.current.focus();
         }
       }, 50);
-      return;
-    }
-
-    // State 2: Unlocked -> Update DB immediately
-    setIsPhoneUpdating(true);
-    try {
-      const fullPhone = `${countryCode} ${localPhone}`.trim();
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({ phone: fullPhone })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Phone Updated",
-        description: "Your phone number has been updated successfully.",
-      });
-      
-      onProfileUpdate(); // Update parent data in background
-      setIsPhoneEditable(false); // Lock field again
-    } catch (error: any) {
-      toast({
-        title: "Update Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsPhoneUpdating(false);
+    } else {
+      // Lock Field (Confirm Locally)
+      setIsPhoneEditable(false);
     }
   };
 
-  // Main Form Save (Name, Gender) -> Closes Modal
+  // Main Form Save - Saves Everything (Name, Gender, Phone)
   const handleMainSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
+      const fullPhone = `${countryCode} ${localPhone}`.trim();
       
       const { error } = await supabase
         .from('profiles')
         .update({
           student_name: fullName,
           gender: gender,
+          phone: fullPhone,
         })
         .eq('id', profile.id);
 
@@ -130,7 +101,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
       toast({
         title: "Profile Updated",
-        description: "Your details have been saved.",
+        description: "Your details have been saved successfully.",
       });
       onProfileUpdate();
       onClose();
@@ -198,7 +169,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </div>
           </div>
 
-          {/* Row 3: Mobile Number (Separate Update Logic) */}
+          {/* Row 3: Mobile Number (Confirm Only) */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#666] uppercase tracking-wide">Mobile Number</label>
             <div className={`flex items-center border rounded-[4px] bg-[#fdfdfd] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#ccc]'}`}>
@@ -227,14 +198,13 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 disabled={!isPhoneEditable}
               />
               
-              {/* Action Button: Edit -> Update */}
+              {/* Toggle Button */}
               <button 
                 type="button" 
                 onClick={handlePhoneBtnClick}
-                disabled={isPhoneUpdating}
-                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer disabled:opacity-50"
+                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
               >
-                {isPhoneUpdating ? "Updating..." : (isPhoneEditable ? "Update" : "Edit")}
+                {isPhoneEditable ? "Update" : "Edit"}
               </button>
             </div>
           </div>
@@ -262,7 +232,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             </Button>
             <Button 
               type="submit"
-              disabled={isLoading || isPhoneEditable} // Disable Save if phone is being edited to avoid confusion
+              disabled={isLoading || isPhoneEditable} // Don't allow saving while phone is being edited
               className="px-4 h-8 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-[4px] border-none shadow-sm transition-all disabled:opacity-50"
             >
               {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-2" /> : null}
