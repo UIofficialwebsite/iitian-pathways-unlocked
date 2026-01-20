@@ -13,7 +13,7 @@ const LoginCard = () => {
       {/* IMAGE SECTION */}
       <div className="mb-4 flex justify-center w-full">
         <img 
-          src="https://i.ibb.co/5xS7gRxq/image-removebg-preview-1-1.png" 
+          src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768895615/image-removebg-preview_1_1_wvewxg.png" 
           alt="Login Illustration" 
           className="h-[200px] md:h-[280px] w-auto object-contain" 
         />
