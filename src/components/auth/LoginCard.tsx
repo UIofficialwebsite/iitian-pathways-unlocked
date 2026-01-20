@@ -63,14 +63,14 @@ const LoginCard = () => {
         <Link 
           to="/terms" 
           target="_blank" 
-          rel="noopener noreferrer" 
+          rel="noopener noreferrer"
           className="text-[#0284c7] font-semibold hover:underline"
         >
           Terms of use
         </Link> & <Link 
           to="/privacy" 
           target="_blank" 
-          rel="noopener noreferrer" 
+          rel="noopener noreferrer"
           className="text-[#0284c7] font-semibold hover:underline"
         >
           Privacy Policy
