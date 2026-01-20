@@ -1,16 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Users, Share2 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Tables } from '@/integrations/supabase/types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { GraduationCap, Clock, Tag } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 import { supabase } from "@/integrations/supabase/client";
 
 // --- HELPER FUNCTIONS ---
 const formatDate = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return 'To be announced'; 
+  if (!dateStr) return 'TBA';
   try {
     return new Date(dateStr).toLocaleDateString('en-GB', {
       day: '2-digit',
@@ -18,7 +14,7 @@ const formatDate = (dateStr: string | null | undefined): string => {
       year: 'numeric',
     });
   } catch (error) {
-    return 'To be announced'; 
+    return 'TBA';
   }
 };
 
@@ -31,33 +27,20 @@ const formatBranch = (branch: string | null): string => {
 };
 
 const getAudienceText = (course: any): string => {
-  const { exam_category, branch, level, student_status } = course;
+  const { exam_category, branch, level } = course;
 
   if (exam_category === 'IITM BS') {
     const parts: string[] = [];
     if (branch) parts.push(formatBranch(branch));
-    if (level) parts.push(level); 
+    if (level) parts.push(level);
     if (parts.length > 0) {
-      return `For IITM BS (${parts.join(' - ')})`;
+      return `IITM BS (${parts.join(' - ')})`;
     }
-    return 'For IITM BS';
+    return 'IITM BS';
   }
 
-  if (exam_category === 'COMPETITIVE_EXAM') {
-    if (student_status) return `For ${student_status}`;
-    return 'For Competitive Exams';
-  }
-
-  if (exam_category) return `For ${exam_category}`;
-  return 'For All Students';
-};
-
-const getDiscount = (salePrice: number | null | undefined, originalPrice: number): string | null => {
-  if (typeof originalPrice !== 'number' || originalPrice <= 0) return null;
-  if (typeof salePrice !== 'number' || salePrice === null) return null;
-  if (originalPrice <= salePrice) return null;
-  const discount = Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-  return discount > 0 ? `${discount}% OFF` : null;
+  if (exam_category) return exam_category;
+  return 'All Students';
 };
 
 // --- COMPONENT ---
@@ -74,9 +57,25 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
     discounted_price,
     start_date,
     end_date,
+    updated_at,
+    language,
+    exam_category,
+    enroll_now_link,
   } = course;
 
-  // --- 1. FETCH ADD-ONS LOGIC ---
+  // Logic for "NEW" tag based on updated_at (last 30 days)
+  const isNewlyLaunched = useMemo(() => {
+    if (!updated_at) return false;
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return new Date(updated_at) > thirtyDaysAgo;
+  }, [updated_at]);
+
+  const discountPercent = price && discounted_price
+    ? Math.round(((price - discounted_price) / price) * 100)
+    : 0;
+
+  // --- FETCH ADD-ONS LOGIC ---
   useEffect(() => {
     const checkAddonsAndPrice = async () => {
       const { data, error } = await supabase
@@ -86,7 +85,6 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
 
       if (!error && data && data.length > 0) {
         setHasAddons(true);
-        // Only calculate "Starts at" price if Main Batch is FREE
         if (price === 0 || price === null) {
           const paidAddons = data.filter(addon => addon.price > 0);
           if (paidAddons.length > 0) {
@@ -104,160 +102,151 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
     checkAddonsAndPrice();
   }, [id, price]);
 
-  // Standard Calc
-  const originalPrice = price;
-  const salePrice = discounted_price;
-  const discount = getDiscount(salePrice, originalPrice);
-  const hasDiscount = !!discount;
-  const finalPriceValue = (salePrice !== null && salePrice < originalPrice) ? salePrice : originalPrice;
-  const finalPriceString = finalPriceValue === 0 ? 'Free' : `₹${Math.round(finalPriceValue)}`;
-  
-  const startDate = formatDate(start_date);
-  const endDate = formatDate(end_date);
-  const audienceText = getAudienceText(course);
+  const isBaseFree = price === 0 || price === null;
+  const hasPaidAddons = minAddonPrice !== null;
 
-  const courseUrl = `${window.location.origin}/courses/${id}`;
-  const shareText = `Check out this course: ${title} on IITian Pathways!`;
-
-  const handleShare = (e: React.MouseEvent) => {
-    e.preventDefault(); 
-    e.stopPropagation(); 
-    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}%0A${encodeURIComponent(courseUrl)}`;
-    window.open(whatsappUrl, '_blank');
+  const handleWhatsappShare = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const courseUrl = `${window.location.origin}/courses/${id}`;
+    const message = `Check out this course: ${title}\n${courseUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
-  const renderPriceSection = () => {
-    // Case: Free base + Paid Addons
-    if ((price === 0 || price === null) && minAddonPrice !== null) {
+  const renderPrice = () => {
+    // Case 1: Base is Free + Paid Add-ons exist => "Starts at ₹..."
+    if (isBaseFree && hasPaidAddons) {
       return (
-        <div className="flex-shrink-0">
-          <div className="flex flex-col leading-tight">
-            <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
-            <span className="text-3xl font-bold text-gray-900">₹{minAddonPrice.toLocaleString()}</span>
-          </div>
-          <p className="text-xs font-medium text-gray-500 mt-1">(Customize Batch)</p>
+        <div className="flex flex-col leading-tight">
+          <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+          <span className="text-[20px] font-bold text-[#1E3A8A]">₹{minAddonPrice?.toLocaleString()}</span>
         </div>
       );
     }
 
-    // Standard Case
-    return (
-      <div className="flex-shrink-0">
-        <div className="flex items-baseline gap-2">
-          <span className="text-3xl font-bold text-gray-900">
-            {finalPriceString} 
-          </span>
-          {hasDiscount && (
-            <span className="text-md font-medium text-gray-400 line-through">
-              ₹{Math.round(originalPrice)}
-            </span>
-          )}
+    // Case 2: Discounted Base Price
+    if (discounted_price && price && discounted_price < price) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-[22px] font-bold text-[#1E3A8A]">₹{discounted_price.toLocaleString()}</span>
+          <span className="text-[14px] text-[#94a3b8] line-through font-normal">₹{price?.toLocaleString()}</span>
         </div>
-        <p className="text-xs font-medium text-gray-500 -mt-1">(For Full Course)</p>
-      </div>
-    );
+      );
+    }
+
+    // Case 3: True Free (Base 0 + No Paid Add-ons)
+    if (isBaseFree && !hasPaidAddons) {
+      return <span className="text-[22px] font-bold text-[#1b8b5a]">FREE</span>;
+    }
+
+    // Case 4: Standard Price
+    return <span className="text-[22px] font-bold text-[#1E3A8A]">₹{price?.toLocaleString()}</span>;
   };
 
-  const renderActionButton = () => {
+  const renderBuyButton = () => {
     if (hasAddons) {
       return (
-        <Button 
+        <button
           onClick={() => navigate(`/courses/${id}/configure`)}
-          className="w-full font-bold bg-black hover:bg-black/90 text-white" // CHANGED TO BLACK
+          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
         >
-          Buy Now
-        </Button>
+          BUY NOW
+        </button>
       );
     }
 
     return (
       <EnrollButton
         courseId={id}
-        enrollmentLink={course.enroll_now_link || undefined}
-        coursePrice={finalPriceValue}
-        className="w-full font-bold bg-black hover:bg-black/90 text-white" // CHANGED TO BLACK
+        enrollmentLink={enroll_now_link || undefined}
+        coursePrice={discounted_price || price}
+        className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
       >
-        Buy Now
+        BUY NOW
       </EnrollButton>
     );
   };
 
   return (
-    <Card 
-      className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm transition-all hover:shadow-md h-full flex flex-col"
-      style={{ fontFamily: "'Inter', sans-serif" }}
+    <div
+      className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full"
+      style={{ borderRadius: '6px' }}
     >
-      <CardContent className="p-4 space-y-4 flex-1 flex flex-col">
-        
-        <div className="flex justify-between items-start gap-3">
-          <h3 className="text-lg font-bold text-gray-900 line-clamp-2 h-[3.25rem] flex-1">
-            {title || 'Unnamed Batch'}
-          </h3>
-          <Button 
-            onClick={handleShare}
-            variant="ghost"
-            size="icon" 
-            className="rounded-full text-green-600 hover:text-green-700 hover:bg-green-50 flex-shrink-0 h-9 w-9"
-          >
-            <Share2 className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <Card className="bg-gray-50 border border-gray-200 overflow-hidden shadow-none">
-          <div className="relative aspect-video bg-gray-100 overflow-hidden">
-            <img 
-              src={image_url || "/lovable-uploads/logo_ui_new.png"}
-              alt={title || 'Course Image'} 
-              className="w-full h-full object-cover object-center"
-            />
+      {/* Banner */}
+      <div
+        className="w-full aspect-video bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"
+        style={{ borderRadius: '6px' }}
+      >
+        {image_url ? (
+          <img src={image_url} alt={title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="text-white/90 text-[24px] font-[800] text-center uppercase leading-tight px-4">
+            {title}
           </div>
-          
-          <div className="p-4 space-y-3">
-            <div className="flex items-center text-sm font-medium text-gray-600">
-              <Users className="h-4 w-4 mr-2 text-blue-600" />
-              {audienceText}
-            </div>
-            <div className="flex items-center text-sm font-medium text-gray-600">
-              <Calendar className="h-4 w-4 mr-2 text-blue-600" />
-              Starts {startDate} | Ends {endDate}
-            </div>
-          </div>
-        </Card>
-        
-        <div className="flex-grow" />
+        )}
+      </div>
 
-        <div className="flex justify-between items-end pt-2">
-          
-          {renderPriceSection()}
-          
-          {hasDiscount && (
-            <div className="relative flex-shrink-0 ml-2">
-              <Badge className="bg-red-500 text-white text-sm font-bold py-1.5 px-3 rounded-md">
-                {discount}
-              </Badge>
-              <div 
-                className="absolute top-1/2 -translate-y-1/2 -left-2 w-0 h-0"
-                style={{
-                  borderTop: '10px solid transparent',
-                  borderBottom: '10px solid transparent',
-                  borderRight: '8px solid #ef4444' 
-                }}
-              />
-            </div>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2 mb-[18px] px-1">
+        <h2 className="text-[19px] font-bold text-[#1a1a1a] flex-1 leading-[1.2]">
+          {title || 'Unnamed Batch'}
+        </h2>
+
+        <div className="flex flex-row items-center gap-1.5 shrink-0 mt-1 whitespace-nowrap font-sans">
+          {isNewlyLaunched && (
+            <span className="bg-[#f59e0b] text-white text-[10px] font-normal px-[10px] py-[3px] text-center uppercase" style={{ borderRadius: '6px' }}>NEW</span>
+          )}
+          {language && (
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-normal px-[10px] py-[3px] text-center" style={{ borderRadius: '6px' }}>{language}</span>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 pt-3">
-          <Link to={`/courses/${id}`}>
-            <Button variant="outline" className="w-full font-bold border-2">
-              Explore
-            </Button>
-          </Link>
-          
-          {renderActionButton()}
+        <div className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleWhatsappShare}>
+          <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-black">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.602 6.039L0 24l6.135-1.61a11.748 11.748 0 005.911 1.586h.005c6.634 0 12.032-5.396 12.033-12.03a11.811 11.811 0 00-3.417-8.481z"/>
+          </svg>
         </div>
+      </div>
 
-      </CardContent>
-    </Card>
+      {/* Info */}
+      <div className="mb-[20px] px-1 space-y-2 flex-grow">
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
+          <GraduationCap className="w-4 h-4" />
+          <span>For <span className="text-[#1a1a1a] uppercase">{getAudienceText(course)}</span> Aspirants</span>
+        </div>
+        <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
+          <Clock className="w-4 h-4" />
+          <span>Starts on <b className="text-[#1a1a1a] font-normal">{formatDate(start_date)}</b> Ends on <b className="text-[#1a1a1a] font-normal">{formatDate(end_date)}</b></span>
+        </div>
+      </div>
+
+      {/* Pricing Section */}
+      <div className="flex items-end justify-between mb-[20px] px-1">
+        <div>
+          {renderPrice()}
+          <span className="block text-[10px] font-normal text-[#94a3b8] mt-[2px] uppercase">
+            {isBaseFree && hasPaidAddons ? "(CUSTOMIZE BATCH)" : "(FOR FULL BATCH)"}
+          </span>
+        </div>
+        {discountPercent > 0 && (
+          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-[10px] py-[6px] text-[10px] font-normal flex items-center gap-[5px]" style={{ borderRadius: '6px' }}>
+            <Tag className="w-[12px] h-[12px]" /> {discountPercent}% OFF
+          </div>
+        )}
+      </div>
+
+      {/* Buttons */}
+      <div className="flex gap-[10px]">
+        <button
+          className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[42px] text-[13px] font-normal uppercase"
+          style={{ borderRadius: '8px' }}
+          onClick={() => navigate(`/courses/${id}`)}
+        >
+          EXPLORE
+        </button>
+
+        {renderBuyButton()}
+      </div>
+    </div>
   );
 };
