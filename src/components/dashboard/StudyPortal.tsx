@@ -18,7 +18,7 @@ import {
   Library 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
@@ -260,7 +260,7 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  // Initialization: Pick the first batch if available
+  // Initialize once.
   const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
     return enrollments.length > 0 ? enrollments[0].course_id : '';
   });
@@ -298,7 +298,7 @@ const EnrolledView = ({
 
   const canSwitchBatch = enrollments.length > 1;
 
-  // Sync temp selection when sheet opens
+  // Sync temp selection when sheet opens (Crucial for UI consistency)
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
@@ -333,8 +333,6 @@ const EnrolledView = ({
           if (courseResult.data) setFullCourseData(courseResult.data as any);
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
           if (faqResult.data) setFaqs(faqResult.data as any);
-        } else {
-          // console.log('Ignoring stale response for batch:', selectedBatchId);
         }
 
       } catch (err) {
@@ -400,7 +398,7 @@ const EnrolledView = ({
     
     setIsSheetOpen(false);
 
-    // Ensure we are viewing the main card to see the change
+    // If viewing main dashboard, ensure we see the updated card
     if (sidebarSource === 'main') {
         setViewMode('main'); 
     }
