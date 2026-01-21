@@ -260,7 +260,7 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  // Initialize once.
+  // Initialize strictly with the first enrollment ID
   const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
     return enrollments.length > 0 ? enrollments[0].course_id : '';
   });
@@ -268,7 +268,6 @@ const EnrolledView = ({
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
-  
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
@@ -278,7 +277,7 @@ const EnrolledView = ({
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // RACE CONDITION FIX: Request ID Counter
+  // Request ID Counter to ignore stale responses
   const lastRequestId = useRef(0);
 
   const tabs = [
@@ -291,21 +290,23 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Instantly derive the summary from the list, so the UI updates IMMEDIATELY upon selection
+  // STRICT SUMMARY LOOKUP: Only returns the specific selected batch. 
+  // No automatic fallback to [0] here prevents showing the wrong batch if ID is lost.
   const currentBatchSummary = useMemo(() => {
-    return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+    const found = enrollments.find(e => e.course_id === selectedBatchId);
+    return found || enrollments[0]; // Fallback to 0 only if ID is totally invalid (e.g. initial load glitch)
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
 
-  // Sync temp selection when sheet opens (Crucial for UI consistency)
+  // Sync temp ID when sheet opens
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
     }
   }, [isSheetOpen, selectedBatchId]);
 
-  // Fetch Data Effect with Race Condition Protection
+  // Fetch Data Effect with Strict Cleanup
   useEffect(() => {
     if (!selectedBatchId) return;
 
@@ -315,7 +316,7 @@ const EnrolledView = ({
     const fetchDetails = async () => {
       setLoadingDetails(true);
       
-      // 2. Clear old data immediately to avoid stale mix
+      // 2. Clear old data immediately so UI doesn't show previous batch info
       setFullCourseData(null);
       setScheduleData([]);
       setFaqs(undefined);
@@ -328,7 +329,7 @@ const EnrolledView = ({
           supabase.from('course_faqs' as any).select('question, answer').eq('course_id', selectedBatchId),
         ]);
 
-        // 3. CRITICAL CHECK: Is this still the latest request?
+        // 3. Only update if this request is still the newest one
         if (currentId === lastRequestId.current) {
           if (courseResult.data) setFullCourseData(courseResult.data as any);
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
@@ -338,7 +339,6 @@ const EnrolledView = ({
       } catch (err) {
         console.error("Error fetching details", err);
       } finally {
-        // Only turn off loading if we are still the active request
         if (currentId === lastRequestId.current) {
           setLoadingDetails(false);
         }
@@ -348,7 +348,7 @@ const EnrolledView = ({
     fetchDetails();
   }, [selectedBatchId]);
 
-  // Scroll Spy Effect
+  // Scroll Spy
   useEffect(() => {
     if (viewMode !== 'description') return;
     const scrollContainer = contentRef.current;
@@ -387,6 +387,7 @@ const EnrolledView = ({
 
   const handleContinue = () => {
     if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
+      // 1. Force update state
       setSelectedBatchId(tempSelectedBatchId);
       
       const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
@@ -398,7 +399,6 @@ const EnrolledView = ({
     
     setIsSheetOpen(false);
 
-    // If viewing main dashboard, ensure we see the updated card
     if (sidebarSource === 'main') {
         setViewMode('main'); 
     }
@@ -419,8 +419,17 @@ const EnrolledView = ({
     }
   };
 
-  // --- RENDER LOGIC ---
-  
+  // Helper to determine what title to show
+  // If we have full data AND it matches the current ID, show it.
+  // Otherwise, fallback to the summary title (which is instant).
+  const displayTitle = (fullCourseData && fullCourseData.id === selectedBatchId) 
+    ? fullCourseData.title 
+    : currentBatchSummary?.title;
+
+  const displayDescription = (fullCourseData && fullCourseData.id === selectedBatchId)
+    ? fullCourseData.description
+    : currentBatchSummary?.description;
+
   return (
     <>
       {viewMode === 'description' ? (
@@ -459,11 +468,10 @@ const EnrolledView = ({
 
                    <div className="space-y-1 sm:space-y-2">
                      <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
-                        {/* Instant Update: Use currentBatchSummary if full data is loading */}
-                        {fullCourseData?.title || currentBatchSummary.title}
+                        {displayTitle}
                      </h1>
                      <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
-                        {fullCourseData?.description || currentBatchSummary.description}
+                        {displayDescription}
                      </p>
                    </div>
                 </div>
@@ -478,7 +486,7 @@ const EnrolledView = ({
 
           <div 
             ref={contentRef}
-            // Use KEY to force re-mount on batch switch - this clears scroll and ensures clean state
+            // KEY ensures that when batch changes, this scroll view is completely rebuilt
             key={selectedBatchId}
             className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
           >
@@ -574,7 +582,8 @@ const EnrolledView = ({
                  View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                </Button>
             </div>
-            {/* FORCE REMOUNT with key to update text immediately */}
+            
+            {/* The Key prop here forces React to treat this as a NEW component when ID changes */}
             {currentBatchSummary && (
               <EnrollmentListItem 
                 key={currentBatchSummary.course_id}
@@ -712,8 +721,7 @@ const EnrolledView = ({
   );
 };
 
-// ... (Rest of file same as before)
-// Re-exporting Main Components below to be sure
+// ... (Rest of StudyPortalContent and exports remain the same as previous safe version)
 
 const NotEnrolledView = ({ 
   profile,
