@@ -759,7 +759,7 @@ const NotEnrolledView = ({
                 </div>
                 {/* Updated Study Material icon from link */}
                 <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944106/image-removebg-preview_2_1_rr5o71.png" 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768976940/3048737_wcvnjf.png" 
                   alt="Study Material" 
                   className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                 />
@@ -775,7 +775,7 @@ const NotEnrolledView = ({
                 </div>
                 {/* Updated Mentorship icon from link */}
                 <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944412/mentor-icon-simple-training-career-vector-removebg-preview_v3kclf.png" 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768977287/8148227_l4zc4u.png" 
                   alt="Mentorship" 
                   className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                 />
@@ -792,7 +792,7 @@ const NotEnrolledView = ({
                 {/* Conditional PDF Bank logo based on IITM BS status */}
                 {profile?.program_type === 'IITM_BS' ? (
                   <img 
-                    src="/lovable-uploads/logo_ui_new.png" 
+                    src="https://i.ibb.co/mr3z2pF7/image.png" 
                     alt="IITM BS Notes" 
                     className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                   />
