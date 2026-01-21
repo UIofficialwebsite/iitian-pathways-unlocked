@@ -18,7 +18,7 @@ import {
   Library 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
@@ -260,7 +260,7 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  // Initialize once. We never reset this automatically to avoid "revert" bugs.
+  // Initialization: Pick the first batch if available
   const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
     return enrollments.length > 0 ? enrollments[0].course_id : '';
   });
@@ -268,6 +268,7 @@ const EnrolledView = ({
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
+  
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
 
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
@@ -276,6 +277,9 @@ const EnrolledView = ({
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // RACE CONDITION FIX: Request ID Counter
+  const lastRequestId = useRef(0);
 
   const tabs = [
     { id: 'features', label: 'Features' },
@@ -287,25 +291,31 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Derive summary directly from state. 
-  // We use useMemo to ensure stability, but even without it, the find operation is cheap.
+  // Instantly derive the summary from the list, so the UI updates IMMEDIATELY upon selection
   const currentBatchSummary = useMemo(() => {
     return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
 
-  // FETCH DETAILS EFFECT WITH ABORT CONTROLLER
+  // Sync temp selection when sheet opens
+  useEffect(() => {
+    if (isSheetOpen) {
+      setTempSelectedBatchId(selectedBatchId);
+    }
+  }, [isSheetOpen, selectedBatchId]);
+
+  // Fetch Data Effect with Race Condition Protection
   useEffect(() => {
     if (!selectedBatchId) return;
 
-    // Create an abort controller for this specific effect run
-    const controller = new AbortController();
-    const signal = controller.signal;
+    // 1. Increment Request ID
+    const currentId = ++lastRequestId.current;
 
     const fetchDetails = async () => {
       setLoadingDetails(true);
-      // Clear previous data immediately to prevent showing stale info
+      
+      // 2. Clear old data immediately to avoid stale mix
       setFullCourseData(null);
       setScheduleData([]);
       setFaqs(undefined);
@@ -318,38 +328,51 @@ const EnrolledView = ({
           supabase.from('course_faqs' as any).select('question, answer').eq('course_id', selectedBatchId),
         ]);
 
-        // Only update state if this effect is still active (not aborted)
-        if (!signal.aborted) {
+        // 3. CRITICAL CHECK: Is this still the latest request?
+        if (currentId === lastRequestId.current) {
           if (courseResult.data) setFullCourseData(courseResult.data as any);
           if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
           if (faqResult.data) setFaqs(faqResult.data as any);
+        } else {
+          // console.log('Ignoring stale response for batch:', selectedBatchId);
         }
 
       } catch (err) {
-        if (!signal.aborted) {
-          console.error("Error fetching details", err);
-        }
+        console.error("Error fetching details", err);
       } finally {
-        if (!signal.aborted) {
+        // Only turn off loading if we are still the active request
+        if (currentId === lastRequestId.current) {
           setLoadingDetails(false);
         }
       }
     };
 
     fetchDetails();
-
-    // Cleanup function: aborts the fetch if component unmounts or selectedBatchId changes
-    return () => {
-      controller.abort();
-    };
   }, [selectedBatchId]);
 
-  // Sync temp ID when sheet opens
+  // Scroll Spy Effect
   useEffect(() => {
-    if (isSheetOpen) {
-      setTempSelectedBatchId(selectedBatchId);
-    }
-  }, [isSheetOpen, selectedBatchId]);
+    if (viewMode !== 'description') return;
+    const scrollContainer = contentRef.current;
+    if (!scrollContainer) return;
+
+    const handleScroll = () => {
+      for (const tab of tabs) {
+        const element = document.getElementById(tab.id);
+        if (element) {
+          const rect = element.getBoundingClientRect();
+          const containerRect = scrollContainer.getBoundingClientRect();
+          if (rect.top - containerRect.top < 150 && rect.bottom - containerRect.top > 50) {
+            setActiveTab(tab.id);
+            break;
+          }
+        }
+      }
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [viewMode, fullCourseData]);
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
@@ -365,7 +388,6 @@ const EnrolledView = ({
   };
 
   const handleContinue = () => {
-    // Force immediate state update locally
     if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
       setSelectedBatchId(tempSelectedBatchId);
       
@@ -378,6 +400,7 @@ const EnrolledView = ({
     
     setIsSheetOpen(false);
 
+    // Ensure we are viewing the main card to see the change
     if (sidebarSource === 'main') {
         setViewMode('main'); 
     }
@@ -398,306 +421,301 @@ const EnrolledView = ({
     }
   };
 
-  const batchSelectionSheet = (
-    <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[150]">
-        <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
-          <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
-          <SheetDescription className="text-sm text-gray-500">
-             Switch between your enrolled batches.
-          </SheetDescription>
-        </SheetHeader>
-        
-        <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
-          {enrollments.length > 1 ? (
-             enrollments.map((batch) => (
-              <div 
-                key={batch.course_id}
-                onClick={() => setTempSelectedBatchId(batch.course_id)}
-                className={cn(
-                  "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
-                  tempSelectedBatchId === batch.course_id 
-                    ? "border-blue-600 bg-blue-50/50 shadow-sm" 
-                    : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="space-y-1">
-                    <h4 className={cn(
-                      "font-semibold text-sm sm:text-base line-clamp-2",
-                      tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
-                    )}>
-                      {batch.title}
-                    </h4>
-                    <p className="text-xs text-gray-500">
-                      {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
-                    </p>
-                  </div>
-                  
-                  <div className={cn(
-                    "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
-                    tempSelectedBatchId === batch.course_id 
-                      ? "border-blue-600 bg-blue-600" 
-                      : "border-gray-300 bg-white"
-                  )}>
-                    {tempSelectedBatchId === batch.course_id && (
-                      <Check className="h-3 w-3 text-white" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
-               <Book className="h-8 w-8 text-gray-400 mb-2" />
-               <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
-               <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
-            </div>
-          )}
-        </div>
+  // --- RENDER LOGIC ---
+  
+  return (
+    <>
+      {viewMode === 'description' ? (
+        <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
+          
+          <div className="flex-none bg-white z-20 shadow-sm">
+             <div className="px-4 md:px-6 py-2 border-b border-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setViewMode('main')}
+                  className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+                  Back to List
+                </Button>
+             </div>
 
-        {enrollments.length > 1 && (
-          <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
-            <Button 
-              onClick={handleContinue} 
-              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-            >
-              Switch to Selected
-            </Button>
-          </SheetFooter>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-
-  // VIEW 1: DETAILS DESCRIPTION VIEW
-  if (viewMode === 'description') {
-    return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
-        
-        {/* Sticky Header */}
-        <div className="flex-none bg-white z-20 shadow-sm">
-           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setViewMode('main')}
-                className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                Back to List
-              </Button>
-           </div>
-
-           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
-              <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
-                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
-                        <BookOpen className="h-3 w-3" />
-                        <span>Currently Viewing</span>
-                    </div>
-                    
-                    {canSwitchBatch && (
-                      <Button 
-                        onClick={() => handleOpenSheet('detail')} 
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
-                      >
-                        Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
-                      </Button>
-                    )}
-                 </div>
-
-                 <div className="space-y-1 sm:space-y-2">
-                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
-                      {fullCourseData?.title || currentBatchSummary.title}
-                   </h1>
-                   <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
-                      {fullCourseData?.description || currentBatchSummary.description}
-                   </p>
-                 </div>
-              </div>
-           </div>
-
-           <CustomDashboardTabNav 
-             tabs={tabs} 
-             activeTab={activeTab} 
-             onTabClick={handleTabClick} 
-           />
-        </div>
-
-        {/* Scrollable Content with KEY to force refresh on batch change */}
-        <div 
-          ref={contentRef}
-          key={selectedBatchId} // <--- CRITICAL FIX: Forces remount of details on batch switch
-          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
-        >
-            {loadingDetails ? (
-               <div className="flex items-center justify-center h-64">
-                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-               </div>
-            ) : fullCourseData ? (
-               <div className="p-3 sm:p-6">
-                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="space-y-8 pb-12">
-                      <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
-                        <FeaturesSection course={fullCourseData} />
+             <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
+                <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
+                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
+                          <BookOpen className="h-3 w-3" />
+                          <span>Currently Viewing</span>
                       </div>
                       
-                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
-                          <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                          <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
-                          <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                          <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
-                          <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
-                          <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                      </div>
-                    </div>
-                 </div>
-               </div>
-            ) : (
-               <div className="text-center py-10 text-gray-500">
-                 Failed to load details.
-               </div>
-            )}
-        </div>
-        
-        {batchSelectionSheet}
-      </div>
-    );
-  }
+                      {canSwitchBatch && (
+                        <Button 
+                          onClick={() => handleOpenSheet('detail')} 
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
+                        >
+                          Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
+                        </Button>
+                      )}
+                   </div>
 
-  // VIEW 2: MAIN DASHBOARD VIEW
-  return (
-    <div className="space-y-6 sm:space-y-8">
-      <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-        <div className="relative z-10 flex justify-between items-start gap-4">
-          <div className="space-y-1 sm:space-y-2 flex-1">
-            <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
-            
-            <div 
-              role="button"
-              tabIndex={0}
-              className={cn(
-                "flex items-center gap-2 transition-opacity group select-none outline-none",
-                canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet('main');
-              }}
-              onKeyDown={(e) => {
-                if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  handleOpenSheet('main');
-                }
-              }}
-            >
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
-                {currentBatchSummary?.title}
-              </h1>
-              
-              {canSwitchBatch && (
-                <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
-              )}
-            </div>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-white/10 text-white flex-shrink-0">
-                <MoreVertical className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
-                <Info className="mr-2 h-4 w-4" />
-                <span>View Details</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
-                <Share2 className="mr-2 h-4 w-4" />
-                <span>Share Batch</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <section>
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
-           <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
-             View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-           </Button>
-        </div>
-        {/* Force re-render of this card on key change to update text immediately */}
-        {currentBatchSummary && (
-          <EnrollmentListItem 
-            key={currentBatchSummary.course_id} 
-            enrollment={currentBatchSummary} 
-            onClick={() => setViewMode('description')} 
-          />
-        )}
-      </section>
-
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
-        <div className="p-5 sm:p-6 md:p-8">
-          <div className="mb-5 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Classroom</h2>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Quick access to your learning tools</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            
-            <div 
-              onClick={() => onViewChange('enrollments')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
-            >
-              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                <ArrowRight className="h-5 w-5 text-gray-500" />
-              </div>
-              <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
-              <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
-            </div>
-
-            <div 
-              onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
-            >
-              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                <ArrowRight className="h-5 w-5 text-gray-500" />
-              </div>
-              <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
-              <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
-            </div>
-
-            <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
-                <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                   <div className="space-y-1 sm:space-y-2">
+                     <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
+                        {/* Instant Update: Use currentBatchSummary if full data is loading */}
+                        {fullCourseData?.title || currentBatchSummary.title}
+                     </h1>
+                     <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
+                        {fullCourseData?.description || currentBatchSummary.description}
+                     </p>
+                   </div>
                 </div>
-                <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
-                <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
-              </div>
-            </Link>
-            
+             </div>
+
+             <CustomDashboardTabNav 
+               tabs={tabs} 
+               activeTab={activeTab} 
+               onTabClick={handleTabClick} 
+             />
+          </div>
+
+          <div 
+            ref={contentRef}
+            // Use KEY to force re-mount on batch switch - this clears scroll and ensures clean state
+            key={selectedBatchId}
+            className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
+          >
+              {loadingDetails ? (
+                 <div className="flex items-center justify-center h-64">
+                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                 </div>
+              ) : fullCourseData ? (
+                 <div className="p-3 sm:p-6">
+                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="space-y-8 pb-12">
+                        <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
+                          <FeaturesSection course={fullCourseData} />
+                        </div>
+                        
+                        <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
+                            <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                            <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
+                            <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                            <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
+                            <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
+                            <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                        </div>
+                      </div>
+                   </div>
+                 </div>
+              ) : (
+                 <div className="text-center py-10 text-gray-500">
+                   Failed to load details.
+                 </div>
+              )}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-6 sm:space-y-8">
+          <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+            <div className="relative z-10 flex justify-between items-start gap-4">
+              <div className="space-y-1 sm:space-y-2 flex-1">
+                <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
+                
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  className={cn(
+                    "flex items-center gap-2 transition-opacity group select-none outline-none",
+                    canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (canSwitchBatch) handleOpenSheet('main');
+                  }}
+                  onKeyDown={(e) => {
+                    if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleOpenSheet('main');
+                    }
+                  }}
+                >
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
+                    {currentBatchSummary?.title}
+                  </h1>
+                  
+                  {canSwitchBatch && (
+                    <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
+                  )}
+                </div>
+              </div>
 
-      <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
-        <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
-      </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-white/10 text-white flex-shrink-0">
+                    <MoreVertical className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
+                    <Info className="mr-2 h-4 w-4" />
+                    <span>View Details</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Share Batch</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
-      {batchSelectionSheet}
-    </div>
+          <section>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+               <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
+               <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
+                 View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+               </Button>
+            </div>
+            {/* FORCE REMOUNT with key to update text immediately */}
+            {currentBatchSummary && (
+              <EnrollmentListItem 
+                key={currentBatchSummary.course_id}
+                enrollment={currentBatchSummary} 
+                onClick={() => setViewMode('description')} 
+              />
+            )}
+          </section>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
+            <div className="p-5 sm:p-6 md:p-8">
+              <div className="mb-5 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Classroom</h2>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Quick access to your learning tools</p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                
+                <div 
+                  onClick={() => onViewChange('enrollments')}
+                  className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
+                >
+                  <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                    <ArrowRight className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
+                </div>
+
+                <div 
+                  onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
+                  className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
+                >
+                  <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                    <ArrowRight className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
+                </div>
+
+                <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
+                  <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
+                    <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                      <ArrowRight className="h-5 w-5 text-gray-500" />
+                    </div>
+                    <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
+                  </div>
+                </Link>
+                
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
+            <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
+          </div>
+        </div>
+      )}
+
+      {/* --- Persistent Sheet (Never Unmounts) --- */}
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[150]">
+          <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
+            <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
+            <SheetDescription className="text-sm text-gray-500">
+               Switch between your enrolled batches to view different course materials.
+            </SheetDescription>
+          </SheetHeader>
+          
+          <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
+            {enrollments.length > 1 ? (
+               enrollments.map((batch) => (
+                <div 
+                  key={batch.course_id}
+                  onClick={() => setTempSelectedBatchId(batch.course_id)}
+                  className={cn(
+                    "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
+                    tempSelectedBatchId === batch.course_id 
+                      ? "border-blue-600 bg-blue-50/50 shadow-sm" 
+                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <h4 className={cn(
+                        "font-semibold text-sm sm:text-base line-clamp-2",
+                        tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                      )}>
+                        {batch.title}
+                      </h4>
+                      <p className="text-xs text-gray-500">
+                        {batch.status === 'Ongoing' ? 'Active Batch' : 'Expired'}
+                      </p>
+                    </div>
+                    
+                    <div className={cn(
+                      "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
+                      tempSelectedBatchId === batch.course_id 
+                        ? "border-blue-600 bg-blue-600" 
+                        : "border-gray-300 bg-white"
+                    )}>
+                      {tempSelectedBatchId === batch.course_id && (
+                        <Check className="h-3 w-3 text-white" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                 <Book className="h-8 w-8 text-gray-400 mb-2" />
+                 <p className="text-gray-600 font-medium">No other enrolled courses found.</p>
+                 <p className="text-xs text-gray-500 mt-1">You are currently enrolled in only one batch.</p>
+              </div>
+            )}
+          </div>
+
+          {enrollments.length > 1 && (
+            <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
+              <Button 
+                onClick={handleContinue} 
+                className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+              >
+                Switch to Selected
+              </Button>
+            </SheetFooter>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
-// ... (Rest of the file remains exactly as is: NotEnrolledView, StudyPortalContent, etc.)
-// Re-exporting the rest to ensure file integrity
+// ... (Rest of file same as before)
+// Re-exporting Main Components below to be sure
 
 const NotEnrolledView = ({ 
   profile,
