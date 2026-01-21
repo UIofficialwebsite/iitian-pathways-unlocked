@@ -260,11 +260,11 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
-    return enrollments.length > 0 ? enrollments[0].course_id : '';
-  });
+  // Derive the initial batch ID from props - this only runs on first render
+  const initialBatchId = enrollments.length > 0 ? enrollments[0].course_id : '';
   
-  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(initialBatchId);
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(initialBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
@@ -275,6 +275,25 @@ const EnrolledView = ({
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // FIX: Sync selectedBatchId when enrollments list changes or when current selection becomes invalid
+  useEffect(() => {
+    if (enrollments.length === 0) {
+      // No enrollments, clear selection
+      setSelectedBatchId('');
+      return;
+    }
+    
+    // Check if current selectedBatchId is still valid in the new enrollments list
+    const isCurrentSelectionValid = enrollments.some(e => e.course_id === selectedBatchId);
+    
+    if (!isCurrentSelectionValid) {
+      // Current selection is no longer valid, reset to first enrollment
+      const newBatchId = enrollments[0].course_id;
+      setSelectedBatchId(newBatchId);
+      setTempSelectedBatchId(newBatchId);
+    }
+  }, [enrollments]);
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
@@ -1035,6 +1054,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
         </div>
       ) : hasEnrollments ? (
         <EnrolledView 
+          key={groupedEnrollments.map(e => e.course_id).join('-')}
           enrollments={groupedEnrollments} 
           onViewChange={onViewChange} 
         />
