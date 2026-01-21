@@ -4,9 +4,7 @@ import {
   Loader2, 
   Book, 
   BookOpen, 
-  Users, 
   ChevronRight, 
-  FileText, 
   Target, 
   ArrowRight, 
   ChevronDown, 
@@ -15,14 +13,12 @@ import {
   Info, 
   Check, 
   ArrowLeft,
-  Calendar,
-  Star,
   Layers,
   LayoutDashboard, 
   Library 
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
@@ -37,7 +33,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-  SheetDescription, // Added SheetDescription
+  SheetDescription,
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -291,18 +287,9 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
+  // Derive current batch summary directly from state and props
   const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   const canSwitchBatch = enrollments.length > 1;
-
-  // Sync selectedBatchId if enrollments update or initialized empty
-  useEffect(() => {
-    if (enrollments.length > 0) {
-      const exists = enrollments.find(e => e.course_id === selectedBatchId);
-      if (!exists) {
-        setSelectedBatchId(enrollments[0].course_id);
-      }
-    }
-  }, [enrollments, selectedBatchId]);
 
   useEffect(() => {
     // Immediately reset all course-specific data when batch changes
@@ -359,7 +346,7 @@ const EnrolledView = ({
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [viewMode, fullCourseData]);
 
-  // Sync temp ID when sheet opens
+  // Sync temp ID when sheet opens, but do NOT automatically reset selectedBatchId based on enrollments effect to avoid race conditions
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
@@ -380,15 +367,23 @@ const EnrolledView = ({
   };
 
   const handleContinue = () => {
+    // Explicitly update the state to the selected batch from the sheet
     if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
       setSelectedBatchId(tempSelectedBatchId);
       const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
       toast({
         title: "Batch Switched",
-        description: `You are now viewing ${newBatch?.title || 'the selected batch'}`,
+        description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
       });
     }
+    
+    // Close the sheet
     setIsSheetOpen(false);
+
+    // If we are currently in the main dashboard view, ensure we stay there
+    if (sidebarSource === 'main') {
+        setViewMode('main'); 
+    }
   };
 
   const handleDescription = () => {
@@ -408,7 +403,7 @@ const EnrolledView = ({
 
   const batchSelectionSheet = (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6">
+      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[150]">
         <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
           <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
           <SheetDescription className="text-sm text-gray-500">
@@ -712,8 +707,6 @@ const NotEnrolledView = ({
   pyqs: any[];
   onEditProfile: () => void;
 }) => {
-  // Removed "hasContent" check since Quick Access section is removed
-  
   return (
     <div className="space-y-10">
       <ProfileCompletionBanner profile={profile} onEditProfile={onEditProfile} />
@@ -723,8 +716,6 @@ const NotEnrolledView = ({
         loading={isLoading}
       />
     
-      {/* QUICK ACCESS SECTION REMOVED HERE */}
-
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
           <div className="mb-6">
@@ -738,7 +729,6 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* Updated Study Material icon from link */}
                 <img 
                   src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768976940/3048737_wcvnjf.png" 
                   alt="Study Material" 
@@ -754,7 +744,6 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* Updated Mentorship icon from link */}
                 <img 
                   src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768977287/8148227_l4zc4u.png" 
                   alt="Mentorship" 
@@ -770,7 +759,6 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* PDF Bank Logo - Now UNIFORM for all users */}
                 <img 
                   src="https://i.ibb.co/mr3z2pF7/image.png" 
                   alt="PDF Bank" 
