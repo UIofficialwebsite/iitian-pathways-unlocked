@@ -291,6 +291,13 @@ const EnrolledView = ({
   const canSwitchBatch = enrollments.length > 1;
 
   useEffect(() => {
+    // Immediately reset all course-specific data when batch changes
+    // This prevents stale data from being shown during transition
+    setFullCourseData(null);
+    setScheduleData([]);
+    setFaqs(undefined);
+    setActiveTab('features');
+    
     const fetchDetails = async () => {
       if (!selectedBatchId) return;
       
