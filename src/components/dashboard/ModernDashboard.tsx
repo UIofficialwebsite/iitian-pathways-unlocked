@@ -76,6 +76,12 @@ const ModernDashboard: React.FC = () => {
     setSelectedCourseTitle(null);
   };
 
+  // --- FIX START: Clear title immediately when switching batches ---
+  useEffect(() => {
+    setSelectedCourseTitle(null);
+  }, [selectedCourseId]);
+  // --- FIX END ---
+
   // CORRECTED useEffect: Removed 'activeView' from dependency array
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
@@ -228,7 +234,7 @@ const ModernDashboard: React.FC = () => {
                           )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          {/* KEY added to force remount and fix Quick Access Card updates */}
+                          {/* Key prop ensures component remounts on ID change */}
                           <CourseDetail 
                             key={selectedCourseId}
                             customCourseId={selectedCourseId} 
@@ -265,7 +271,6 @@ const ModernDashboard: React.FC = () => {
                           )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                           {/* KEY added to force remount and fix Quick Access Card updates */}
                           <CourseDetail 
                             key={selectedCourseId}
                             customCourseId={selectedCourseId} 
@@ -303,7 +308,6 @@ const ModernDashboard: React.FC = () => {
                           )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                           {/* KEY added to force remount and fix Quick Access Card updates */}
                           <CourseDetail 
                             key={selectedCourseId}
                             customCourseId={selectedCourseId} 
