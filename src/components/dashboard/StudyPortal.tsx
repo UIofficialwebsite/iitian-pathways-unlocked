@@ -253,7 +253,7 @@ const CustomDashboardTabNav = ({
 };
 
 
-// --- View 1: Student IS Enrolled (Complex View) ---
+// --- View 1: Student IS Enrolled ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -657,6 +657,7 @@ const EnrolledView = ({
         </div>
       </div>
       
+      {/* Restored Heart footer for Enrolled view */}
       <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
@@ -759,7 +760,7 @@ const NotEnrolledView = ({
                 </div>
                 {/* Updated Study Material icon */}
                 <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768976940/3048737_wcvnjf.png" 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944106/image-removebg-preview_2_1_rr5o71.png" 
                   alt="Study Material" 
                   className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                 />
@@ -775,7 +776,7 @@ const NotEnrolledView = ({
                 </div>
                 {/* Updated Mentorship icon */}
                 <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768977287/8148227_l4zc4u.png" 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944412/mentor-icon-simple-training-career-vector-removebg-preview_v3kclf.png" 
                   alt="Mentorship" 
                   className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                 />
@@ -792,7 +793,7 @@ const NotEnrolledView = ({
                 {/* Conditional PDF Bank logo based on IITM BS status */}
                 {profile?.program_type === 'IITM_BS' ? (
                   <img 
-                    src="https://i.ibb.co/mr3z2pF7/image.png" 
+                    src="/lovable-uploads/logo_ui_new.png" 
                     alt="IITM BS Notes" 
                     className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                   />
@@ -805,6 +806,11 @@ const NotEnrolledView = ({
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Restored Heart footer for NotEnrolled view */}
+      <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
+        <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
     </div>
   );
