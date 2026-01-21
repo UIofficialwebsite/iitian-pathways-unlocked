@@ -37,6 +37,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
+  SheetDescription, // Added import
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -385,10 +386,7 @@ const EnrolledView = ({
     }
     setIsSheetOpen(false);
     
-    // If we are in the main view, we stay there. 
-    // If we were in description view and user switched from there (sidebarSource === 'detail'), we might stay or go back.
-    // Typically, user expects to see the new batch. If they were in details, maybe show details of new batch?
-    // For now, let's default to showing the main card view to ensure they see the change clearly.
+    // Default to main view to show the card of the new batch clearly
     if (sidebarSource === 'main') {
         setViewMode('main'); 
     }
@@ -414,6 +412,10 @@ const EnrolledView = ({
       <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6">
         <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
           <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
+          {/* Added Description for Accessibility */}
+          <SheetDescription className="text-sm text-gray-500">
+            Choose a batch from your enrollments to view its details and content.
+          </SheetDescription>
         </SheetHeader>
         
         <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
@@ -478,223 +480,220 @@ const EnrolledView = ({
     </Sheet>
   );
 
-  if (viewMode === 'description') {
-    return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
+  return (
+    <>
+      {viewMode === 'description' ? (
+        <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
         
-        <div className="flex-none bg-white z-20 shadow-sm">
-           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setViewMode('main')}
-                className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                Back to List
-              </Button>
-           </div>
+          <div className="flex-none bg-white z-20 shadow-sm">
+             <div className="px-4 md:px-6 py-2 border-b border-gray-100">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setViewMode('main')}
+                  className="group pl-0 hover:pl-1 hover:bg-transparent text-gray-600 hover:text-gray-900 transition-all"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-1 group-hover:-translate-x-1 transition-transform" />
+                  Back to List
+                </Button>
+             </div>
 
-           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
-              <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
-                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
-                        <BookOpen className="h-3 w-3" />
-                        <span>Currently Viewing</span>
-                    </div>
-                    
-                    {canSwitchBatch && (
-                      <Button 
-                        onClick={() => handleOpenSheet('detail')} 
-                        className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
-                      >
-                        Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
-                      </Button>
-                    )}
-                 </div>
-
-                 <div className="space-y-1 sm:space-y-2">
-                   <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
-                      {fullCourseData?.title || currentBatchSummary.title}
-                   </h1>
-                   <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
-                      {fullCourseData?.description || currentBatchSummary.description}
-                   </p>
-                 </div>
-              </div>
-           </div>
-
-           <CustomDashboardTabNav 
-             tabs={tabs} 
-             activeTab={activeTab} 
-             onTabClick={handleTabClick} 
-           />
-        </div>
-
-        <div 
-          ref={contentRef}
-          className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
-        >
-            {loadingDetails ? (
-               <div className="flex items-center justify-center h-64">
-                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-               </div>
-            ) : fullCourseData ? (
-               <div className="p-3 sm:p-6">
-                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="space-y-8 pb-12">
-                      <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
-                        <FeaturesSection course={fullCourseData} />
+             <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
+                <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
+                   <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                      <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
+                          <BookOpen className="h-3 w-3" />
+                          <span>Currently Viewing</span>
                       </div>
                       
-                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
-                          <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                          <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
-                          <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                          <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
-                          <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
-                          <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                      </div>
-                    </div>
-                 </div>
-               </div>
-            ) : (
-               <div className="text-center py-10 text-gray-500">
-                 Failed to load details.
-               </div>
-            )}
-        </div>
-        
-        {batchSelectionSheet}
-      </div>
-    );
-  }
+                      {canSwitchBatch && (
+                        <Button 
+                          onClick={() => handleOpenSheet('detail')} 
+                          className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
+                        >
+                          Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
+                        </Button>
+                      )}
+                   </div>
 
-  return (
-    <div className="space-y-6 sm:space-y-8">
-      <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
-        <div className="relative z-10 flex justify-between items-start gap-4">
-          <div className="space-y-1 sm:space-y-2 flex-1">
-            <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
-            
-            <div 
-              role="button"
-              tabIndex={0}
-              className={cn(
-                "flex items-center gap-2 transition-opacity group select-none outline-none",
-                canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
-              )}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet('main');
-              }}
-              onKeyDown={(e) => {
-                if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
-                  e.preventDefault();
-                  handleOpenSheet('main');
-                }
-              }}
-            >
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
-                {currentBatchSummary?.title}
-              </h1>
-              
-              {canSwitchBatch && (
-                <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
-              )}
-            </div>
-          </div>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-white/10 text-white flex-shrink-0">
-                <MoreVertical className="h-5 w-5 sm:h-6 sm:w-6" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
-                <Info className="mr-2 h-4 w-4" />
-                <span>View Details</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
-                <Share2 className="mr-2 h-4 w-4" />
-                <span>Share Batch</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      <section>
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
-           <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
-           <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
-             View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-           </Button>
-        </div>
-        {currentBatchSummary && (
-          <EnrollmentListItem 
-            key={currentBatchSummary.course_id}
-            enrollment={currentBatchSummary} 
-            onClick={() => setViewMode('description')} 
-          />
-        )}
-      </section>
-
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
-        <div className="p-5 sm:p-6 md:p-8">
-          <div className="mb-5 sm:mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Classroom</h2>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">Quick access to your learning tools</p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-            
-            <div 
-              onClick={() => onViewChange('enrollments')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
-            >
-              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                <ArrowRight className="h-5 w-5 text-gray-500" />
-              </div>
-              <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
-              <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
-            </div>
-
-            <div 
-              onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
-              className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
-            >
-              <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                <ArrowRight className="h-5 w-5 text-gray-500" />
-              </div>
-              <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
-              <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
-            </div>
-
-            <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
-              <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
-                <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
-                  <ArrowRight className="h-5 w-5 text-gray-500" />
+                   <div className="space-y-1 sm:space-y-2">
+                     <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
+                        {fullCourseData?.title || currentBatchSummary.title}
+                     </h1>
+                     <p className="text-slate-200 text-xs sm:text-sm md:text-base leading-relaxed opacity-90 line-clamp-2 sm:line-clamp-3">
+                        {fullCourseData?.description || currentBatchSummary.description}
+                     </p>
+                   </div>
                 </div>
-                <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
-                <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
-              </div>
-            </Link>
-            
+             </div>
+
+             <CustomDashboardTabNav 
+               tabs={tabs} 
+               activeTab={activeTab} 
+               onTabClick={handleTabClick} 
+             />
+          </div>
+
+          <div 
+            ref={contentRef}
+            className="flex-1 overflow-y-auto scrollbar-hide bg-gray-50 pb-20"
+          >
+              {loadingDetails ? (
+                 <div className="flex items-center justify-center h-64">
+                   <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                 </div>
+              ) : fullCourseData ? (
+                 <div className="p-3 sm:p-6">
+                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                      <div className="space-y-8 pb-12">
+                        <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
+                          <FeaturesSection course={fullCourseData} />
+                        </div>
+                        
+                        <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
+                            <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                            <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
+                            <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                            <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
+                            <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
+                            <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                        </div>
+                      </div>
+                   </div>
+                 </div>
+              ) : (
+                 <div className="text-center py-10 text-gray-500">
+                   Failed to load details.
+                 </div>
+              )}
           </div>
         </div>
-      </div>
+      ) : (
+        <div className="space-y-6 sm:space-y-8">
+          <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
+            <div className="relative z-10 flex justify-between items-start gap-4">
+              <div className="space-y-1 sm:space-y-2 flex-1">
+                <p className="text-xs sm:text-sm text-blue-200 font-medium uppercase tracking-wider">Selected Batch</p>
+                
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  className={cn(
+                    "flex items-center gap-2 transition-opacity group select-none outline-none",
+                    canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (canSwitchBatch) handleOpenSheet('main');
+                  }}
+                  onKeyDown={(e) => {
+                    if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleOpenSheet('main');
+                    }
+                  }}
+                >
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2">
+                    {currentBatchSummary?.title}
+                  </h1>
+                  
+                  {canSwitchBatch && (
+                    <ChevronDown className="h-5 w-5 sm:h-6 sm:w-6 text-blue-200 group-hover:text-white transition-colors mt-1 flex-shrink-0" />
+                  )}
+                </div>
+              </div>
 
-      <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
-        <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
-      </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full hover:bg-white/10 text-white flex-shrink-0">
+                    <MoreVertical className="h-5 w-5 sm:h-6 sm:w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={handleDescription} className="cursor-pointer">
+                    <Info className="mr-2 h-4 w-4" />
+                    <span>View Details</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleShare} className="cursor-pointer">
+                    <Share2 className="mr-2 h-4 w-4" />
+                    <span>Share Batch</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
 
+          <section>
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+               <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
+               <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
+                 View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+               </Button>
+            </div>
+            {currentBatchSummary && (
+              <EnrollmentListItem 
+                key={currentBatchSummary.course_id}
+                enrollment={currentBatchSummary} 
+                onClick={() => setViewMode('description')} 
+              />
+            )}
+          </section>
+
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mt-8 sm:mt-12">
+            <div className="p-5 sm:p-6 md:p-8">
+              <div className="mb-5 sm:mb-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">My Classroom</h2>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Quick access to your learning tools</p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+                
+                <div 
+                  onClick={() => onViewChange('enrollments')}
+                  className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
+                >
+                  <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                    <ArrowRight className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
+                </div>
+
+                <div 
+                  onClick={() => window.open('https://ssp.unknowniitians.live', '_blank')}
+                  className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative cursor-pointer group active:scale-[0.98] transform transition-transform"
+                >
+                  <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                    <ArrowRight className="h-5 w-5 text-gray-500" />
+                  </div>
+                  <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
+                  <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
+                </div>
+
+                <Link to="/exam-preparation" className="block group h-full active:scale-[0.98] transform transition-transform">
+                  <div className="bg-gray-50/50 hover:bg-gray-100 transition-colors border border-gray-200 rounded-lg p-5 sm:p-6 h-full flex flex-col relative">
+                    <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
+                      <ArrowRight className="h-5 w-5 text-gray-500" />
+                    </div>
+                    <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
+                  </div>
+                </Link>
+                
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
+            <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
+          </div>
+        </div>
+      )}
       {batchSelectionSheet}
-    </div>
+    </>
   );
 };
 
