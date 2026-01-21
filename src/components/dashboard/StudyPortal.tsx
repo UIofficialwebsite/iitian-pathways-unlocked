@@ -263,7 +263,10 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  const [selectedBatchId, setSelectedBatchId] = useState<string>(enrollments[0]?.course_id || '');
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
+    return enrollments.length > 0 ? enrollments[0].course_id : '';
+  });
+  
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
@@ -289,6 +292,17 @@ const EnrolledView = ({
 
   const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   const canSwitchBatch = enrollments.length > 1;
+
+  // Sync selectedBatchId if enrollments update or initialized empty
+  useEffect(() => {
+    if (enrollments.length > 0) {
+      // If currently selected ID is not in the new list, reset to first
+      const exists = enrollments.find(e => e.course_id === selectedBatchId);
+      if (!exists) {
+        setSelectedBatchId(enrollments[0].course_id);
+      }
+    }
+  }, [enrollments, selectedBatchId]);
 
   useEffect(() => {
     // Immediately reset all course-specific data when batch changes
@@ -361,13 +375,23 @@ const EnrolledView = ({
   };
 
   const handleContinue = () => {
-    setSelectedBatchId(tempSelectedBatchId);
+    if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
+      setSelectedBatchId(tempSelectedBatchId);
+      const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
+      toast({
+        title: "Batch Switched",
+        description: `You are now viewing ${newBatch?.title || 'the selected batch'}`,
+      });
+    }
     setIsSheetOpen(false);
-    setViewMode('main'); 
-    toast({
-      title: "Batch Switched",
-      description: `You are now viewing ${enrollments.find(e => e.course_id === tempSelectedBatchId)?.title}`,
-    });
+    
+    // If we are in the main view, we stay there. 
+    // If we were in description view and user switched from there (sidebarSource === 'detail'), we might stay or go back.
+    // Typically, user expects to see the new batch. If they were in details, maybe show details of new batch?
+    // For now, let's default to showing the main card view to ensure they see the change clearly.
+    if (sidebarSource === 'main') {
+        setViewMode('main'); 
+    }
   };
 
   const handleDescription = () => {
@@ -547,7 +571,7 @@ const EnrolledView = ({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8" key={selectedBatchId}>
+    <div className="space-y-6 sm:space-y-8">
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
