@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
@@ -56,6 +56,7 @@ const ModernDashboard: React.FC = () => {
   
   // Floating Detail State
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
   
   // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
@@ -65,6 +66,16 @@ const ModernDashboard: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
 
+  // Handle title update from CourseDetail
+  const handleTitleLoad = useCallback((title: string) => {
+    setSelectedCourseTitle(title);
+  }, []);
+
+  const handleCloseDetail = () => {
+    setSelectedCourseId(null);
+    setSelectedCourseTitle(null);
+  };
+
   // CORRECTED useEffect: Removed 'activeView' from dependency array
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
@@ -73,7 +84,7 @@ const ModernDashboard: React.FC = () => {
     if (targetView !== activeView) {
       setIsViewLoading(true);
       setActiveView(targetView);
-      setSelectedCourseId(null); // Reset detail view on tab change
+      handleCloseDetail(); // Reset detail view on tab change
       
       const timer = setTimeout(() => {
         setIsViewLoading(false);
@@ -129,7 +140,7 @@ const ModernDashboard: React.FC = () => {
 
   const handleViewChange = (view: ActiveView) => {
     if (view === activeView) {
-      setSelectedCourseId(null);
+      handleCloseDetail();
       return; 
     }
     // Update URL, let useEffect handle the state and loading
@@ -201,17 +212,29 @@ const ModernDashboard: React.FC = () => {
                       </ContentWrapper>
                     ) : (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
+                        {/* Sticky Header with Dynamic Title */}
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
                           <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
+                            onClick={handleCloseDetail}
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
                           >
                             <ArrowLeft className="w-5 h-5" />
                             Back to My Enrollments
                           </button>
+                          {selectedCourseTitle && (
+                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
+                              {selectedCourseTitle}
+                            </h2>
+                          )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                          {/* KEY added to force remount and fix Quick Access Card updates */}
+                          <CourseDetail 
+                            key={selectedCourseId}
+                            customCourseId={selectedCourseId} 
+                            isDashboardView={true} 
+                            onTitleLoad={handleTitleLoad}
+                          />
                         </div>
                       </div>
                     )}
@@ -227,17 +250,28 @@ const ModernDashboard: React.FC = () => {
 
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
                           <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
+                            onClick={handleCloseDetail}
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
                           >
                             <ArrowLeft className="w-5 h-5" />
                             Back to All Batches
                           </button>
+                          {selectedCourseTitle && (
+                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
+                              {selectedCourseTitle}
+                            </h2>
+                          )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                           {/* KEY added to force remount and fix Quick Access Card updates */}
+                          <CourseDetail 
+                            key={selectedCourseId}
+                            customCourseId={selectedCourseId} 
+                            isDashboardView={true}
+                            onTitleLoad={handleTitleLoad}
+                          />
                         </div>
                       </div>
                     )}
@@ -254,17 +288,28 @@ const ModernDashboard: React.FC = () => {
 
                     {selectedCourseId && (
                       <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center shadow-sm shrink-0">
+                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
                           <button 
-                            onClick={() => setSelectedCourseId(null)}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors"
+                            onClick={handleCloseDetail}
+                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
                           >
                             <ArrowLeft className="w-5 h-5" />
                             Back to Fastrack Batches
                           </button>
+                          {selectedCourseTitle && (
+                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
+                              {selectedCourseTitle}
+                            </h2>
+                          )}
                         </div>
                         <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <CourseDetail customCourseId={selectedCourseId} isDashboardView={true} />
+                           {/* KEY added to force remount and fix Quick Access Card updates */}
+                          <CourseDetail 
+                            key={selectedCourseId}
+                            customCourseId={selectedCourseId} 
+                            isDashboardView={true}
+                            onTitleLoad={handleTitleLoad}
+                          />
                         </div>
                       </div>
                     )}
