@@ -45,6 +45,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
     const cardRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    
+    // Track if this is the initial mount to prevent scroll-triggered re-fetches
+    const hasFetchedRef = useRef<string | null>(null);
 
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
@@ -55,12 +58,25 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const isExpired = endDate && today > endDate;
 
     // --- 1. FETCH ADD-ONS TO DETERMINE LOWEST PRICE ---
+    // Reset state immediately when course.id changes to prevent stale data
     useEffect(() => {
+        // Reset state when course changes
+        if (hasFetchedRef.current !== course.id) {
+            setMinAddonPrice(null);
+            setHasAddons(false);
+        }
+        
         const checkAddonsAndPrice = async () => {
+            // Skip if already fetched for this course
+            if (hasFetchedRef.current === course.id) return;
+            
             const { data, error } = await supabase
                 .from('course_addons')
                 .select('price')
                 .eq('course_id', course.id);
+
+            // Mark as fetched for this course
+            hasFetchedRef.current = course.id;
 
             if (!error && data && data.length > 0) {
                 setHasAddons(true);
@@ -94,15 +110,24 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             ? cardRef.current?.closest('.overflow-y-auto') || window 
             : window;
 
+        // Use a stable ref to track last state and avoid unnecessary state updates
+        let lastVisible = false;
+
         const handleScroll = () => {
             const currentScroll = scrollContainer instanceof HTMLElement
                 ? scrollContainer.scrollTop 
                 : window.scrollY;
 
-            setDetailsVisible(currentScroll > 80);
+            const shouldBeVisible = currentScroll > 80;
+            
+            // Only update state if visibility actually changed (prevents re-renders)
+            if (shouldBeVisible !== lastVisible) {
+                lastVisible = shouldBeVisible;
+                setDetailsVisible(shouldBeVisible);
+            }
         };
 
-        scrollContainer.addEventListener('scroll', handleScroll);
+        scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
         handleScroll();
 
         return () => scrollContainer.removeEventListener('scroll', handleScroll);
