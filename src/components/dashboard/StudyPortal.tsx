@@ -759,7 +759,7 @@ const NotEnrolledView = ({
                 </div>
                 {/* Updated Study Material icon */}
                 <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944106/image-removebg-preview_2_1_rr5o71.png" 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768976940/3048737_wcvnjf.png" 
                   alt="Study Material" 
                   className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                 />
