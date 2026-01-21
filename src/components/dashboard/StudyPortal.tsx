@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -260,6 +260,8 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
+  // Initialize selected batch once. 
+  // We do NOT reset this automatically with useEffect anymore to prevent the "revert" bug.
   const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
     return enrollments.length > 0 ? enrollments[0].course_id : '';
   });
@@ -287,8 +289,12 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Derive current batch summary directly from state and props
-  const currentBatchSummary = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+  // Derive current batch summary directly.
+  // Using useMemo for stability, though derived variable is also fine.
+  const currentBatchSummary = useMemo(() => {
+    return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+  }, [enrollments, selectedBatchId]);
+
   const canSwitchBatch = enrollments.length > 1;
 
   useEffect(() => {
@@ -346,7 +352,7 @@ const EnrolledView = ({
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [viewMode, fullCourseData]);
 
-  // Sync temp ID when sheet opens, but do NOT automatically reset selectedBatchId based on enrollments effect to avoid race conditions
+  // Sync temp ID when sheet opens so it highlights the current selection
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
@@ -367,9 +373,11 @@ const EnrolledView = ({
   };
 
   const handleContinue = () => {
-    // Explicitly update the state to the selected batch from the sheet
     if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
+      // 1. Update State
       setSelectedBatchId(tempSelectedBatchId);
+      
+      // 2. Feedback
       const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
       toast({
         title: "Batch Switched",
@@ -377,10 +385,10 @@ const EnrolledView = ({
       });
     }
     
-    // Close the sheet
+    // 3. Close Sheet
     setIsSheetOpen(false);
 
-    // If we are currently in the main dashboard view, ensure we stay there
+    // 4. Force view to main to ensure fresh render of the card
     if (sidebarSource === 'main') {
         setViewMode('main'); 
     }
