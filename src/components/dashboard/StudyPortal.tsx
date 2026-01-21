@@ -683,7 +683,7 @@ const NotEnrolledView = ({
   pyqs: any[];
   onEditProfile: () => void;
 }) => {
-  const hasContent = notes.length > 0 || pyqs.length > 0;
+  // Removed "hasContent" check since Quick Access section is removed
   
   return (
     <div className="space-y-10">
@@ -694,55 +694,7 @@ const NotEnrolledView = ({
         loading={isLoading}
       />
     
-      {hasContent && (
-        <section>
-          <h2 className="text-2xl font-bold text-gray-900">Quick Access</h2>
-          <p className="text-gray-600 mt-1">Your personalized free notes and PYQs</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-            {notes.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My Notes</CardTitle>
-                  <BookOpen className="h-5 w-5 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {notes.slice(0, 3).map((note: any) => (
-                      <div key={note.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{note.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All Notes</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            {pyqs.length > 0 && (
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium">My PYQs</CardTitle>
-                  <FileText className="h-5 w-5 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3 pt-2">
-                    {pyqs.slice(0, 3).map((pyq: any) => (
-                      <div key={pyq.id} className="p-3 bg-gray-50 rounded-lg">
-                        <p className="font-medium text-sm truncate text-gray-900">{pyq.title}</p>
-                      </div>
-                    ))}
-                    <Link to="/exam-preparation">
-                      <Button variant="outline" size="sm" className="w-full mt-3">View All PYQs</Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </section>
-      )}
+      {/* QUICK ACCESS SECTION REMOVED HERE */}
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         <div className="p-6 md:p-8">
@@ -789,16 +741,12 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* Conditional PDF Bank logo based on IITM BS status */}
-                {profile?.program_type === 'IITM_BS' ? (
-                  <img 
-                    src="https://i.ibb.co/mr3z2pF7/image.png" 
-                    alt="IITM BS Notes" 
-                    className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
-                  />
-                ) : (
-                  <FileText className="h-8 w-8 text-red-600 mb-4 group-hover:scale-110 transition-transform" />
-                )}
+                {/* PDF Bank Logo - Now UNIFORM for all users */}
+                <img 
+                  src="https://i.ibb.co/mr3z2pF7/image.png" 
+                  alt="PDF Bank" 
+                  className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
+                />
                 <h3 className="text-lg font-semibold text-gray-900">PDF Bank</h3>
                 <p className="text-gray-600 text-sm mt-1">Download your study pdf from one place</p>
               </div>
