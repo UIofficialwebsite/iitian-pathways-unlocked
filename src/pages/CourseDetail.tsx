@@ -44,7 +44,6 @@ interface CourseFaq {
   answer: string;
 }
 
-// Added prop type for onTitleLoad
 interface CourseDetailProps {
   customCourseId?: string | null;
   isDashboardView?: boolean;
