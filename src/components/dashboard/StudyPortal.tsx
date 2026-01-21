@@ -792,7 +792,7 @@ const NotEnrolledView = ({
                 {/* Conditional PDF Bank logo based on IITM BS status */}
                 {profile?.program_type === 'IITM_BS' ? (
                   <img 
-                    src="/lovable-uploads/logo_ui_new.png" 
+                    src="https://i.ibb.co/mr3z2pF7/image.png" 
                     alt="IITM BS Notes" 
                     className="h-10 w-10 mb-4 group-hover:scale-110 transition-transform object-contain"
                   />
