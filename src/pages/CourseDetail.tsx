@@ -44,7 +44,14 @@ interface CourseFaq {
   answer: string;
 }
 
-const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
+// Added prop type for onTitleLoad
+interface CourseDetailProps {
+  customCourseId?: string | null;
+  isDashboardView?: boolean;
+  onTitleLoad?: (title: string) => void; 
+}
+
+const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDetailProps) => {
   const { courseId: urlCourseId } = useParams<{ courseId: string }>();
   const courseId = customCourseId || urlCourseId;
   const navigate = useNavigate();
@@ -97,6 +104,11 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
         
         const fetchedCourse = courseResult.data as Course;
         setCourse(fetchedCourse);
+        
+        // Notify parent (Dashboard) of the title immediately
+        if (onTitleLoad && fetchedCourse.title) {
+            onTitleLoad(fetchedCourse.title);
+        }
 
         if (scheduleResult.data) setScheduleData(scheduleResult.data as any);
         if (faqResult.data) setFaqs(faqResult.data as any);
@@ -140,7 +152,7 @@ const CourseDetail = ({ customCourseId, isDashboardView }: any) => {
       }
     };
     fetchCourseData();
-  }, [courseId, user]);
+  }, [courseId, user, onTitleLoad]);
 
   const hasOptionalItems = addons.length > 0;
 
