@@ -188,7 +188,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             )
           `)
           .eq('user_id', user.id)
-          .neq('status', 'FAILED'); // Filter out failed attempts
+          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); // Only show successful/active enrollments
 
         if (error) throw error;
 

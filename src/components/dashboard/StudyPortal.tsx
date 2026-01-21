@@ -923,13 +923,14 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
           supabase
             .from('enrollments')
             .select(`
-              id, course_id, subject_name,
+              id, course_id, subject_name, status,
               courses (
                 id, title, description, start_date, end_date, image_url, price,
                 exam_category, level, bestseller, rating, students_enrolled
               )
             `)
-            .eq('user_id', user.id),
+            .eq('user_id', user.id)
+            .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']),
           fetchRecommendedCourses(profile)
         ]);
 
