@@ -253,7 +253,7 @@ const CustomDashboardTabNav = ({
 };
 
 
-// --- View 1: Student IS Enrolled ---
+// --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
   onViewChange
@@ -656,8 +656,7 @@ const EnrolledView = ({
           </div>
         </div>
       </div>
-      
-      {/* Restored Heart footer for Enrolled view */}
+
       <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
@@ -758,7 +757,7 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* Updated Study Material icon */}
+                {/* Updated Study Material icon from link */}
                 <img 
                   src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944106/image-removebg-preview_2_1_rr5o71.png" 
                   alt="Study Material" 
@@ -774,7 +773,7 @@ const NotEnrolledView = ({
                 <div className="absolute top-6 right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                {/* Updated Mentorship icon */}
+                {/* Updated Mentorship icon from link */}
                 <img 
                   src="https://res.cloudinary.com/dkywjijpv/image/upload/v1768944412/mentor-icon-simple-training-career-vector-removebg-preview_v3kclf.png" 
                   alt="Mentorship" 
@@ -808,7 +807,6 @@ const NotEnrolledView = ({
         </div>
       </div>
 
-      {/* Restored Heart footer for NotEnrolled view */}
       <div className="flex items-center justify-center sm:justify-start pt-6 pb-8 text-gray-600 text-lg sm:text-xl font-semibold">
         <span className="text-red-500 mr-2">❤️</span> <span className="text-sm sm:text-xl">from UnknownIITians</span>
       </div>
