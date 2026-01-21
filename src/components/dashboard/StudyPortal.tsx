@@ -37,7 +37,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetFooter,
-  SheetDescription, // Added import
+  SheetDescription, // Added SheetDescription
 } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -297,7 +297,6 @@ const EnrolledView = ({
   // Sync selectedBatchId if enrollments update or initialized empty
   useEffect(() => {
     if (enrollments.length > 0) {
-      // If currently selected ID is not in the new list, reset to first
       const exists = enrollments.find(e => e.course_id === selectedBatchId);
       if (!exists) {
         setSelectedBatchId(enrollments[0].course_id);
@@ -307,7 +306,6 @@ const EnrolledView = ({
 
   useEffect(() => {
     // Immediately reset all course-specific data when batch changes
-    // This prevents stale data from being shown during transition
     setFullCourseData(null);
     setScheduleData([]);
     setFaqs(undefined);
@@ -361,6 +359,13 @@ const EnrolledView = ({
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
   }, [viewMode, fullCourseData]);
 
+  // Sync temp ID when sheet opens
+  useEffect(() => {
+    if (isSheetOpen) {
+      setTempSelectedBatchId(selectedBatchId);
+    }
+  }, [isSheetOpen, selectedBatchId]);
+
   const handleTabClick = (id: string) => {
     setActiveTab(id);
     const element = document.getElementById(id);
@@ -371,7 +376,6 @@ const EnrolledView = ({
 
   const handleOpenSheet = (source: 'main' | 'detail') => {
     setSidebarSource(source);
-    setTempSelectedBatchId(selectedBatchId);
     setIsSheetOpen(true);
   };
 
@@ -385,11 +389,6 @@ const EnrolledView = ({
       });
     }
     setIsSheetOpen(false);
-    
-    // Default to main view to show the card of the new batch clearly
-    if (sidebarSource === 'main') {
-        setViewMode('main'); 
-    }
   };
 
   const handleDescription = () => {
@@ -412,9 +411,8 @@ const EnrolledView = ({
       <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6">
         <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
           <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
-          {/* Added Description for Accessibility */}
           <SheetDescription className="text-sm text-gray-500">
-            Choose a batch from your enrollments to view its details and content.
+             Switch between your enrolled batches to view different course materials and schedules.
           </SheetDescription>
         </SheetHeader>
         
@@ -472,7 +470,7 @@ const EnrolledView = ({
               onClick={handleContinue} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
-              {sidebarSource === 'main' ? "Continue" : "Switch to Selected"}
+              Switch to Selected
             </Button>
           </SheetFooter>
         )}
