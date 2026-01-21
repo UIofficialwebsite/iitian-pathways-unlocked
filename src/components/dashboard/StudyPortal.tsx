@@ -328,6 +328,9 @@ const EnrolledView = ({
     const scrollContainer = contentRef.current;
     if (!scrollContainer) return;
 
+    // Track last active tab to prevent unnecessary state updates
+    let lastActiveTab = activeTab;
+
     const handleScroll = () => {
       for (const tab of tabs) {
         const element = document.getElementById(tab.id);
@@ -335,7 +338,11 @@ const EnrolledView = ({
           const rect = element.getBoundingClientRect();
           const containerRect = scrollContainer.getBoundingClientRect();
           if (rect.top - containerRect.top < 150 && rect.bottom - containerRect.top > 50) {
-            setActiveTab(tab.id);
+            // Only update state if tab actually changed
+            if (tab.id !== lastActiveTab) {
+              lastActiveTab = tab.id;
+              setActiveTab(tab.id);
+            }
             break;
           }
         }
@@ -344,7 +351,7 @@ const EnrolledView = ({
 
     scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
     return () => scrollContainer.removeEventListener('scroll', handleScroll);
-  }, [viewMode, fullCourseData]);
+  }, [viewMode, fullCourseData, activeTab]);
 
   const handleTabClick = (id: string) => {
     setActiveTab(id);
@@ -456,7 +463,7 @@ const EnrolledView = ({
 
   if (viewMode === 'description') {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
+      <div key={selectedBatchId} className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
         
         <div className="flex-none bg-white z-20 shadow-sm">
            <div className="px-4 md:px-6 py-2 border-b border-gray-100">
