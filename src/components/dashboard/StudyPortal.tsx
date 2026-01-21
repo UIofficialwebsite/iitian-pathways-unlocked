@@ -540,7 +540,7 @@ const EnrolledView = ({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8" key={selectedBatchId}>
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
@@ -603,6 +603,7 @@ const EnrolledView = ({
         </div>
         {currentBatchSummary && (
           <EnrollmentListItem 
+            key={currentBatchSummary.course_id}
             enrollment={currentBatchSummary} 
             onClick={() => setViewMode('description')} 
           />
