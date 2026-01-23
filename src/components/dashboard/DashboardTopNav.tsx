@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu, Target } from "lucide-react";
+import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
 import FocusAreaModal from './FocusAreaModal';
@@ -27,7 +27,7 @@ interface UserProfile {
   student_name?: string | null;
   full_name?: string | null;
   email?: string | null;
-  id: string; // Added id to match expected profile type in modal
+  id: string; 
 }
 
 interface DashboardTopNavProps {
@@ -53,14 +53,14 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
 
   const getProfileDisplay = () => {
     if (!profile || !profile.program_type) {
-      return <span className="text-sm text-gray-500 hidden sm:inline">Set Focus</span>;
+      return <span className="text-sm font-medium text-white hidden sm:inline capitalize">Set Focus</span>;
     }
     if (profile.program_type === 'IITM_BS') {
       const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch';
       const level = profile.level || 'Level';
       return (
         <div className="text-left hidden sm:block">
-          <p className="text-sm font-semibold text-gray-800 leading-none">{branch} • {level}</p>
+          <p className="text-sm font-medium text-white leading-none capitalize">{branch} • {level}</p>
         </div>
       );
     }
@@ -69,11 +69,11 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
       const status = profile.student_status || 'Class';
       return (
         <div className="text-left hidden sm:block">
-          <p className="text-sm font-semibold text-gray-800 leading-none">{status} • {exam}</p>
+          <p className="text-sm font-medium text-white leading-none capitalize">{status} • {exam}</p>
         </div>
       );
     }
-    return <span className="text-sm text-gray-500 hidden sm:inline">Set Focus</span>;
+    return <span className="text-sm font-medium text-white hidden sm:inline capitalize">Set Focus</span>;
   };
 
   return (
@@ -118,15 +118,13 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           {/* Right: Focus Area & User Menu */}
           <div className="flex items-center gap-4">
             
-            {/* Focus Area Box (No Arrow) */}
+            {/* Focus Area Box (Black, Capitalized, Arrow) */}
             <div 
               onClick={() => setIsFocusModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 cursor-pointer bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 transition-all select-none"
+              className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-black text-white rounded-md shadow-sm hover:bg-gray-900 transition-all select-none"
             >
-              <div className="p-1 bg-blue-50 rounded text-blue-600">
-                <Target className="h-4 w-4" />
-              </div>
               {getProfileDisplay()}
+              <span className="text-white text-sm font-medium ml-1">&gt;</span>
             </div>
 
             <div className="h-6 w-px bg-gray-200 hidden sm:block" />
