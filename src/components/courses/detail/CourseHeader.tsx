@@ -26,10 +26,12 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
       {/* Light Rays Effect */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.8)_0%,transparent_40%)]" />
 
-      {/* Main Content Container - Remove max-width constraint in dashboard view */}
+      {/* Main Content Container - Conditional layout based on view context */}
       <div className={cn(
-        "relative z-10 px-5 sm:px-8 lg:px-12",
-        isDashboardView ? "py-2 sm:py-3" : "py-6 md:py-8 max-w-[1440px] mx-auto"
+        "relative z-10",
+        isDashboardView 
+          ? "w-full px-6 py-3" 
+          : "max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-6 md:py-8"
       )}>
         
         {/* Breadcrumbs - Hidden in dashboard view */}
@@ -51,18 +53,18 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
           </nav>
         )}
 
-        {/* Hero Title */}
+        {/* Hero Title - Tighter spacing in dashboard view */}
         <h1 className={cn(
           "font-[800] text-[#2d2d2d] leading-[1.2] tracking-tight max-w-5xl",
           isDashboardView 
-            ? "text-2xl md:text-3xl mb-3" 
+            ? "text-2xl md:text-3xl mb-2" 
             : "text-3xl md:text-[40px] mb-5"
         )}>
             {course.title}
         </h1>
 
         {/* Info Rows (Using Custom Images) */}
-        <div className={cn("flex flex-col gap-3", isDashboardView ? "mb-4" : "mb-6")}>
+        <div className={cn("flex flex-col gap-2", isDashboardView ? "mb-3" : "mb-6")}>
             {/* Target Audience Row */}
             <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
                <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">
