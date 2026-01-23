@@ -53,14 +53,14 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
 
   const getProfileDisplay = () => {
     if (!profile || !profile.program_type) {
-      return <span className="text-sm font-medium text-white hidden sm:inline capitalize">Set Focus</span>;
+      return <span className="text-[10px] sm:text-sm font-medium text-white capitalize whitespace-nowrap">Set Focus</span>;
     }
     if (profile.program_type === 'IITM_BS') {
       const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch';
       const level = profile.level || 'Level';
       return (
-        <div className="text-left hidden sm:block">
-          <p className="text-sm font-medium text-white leading-none capitalize">{branch} • {level}</p>
+        <div className="text-left">
+          <p className="text-[10px] sm:text-sm font-medium text-white leading-none capitalize whitespace-nowrap">{branch} • {level}</p>
         </div>
       );
     }
@@ -68,12 +68,12 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
       const exam = profile.exam_type || 'Exam';
       const status = profile.student_status || 'Class';
       return (
-        <div className="text-left hidden sm:block">
-          <p className="text-sm font-medium text-white leading-none capitalize">{status} • {exam}</p>
+        <div className="text-left">
+          <p className="text-[10px] sm:text-sm font-medium text-white leading-none capitalize whitespace-nowrap">{status} • {exam}</p>
         </div>
       );
     }
-    return <span className="text-sm font-medium text-white hidden sm:inline capitalize">Set Focus</span>;
+    return <span className="text-[10px] sm:text-sm font-medium text-white capitalize whitespace-nowrap">Set Focus</span>;
   };
 
   return (
@@ -86,7 +86,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
             {/* Mobile Hamburger Menu */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
+                <Button variant="ghost" size="icon" className="lg:hidden shrink-0">
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
@@ -102,7 +102,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
               </SheetContent>
             </Sheet>
 
-            {/* Logo */}
+            {/* Logo - Hidden on very small screens if needed to save space, but kept for now */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-2">
               <img
                 className="h-8 w-auto"
@@ -116,20 +116,20 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           </div>
 
           {/* Right: Focus Area & User Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* Focus Area Box (Black, Capitalized, Arrow) */}
+            {/* Focus Area Box (Black, Capitalized, Arrow) - Optimized for Mobile */}
             <div 
               onClick={() => setIsFocusModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 cursor-pointer bg-black text-white rounded-md shadow-sm hover:bg-gray-900 transition-all select-none"
+              className="flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 cursor-pointer bg-black text-white rounded-md shadow-sm hover:bg-gray-900 transition-all select-none max-w-[140px] sm:max-w-none"
             >
               {getProfileDisplay()}
-              <span className="text-white text-sm font-medium ml-1">&gt;</span>
+              <span className="text-white text-[10px] sm:text-sm font-medium ml-0.5 sm:ml-1">&gt;</span>
             </div>
 
             <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
-            {/* User Greeting */}
+            {/* User Greeting - Hidden on mobile */}
             <span className="text-sm font-medium text-gray-700 hidden sm:block">
               Hi, {userName}
             </span>
@@ -142,7 +142,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
                     <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
                     <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{userInitial}</AvatarFallback>
                   </Avatar>
-                  <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-[#1d4ed8] transition-colors" />
+                  <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-[#1d4ed8] transition-colors hidden sm:block" />
                 </button>
               </DropdownMenuTrigger>
               
