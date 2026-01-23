@@ -6,6 +6,9 @@ import {
   Phone, 
   ShieldCheck, 
   Home,
+  BookOpen, // Fallback
+  LayoutGrid, // Fallback
+  Zap // Fallback
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -104,7 +107,19 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const SidebarButton = ({ icon: Icon, label, viewName, iconType = 'component' }: { icon: any, label: string, viewName: ActiveView, iconType?: 'component' | 'image' }) => (
+  const SidebarButton = ({ 
+    icon: Icon, 
+    label, 
+    viewName, 
+    iconType = 'component',
+    iconClassName = "h-4 w-4"
+  }: { 
+    icon: any, 
+    label: string, 
+    viewName: ActiveView, 
+    iconType?: 'component' | 'image',
+    iconClassName?: string
+  }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange(viewName)}
@@ -116,15 +131,25 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
     >
       {iconType === 'component' ? (
-        <Icon className="h-4 w-4" />
+        <Icon className={iconClassName} />
       ) : (
-        <img src={Icon} alt={label} className="h-4 w-4 object-contain" />
+        <img src={Icon} alt={label} className={cn("object-contain", iconClassName)} />
       )}
       {label}
     </Button>
   );
 
-  const PlaceholderButton = ({ icon: Icon, label, iconType = 'component' }: { icon: any, label: string, iconType?: 'component' | 'image' }) => (
+  const PlaceholderButton = ({ 
+    icon: Icon, 
+    label, 
+    iconType = 'component',
+    iconClassName = "h-4 w-4"
+  }: { 
+    icon: any, 
+    label: string, 
+    iconType?: 'component' | 'image',
+    iconClassName?: string
+  }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange('coming_soon')}
@@ -134,9 +159,9 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       )}
     >
       {iconType === 'component' ? (
-        <Icon className="h-4 w-4" />
+        <Icon className={iconClassName} />
       ) : (
-        <img src={Icon} alt={label} className="h-4 w-4 object-contain" />
+        <img src={Icon} alt={label} className={cn("object-contain", iconClassName)} />
       )}
       {label}
     </Button>
@@ -171,7 +196,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 onClick={() => window.open('/career', '_blank')}
                 className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <WorkIcon className="h-4 w-4" />
+                <WorkIcon className="h-6 w-6" /> {/* Increased size */}
                 Work @UI
               </Button>
               
@@ -179,12 +204,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769177688/consultation_jtgrze.jpg" 
                 label="Career Consult" 
                 iconType="image"
+                iconClassName="h-7 w-7" /* Increased size */
               />
               
               <PlaceholderButton 
                 icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769179438/creative-idea-flat-line-icon-600nw-2470397429_ux6kot.png" 
                 label="Upskilling" 
                 iconType="image"
+                iconClassName="h-7 w-7" /* Increased size */
               />
             </div>
           </div>
