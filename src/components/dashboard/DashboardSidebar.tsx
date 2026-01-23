@@ -144,7 +144,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Explore</h4>
               <div className="mt-2 space-y-1">
-                <PlaceholderButton icon={Briefcase} label="Work @UI" />
+                <Button 
+                  variant="ghost" 
+                  onClick={() => window.open('/career', '_blank')}
+                  className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
+                >
+                  <Briefcase className="h-4 w-4" />
+                  Work @UI
+                </Button>
                 <PlaceholderButton icon={Users} label="Career Consult" />
                 <PlaceholderButton icon={BookOpen} label="Upskilling" />
               </div>
@@ -155,7 +162,6 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               <div className="mt-2 space-y-1">
                 <PlaceholderButton icon={Phone} label="Contact Us" />
                 
-                {/* Updated to open in a NEW TAB using window.open */}
                 <Button 
                   variant="ghost" 
                   onClick={() => window.open('/about', '_blank')}
