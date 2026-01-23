@@ -18,8 +18,8 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
-  status: string | null; // Added status
-  amount: number | null; // Added amount
+  status: string | null; 
+  amount: number | null;
   courses: {
     id: string;
     title: string | null;
@@ -37,10 +37,10 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Pending' | 'Unknown';
   subjects: string[]; 
   image_url: string | null;
-  total_paid: number; // Changed to total_paid
+  total_paid: number;
 };
 
-const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: GroupedEnrollment; onSelectCourse?: (courseId: string) => void }) => {
+const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
   
   const StatusIndicator = () => {
     if (enrollment.status === 'Pending') {
@@ -81,19 +81,11 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
     return <span className="font-medium text-gray-800">{`₹${enrollment.total_paid}`}</span>;
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    if (onSelectCourse) {
-      e.preventDefault();
-      onSelectCourse(enrollment.course_id);
-    }
-  };
-
   return (
-    // UPDATED LINK HERE
+    // FIX: Removed onClick handler and updated 'to' path
     <Link 
       to={`/enrollment/${enrollment.course_id}`} 
       className="block group"
-      onClick={handleClick}
     >
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200">
         <CardContent className="flex items-center gap-5 p-5">
@@ -135,8 +127,6 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   );
 };
 
-// ... (Rest of the file remains unchanged, NoEnrollmentsPlaceholder and MyEnrollments implementation)
-
 const NoEnrollmentsPlaceholder = () => {
   return (
     <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
@@ -173,7 +163,6 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       
       try {
         setLoading(true);
-        // 1. Fetch raw enrollments WITH amount and status
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -191,7 +180,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             )
           `)
           .eq('user_id', user.id)
-          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); // Only show successful/active enrollments
+          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); 
 
         if (error) throw error;
 
@@ -200,7 +189,6 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           return;
         }
 
-        // 2. Process and group
         const today = new Date();
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
@@ -211,7 +199,6 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           const endDate = enrollment.courses.end_date ? new Date(enrollment.courses.end_date) : null;
           const dbStatus = enrollment.status?.toLowerCase() || 'pending';
           
-          // Determine Status Priority
           let calculatedStatus: GroupedEnrollment['status'] = 'Pending';
           
           const isRowActive = ['success', 'paid', 'active'].includes(dbStatus);
@@ -289,7 +276,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       ) : (
         <div className="space-y-4">
           {groupedEnrollments.map((enrollment) => (
-            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} onSelectCourse={onSelectCourse} />
+            <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
           ))}
         </div>
       )}
