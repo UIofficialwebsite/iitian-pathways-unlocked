@@ -89,8 +89,9 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
   };
 
   return (
+    // UPDATED LINK HERE
     <Link 
-      to={`/courses/${enrollment.course_id}`} 
+      to={`/enrollment/${enrollment.course_id}`} 
       className="block group"
       onClick={handleClick}
     >
@@ -133,6 +134,8 @@ const EnrollmentListItem = ({ enrollment, onSelectCourse }: { enrollment: Groupe
     </Link>
   );
 };
+
+// ... (Rest of the file remains unchanged, NoEnrollmentsPlaceholder and MyEnrollments implementation)
 
 const NoEnrollmentsPlaceholder = () => {
   return (
@@ -209,7 +212,6 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           const dbStatus = enrollment.status?.toLowerCase() || 'pending';
           
           // Determine Status Priority
-          // If we already have "Ongoing", we keep it. If we have "Pending", we can upgrade to "Ongoing".
           let calculatedStatus: GroupedEnrollment['status'] = 'Pending';
           
           const isRowActive = ['success', 'paid', 'active'].includes(dbStatus);
@@ -237,17 +239,14 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
 
           const groupedEntry = enrollmentsMap.get(course_id)!;
 
-          // Update Status Priority: Ongoing > Batch Expired > Pending
           if (calculatedStatus === 'Ongoing') {
              groupedEntry.status = 'Ongoing';
           } else if (calculatedStatus === 'Batch Expired' && groupedEntry.status !== 'Ongoing') {
              groupedEntry.status = 'Batch Expired';
           }
 
-          // Sum up the amount paid (Handle nulls as 0)
           groupedEntry.total_paid += (enrollment.amount || 0);
 
-          // Add subject
           if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
             groupedEntry.subjects.push(enrollment.subject_name);
           }
