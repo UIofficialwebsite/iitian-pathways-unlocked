@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2, ArrowLeft } from "lucide-react"; 
+import { Loader2 } from "lucide-react"; 
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -19,8 +19,7 @@ import LibrarySection from "./LibrarySection";
 import RegularBatchesTab from "./RegularBatchesTab";
 import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
 import HelpCentre from "./HelpCentre";
-import CourseDetail from "@/pages/CourseDetail";
-// --- NEW IMPORT ---
+// import CourseDetail from "@/pages/CourseDetail"; // Removed: No longer needed for overlay
 import EnrollmentReceiptView from "./EnrollmentReceiptView";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -57,10 +56,6 @@ const ModernDashboard: React.FC = () => {
   const [activeView, setActiveView] = useState<ActiveView>((tab as ActiveView) || "studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
-  // Floating Detail State
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
-  const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
-  
   // Persisted Library State
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
@@ -68,21 +63,6 @@ const ModernDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-
-  // Handle title update from CourseDetail
-  const handleTitleLoad = useCallback((title: string) => {
-    setSelectedCourseTitle(title);
-  }, []);
-
-  const handleCloseDetail = () => {
-    setSelectedCourseId(null);
-    setSelectedCourseTitle(null);
-  };
-
-  // --- Clear title immediately when switching batches ---
-  useEffect(() => {
-    setSelectedCourseTitle(null);
-  }, [selectedCourseId]);
 
   // Handle View Switching based on URL
   useEffect(() => {
@@ -92,7 +72,6 @@ const ModernDashboard: React.FC = () => {
     if (targetView !== activeView) {
       setIsViewLoading(true);
       setActiveView(targetView);
-      handleCloseDetail(); // Reset detail view on tab change
       
       const timer = setTimeout(() => {
         setIsViewLoading(false);
@@ -147,12 +126,13 @@ const ModernDashboard: React.FC = () => {
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
   const handleViewChange = (view: ActiveView) => {
-    if (view === activeView) {
-      handleCloseDetail();
-      return; 
-    }
-    // Update URL, let useEffect handle the state and loading
+    if (view === activeView) return;
     navigate(`/dashboard/${view}`);
+  };
+
+  // --- NEW: Helper to navigate directly to course page ---
+  const handleCourseClick = (courseId: string) => {
+    navigate(`/courses/${courseId}`);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -212,128 +192,47 @@ const ModernDashboard: React.FC = () => {
                   <ContentWrapper><MyProfile /></ContentWrapper>
                 )}
 
-                {/* --- NEW RECEIPT VIEW --- */}
-                {/* @ts-ignore - Ignoring type check if ActiveView is strictly typed */}
+                {/* @ts-ignore */}
                 {activeView === 'receipt' && (
                   <ContentWrapper>
                     <EnrollmentReceiptView />
                   </ContentWrapper>
                 )}
 
-                {/* HELP CENTRE VIEW */}
                 {activeView === 'contact' && (
                   <div className="h-full flex flex-col">
                     <HelpCentre />
                   </div>
                 )}
 
+                {/* --- UPDATED SECTIONS: REMOVED SIDE PANELS --- */}
+
                 {activeView === 'enrollments' && (
-                  <div className="flex-1 relative h-full">
-                    {!selectedCourseId ? (
-                      <ContentWrapper>
-                        <MyEnrollments onSelectCourse={setSelectedCourseId} />
-                      </ContentWrapper>
-                    ) : (
-                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        {/* Sticky Header with Dynamic Title */}
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
-                          <button 
-                            onClick={handleCloseDetail}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
-                          >
-                            <ArrowLeft className="w-5 h-5" />
-                            Back to My Enrollments
-                          </button>
-                          {selectedCourseTitle && (
-                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
-                              {selectedCourseTitle}
-                            </h2>
-                          )}
-                        </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          {/* Key prop ensures component remounts on ID change */}
-                          <CourseDetail 
-                            key={selectedCourseId}
-                            customCourseId={selectedCourseId} 
-                            isDashboardView={true} 
-                            onTitleLoad={handleTitleLoad}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <ContentWrapper>
+                    <MyEnrollments onSelectCourse={handleCourseClick} />
+                  </ContentWrapper>
                 )}
 
                 {activeView === 'regularBatches' && (
                   <div className="flex-1 relative h-full">
-                    <RegularBatchesTab 
-                      focusArea={profile?.program_type || 'General'} 
-                      onSelectCourse={setSelectedCourseId}
-                    />
-
-                    {selectedCourseId && (
-                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
-                          <button 
-                            onClick={handleCloseDetail}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
-                          >
-                            <ArrowLeft className="w-5 h-5" />
-                            Back to All Batches
-                          </button>
-                          {selectedCourseTitle && (
-                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
-                              {selectedCourseTitle}
-                            </h2>
-                          )}
-                        </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <CourseDetail 
-                            key={selectedCourseId}
-                            customCourseId={selectedCourseId} 
-                            isDashboardView={true}
-                            onTitleLoad={handleTitleLoad}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    {/* Added ContentWrapper for consistency */}
+                    <ContentWrapper>
+                      <RegularBatchesTab 
+                        focusArea={profile?.program_type || 'General'} 
+                        onSelectCourse={handleCourseClick} 
+                      />
+                    </ContentWrapper>
                   </div>
                 )}
 
-                {/* FASTRACK BATCHES VIEW */}
                 {activeView === 'fastTrackBatches' && (
                   <div className="flex-1 relative h-full">
-                    <FastTrackBatchesTab 
-                      focusArea={profile?.program_type || 'General'} 
-                      onSelectCourse={setSelectedCourseId}
-                    />
-
-                    {selectedCourseId && (
-                      <div className="absolute inset-0 z-[80] bg-white animate-in slide-in-from-right duration-300 flex flex-col">
-                        <div className="sticky top-0 z-[100] h-[73px] bg-white border-b px-6 flex items-center gap-4 shadow-sm shrink-0">
-                          <button 
-                            onClick={handleCloseDetail}
-                            className="flex items-center gap-2 text-gray-700 hover:text-orange-600 font-bold transition-colors shrink-0"
-                          >
-                            <ArrowLeft className="w-5 h-5" />
-                            Back to Fastrack Batches
-                          </button>
-                          {selectedCourseTitle && (
-                            <h2 className="text-lg font-semibold text-gray-900 truncate border-l border-gray-300 pl-4 animate-in fade-in">
-                              {selectedCourseTitle}
-                            </h2>
-                          )}
-                        </div>
-                        <div className="flex-1 overflow-y-auto custom-scrollbar">
-                          <CourseDetail 
-                            key={selectedCourseId}
-                            customCourseId={selectedCourseId} 
-                            isDashboardView={true}
-                            onTitleLoad={handleTitleLoad}
-                          />
-                        </div>
-                      </div>
-                    )}
+                    <ContentWrapper>
+                      <FastTrackBatchesTab 
+                        focusArea={profile?.program_type || 'General'} 
+                        onSelectCourse={handleCourseClick}
+                      />
+                    </ContentWrapper>
                   </div>
                 )}
 
