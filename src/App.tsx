@@ -10,7 +10,7 @@ import GlobalLoginModal from "@/components/auth/GlobalLoginModal";
 import ScrollPersistence from "@/components/ScrollPersistence";
 import { Suspense, lazy } from "react";
 
-// Lazy Load Pages for Performance
+// Lazy Load Pages
 const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const CourseListing = lazy(() => import("./pages/CourseListing"));
@@ -42,8 +42,8 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const IITMCalculators = lazy(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazy(() => import("./pages/NewsDetail"));
-// NEW IMPORT
-const EnrollmentReceipt = lazy(() => import("./pages/EnrollmentReceipt"));
+
+// REMOVED: const EnrollmentReceipt = lazy(...) <--- This was causing the error
 
 const queryClient = new QueryClient();
 
@@ -79,8 +79,7 @@ const App = () => (
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
                   
-                  {/* NEW ROUTE: Enrollment Receipt */}
-                  <Route path="/enrollment/:courseId" element={<EnrollmentReceipt />} />
+                  {/* REMOVED: Route path="/enrollment/:courseId" ... <--- This was causing the error */}
                   
                   {/* Exam Prep */}
                   <Route path="/exam-preparation" element={<ExamPreparation />} />
