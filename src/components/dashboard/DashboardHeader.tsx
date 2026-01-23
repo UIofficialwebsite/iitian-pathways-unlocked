@@ -24,6 +24,7 @@ const viewNames: Record<ActiveView, string> = {
   regularBatches: 'Regular Batches',
   fastTrackBatches: 'FastTrack Batches',
   coming_soon: 'Coming Soon',
+  contact: 'Contact Us',
 };
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
