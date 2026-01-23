@@ -31,7 +31,7 @@ const EnrollmentReceiptView = () => {
   const [loading, setLoading] = useState(true);
   const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
 
-  // --- Data Fetching Logic (Same as before) ---
+  // --- Data Fetching Logic ---
   useEffect(() => {
     const fetchReceiptData = async () => {
       if (!user || !courseId) return;
@@ -111,7 +111,7 @@ const EnrollmentReceiptView = () => {
     fetchReceiptData();
   }, [user, courseId, toast]);
 
-  // --- Helper: Format Date ---
+  // --- Helpers ---
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-GB', {
@@ -154,10 +154,22 @@ const EnrollmentReceiptView = () => {
 
   const isFree = receipt.amount === 0;
 
-  // --- Render (Exact Design Implementation) ---
+  // --- Render ---
   return (
-    <div className="min-h-screen bg-[#f5f8ff] font-['Inter',sans-serif] p-4 md:p-8 flex justify-center">
-      <div className="w-full max-w-[1000px] grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
+    <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
+      
+      {/* Back Button - Hanging below navbar */}
+      <div className="mb-6">
+        <Link 
+          to="/dashboard/enrollments" 
+          className="inline-flex items-center text-sm text-[#64748b] hover:text-[#4f46e5] transition-colors font-medium"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Enrollments
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
         
         {/* --- Left Column --- */}
         <div className="flex flex-col gap-6">
