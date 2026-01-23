@@ -201,7 +201,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               </Button>
               
               <PlaceholderButton 
-                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769177688/consultation_jtgrze.jpg" 
+                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769179994/consultation_jtgrze.png" 
                 label="Career Consult" 
                 iconType="image"
                 iconClassName="h-7 w-7" /* Increased size */
