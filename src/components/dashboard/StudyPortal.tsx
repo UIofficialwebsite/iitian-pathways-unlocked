@@ -572,14 +572,12 @@ const EnrolledView = ({
                     <FeaturesSection course={fullCourseData} />
                   </div>
                   
-                  <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12 pb-12 bg-white">
-                      <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                      <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
-                      <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                      <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
-                      <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
-                      <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                  </div>
+                   <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                   <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
+                   <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                   <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
+                   <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
+                   <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32 pb-12"><FAQSection faqs={faqs || []} /></div>
                </>
             ) : (
                <div className="text-center py-10 text-gray-500">
