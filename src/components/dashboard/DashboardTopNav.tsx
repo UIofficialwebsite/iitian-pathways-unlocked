@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu, Target, ChevronRight } from "lucide-react";
+import { ChevronDown, User, LogOut, LayoutGrid, Menu, Target } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
 import FocusAreaModal from './FocusAreaModal';
@@ -118,18 +118,16 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           {/* Right: Focus Area & User Menu */}
           <div className="flex items-center gap-4">
             
-            {/* Focus Area Button */}
-            <Button
-              variant="ghost"
+            {/* Focus Area Box (No Arrow) */}
+            <div 
               onClick={() => setIsFocusModalOpen(true)}
-              className="flex items-center gap-2 px-3 py-2 h-auto hover:bg-gray-100 rounded-lg border border-transparent hover:border-gray-200 transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 cursor-pointer bg-white border border-gray-200 rounded-md shadow-sm hover:bg-gray-50 transition-all select-none"
             >
-              <div className="p-1 bg-blue-50 rounded-md">
-                <Target className="h-4 w-4 text-blue-600" />
+              <div className="p-1 bg-blue-50 rounded text-blue-600">
+                <Target className="h-4 w-4" />
               </div>
               {getProfileDisplay()}
-              <ChevronRight className="h-4 w-4 text-gray-400 hidden sm:block" />
-            </Button>
+            </div>
 
             <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
