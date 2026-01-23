@@ -22,7 +22,7 @@ interface OrderItem {
   validTill: string | null;
   image_url: string | null;
   id: string; // course_id
-  type: 'Batch' | 'Add-on'; // Simple type distinction
+  type: 'Batch' | 'Add-on';
 }
 
 interface ReceiptDetails {
@@ -85,6 +85,7 @@ const EnrollmentReceiptView = () => {
             .from('enrollments')
             .select(`
               amount,
+              subject_name,
               courses (
                 id,
                 title,
@@ -97,28 +98,30 @@ const EnrollmentReceiptView = () => {
           if (allError) throw allError;
 
           if (allEnrollments) {
-            // Heuristic: The item with the highest price or the one matching the initial courseId is the "Main Batch"
-            // For now, we simply list them. You can add logic to detect 'Add-on' based on your specific business logic (e.g. price < X or naming convention)
-            
-            // Sort so the clicked course comes first (or most expensive)
+            // Sort: Clicked course first, then by price descending
             const sortedEnrollments = allEnrollments.sort((a, b) => {
-               // Prioritize the course ID user clicked on
                if (a.courses?.id === courseId) return -1;
                if (b.courses?.id === courseId) return 1;
-               return (b.amount || 0) - (a.amount || 0); // Then by price descending
+               return (b.amount || 0) - (a.amount || 0);
             });
 
-            finalItems = sortedEnrollments.map((item: any, index) => ({
-              title: item.courses?.title || 'Unknown Item',
-              amount: Number(item.amount) || 0,
-              validTill: item.courses?.end_date,
-              image_url: item.courses?.image_url,
-              id: item.courses?.id,
-              type: index === 0 ? 'Batch' : 'Add-on' // Assume first item is Batch, rest Add-ons
-            }));
+            finalItems = sortedEnrollments.map((item: any) => {
+              // LOGIC FIX: If subject_name exists, it's an Add-on Name. Otherwise, it's the Batch Title.
+              const isAddon = !!item.subject_name;
+              const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
+
+              return {
+                title: displayTitle,
+                amount: Number(item.amount) || 0,
+                validTill: item.courses?.end_date,
+                image_url: item.courses?.image_url,
+                id: item.courses?.id,
+                type: isAddon ? 'Add-on' : 'Batch'
+              };
+            });
           }
 
-          // 3. Fetch Payment Record
+          // 3. Fetch Payment Record for the REAL total metadata
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select('amount, created_at, order_id, status, utr, payment_time')
@@ -248,8 +251,10 @@ const EnrollmentReceiptView = () => {
   if (!receipt) return <div className="flex flex-col items-center justify-center min-h-[60vh] text-[#64748b]"><h2 className="text-xl font-bold mb-2">Receipt Not Found</h2><Link to="/dashboard/enrollments"><Button variant="outline">Back to Enrollments</Button></Link></div>;
 
   const isFree = receipt.totalAmount === 0;
-  const mainBatch = receipt.items.find(i => i.type === 'Batch') || receipt.items[0];
-  const addOns = receipt.items.filter(i => i !== mainBatch);
+  
+  // Logic: First item is main, others are add-ons
+  const mainBatch = receipt.items[0]; 
+  const addOns = receipt.items.slice(1);
 
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
@@ -302,7 +307,7 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* Add-ons List */}
+            {/* Add-ons List (Visible only if add-ons exist) */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
@@ -338,7 +343,7 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Everything in Payment Breakdown */}
+            {/* List Everything in Payment Breakdown with distinct names */}
             {receipt.items.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
