@@ -111,7 +111,7 @@ const EnrollmentReceiptView = () => {
     fetchReceiptData();
   }, [user, courseId, toast]);
 
-  // --- Helpers ---
+  // --- Helper Functions ---
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-GB', {
@@ -131,6 +131,67 @@ const EnrollmentReceiptView = () => {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  // --- Button Handlers ---
+
+  const handleDownload = () => {
+    // Opens the browser print dialog, which allows saving as PDF
+    window.print();
+  };
+
+  const handleShare = async () => {
+    if (!receipt) return;
+    const shareData = {
+      title: 'Enrollment Receipt',
+      text: `Enrollment Receipt for ${receipt.course.title}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Receipt link has been copied to clipboard.",
+      });
+    }
+  };
+
+  const handleContactUs = () => {
+    if (!receipt) return;
+    
+    const subject = `Support Request: Order ${receipt.orderId}`;
+    const formattedAmount = receipt.amount === 0 ? 'Free' : `₹ ${receipt.amount}`;
+    const orderDate = new Date(receipt.date).toLocaleDateString('en-GB');
+    
+    // Pre-filled email body with order details
+    const body = `Hi Support Team,
+
+I need help with my enrollment regarding the following order:
+
+--- ORDER DETAILS ---
+Order ID: ${receipt.orderId}
+Course Name: ${receipt.course.title}
+Amount Paid: ${formattedAmount}
+Transaction Date: ${orderDate}
+Status: ${receipt.status}
+---------------------
+
+My Query:
+[Please describe your issue here]
+`;
+
+    // Construct mailto link with CC and pre-filled details
+    const mailtoLink = `mailto:support@unknown.live?cc=unknowniitians@gmail.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    
+    // Open default email client
+    window.location.href = mailtoLink;
   };
 
   if (loading) {
@@ -156,10 +217,10 @@ const EnrollmentReceiptView = () => {
 
   // --- Render ---
   return (
-    <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
+    <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10 print:bg-white print:p-0">
       
-      {/* Back Button - Hanging below navbar */}
-      <div className="mb-6">
+      {/* Back Button (Hidden when printing) */}
+      <div className="mb-6 print:hidden">
         <Link 
           to="/dashboard/enrollments" 
           className="inline-flex items-center text-sm text-[#64748b] hover:text-[#4f46e5] transition-colors font-medium"
@@ -169,23 +230,29 @@ const EnrollmentReceiptView = () => {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6 print:block">
         
         {/* --- Left Column --- */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-6 print:mb-6">
           
           {/* Status Banner */}
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-10 text-center">
-            <div className="w-11 h-11 bg-[#10b981] text-white rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-10 text-center print:border-2 print:shadow-none">
+            <div className="w-11 h-11 bg-[#10b981] text-white rounded-full flex items-center justify-center mx-auto mb-4 print:text-black">
               <Check className="w-6 h-6" strokeWidth={3} />
             </div>
             <h1 className="text-2xl font-bold text-[#334155] mb-6">Payment Successful</h1>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <button className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
+            <div className="flex flex-wrap gap-3 justify-center print:hidden">
+              <button 
+                onClick={handleDownload}
+                className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors"
+              >
                 <Download className="w-4 h-4" />
                 Download Receipt
               </button>
-              <button className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
+              <button 
+                onClick={handleShare}
+                className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors"
+              >
                 <Share2 className="w-4 h-4" />
                 Share Receipt
               </button>
@@ -193,13 +260,13 @@ const EnrollmentReceiptView = () => {
           </div>
 
           {/* Details Card */}
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6 print:border-0 print:shadow-none print:p-0 print:mt-4">
             <div className="flex justify-between text-[13px] text-[#64748b] mb-5">
               <span>Order Id: {receipt.orderId}</span>
               <span>Order Date: {formatDate(receipt.date)}</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4 print:bg-white print:border print:border-gray-300">
               <div className="flex gap-4 items-center w-full">
                 <img 
                   src={receipt.course.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} 
@@ -218,14 +285,14 @@ const EnrollmentReceiptView = () => {
                   </span>
                 </div>
               </div>
-              <Link to={`/courses/${receipt.course.id}`} className="w-full sm:w-auto">
+              <Link to={`/courses/${receipt.course.id}`} className="w-full sm:w-auto print:hidden">
                 <button className="w-full sm:w-auto bg-[#eef2ff] text-[#4f46e5] border-none px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors whitespace-nowrap cursor-pointer">
                   Go to Batch
                 </button>
               </Link>
             </div>
 
-            <div className="mt-6 bg-[#fafbff] p-4 rounded-lg">
+            <div className="mt-6 bg-[#fafbff] p-4 rounded-lg print:bg-white print:border print:border-gray-200">
               <label className="text-xs text-[#64748b] block mb-1">Valid Till:</label>
               <p className="text-base text-[#334155]">
                 {formatValidTill(receipt.course.end_date)}
@@ -238,7 +305,7 @@ const EnrollmentReceiptView = () => {
         <div className="flex flex-col gap-6">
           
           {/* Summary Card */}
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6 print:border print:border-gray-300 print:shadow-none">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             <div className="flex justify-between text-sm text-[#64748b] mb-3">
               <span>Price (1 items)</span>
@@ -262,15 +329,18 @@ const EnrollmentReceiptView = () => {
             </div>
           </div>
 
-          {/* Help Card */}
-          <div className="bg-gradient-to-br from-white to-[#f9faff] rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+          {/* Help Card (Hidden in Print) */}
+          <div className="bg-gradient-to-br from-white to-[#f9faff] rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6 print:hidden">
             <div className="flex justify-between items-center">
               <div className="flex-1 pr-4">
                 <h2 className="text-[17px] font-bold text-[#334155] mb-1">Need help?</h2>
                 <p className="text-[13px] text-[#64748b] leading-[1.4] mb-4">
                   Get in touch and we will be happy to help you.
                 </p>
-                <button className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors">
+                <button 
+                  onClick={handleContactUs}
+                  className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors"
+                >
                   Contact Us
                 </button>
               </div>
