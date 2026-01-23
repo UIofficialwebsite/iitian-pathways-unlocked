@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, FileText, ChevronRight, Play, ChevronLeft } from "lucide-react";
+import { ArrowLeft, Download, Search, Youtube, PlayCircle, Loader2, ChevronRight, Play, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -379,7 +379,14 @@ const LibrarySection: React.FC<LibrarySectionProps> = ({ profile, activeTab, onT
             ) : (
                 <div className="bg-[#f8fafc] border border-slate-200 rounded-xl p-4 sm:p-6 md:p-8 mb-20">
                     <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-200 pb-5 mb-6 gap-4">
-                        <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800"><FileText className="h-5 w-5 text-blue-600 shrink-0" /> <span className="truncate">{activeTab}</span></h2>
+                        <h2 className="text-lg font-semibold flex items-center gap-2 text-slate-800">
+                          <img 
+                            src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769162220/4706330_ptdftj.png" 
+                            alt="File Icon" 
+                            className="h-5 w-5 object-contain shrink-0"
+                          />
+                          <span className="truncate">{activeTab}</span>
+                        </h2>
                         <div className="flex items-center gap-4">
                             <div className="relative w-full md:w-64">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
