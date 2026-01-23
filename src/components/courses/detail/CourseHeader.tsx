@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Course } from '@/components/admin/courses/types';
+import { cn } from '@/lib/utils';
 
 interface CourseHeaderProps {
   course: Course;
@@ -25,11 +26,15 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
       {/* Light Rays Effect */}
       <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(255,255,255,0.8)_0%,transparent_40%)]" />
 
-      {/* Main Content Container */}
-      <div className="relative z-10 max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-6 md:py-8">
+      {/* Main Content Container - Remove max-width constraint in dashboard view */}
+      <div className={cn(
+        "relative z-10 px-5 sm:px-8 lg:px-12",
+        isDashboardView ? "py-4" : "py-6 md:py-8 max-w-[1440px] mx-auto"
+      )}>
         
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#4b4b4b] mb-4 font-medium flex-wrap">
+        {/* Breadcrumbs - Hidden in dashboard view */}
+        {!isDashboardView && (
+          <nav className="flex items-center gap-2 text-[13px] md:text-[14px] text-[#4b4b4b] mb-4 font-medium flex-wrap">
              <span className="cursor-pointer hover:text-black transition-colors" onClick={() => navigate('/')}>
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
              </span>
@@ -43,15 +48,21 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
              )}
              <span className="text-[#b0b0b0]">&rsaquo;</span>
              <span className="text-black/60 truncate max-w-[200px] sm:max-w-none">{course.title}</span>
-        </nav>
+          </nav>
+        )}
 
         {/* Hero Title */}
-        <h1 className="text-3xl md:text-[40px] font-[800] text-[#2d2d2d] leading-[1.2] mb-5 tracking-tight max-w-5xl">
+        <h1 className={cn(
+          "font-[800] text-[#2d2d2d] leading-[1.2] tracking-tight max-w-5xl",
+          isDashboardView 
+            ? "text-2xl md:text-3xl mb-3" 
+            : "text-3xl md:text-[40px] mb-5"
+        )}>
             {course.title}
         </h1>
 
         {/* Info Rows (Using Custom Images) */}
-        <div className="flex flex-col gap-3 mb-6">
+        <div className={cn("flex flex-col gap-3", isDashboardView ? "mb-4" : "mb-6")}>
             {/* Target Audience Row */}
             <div className="flex items-center gap-3 text-[15px] md:text-[16px] font-[500] text-[#2d2d2d]">
                <div className="w-8 h-8 rounded-full bg-[#e2e8ff] flex items-center justify-center shrink-0 p-1.5">

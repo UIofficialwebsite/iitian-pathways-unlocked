@@ -54,7 +54,7 @@ const SSPPortalSection: React.FC = () => {
 
   return (
     <section id="ssp" className="scroll-mt-24 w-full font-['Inter',sans-serif]">
-       <div className="bg-white rounded-[24px] p-5 md:p-12 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 max-w-[850px] mx-auto">
+       <div className="bg-white rounded-[24px] p-5 md:p-8 shadow-[0_4px_24px_rgba(0,0,0,0.04)] border border-black/5 w-full">
          
          <h2 className="text-[20px] md:text-[22px] font-semibold text-black mb-6 md:mb-8 tracking-tight">
            Student Service Portal
