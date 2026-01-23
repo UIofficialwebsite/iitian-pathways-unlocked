@@ -267,7 +267,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
         {/* Full-width container with reduced padding for dashboard */}
-        <div className="w-full px-4 sm:px-6 md:px-8 py-4 pb-20 space-y-6">
+        <div className="w-full px-4 sm:px-6 md:px-8 py-2 pb-20 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
             <div className="lg:col-span-7 space-y-6">
               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
