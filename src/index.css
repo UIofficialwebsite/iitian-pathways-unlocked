@@ -3,11 +3,24 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Hide scrollbars */
+/* Hide scrollbars & Global zoom-out */
 html {
+  font-size: 14px; /* Zoomed out from default 16px */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* Internet Explorer 10+ */
   scroll-behavior: smooth;
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px; /* Slightly larger on tablets */
+  }
+}
+
+@media (min-width: 1024px) {
+  html {
+    font-size: 15px; /* Desktop stays at 15px for zoomed-out feel */
+  }
 }
 
 html::-webkit-scrollbar {
