@@ -290,6 +290,7 @@ export type Database = {
           tags: string[] | null
           title: string
           updated_at: string | null
+          valid_till: string | null
         }
         Insert: {
           batch_type?: string | null
@@ -320,6 +321,7 @@ export type Database = {
           tags?: string[] | null
           title: string
           updated_at?: string | null
+          valid_till?: string | null
         }
         Update: {
           batch_type?: string | null
@@ -350,6 +352,7 @@ export type Database = {
           tags?: string[] | null
           title?: string
           updated_at?: string | null
+          valid_till?: string | null
         }
         Relationships: [
           {

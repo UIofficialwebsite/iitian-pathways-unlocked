@@ -25,6 +25,7 @@ const viewNames: Record<ActiveView, string> = {
   fastTrackBatches: 'FastTrack Batches',
   coming_soon: 'Coming Soon',
   contact: 'Contact Us',
+  receipt: 'Enrollment Receipt',
 };
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ 
