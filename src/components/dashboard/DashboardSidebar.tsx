@@ -2,16 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  BookOpen, 
+  LayoutDashboard, 
   Library, 
   Briefcase, 
   Users, 
   Phone, 
   Info, 
-  Shield, 
-  GraduationCap, 
-  FastForward,
-  Home
+  ShieldCheck, 
+  LayoutGrid, 
+  Zap,
+  Home,
+  BookOpen
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -33,6 +34,13 @@ interface DashboardSidebarProps {
   onViewChange: (view: ActiveView) => void;
   activeView: ActiveView;
 }
+
+// Custom Icon for FastTrack Batches (Lightning in a circle)
+const FastTrackIcon = ({ className }: { className?: string }) => (
+  <div className={cn("flex items-center justify-center border border-current rounded-full", className)}>
+    <Zap className="h-2.5 w-2.5" strokeWidth={2} />
+  </div>
+);
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
   onViewChange,
@@ -75,12 +83,10 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
       <div className="flex-1 overflow-y-auto py-4">
         <div className="px-4 space-y-4">
           
-          {/* Focus Area Removed from Sidebar */}
-          
           <div>
             <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
             <div className="mt-2 space-y-1">
-              <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
+              <SidebarButton icon={LayoutDashboard} label="Study Portal" viewName="studyPortal" />
               <SidebarButton icon={Library} label="Digital Library" viewName="library" />
             </div>
           </div>
@@ -88,8 +94,8 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <div>
             <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
             <div className="mt-2 space-y-1">
-              <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
-              <SidebarButton icon={FastForward} label="FastTrack Batches" viewName="fastTrackBatches" />
+              <SidebarButton icon={LayoutGrid} label="Regular Batches" viewName="regularBatches" />
+              <SidebarButton icon={FastTrackIcon} label="FastTrack Batches" viewName="fastTrackBatches" />
             </div>
           </div>
 
@@ -128,7 +134,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 onClick={() => window.open('/privacy-policy', '_blank')}
                 className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <Shield className="h-4 w-4" />
+                <ShieldCheck className="h-4 w-4" />
                 Privacy Policy
               </Button>
             </div>
