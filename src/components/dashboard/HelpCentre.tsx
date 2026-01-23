@@ -10,6 +10,7 @@ const HelpCentre = () => {
   const [activeTab, setActiveTab] = useState<'Help Centre' | 'Notice Board'>('Help Centre');
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const faqItems: FAQItem[] = [
     {
@@ -48,20 +49,37 @@ const HelpCentre = () => {
     {
       question: "How to contact support?",
       answer: "Please email us at support@unknowniitians.live with your query."
+    },
+    {
+      question: "I forgot my password, how do I reset it?",
+      answer: "You can reset your password from the login screen by clicking 'Forgot Password'. A reset link will be sent to your registered email."
     }
   ];
 
-  const displayedItems = showAll ? faqItems : faqItems.slice(0, 5);
+  // Search Filtering Logic
+  const filteredItems = faqItems.filter(item => 
+    item.question.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // If searching, show all matches. Otherwise, respect showAll/slice logic
+  const displayedItems = searchQuery 
+    ? filteredItems 
+    : (showAll ? filteredItems : filteredItems.slice(0, 5));
 
   const toggleAccordion = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  const handleContactClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.location.href = "mailto:support@unknowniitians.live?cc=unknowniitians@gmail.com";
+  };
+
   return (
     <div className="w-full flex justify-center py-6 sm:py-10 px-4 sm:px-5 bg-[#fcfdfe] min-h-full font-sans">
       <div className="bg-white w-full max-w-[960px] rounded-2xl p-6 sm:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] h-fit border border-gray-100/50">
-
-        {/* Top Navigation */}
+        
+        {/* Top Navigation & Search */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-5">
           <div className="bg-[#f4f7fa] p-1.5 rounded-xl flex gap-1 w-full sm:w-auto">
             <button
@@ -90,6 +108,8 @@ const HelpCentre = () => {
             <input
               type="text"
               placeholder="Type your query here..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full py-3 px-4 pr-11 border border-[#eef2f6] bg-[#fafbfc] rounded-xl text-sm outline-none text-slate-800 placeholder:text-slate-400 focus:border-blue-200 focus:ring-2 focus:ring-blue-100 transition-all"
             />
             <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -101,63 +121,102 @@ const HelpCentre = () => {
         {/* Content */}
         {activeTab === 'Help Centre' ? (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <h3 className="text-lg font-semibold text-slate-900 mb-6">Tell us how we can help 👋</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-6">
+              {searchQuery ? `Search results for "${searchQuery}"` : "Tell us how we can help 👋"}
+            </h3>
 
-            <div className="flex flex-col gap-3">
-              {displayedItems.map((item, index) => {
-                const isOpen = expandedIndex === index;
-                return (
-                  <div
-                    key={index}
-                    onClick={() => toggleAccordion(index)}
-                    className={`bg-[#f0f3ff] rounded-lg overflow-hidden transition-all duration-200 group border border-transparent ${
-                      isOpen ? 'bg-blue-50/50 border-blue-100' : 'hover:bg-[#e8ebff] hover:scale-[1.002] cursor-pointer'
-                    }`}
-                  >
-                    <div className="p-[18px_24px] flex justify-between items-center">
-                      <span className={`text-[15px] font-medium transition-colors ${
-                        isOpen ? 'text-blue-700' : 'text-slate-700 group-hover:text-slate-900'
-                      }`}>
-                        {item.question}
-                      </span>
-                      <div className={`transition-transform duration-200 shrink-0 ml-4 ${
-                         isOpen ? 'rotate-90 text-blue-600' : 'text-slate-500 group-hover:text-blue-600'
-                      }`}>
-                        <ChevronRight className="w-5 h-5" />
-                      </div>
-                    </div>
-
-                    {/* Accordion Answer */}
-                    <div 
-                      className={`grid transition-all duration-300 ease-in-out ${
-                        isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+            <div className="flex flex-col gap-3 min-h-[200px]">
+              {displayedItems.length > 0 ? (
+                displayedItems.map((item, index) => {
+                  const isOpen = expandedIndex === index;
+                  return (
+                    <div
+                      key={index}
+                      onClick={() => toggleAccordion(index)}
+                      className={`bg-[#f0f3ff] rounded-lg overflow-hidden transition-all duration-200 group border border-transparent ${
+                        isOpen ? 'bg-blue-50/50 border-blue-100' : 'hover:bg-[#e8ebff] hover:scale-[1.002] cursor-pointer'
                       }`}
                     >
-                      <div className="overflow-hidden">
-                        <div className="px-6 pb-5 pt-0">
-                          <div className="text-[15px] font-normal text-black leading-relaxed border-t border-blue-100/50 pt-4 font-sans">
-                            {item.answer}
+                      <div className="p-[18px_24px] flex justify-between items-center">
+                        <span className={`text-[15px] font-medium transition-colors ${
+                          isOpen ? 'text-blue-700' : 'text-slate-700 group-hover:text-slate-900'
+                        }`}>
+                          {item.question}
+                        </span>
+                        <div className={`transition-transform duration-200 shrink-0 ml-4 ${
+                           isOpen ? 'rotate-90 text-blue-600' : 'text-slate-500 group-hover:text-blue-600'
+                        }`}>
+                          <ChevronRight className="w-5 h-5" />
+                        </div>
+                      </div>
+                      
+                      {/* Accordion Answer */}
+                      <div 
+                        className={`grid transition-all duration-300 ease-in-out ${
+                          isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="px-6 pb-5 pt-0">
+                            <div className="text-[15px] font-normal text-black leading-relaxed border-t border-blue-100/50 pt-4 font-sans">
+                              {item.answer}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="text-center py-10 text-slate-500">
+                  No results found for your query.
+                </div>
+              )}
             </div>
 
-            <div className="text-center mt-8 border-t border-slate-100 pt-5">
-              <button 
-                onClick={() => setShowAll(!showAll)}
-                className="inline-flex items-center justify-center gap-1.5 text-blue-600 text-sm font-semibold hover:underline bg-transparent border-none cursor-pointer transition-colors hover:text-blue-700"
-              >
-                {showAll ? (
-                  <>Show Less <ChevronUp className="w-4 h-4" /></>
-                ) : (
-                  <>Show More <ChevronDown className="w-4 h-4" /></>
-                )}
-              </button>
+            {/* Show More / Less Link (Only show if not searching and items > 5) */}
+            {!searchQuery && filteredItems.length > 5 && (
+              <div className="text-center mt-8 border-t border-slate-100 pt-5">
+                <button 
+                  onClick={() => setShowAll(!showAll)}
+                  className="inline-flex items-center justify-center gap-1.5 text-blue-600 text-sm font-semibold hover:underline bg-transparent border-none cursor-pointer transition-colors hover:text-blue-700"
+                >
+                  {showAll ? (
+                    <>Show Less <ChevronUp className="w-4 h-4" /></>
+                  ) : (
+                    <>Show More <ChevronDown className="w-4 h-4" /></>
+                  )}
+                </button>
+              </div>
+            )}
+
+            {/* Support Banner Section */}
+            <div className="mt-12 bg-white w-full border border-[#e2e8f0] rounded-xl p-8 sm:p-12 flex flex-col md:flex-row justify-between items-center shadow-[0_2px_10px_rgba(0,0,0,0.02)] gap-8">
+               <div className="flex-1 text-center md:text-left">
+                  <h2 className="text-[26px] font-semibold text-[#1a1a1a] mb-2.5 tracking-tight">
+                    Still need help, Have Queries
+                  </h2>
+                  <p className="text-base text-slate-500 mb-8 font-normal">
+                    Have Queries? Please get in touch & we will happy to help you
+                  </p>
+                  <a 
+                    href="#" 
+                    onClick={handleContactClick}
+                    className="inline-block bg-blue-600 text-white text-base font-semibold px-10 py-3.5 rounded-[10px] transition-all duration-200 hover:bg-blue-700 hover:-translate-y-[1px] hover:shadow-lg hover:shadow-blue-600/20"
+                  >
+                    Contact Us
+                  </a>
+               </div>
+               
+               <div className="flex-shrink-0 md:ml-8 order-first md:order-last">
+                  <img 
+                    src="https://i.ibb.co/Xz9Zrtn/image.png" 
+                    alt="Support Gears Illustration" 
+                    className="w-[160px] md:w-[200px] h-auto object-contain block"
+                  />
+               </div>
             </div>
+
           </div>
         ) : (
           <div className="text-center py-20 text-slate-400 animate-in fade-in slide-in-from-bottom-2 duration-300 bg-gray-50 rounded-xl border border-dashed border-gray-200">
