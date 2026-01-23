@@ -20,6 +20,8 @@ import RegularBatchesTab from "./RegularBatchesTab";
 import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
 import HelpCentre from "./HelpCentre";
 import CourseDetail from "@/pages/CourseDetail";
+// --- NEW IMPORT ---
+import EnrollmentReceiptView from "./EnrollmentReceiptView";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -77,13 +79,12 @@ const ModernDashboard: React.FC = () => {
     setSelectedCourseTitle(null);
   };
 
-  // --- FIX START: Clear title immediately when switching batches ---
+  // --- Clear title immediately when switching batches ---
   useEffect(() => {
     setSelectedCourseTitle(null);
   }, [selectedCourseId]);
-  // --- FIX END ---
 
-  // CORRECTED useEffect: Removed 'activeView' from dependency array
+  // Handle View Switching based on URL
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
     
@@ -101,7 +102,7 @@ const ModernDashboard: React.FC = () => {
       return () => clearTimeout(timer);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab]); // Only re-run when URL 'tab' changes
+  }, [tab]); 
 
   useEffect(() => {
     if (authLoading) return;
@@ -209,6 +210,14 @@ const ModernDashboard: React.FC = () => {
                 
                 {activeView === 'profile' && (
                   <ContentWrapper><MyProfile /></ContentWrapper>
+                )}
+
+                {/* --- NEW RECEIPT VIEW --- */}
+                {/* @ts-ignore - Ignoring type check if ActiveView is strictly typed */}
+                {activeView === 'receipt' && (
+                  <ContentWrapper>
+                    <EnrollmentReceiptView />
+                  </ContentWrapper>
                 )}
 
                 {/* HELP CENTRE VIEW */}
