@@ -566,25 +566,21 @@ const EnrolledView = ({
                <div className="flex items-center justify-center h-64">
                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                </div>
-            ) : fullCourseData ? (
-               <div className="p-3 sm:p-6">
-                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="space-y-8 pb-12">
-                      <div id="features" className="scroll-mt-36 sm:scroll-mt-32 px-0 pt-0">
-                        <FeaturesSection course={fullCourseData} />
-                      </div>
-                      
-                      <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12">
-                          <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
-                          <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
-                          <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
-                          <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
-                          <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
-                          <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
-                      </div>
-                    </div>
-                 </div>
-               </div>
+             ) : fullCourseData ? (
+               <>
+                  <div id="features" className="scroll-mt-36 sm:scroll-mt-32">
+                    <FeaturesSection course={fullCourseData} />
+                  </div>
+                  
+                  <div className="px-4 sm:px-5 md:px-8 space-y-10 sm:space-y-12 pb-12 bg-white">
+                      <div id="about" className="scroll-mt-36 sm:scroll-mt-32"><AboutSection course={fullCourseData} /></div>
+                      <div id="moreDetails" className="scroll-mt-36 sm:scroll-mt-32"><MoreDetailsSection /></div>
+                      <div id="schedule" className="scroll-mt-36 sm:scroll-mt-32"><ScheduleSection scheduleData={scheduleData} /></div>
+                      <div id="ssp" className="scroll-mt-36 sm:scroll-mt-32"><SSPPortalSection /></div>
+                      <div id="access" className="scroll-mt-36 sm:scroll-mt-32"><CourseAccessGuide /></div>
+                      <div id="faqs" className="scroll-mt-36 sm:scroll-mt-32"><FAQSection faqs={faqs || []} /></div>
+                  </div>
+               </>
             ) : (
                <div className="text-center py-10 text-gray-500">
                  Failed to load details.
