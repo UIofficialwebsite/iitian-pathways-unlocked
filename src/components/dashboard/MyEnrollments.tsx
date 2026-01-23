@@ -18,8 +18,8 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
-  status: string | null; 
-  amount: number | null;
+  status: string | null; // Added status
+  amount: number | null; // Added amount
   courses: {
     id: string;
     title: string | null;
@@ -37,7 +37,7 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Pending' | 'Unknown';
   subjects: string[]; 
   image_url: string | null;
-  total_paid: number;
+  total_paid: number; // Changed to total_paid
 };
 
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
@@ -82,9 +82,9 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
   };
 
   return (
-    // FIX: Removed onClick handler and updated 'to' path
+    // FIX: Updated to point to new Dashboard Receipt View
     <Link 
-      to={`/enrollment/${enrollment.course_id}`} 
+      to={`/dashboard/receipt?courseId=${enrollment.course_id}`} 
       className="block group"
     >
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200">
@@ -163,6 +163,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       
       try {
         setLoading(true);
+        // 1. Fetch raw enrollments WITH amount and status
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -180,7 +181,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             )
           `)
           .eq('user_id', user.id)
-          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); 
+          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); // Only show successful/active enrollments
 
         if (error) throw error;
 
@@ -189,6 +190,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           return;
         }
 
+        // 2. Process and group
         const today = new Date();
         const enrollmentsMap = new Map<string, GroupedEnrollment>();
 
@@ -199,6 +201,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           const endDate = enrollment.courses.end_date ? new Date(enrollment.courses.end_date) : null;
           const dbStatus = enrollment.status?.toLowerCase() || 'pending';
           
+          // Determine Status Priority
           let calculatedStatus: GroupedEnrollment['status'] = 'Pending';
           
           const isRowActive = ['success', 'paid', 'active'].includes(dbStatus);
