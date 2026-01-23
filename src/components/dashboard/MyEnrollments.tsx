@@ -18,8 +18,8 @@ type RawEnrollment = {
   id: string;
   course_id: string;
   subject_name: string | null;
-  status: string | null; // Added status
-  amount: number | null; // Added amount
+  status: string | null;
+  amount: number | null;
   courses: {
     id: string;
     title: string | null;
@@ -37,7 +37,7 @@ type GroupedEnrollment = {
   status: 'Ongoing' | 'Batch Expired' | 'Pending' | 'Unknown';
   subjects: string[]; 
   image_url: string | null;
-  total_paid: number; // Changed to total_paid
+  total_paid: number;
 };
 
 const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) => {
@@ -45,7 +45,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
   const StatusIndicator = () => {
     if (enrollment.status === 'Pending') {
       return (
-        <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50">
+        <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50 text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2.5 sm:py-0.5">
           Payment Pending
         </Badge>
       );
@@ -53,18 +53,18 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 
     if (enrollment.status === 'Ongoing') {
       return (
-        <div className="flex items-center justify-end gap-2" title="Ongoing">
-          <span className="text-sm font-medium text-green-600">Ongoing</span>
-          <span className="relative flex h-3 w-3">
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2" title="Ongoing">
+          <span className="text-xs sm:text-sm font-medium text-green-600">Ongoing</span>
+          <span className="relative flex h-2 w-2 sm:h-3 sm:w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-3 sm:w-3 bg-green-500"></span>
           </span>
         </div>
       );
     }
     
     return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium">
+      <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2.5 sm:py-0.5">
         SUCCESS
       </Badge>
     );
@@ -76,20 +76,21 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 
   const PriceDisplay = () => {
     if (enrollment.total_paid === 0) {
-      return <span className="font-medium text-green-700">Free</span>;
+      return <span className="font-medium text-green-700 text-sm sm:text-base">Free</span>;
     }
-    return <span className="font-medium text-gray-800">{`₹${enrollment.total_paid}`}</span>;
+    return <span className="font-medium text-gray-800 text-sm sm:text-base">{`₹${enrollment.total_paid}`}</span>;
   };
 
   return (
-    // FIX: Updated to point to new Dashboard Receipt View
     <Link 
       to={`/dashboard/receipt?courseId=${enrollment.course_id}`} 
       className="block group"
     >
-      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200">
-        <CardContent className="flex items-center gap-5 p-5">
-          <div className="flex-shrink-0 w-36 sm:w-48 aspect-video overflow-hidden rounded-lg bg-gray-50">
+      <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200 shadow-sm sm:shadow-none">
+        {/* Compact padding for mobile (p-3) vs regular for desktop (sm:p-5) */}
+        <CardContent className="flex items-start sm:items-center gap-3 sm:gap-5 p-3 sm:p-5">
+          {/* Smaller image on mobile (w-24 approx 96px) vs larger on desktop */}
+          <div className="flex-shrink-0 w-24 sm:w-48 aspect-video overflow-hidden rounded-md sm:rounded-lg bg-gray-50 border border-gray-100">
             <img 
               src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
               alt={enrollment.title} 
@@ -97,28 +98,31 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
             />
           </div>
 
-          <div className="flex-grow space-y-1.5">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0">
-              <CardTitle className="text-lg md:text-xl font-bold text-gray-900 pr-4">
+          <div className="flex-grow space-y-1 sm:space-y-1.5 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-0 gap-1 sm:gap-0">
+              {/* Reduced text size for mobile title */}
+              <CardTitle className="text-base sm:text-xl font-bold text-gray-900 pr-0 sm:pr-4 leading-tight truncate">
                 {enrollment.title}
               </CardTitle>
-              <div className="flex-shrink-0 mt-1 sm:mt-0">
+              <div className="flex-shrink-0 self-start sm:self-auto sm:mt-0">
                 <StatusIndicator />
               </div>
             </div>
             
-            <p className="text-base text-gray-600 flex items-center gap-1.5">
-              <span>{formattedEndDate}</span>
-              <span>•</span>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-1.5 text-xs sm:text-base text-gray-600">
+              <div className="flex items-center gap-1.5">
+                <span>{formattedEndDate}</span>
+                <span className="hidden sm:inline">•</span>
+              </div>
               <PriceDisplay />
-            </p>
+            </div>
           </div>
 
-          <ChevronRight className="h-6 w-6 text-gray-400 ml-2 flex-shrink-0" />
+          <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400 ml-auto sm:ml-2 flex-shrink-0 self-center" />
         </CardContent>
         
         {enrollment.status === 'Batch Expired' && (
-          <div className="bg-red-50 text-red-700 text-base p-4 text-center">
+          <div className="bg-red-50 text-red-700 text-xs sm:text-base p-2 sm:p-4 text-center border-t border-red-100">
             This batch got expired on {formattedEndDate}!
           </div>
         )}
@@ -129,15 +133,15 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 
 const NoEnrollmentsPlaceholder = () => {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-8 rounded-lg bg-gray-50 min-h-[400px] border border-gray-200">
-      <Inbox className="h-32 w-32 text-gray-400 mb-6" strokeWidth={1.5} />
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">No Enrollments Yet!</h2>
-      <p className="text-gray-600 max-w-md mx-auto mb-6">
+    <div className="flex flex-col items-center justify-center text-center p-6 sm:p-8 rounded-lg bg-gray-50 min-h-[300px] sm:min-h-[400px] border border-gray-200">
+      <Inbox className="h-20 w-20 sm:h-32 sm:w-32 text-gray-400 mb-4 sm:mb-6" strokeWidth={1.5} />
+      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No Enrollments Yet!</h2>
+      <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto mb-6 px-4">
         It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
       </p>
       <Link to="/courses">
-        <Button size="lg" className="flex items-center">
-          Explore Courses <ArrowRight className="ml-2 h-5 w-5" />
+        <Button size="lg" className="flex items-center w-full sm:w-auto text-sm sm:text-base">
+          Explore Courses <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
         </Button>
       </Link>
     </div>
@@ -268,16 +272,16 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
-        <p className="text-gray-600">All the courses you are currently enrolled in.</p>
+    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0">
+      <div className="px-2 sm:px-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Enrollments</h1>
+        <p className="text-sm sm:text-base text-gray-600">All the courses you are currently enrolled in.</p>
       </div>
 
       {groupedEnrollments.length === 0 ? (
         <NoEnrollmentsPlaceholder />
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {groupedEnrollments.map((enrollment) => (
             <EnrollmentListItem key={enrollment.course_id} enrollment={enrollment} />
           ))}
