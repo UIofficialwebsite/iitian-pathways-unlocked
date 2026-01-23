@@ -182,7 +182,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
               />
               
               <PlaceholderButton 
-                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769177980/creative-idea-flat-line-icon-600nw-2470397429_ux6kot.webp" 
+                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769179438/creative-idea-flat-line-icon-600nw-2470397429_ux6kot.png" 
                 label="Upskilling" 
                 iconType="image"
               />
