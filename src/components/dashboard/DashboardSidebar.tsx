@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,11 +11,8 @@ import {
   Shield, 
   GraduationCap, 
   FastForward,
-  Home,
-  ChevronRight,
-  Target 
+  Home
 } from 'lucide-react';
-import FocusAreaModal from './FocusAreaModal';
 import { cn } from "@/lib/utils";
 
 interface UserProfile {
@@ -28,8 +25,7 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// Added 'contact' to ActiveView type
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'contact' | 'coming_soon';
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'coming_soon' | 'contact';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
@@ -39,40 +35,10 @@ interface DashboardSidebarProps {
 }
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
-  profile, 
-  onProfileUpdate, 
   onViewChange,
   activeView 
 }) => {
   const navigate = useNavigate();
-  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
-
-  const getProfileDisplay = () => {
-    if (!profile || !profile.program_type) {
-      return <span className="text-gray-500">Set your focus area</span>;
-    }
-    if (profile.program_type === 'IITM_BS') {
-      const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch?';
-      const level = profile.level || 'Level?';
-      return (
-        <div className="text-left">
-          <p className="font-semibold text-gray-800">{branch} ({level})</p>
-          <p className="text-xs text-gray-500">IITM BS Degree</p>
-        </div>
-      );
-    }
-    if (profile.program_type === 'COMPETITIVE_EXAM') {
-      const exam = profile.exam_type || 'Exam?';
-      const status = profile.student_status || 'Class?';
-      return (
-        <div className="text-left">
-          <p className="font-semibold text-gray-800">{status} - {exam}</p>
-          <p className="text-xs text-gray-500">Competitive Exam</p>
-        </div>
-      );
-    }
-    return <span className="text-gray-500">Set your focus area</span>;
-  };
 
   const SidebarButton = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => (
     <Button 
@@ -105,105 +71,83 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
   );
 
   return (
-    <>
-      <nav className="flex flex-col h-screen sticky top-0 bg-white border-r border-gray-200">
-        <div className="flex-1 overflow-y-auto py-4">
-          <div className="px-4 space-y-4">
-            
-            <div className="px-2 py-2">
-              <h4 className="px-0 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">My Focus Area</h4>
-              <Button
-                variant="ghost"
-                onClick={() => setIsFocusModalOpen(true)}
-                className="w-full justify-between items-center h-auto py-3 px-3 group hover:bg-gray-100 border border-transparent hover:border-gray-200 rounded-lg"
+    <nav className="flex flex-col h-screen sticky top-0 bg-white border-r border-gray-200">
+      <div className="flex-1 overflow-y-auto py-4">
+        <div className="px-4 space-y-4">
+          
+          {/* Focus Area Removed from Sidebar */}
+          
+          <div>
+            <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
+            <div className="mt-2 space-y-1">
+              <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
+              <SidebarButton icon={Library} label="Digital Library" viewName="library" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
+            <div className="mt-2 space-y-1">
+              <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
+              <SidebarButton icon={FastForward} label="FastTrack Batches" viewName="fastTrackBatches" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Explore</h4>
+            <div className="mt-2 space-y-1">
+              <Button 
+                variant="ghost" 
+                onClick={() => window.open('/career', '_blank')}
+                className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <div className="flex items-center gap-3">
-                  <Target className="h-5 w-5 text-blue-600" />
-                  {getProfileDisplay()}
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400 group-hover:animate-bounce-horizontal" />
+                <Briefcase className="h-4 w-4" />
+                Work @UI
+              </Button>
+              <PlaceholderButton icon={Users} label="Career Consult" />
+              <PlaceholderButton icon={BookOpen} label="Upskilling" />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</h4>
+            <div className="mt-2 space-y-1">
+              <SidebarButton icon={Phone} label="Contact Us" viewName="contact" />
+              
+              <Button 
+                variant="ghost" 
+                onClick={() => window.open('/about', '_blank')}
+                className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
+              >
+                <Info className="h-4 w-4" />
+                About Us
+              </Button>
+
+              <Button 
+                variant="ghost" 
+                onClick={() => window.open('/privacy-policy', '_blank')}
+                className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
+              >
+                <Shield className="h-4 w-4" />
+                Privacy Policy
               </Button>
             </div>
-            
-            <div>
-              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
-              <div className="mt-2 space-y-1">
-                <SidebarButton icon={BookOpen} label="Study Portal" viewName="studyPortal" />
-                <SidebarButton icon={Library} label="Digital Library" viewName="library" />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
-              <div className="mt-2 space-y-1">
-                <SidebarButton icon={GraduationCap} label="Regular Batches" viewName="regularBatches" />
-                <SidebarButton icon={FastForward} label="FastTrack Batches" viewName="fastTrackBatches" />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Explore</h4>
-              <div className="mt-2 space-y-1">
-                <Button 
-                  variant="ghost" 
-                  onClick={() => window.open('/career', '_blank')}
-                  className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
-                >
-                  <Briefcase className="h-4 w-4" />
-                  Work @UI
-                </Button>
-                <PlaceholderButton icon={Users} label="Career Consult" />
-                <PlaceholderButton icon={BookOpen} label="Upskilling" />
-              </div>
-            </div>
-
-            <div>
-              <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</h4>
-              <div className="mt-2 space-y-1">
-                <SidebarButton icon={Phone} label="Contact Us" viewName="contact" />
-                
-                <Button 
-                  variant="ghost" 
-                  onClick={() => window.open('/about', '_blank')}
-                  className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
-                >
-                  <Info className="h-4 w-4" />
-                  About Us
-                </Button>
-
-                <Button 
-                  variant="ghost" 
-                  onClick={() => window.open('/privacy-policy', '_blank')}
-                  className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
-                >
-                  <Shield className="h-4 w-4" />
-                  Privacy Policy
-                </Button>
-              </div>
-            </div>
-
           </div>
-        </div>
 
-        <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-          >
-            <Home className="h-4 w-4 mr-2" />
-            Home
-          </Button>
         </div>
-      </nav>
+      </div>
 
-      <FocusAreaModal
-        isOpen={isFocusModalOpen}
-        onClose={() => setIsFocusModalOpen(false)}
-        profile={profile}
-        onProfileUpdate={onProfileUpdate}
-      />
-    </>
+      <div className="mt-auto p-4 border-t border-gray-200 space-y-2">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate('/')}
+          className="w-full justify-start text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+        >
+          <Home className="h-4 w-4 mr-2" />
+          Home
+        </Button>
+      </div>
+    </nav>
   );
 };
 
