@@ -3,7 +3,7 @@ import { Search, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface FAQItem {
   question: string;
-  answer: string;
+  answer: React.ReactNode; // Changed to ReactNode to support links
 }
 
 const HelpCentre = () => {
@@ -13,12 +13,29 @@ const HelpCentre = () => {
 
   const faqItems: FAQItem[] = [
     {
-      question: "How do I access my enrolled batches?",
-      answer: "Navigate to the 'Study Portal' from the sidebar. Under 'My Classroom', click on 'My Batches' to see all your active enrollments."
+      question: "Where can I find notes and PYQs?",
+      answer: (
+        <span>
+          Enrolled batch class notes are available on the{" "}
+          <a 
+            href="https://ssp.unknowniitians.live" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-700 underline underline-offset-2 font-medium"
+          >
+            SSP Portal
+          </a>. 
+          For free notes and PYQs, please visit the <strong>Digital Library</strong> or <strong>Exam Preparation</strong> section for more resources.
+        </span>
+      )
     },
     {
-      question: "Where can I find class notes and PYQs?",
-      answer: "Go to the 'Digital Library' section. You can toggle between PYQs, Short Notes, and other resources using the tabs at the top of the page."
+      question: "How do I join a live class?",
+      answer: "Live classes are conducted according to the schedule. You can join them directly by navigating to the Dashboard and accessing the 'My Classroom' section."
+    },
+    {
+      question: "Can I download lectures for offline viewing?",
+      answer: "No, offline viewing is currently not possible. You will need an active internet connection to access and watch the lectures."
     },
     {
       question: "How to update my profile details?",
@@ -27,14 +44,6 @@ const HelpCentre = () => {
     {
       question: "My FastTrack batch is not showing up.",
       answer: "Please ensure you have selected the correct 'Focus Area' (e.g., JEE, NEET). You can switch your focus area from the sidebar top menu."
-    },
-    {
-      question: "How do I join a live class?",
-      answer: "Live classes appear in your batch schedule 10 minutes before the start time. Click the 'Join Now' button on your batch dashboard."
-    },
-    {
-      question: "Can I download lectures for offline viewing?",
-      answer: "Yes, if your batch supports it, you will see a download icon next to the lecture video in the player."
     },
     {
       question: "How to contact support for payment issues?",
@@ -126,9 +135,9 @@ const HelpCentre = () => {
                     >
                       <div className="overflow-hidden">
                         <div className="px-6 pb-5 pt-0">
-                          <p className="text-[15px] font-normal text-gray-900 leading-relaxed border-t border-blue-100/50 pt-4">
+                          <div className="text-[15px] font-normal text-gray-900 leading-relaxed border-t border-blue-100/50 pt-4 font-sans">
                             {item.answer}
-                          </p>
+                          </div>
                         </div>
                       </div>
                     </div>
