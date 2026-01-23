@@ -190,8 +190,8 @@ const HelpCentre = () => {
               </div>
             )}
 
-            {/* Compact Support Banner Section */}
-            <div className="mt-8 bg-white w-full border border-[#e2e8f0] rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center shadow-[0_2px_8px_rgba(0,0,0,0.02)] gap-6">
+            {/* Support Banner Section - Updated with new Image & No Frame */}
+            <div className="mt-8 w-full bg-[#f8faff] rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-6">
                <div className="flex-1 text-center sm:text-left">
                   <h2 className="text-lg sm:text-xl font-semibold text-[#1a1a1a] mb-2 tracking-tight">
                     Still need help?
@@ -210,9 +210,9 @@ const HelpCentre = () => {
                
                <div className="flex-shrink-0 order-first sm:order-last">
                   <img 
-                    src="https://i.ibb.co/Xz9Zrtn/image.png" 
+                    src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769168258/Screenshot_2026-01-23_170500_loznb1.png" 
                     alt="Support" 
-                    className="w-[120px] sm:w-[140px] h-auto object-contain block"
+                    className="w-[120px] sm:w-[140px] h-auto object-contain block mix-blend-multiply"
                   />
                </div>
             </div>
