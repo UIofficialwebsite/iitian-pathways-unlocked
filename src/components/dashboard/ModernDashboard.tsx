@@ -162,7 +162,7 @@ const ModernDashboard: React.FC = () => {
   return (
     <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden font-sans">
       {/* GLOBAL TOP NAV */}
-      <div className="z-[100] w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
+      <div className="z-30 w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
           profile={profile}
