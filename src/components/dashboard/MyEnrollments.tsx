@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Inbox, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Loader2, Inbox, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
   CardContent, 
@@ -155,6 +155,7 @@ interface MyEnrollmentsProps {
 const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -272,10 +273,25 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-2 sm:px-0">
-      <div className="px-2 sm:px-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Enrollments</h1>
-        <p className="text-sm sm:text-base text-gray-600">All the courses you are currently enrolled in.</p>
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-8 px-2 sm:px-0">
+      
+      {/* Mobile-Only Header Row */}
+      <div className="flex items-center gap-2 sm:hidden pt-2 pb-1 border-b border-gray-100">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 -ml-1 text-gray-600" 
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-lg font-bold text-gray-900">My Enrollments</h1>
+      </div>
+
+      {/* Desktop-Only Header (Hidden on Mobile) */}
+      <div className="hidden sm:block px-2 sm:px-0">
+        <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
+        <p className="text-base text-gray-600">All the courses you are currently enrolled in.</p>
       </div>
 
       {groupedEnrollments.length === 0 ? (
