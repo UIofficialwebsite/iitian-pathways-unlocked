@@ -49,10 +49,6 @@ const HelpCentre = () => {
     {
       question: "How to contact support?",
       answer: "Please email us at support@unknowniitians.live with your query."
-    },
-    {
-      question: "I forgot my password, how do I reset it?",
-      answer: "You can reset your password from the login screen by clicking 'Forgot Password'. A reset link will be sent to your registered email."
     }
   ];
 
@@ -190,7 +186,7 @@ const HelpCentre = () => {
               </div>
             )}
 
-            {/* Support Banner Section - Updated with new Image & No Frame */}
+            {/* Compact Support Banner Section - Updated with new Image & No Frame */}
             <div className="mt-8 w-full bg-[#f8faff] rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-6">
                <div className="flex-1 text-center sm:text-left">
                   <h2 className="text-lg sm:text-xl font-semibold text-[#1a1a1a] mb-2 tracking-tight">
