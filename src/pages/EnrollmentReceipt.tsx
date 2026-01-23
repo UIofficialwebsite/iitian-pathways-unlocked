@@ -33,7 +33,8 @@ const EnrollmentReceipt = () => {
       if (!user || !courseId) return;
 
       try {
-        // 1. Fetch Enrollment (Source of Truth for Access & Course Metadata)
+        // 1. Fetch Enrollment (Safely handle multiple rows with limit(1))
+        // We order by created_at descending to get the most recent enrollment
         const { data: enrollmentData, error: enrollmentError } = await supabase
           .from('enrollments')
           .select(`
@@ -51,20 +52,26 @@ const EnrollmentReceipt = () => {
           `)
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .in('status', ['success', 'active', 'paid', 'SUCCESS', 'ACTIVE']) // Broaden status check
-          .maybeSingle(); // Use maybeSingle to avoid 406 if no rows found
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
         if (enrollmentError) throw enrollmentError;
 
         if (!enrollmentData) {
+          console.log("No enrollment found for receipt");
           setLoading(false);
           return;
         }
 
+        // Force cast the joined course data
         const course = enrollmentData.courses as unknown as CourseDetails;
-        let finalAmount = enrollmentData.amount || 0;
-        let finalDate = enrollmentData.created_at;
+        
+        // Default values from Enrollment table
+        let finalAmount = Number(enrollmentData.amount) || 0;
+        let finalDate = enrollmentData.created_at || new Date().toISOString();
         let finalOrderId = enrollmentData.order_id || enrollmentData.id;
+        let finalStatus = enrollmentData.status || 'Success';
 
         // 2. If Paid Course (Amount > 0) & Has Order ID -> Fetch from Payments Table
         if (finalAmount > 0 && enrollmentData.order_id) {
@@ -75,10 +82,11 @@ const EnrollmentReceipt = () => {
             .maybeSingle();
 
           if (!paymentError && paymentData) {
-            // Override with Payment Table Details
-            finalAmount = paymentData.amount || finalAmount;
+            // Override with Payment Table Details if available
+            finalAmount = Number(paymentData.amount) || finalAmount;
             finalDate = paymentData.created_at || finalDate;
             finalOrderId = paymentData.order_id || finalOrderId;
+            finalStatus = paymentData.status || finalStatus;
           }
         }
 
@@ -86,7 +94,7 @@ const EnrollmentReceipt = () => {
           orderId: finalOrderId,
           date: finalDate,
           amount: finalAmount,
-          status: 'Success',
+          status: finalStatus,
           course: course
         });
 
@@ -117,7 +125,7 @@ const EnrollmentReceipt = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f5f8ff] text-slate-600 gap-4">
         <h2 className="text-xl font-bold">Receipt Not Found</h2>
-        <p className="text-sm text-slate-500">We couldn't find an active enrollment for this course.</p>
+        <p className="text-sm text-slate-500">We couldn't find the transaction details for this course.</p>
         <Link to="/dashboard">
           <Button variant="outline">Return to Dashboard</Button>
         </Link>
@@ -126,11 +134,15 @@ const EnrollmentReceipt = () => {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    try {
+      return new Date(dateString).toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    } catch (e) {
+      return dateString;
+    }
   };
 
   const isFree = receipt.amount === 0;
@@ -179,7 +191,7 @@ const EnrollmentReceipt = () => {
                     {receipt.course.title}
                   </h3>
                   <p className="text-sm text-slate-500 mb-1">
-                    Price: <span className="text-emerald-600 font-medium">{isFree ? 'Free' : `₹${receipt.amount}`}</span>
+                    Price: <span className="text-emerald-600 font-medium">{isFree ? 'Free' : `₹${receipt.amount.toLocaleString()}`}</span>
                   </p>
                   <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.5 rounded">
                     Active
@@ -210,7 +222,7 @@ const EnrollmentReceipt = () => {
             <h2 className="text-[17px] font-bold text-slate-800 mb-5">Payment Details</h2>
             <div className="flex justify-between text-sm text-slate-500 mb-3">
               <span>Price (1 item)</span>
-              <span>{isFree ? '₹0' : `₹${receipt.amount}`}</span>
+              <span>{isFree ? '₹0' : `₹${receipt.amount.toLocaleString()}`}</span>
             </div>
             <div className="flex justify-between text-sm text-slate-500 mb-3">
               <span>Discount</span>
@@ -223,7 +235,7 @@ const EnrollmentReceipt = () => {
             <div className="border-t border-slate-200 my-4"></div>
             <div className="flex justify-between text-base font-medium text-slate-800">
               <span>Total Amount</span>
-              <span>{isFree ? '₹0' : `₹${receipt.amount}`}</span>
+              <span>{isFree ? '₹0' : `₹${receipt.amount.toLocaleString()}`}</span>
             </div>
           </div>
 
