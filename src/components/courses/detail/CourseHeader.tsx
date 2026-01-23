@@ -29,7 +29,7 @@ const CourseHeader: React.FC<CourseHeaderProps> = ({ course, isDashboardView }) 
       {/* Main Content Container - Remove max-width constraint in dashboard view */}
       <div className={cn(
         "relative z-10 px-5 sm:px-8 lg:px-12",
-        isDashboardView ? "py-4" : "py-6 md:py-8 max-w-[1440px] mx-auto"
+        isDashboardView ? "py-2 sm:py-3" : "py-6 md:py-8 max-w-[1440px] mx-auto"
       )}>
         
         {/* Breadcrumbs - Hidden in dashboard view */}
