@@ -259,15 +259,16 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     enrolling
   };
 
-  // For dashboard view, render without the outer max-w container constraints
+  // --- UPDATED: Removed the "major section" wrapper in Dashboard View ---
   if (isDashboardView) {
     return (
-      <div className="w-full">
+      <>
         <CourseHeader course={course} isDashboardView={isDashboardView} />
         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
-        <div className="w-full px-4 sm:px-6 lg:px-8 py-8 pb-20">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Replaced fixed max-width container with a fluid full-width div */}
+        <div className="w-full px-4 md:px-6 py-6 pb-20">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
             <div className="lg:col-span-7 space-y-8">
               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
               <div ref={sectionRefs.curriculum}>
@@ -281,9 +282,9 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
               <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
             </div>
             
-            {/* Desktop Sidebar (Stays Right) */}
+            {/* Desktop Sidebar */}
             <aside className="hidden lg:block lg:col-span-5 relative">
-              <div className="sticky top-24 z-20">
+              <div className="sticky top-24 z-20 transition-all duration-300">
                 <EnrollmentCard {...commonEnrollmentProps} />
               </div>
             </aside>
@@ -294,7 +295,7 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
             </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
