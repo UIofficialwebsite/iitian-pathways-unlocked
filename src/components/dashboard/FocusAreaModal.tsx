@@ -3,9 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
 import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle } from 'lucide-react';
-// We no longer import the constants file
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Define the shape of the options we fetch
 interface FocusOption {
@@ -48,6 +49,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profile, onProfileUpdate }) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingOptions, setIsFetchingOptions] = useState(true);
   
@@ -171,61 +173,81 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
   // Check if the user has a value selected at this step
   const selectedValue = selectionPath.find(p => p.parent_id === currentStepParentId)?.value_to_save;
 
+  // Shared content for both Dialog and Drawer
+  const modalContent = (
+    <>
+      {isFetchingOptions || isLoading ? (
+        <div className="flex justify-center items-center h-32">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-2 px-4 py-4">
+          {currentOptions.length > 0 ? (
+            currentOptions.map(option => {
+              const Icon = iconMap[option.icon || 'default'] || iconMap.default;
+              return (
+                <Button
+                  key={option.id}
+                  variant={selectedValue === option.value_to_save ? "default" : "outline"}
+                  className="w-full justify-between h-11 text-left text-sm rounded-sm"
+                  onClick={() => handleOptionClick(option)}
+                >
+                  <div className="flex items-center">
+                    <Icon className="h-4 w-4 mr-2" />
+                    <p className="font-medium text-[13px]">{option.label}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              );
+            })
+          ) : (
+            <p className="text-center text-muted-foreground text-sm">No options available for this selection.</p>
+          )}
+
+          {/* Back Button */}
+          {currentStepParentId !== null && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2"
+              onClick={() => {
+                const newPath = [...selectionPath.slice(0, -1)];
+                setSelectionPath(newPath);
+                setCurrentStepParentId(newPath.length > 0 ? newPath[newPath.length - 1].parent_id : null);
+              }}
+            >
+              Back
+            </Button>
+          )}
+        </div>
+      )}
+    </>
+  );
+
+  // Mobile: Use Drawer from top
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={onClose} direction="top">
+        <DrawerContent className="rounded-b-lg rounded-t-none top-0 bottom-auto mt-0 max-h-[85vh]">
+          <DrawerHeader className="px-4 py-3 border-b bg-muted/30">
+            <DrawerTitle className="text-base font-semibold">{title}</DrawerTitle>
+            <DrawerDescription className="text-xs text-muted-foreground">{description}</DrawerDescription>
+          </DrawerHeader>
+          {modalContent}
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Desktop: Use Dialog
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[94vw] max-w-[420px] p-0 gap-0 rounded-xl overflow-hidden">
+      <DialogContent className="w-[94vw] max-w-[420px] p-0 gap-0 rounded-lg overflow-hidden">
         <DialogHeader className="px-4 py-3 border-b bg-muted/30">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">{description}</DialogDescription>
         </DialogHeader>
-
-        {isFetchingOptions || isLoading ? (
-          <div className="flex justify-center items-center h-32">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : (
-          <div className="space-y-2.5 px-4 py-4">
-            {currentOptions.length > 0 ? (
-              currentOptions.map(option => {
-                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
-                return (
-                  <Button
-                    key={option.id}
-                    variant={selectedValue === option.value_to_save ? "default" : "outline"}
-                    className="w-full justify-between h-12 text-left text-sm rounded-md" // Changed rounded-xl to rounded-md
-                    onClick={() => handleOptionClick(option)}
-                  >
-                    <div className="flex items-center">
-                      <Icon className="h-5 w-5 mr-2.5" />
-                      <div>
-                        <p className="font-medium text-[13px]">{option.label}</p>
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                );
-              })
-            ) : (
-              <p className="text-center text-muted-foreground text-sm">No options available for this selection.</p>
-            )}
-
-            {/* Back Button */}
-            {currentStepParentId !== null && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="mt-2"
-                onClick={() => {
-                  const newPath = [...selectionPath.slice(0, -1)];
-                  setSelectionPath(newPath);
-                  setCurrentStepParentId(newPath.length > 0 ? newPath[newPath.length - 1].parent_id : null);
-                }}
-              >
-                Back
-              </Button>
-            )}
-          </div>
-        )}
+        {modalContent}
       </DialogContent>
     </Dialog>
   );

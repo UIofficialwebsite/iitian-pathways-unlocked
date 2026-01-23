@@ -3,14 +3,24 @@ import { Drawer as DrawerPrimitive } from "vaul"
 
 import { cn } from "@/lib/utils"
 
+type DrawerProps = React.ComponentProps<typeof DrawerPrimitive.Root> & {
+  direction?: "top" | "bottom" | "left" | "right";
+}
+
+const DrawerContext = React.createContext<{ direction?: "top" | "bottom" | "left" | "right" }>({});
+
 const Drawer = ({
   shouldScaleBackground = true,
+  direction = "bottom",
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
+}: DrawerProps) => (
+  <DrawerContext.Provider value={{ direction }}>
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      direction={direction}
+      {...props}
+    />
+  </DrawerContext.Provider>
 )
 Drawer.displayName = "Drawer"
 
@@ -26,7 +36,6 @@ const DrawerOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DrawerPrimitive.Overlay
     ref={ref}
-    // [CHANGED] Increased z-index to 10040 to match Dialog and overlap Navbar
     className={cn("fixed inset-0 z-[10040] bg-black/80", className)}
     {...props}
   />
@@ -36,23 +45,31 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => (
-  <DrawerPortal>
-    <DrawerOverlay />
-    <DrawerPrimitive.Content
-      ref={ref}
-      // [CHANGED] Increased z-index to 10050 to sit above overlay
-      className={cn(
-        "fixed inset-x-0 bottom-0 z-[10050] mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background",
-        className
-      )}
-      {...props}
-    >
-      <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />
-      {children}
-    </DrawerPrimitive.Content>
-  </DrawerPortal>
-))
+>(({ className, children, ...props }, ref) => {
+  const { direction } = React.useContext(DrawerContext);
+  const isTop = direction === "top";
+  
+  return (
+    <DrawerPortal>
+      <DrawerOverlay />
+      <DrawerPrimitive.Content
+        ref={ref}
+        className={cn(
+          "fixed inset-x-0 z-[10050] flex h-auto flex-col border bg-background",
+          isTop 
+            ? "top-0 rounded-b-[10px]" 
+            : "bottom-0 mt-24 rounded-t-[10px]",
+          className
+        )}
+        {...props}
+      >
+        {!isTop && <div className="mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted" />}
+        {children}
+        {isTop && <div className="mx-auto mb-4 h-2 w-[100px] rounded-full bg-muted" />}
+      </DrawerPrimitive.Content>
+    </DrawerPortal>
+  );
+})
 DrawerContent.displayName = "DrawerContent"
 
 const DrawerHeader = ({
