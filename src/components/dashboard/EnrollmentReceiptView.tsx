@@ -22,6 +22,8 @@ interface ReceiptDetails {
   amount: number;
   status: string;
   course: CourseDetails;
+  utr?: string;
+  paymentTime?: string;
 }
 
 const EnrollmentReceiptView = () => {
@@ -77,11 +79,14 @@ const EnrollmentReceiptView = () => {
         let finalDate = enrollmentData.created_at || new Date().toISOString();
         let finalOrderId = enrollmentData.order_id || enrollmentData.id;
         let finalStatus = enrollmentData.status || 'Success';
+        let finalUtr = '-';
+        let finalPaymentTime = new Date(finalDate).toLocaleTimeString();
 
+        // Check Payment Table if it's a paid course to get UTR and Time
         if (finalAmount > 0 && enrollmentData.order_id) {
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
-            .select('amount, created_at, order_id, status')
+            .select('amount, created_at, order_id, status, utr, payment_time')
             .eq('order_id', enrollmentData.order_id)
             .maybeSingle();
 
@@ -90,6 +95,9 @@ const EnrollmentReceiptView = () => {
             finalDate = paymentData.created_at || finalDate;
             finalOrderId = paymentData.order_id || finalOrderId;
             finalStatus = paymentData.status || finalStatus;
+            finalUtr = paymentData.utr || '-';
+            // Use payment_time from DB or derive from created_at
+            finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
           }
         }
 
@@ -98,7 +106,9 @@ const EnrollmentReceiptView = () => {
           date: finalDate,
           amount: finalAmount,
           status: finalStatus,
-          course: course
+          course: course,
+          utr: finalUtr,
+          paymentTime: finalPaymentTime
         });
 
       } catch (error) {
@@ -283,7 +293,7 @@ Date: ${orderDate}
                 className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors disabled:opacity-50"
               >
                 {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {isDownloading ? 'Generating...' : 'Download Receipt'}
+                {isDownloading ? 'Generating...' : 'Download Invoice'}
               </button>
               <button 
                 onClick={handleShare}
@@ -375,9 +385,9 @@ Date: ${orderDate}
                 </p>
                 <button 
                   onClick={handleContactUs}
-                  className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors"
+                  className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
                 >
-                  Contact Us
+                  <Mail className="w-4 h-4" /> Contact Us
                 </button>
               </div>
               <img 
@@ -404,7 +414,7 @@ Date: ${orderDate}
           minHeight: '297mm',
           backgroundColor: '#ffffff',
           padding: '40px',
-          fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+          fontFamily: "'Inter', sans-serif", // Enforced Font
           color: '#1a1a1a',
           boxSizing: 'border-box'
         }}
@@ -421,8 +431,8 @@ Date: ${orderDate}
             />
             <div style={{ fontSize: '14px', lineHeight: '1.5', color: '#4b5563' }}>
               <strong>Unknown IITians</strong><br />
-              Digital Learning Platform<br />
-              Noida, Uttar Pradesh, India<br />
+              Ed-tech Platform<br />
+              New Delhi, India<br />
               <span style={{ color: '#4f46e5' }}>support@unknowniitians.live</span><br />
               <a href="https://unknowniitians.live" style={{ color: '#4f46e5', textDecoration: 'none' }}>www.unknowniitians.live</a>
             </div>
@@ -435,6 +445,8 @@ Date: ${orderDate}
               <p style={{ margin: '4px 0' }}><strong>Invoice #:</strong> INV-{receipt.orderId.slice(-8).toUpperCase()}</p>
               <p style={{ margin: '4px 0' }}><strong>Order ID:</strong> {receipt.orderId}</p>
               <p style={{ margin: '4px 0' }}><strong>Date:</strong> {formatDate(receipt.date)}</p>
+              <p style={{ margin: '4px 0' }}><strong>Time:</strong> {receipt.paymentTime}</p>
+              <p style={{ margin: '4px 0' }}><strong>UTR:</strong> {receipt.utr}</p>
               <p style={{ margin: '4px 0' }}><strong>Status:</strong> <span style={{ color: '#059669', fontWeight: 'bold' }}>PAID</span></p>
             </div>
           </div>
@@ -508,7 +520,7 @@ Date: ${orderDate}
               2. <strong>Unauthorized Distribution:</strong> The content provided under this enrollment is the intellectual property of Unknown IITians. Unauthorized copying, distribution, screen recording, or sharing of account credentials is strictly prohibited and may result in immediate termination of access without refund and potential legal action under the Copyright Act, 1957.
             </p>
             <p style={{ marginBottom: '6px' }}>
-              3. <strong>Jurisdiction:</strong> Any disputes arising out of or in connection with this transaction shall be subject to the exclusive jurisdiction of the courts located in Noida, Uttar Pradesh, India.
+              3. <strong>Jurisdiction:</strong> Any disputes arising out of or in connection with this transaction shall be subject to the exclusive jurisdiction of the courts located in New Delhi, India.
             </p>
             <p style={{ marginBottom: '6px' }}>
               4. <strong>Service Claims:</strong> While we strive to provide the highest quality education, Unknown IITians makes no guarantees regarding specific exam results or academic outcomes. The materials are provided "as is" to aid in preparation.
