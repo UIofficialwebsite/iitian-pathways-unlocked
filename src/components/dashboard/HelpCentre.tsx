@@ -100,18 +100,21 @@ const HelpCentre = () => {
             </button>
           </div>
 
-          <div className="relative w-full sm:w-[300px]">
-            <input
-              type="text"
-              placeholder="Type your query here..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full py-2.5 px-4 pr-10 border border-[#eef2f6] bg-[#fafbfc] rounded-xl text-sm outline-none text-slate-800 placeholder:text-slate-400 focus:border-blue-200 focus:ring-2 focus:ring-blue-100 transition-all"
-            />
-            <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-              <Search className="w-4 h-4" />
+          {/* Search bar is hidden in Notice Board view to match common patterns, or can be kept if desired. Kept here for consistency. */}
+          {activeTab === 'Help Centre' && (
+            <div className="relative w-full sm:w-[300px]">
+              <input
+                type="text"
+                placeholder="Type your query here..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full py-2.5 px-4 pr-10 border border-[#eef2f6] bg-[#fafbfc] rounded-xl text-sm outline-none text-slate-800 placeholder:text-slate-400 focus:border-blue-200 focus:ring-2 focus:ring-blue-100 transition-all"
+              />
+              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                <Search className="w-4 h-4" />
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Content */}
@@ -186,7 +189,7 @@ const HelpCentre = () => {
               </div>
             )}
 
-            {/* Compact Support Banner Section - Updated with new Image & No Frame */}
+            {/* Compact Support Banner Section */}
             <div className="mt-8 w-full bg-[#f8faff] rounded-xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-center gap-6">
                <div className="flex-1 text-center sm:text-left">
                   <h2 className="text-lg sm:text-xl font-semibold text-[#1a1a1a] mb-2 tracking-tight">
@@ -215,8 +218,13 @@ const HelpCentre = () => {
 
           </div>
         ) : (
-          <div className="text-center py-20 text-slate-400 animate-in fade-in slide-in-from-bottom-2 duration-300 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            <p className="font-medium">No new notices at the moment.</p>
+          <div className="flex flex-col items-center justify-center py-20 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <img 
+              src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769169190/Screenshot_2026-01-23_172250_qqa6dd.png" 
+              alt="No Notices" 
+              className="w-48 sm:w-64 h-auto object-contain mb-4 mix-blend-multiply opacity-95"
+            />
+            <p className="text-lg font-medium text-slate-600">No notice for today</p>
           </div>
         )}
       </div>
