@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check, Download, Share2, ArrowLeft, Mail, Printer } from 'lucide-react';
+import { Loader2, Check, Download, Share2, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import html2canvas from 'html2canvas';
@@ -34,6 +34,7 @@ const EnrollmentReceiptView = () => {
   const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   
+  // Ref for the hidden formal receipt template (Only for PDF)
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // --- Data Fetching Logic ---
@@ -146,7 +147,7 @@ const EnrollmentReceiptView = () => {
     try {
       const element = receiptRef.current;
       
-      // Use html2canvas to render the hidden receipt div
+      // Use html2canvas to render the HIDDEN formal invoice
       const canvas = await html2canvas(element, {
         scale: 2, 
         useCORS: true, 
@@ -156,10 +157,8 @@ const EnrollmentReceiptView = () => {
 
       const imgData = canvas.toDataURL('image/png');
       
-      // A4 settings
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
       
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
@@ -169,17 +168,40 @@ const EnrollmentReceiptView = () => {
 
       toast({
         title: "Success",
-        description: "Official receipt downloaded.",
+        description: "Official invoice downloaded.",
       });
     } catch (error) {
       console.error("PDF Generation Error:", error);
       toast({
         title: "Error",
-        description: "Failed to generate receipt. Please try printing instead.",
+        description: "Failed to generate receipt.",
         variant: "destructive",
       });
     } finally {
       setIsDownloading(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!receipt) return;
+    const shareData = {
+      title: 'Enrollment Receipt',
+      text: `Enrollment Receipt for ${receipt.course.title}`,
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Link Copied",
+        description: "Receipt link has been copied to clipboard.",
+      });
     }
   };
 
@@ -203,9 +225,7 @@ Date: ${orderDate}
 
 [Please describe your issue here]`;
 
-    // UPDATED EMAILS
     const mailtoLink = `mailto:support@unknowniitians.live?cc=unknowniitians@gmail.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
     window.location.href = mailtoLink;
   };
 
@@ -233,7 +253,7 @@ Date: ${orderDate}
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
       
-      {/* Back Link */}
+      {/* Back Button (On Screen) */}
       <div className="mb-6">
         <Link 
           to="/dashboard/enrollments" 
@@ -244,11 +264,14 @@ Date: ${orderDate}
         </Link>
       </div>
 
+      {/* === ON-SCREEN VIEW (Card Design) === */}
       <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
         
-        {/* Left Column - On Screen View */}
+        {/* Left Column */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-sm p-10 text-center">
+          
+          {/* Status Banner */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-10 text-center">
             <div className="w-11 h-11 bg-[#10b981] text-white rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6" strokeWidth={3} />
             </div>
@@ -260,12 +283,20 @@ Date: ${orderDate}
                 className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors disabled:opacity-50"
               >
                 {isDownloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-                {isDownloading ? 'Generating...' : 'Download Official Invoice'}
+                {isDownloading ? 'Generating...' : 'Download Receipt'}
+              </button>
+              <button 
+                onClick={handleShare}
+                className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+                Share Receipt
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-sm p-6">
+          {/* Course Details Card */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <div className="flex justify-between text-[13px] text-[#64748b] mb-5">
               <span>Order Id: {receipt.orderId}</span>
               <span>Order Date: {formatDate(receipt.date)}</span>
@@ -296,19 +327,36 @@ Date: ${orderDate}
                 </button>
               </Link>
             </div>
+
+            <div className="mt-6 bg-[#fafbff] p-4 rounded-lg">
+              <label className="text-xs text-[#64748b] block mb-1">Valid Till:</label>
+              <p className="text-base text-[#334155]">
+                {formatValidTill(receipt.course.end_date)}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Right Column */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-sm p-6">
+          
+          {/* Payment Summary Card */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             <div className="flex justify-between text-sm text-[#64748b] mb-3">
-              <span>Price (1 item)</span>
+              <span>Price (1 items)</span>
               <span>{isFree ? '₹ 0' : `₹ ${receipt.amount}`}</span>
             </div>
             <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Discount</span>
+              <span>₹ 0</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
               <span>Delivery Charges</span>
+              <span>₹ 0</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Coupon Disc.</span>
               <span>₹ 0</span>
             </div>
             <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
@@ -317,22 +365,29 @@ Date: ${orderDate}
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-white to-[#f9faff] rounded-xl border border-[#e2e8f0] shadow-sm p-6">
+          {/* Help Card */}
+          <div className="bg-gradient-to-br from-white to-[#f9faff] rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <div className="flex justify-between items-center">
               <div className="flex-1 pr-4">
                 <h2 className="text-[17px] font-bold text-[#334155] mb-1">Need help?</h2>
                 <p className="text-[13px] text-[#64748b] leading-[1.4] mb-4">
-                  For support inquiries, please contact us directly.
+                  Get in touch and we will be happy to help you.
                 </p>
                 <button 
                   onClick={handleContactUs}
-                  className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors inline-flex items-center gap-2"
+                  className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors"
                 >
-                  <Mail className="w-4 h-4" /> Contact Support
+                  Contact Us
                 </button>
               </div>
+              <img 
+                src="https://illustrations.popsy.co/blue/customer-support.svg" 
+                className="w-20 opacity-80" 
+                alt="support"
+              />
             </div>
           </div>
+
         </div>
       </div>
 
