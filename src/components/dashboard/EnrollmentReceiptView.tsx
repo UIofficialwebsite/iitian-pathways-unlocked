@@ -106,7 +106,7 @@ const EnrollmentReceiptView = () => {
             });
 
             finalItems = sortedEnrollments.map((item: any) => {
-              // LOGIC: If subject_name exists, it is an Add-on.
+              // If subject_name exists, it's an Add-on Name. Otherwise, it's the Batch Title.
               const isAddon = !!item.subject_name;
               const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
 
@@ -121,7 +121,7 @@ const EnrollmentReceiptView = () => {
             });
           }
 
-          // 3. Fetch Payment Record for metadata
+          // 3. Fetch Payment Record for the REAL total
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select('amount, created_at, order_id, status, utr, payment_time')
@@ -252,11 +252,19 @@ const EnrollmentReceiptView = () => {
 
   const isFree = receipt.totalAmount === 0;
   
-  // Separation Logic
-  // 1. Find the main batch (Type = Batch)
+  // LOGIC: Separate items for display
   const mainBatch = receipt.items.find(i => i.type === 'Batch') || receipt.items[0]; 
-  // 2. Find add-ons (Type = Add-on OR anything that isn't the main batch we just picked)
   const addOns = receipt.items.filter(i => i !== mainBatch);
+
+  // LOGIC: Filter Payment Details to show ONLY what was paid for
+  // If Total > 0, show only items with amount > 0.
+  // If Total == 0, show all items (as free).
+  const paymentLineItems = isFree 
+    ? receipt.items 
+    : receipt.items.filter(i => i.amount > 0);
+
+  // Fallback: If someone paid e.g. 500 but data shows all items 0 (edge case), show all items.
+  const displayItems = paymentLineItems.length > 0 ? paymentLineItems : receipt.items;
 
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
@@ -294,7 +302,7 @@ const EnrollmentReceiptView = () => {
               <span>Order Date: {formatDate(receipt.date)}</span>
             </div>
 
-            {/* --- MAIN BATCH CARD (Shown Once) --- */}
+            {/* Main Batch Card (Only the Batch) */}
             <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
               <div className="flex gap-4 items-center w-full">
                 <img src={mainBatch.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} alt={mainBatch.title} className="w-[90px] h-[60px] bg-[#e2e8f0] rounded-md object-cover flex-shrink-0" />
@@ -309,7 +317,7 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* --- INCLUDED ADD-ONS LIST (Shown Below Batch) --- */}
+            {/* Add-ons List */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
@@ -345,10 +353,10 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Everything in Payment Breakdown */}
-            {receipt.items.map((item, idx) => (
+            {/* List ONLY Items that have a cost (or all if order is free) */}
+            {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
-                    <span className="truncate max-w-[180px]">{item.title}</span>
+                    <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
                     <span>{item.amount === 0 ? 'Free' : `₹ ${item.amount}`}</span>
                 </div>
             ))}
@@ -429,7 +437,8 @@ const EnrollmentReceiptView = () => {
             </tr>
           </thead>
           <tbody>
-            {receipt.items.map((item, idx) => (
+            {/* Show only relevant items in PDF table as well */}
+            {displayItems.map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '16px', fontSize: '14px', color: '#1f2937' }}>
                     <div style={{ fontWeight: '600', marginBottom: '4px' }}>{item.title}</div>
