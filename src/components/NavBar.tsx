@@ -298,7 +298,7 @@ const NavBar = () => {
                 </Button>
               </SheetTrigger>
               
-              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[10001] border-none font-['Inter',sans-serif] bg-white">
+              <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[10060] border-none font-['Inter',sans-serif] bg-white">
                 <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
                   <div className="flex items-center gap-4">
                     {activePane === "main" ? (
