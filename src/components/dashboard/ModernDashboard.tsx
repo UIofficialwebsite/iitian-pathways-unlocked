@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Database } from "@/integrations/supabase/types";
-import { Loader2 } from "lucide-react"; 
+import { Loader2, ArrowLeft } from "lucide-react"; 
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -19,6 +19,7 @@ import LibrarySection from "./LibrarySection";
 import RegularBatchesTab from "./RegularBatchesTab";
 import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
 import HelpCentre from "./HelpCentre";
+import CourseDetail from "@/pages/CourseDetail"; // Restored Import
 import EnrollmentReceiptView from "./EnrollmentReceiptView";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -48,14 +49,15 @@ const ModernDashboard: React.FC = () => {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
-  // Get the tab param from the URL
   const { tab } = useParams<{ tab?: string }>();
   
-  // Initialize state based on URL param
   const [activeView, setActiveView] = useState<ActiveView>((tab as ActiveView) || "studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
   
-  // Persisted Library State
+  // --- Detail View State ---
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
+  
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
   
@@ -63,23 +65,33 @@ const ModernDashboard: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Handle View Switching based on URL
+  // Handle title update from CourseDetail
+  const handleTitleLoad = useCallback((title: string) => {
+    setSelectedCourseTitle(title);
+  }, []);
+
+  // Close Detail View
+  const handleCloseDetail = () => {
+    setSelectedCourseId(null);
+    setSelectedCourseTitle(null);
+  };
+
+  // Sync Tab Changes
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
-    
     if (targetView !== activeView) {
       setIsViewLoading(true);
       setActiveView(targetView);
+      handleCloseDetail(); // Close detail if user switches main tabs
       
       const timer = setTimeout(() => {
         setIsViewLoading(false);
       }, 800);
-
       return () => clearTimeout(timer);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]); 
 
+  // Load Profile
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -123,13 +135,16 @@ const ModernDashboard: React.FC = () => {
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
   const handleViewChange = (view: ActiveView) => {
-    if (view === activeView) return;
+    if (view === activeView) {
+      handleCloseDetail();
+      return;
+    }
     navigate(`/dashboard/${view}`);
   };
 
-  // Navigate directly to course page
+  // --- Handlers ---
   const handleCourseClick = (courseId: string) => {
-    navigate(`/courses/${courseId}`);
+    setSelectedCourseId(courseId); // Open in-dashboard view
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -178,64 +193,98 @@ const ModernDashboard: React.FC = () => {
             {isViewLoading ? (
                <ContentWrapper><DashboardLoader /></ContentWrapper>
             ) : (
-              <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
-                {activeView === 'studyPortal' && (
-                  <ContentWrapper>
-                    <StudyPortal profile={profile} onViewChange={handleViewChange} />
-                  </ContentWrapper>
-                )}
+              <div className="h-full flex flex-col">
                 
-                {activeView === 'profile' && (
-                  <ContentWrapper><MyProfile /></ContentWrapper>
-                )}
-
-                {/* @ts-ignore */}
-                {activeView === 'receipt' && (
-                  <ContentWrapper>
-                    <EnrollmentReceiptView />
-                  </ContentWrapper>
-                )}
-
-                {activeView === 'contact' && (
-                  <div className="h-full flex flex-col">
-                    <HelpCentre />
+                {/* --- COURSE DETAIL VIEW (REPLACES LIST IF SELECTED) --- */}
+                {selectedCourseId ? (
+                  <div className="flex flex-col h-full bg-white animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {/* Sticky Detail Header */}
+                    <div className="sticky top-0 z-[10] h-[64px] bg-white border-b px-6 flex items-center gap-4 shrink-0 shadow-sm">
+                      <button 
+                        onClick={handleCloseDetail}
+                        className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 font-medium transition-colors"
+                      >
+                        <ArrowLeft className="w-5 h-5" />
+                        Back to List
+                      </button>
+                      <div className="h-6 w-px bg-gray-300 mx-2" />
+                      <h2 className="text-lg font-semibold text-slate-800 truncate">
+                        {selectedCourseTitle || 'Course Details'}
+                      </h2>
+                    </div>
+                    
+                    {/* Detail Body - Scrollable */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                      <CourseDetail 
+                        customCourseId={selectedCourseId} 
+                        isDashboardView={true}
+                        onTitleLoad={handleTitleLoad}
+                      />
+                    </div>
                   </div>
-                )}
+                ) : (
+                  /* --- STANDARD DASHBOARD VIEWS --- */
+                  <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+                    
+                    {activeView === 'studyPortal' && (
+                      <ContentWrapper>
+                        <StudyPortal profile={profile} onViewChange={handleViewChange} />
+                      </ContentWrapper>
+                    )}
+                    
+                    {activeView === 'profile' && (
+                      <ContentWrapper><MyProfile /></ContentWrapper>
+                    )}
 
-                {activeView === 'enrollments' && (
-                  <ContentWrapper>
-                    <MyEnrollments onSelectCourse={handleCourseClick} />
-                  </ContentWrapper>
-                )}
+                    {/* @ts-ignore */}
+                    {activeView === 'receipt' && (
+                      <ContentWrapper>
+                        <EnrollmentReceiptView />
+                      </ContentWrapper>
+                    )}
 
-                {/* FIX: Removed ContentWrapper here to restore full-width alignment */}
-                {activeView === 'regularBatches' && (
-                  <div className="flex-1 relative h-full">
-                    <RegularBatchesTab 
-                      focusArea={profile?.program_type || 'General'} 
-                      onSelectCourse={handleCourseClick} 
-                    />
+                    {activeView === 'contact' && (
+                      <div className="h-full flex flex-col">
+                        <HelpCentre />
+                      </div>
+                    )}
+
+                    {activeView === 'enrollments' && (
+                      <ContentWrapper>
+                        <MyEnrollments onSelectCourse={handleCourseClick} />
+                      </ContentWrapper>
+                    )}
+
+                    {/* Regular Batches - No ContentWrapper for Full Width Control */}
+                    {activeView === 'regularBatches' && (
+                      <div className="flex-1 relative h-full">
+                        <RegularBatchesTab 
+                          focusArea={profile?.program_type || 'General'} 
+                          onSelectCourse={handleCourseClick} 
+                        />
+                      </div>
+                    )}
+
+                    {/* FastTrack Batches - No ContentWrapper for Full Width Control */}
+                    {activeView === 'fastTrackBatches' && (
+                      <div className="flex-1 relative h-full">
+                        <FastTrackBatchesTab 
+                          focusArea={profile?.program_type || 'General'} 
+                          onSelectCourse={handleCourseClick}
+                        />
+                      </div>
+                    )}
+
+                    {activeView === 'library' && (
+                      <LibrarySection 
+                        profile={profile} 
+                        activeTab={activeLibraryTab} 
+                        onTabChange={setActiveLibraryTab}
+                        persistedVideo={activeVideo}
+                        onVideoChange={setActiveVideo}
+                      /> 
+                    )}
                   </div>
-                )}
-
-                {/* FIX: Removed ContentWrapper here to restore full-width alignment */}
-                {activeView === 'fastTrackBatches' && (
-                  <div className="flex-1 relative h-full">
-                    <FastTrackBatchesTab 
-                      focusArea={profile?.program_type || 'General'} 
-                      onSelectCourse={handleCourseClick}
-                    />
-                  </div>
-                )}
-
-                {activeView === 'library' && (
-                   <LibrarySection 
-                    profile={profile} 
-                    activeTab={activeLibraryTab} 
-                    onTabChange={setActiveLibraryTab}
-                    persistedVideo={activeVideo}
-                    onVideoChange={setActiveVideo}
-                   /> 
                 )}
               </div>
             )}
