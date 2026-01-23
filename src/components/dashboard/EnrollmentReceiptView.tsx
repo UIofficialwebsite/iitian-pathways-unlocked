@@ -106,7 +106,7 @@ const EnrollmentReceiptView = () => {
             });
 
             finalItems = sortedEnrollments.map((item: any) => {
-              // LOGIC FIX: If subject_name exists, it's an Add-on Name. Otherwise, it's the Batch Title.
+              // LOGIC: If subject_name exists, it is an Add-on.
               const isAddon = !!item.subject_name;
               const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
 
@@ -121,7 +121,7 @@ const EnrollmentReceiptView = () => {
             });
           }
 
-          // 3. Fetch Payment Record for the REAL total metadata
+          // 3. Fetch Payment Record for metadata
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select('amount, created_at, order_id, status, utr, payment_time')
@@ -252,9 +252,11 @@ const EnrollmentReceiptView = () => {
 
   const isFree = receipt.totalAmount === 0;
   
-  // Logic: First item is main, others are add-ons
-  const mainBatch = receipt.items[0]; 
-  const addOns = receipt.items.slice(1);
+  // Separation Logic
+  // 1. Find the main batch (Type = Batch)
+  const mainBatch = receipt.items.find(i => i.type === 'Batch') || receipt.items[0]; 
+  // 2. Find add-ons (Type = Add-on OR anything that isn't the main batch we just picked)
+  const addOns = receipt.items.filter(i => i !== mainBatch);
 
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
@@ -292,7 +294,7 @@ const EnrollmentReceiptView = () => {
               <span>Order Date: {formatDate(receipt.date)}</span>
             </div>
 
-            {/* Main Batch Card */}
+            {/* --- MAIN BATCH CARD (Shown Once) --- */}
             <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
               <div className="flex gap-4 items-center w-full">
                 <img src={mainBatch.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} alt={mainBatch.title} className="w-[90px] h-[60px] bg-[#e2e8f0] rounded-md object-cover flex-shrink-0" />
@@ -307,20 +309,20 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* Add-ons List (Visible only if add-ons exist) */}
+            {/* --- INCLUDED ADD-ONS LIST (Shown Below Batch) --- */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
                 <div className="space-y-3">
                   {addOns.map((addon, idx) => (
-                    <div key={idx} className="flex items-center justify-between group">
+                    <div key={idx} className="flex items-center justify-between group py-1">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#f0f9ff] text-[#0ea5e9] flex items-center justify-center">
-                          <Plus className="w-4 h-4" />
+                        <div className="w-6 h-6 rounded-full bg-[#f0f9ff] text-[#0ea5e9] flex items-center justify-center shrink-0">
+                          <Plus className="w-3 h-3" />
                         </div>
                         <span className="text-sm text-[#334155] font-medium">{addon.title}</span>
                       </div>
-                      <Link to={`/courses/${addon.id}`} className="text-xs text-[#4f46e5] hover:underline opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Link to={`/courses/${addon.id}`} className="text-xs text-[#4f46e5] hover:underline font-medium">
                         View
                       </Link>
                     </div>
@@ -343,10 +345,10 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Everything in Payment Breakdown with distinct names */}
+            {/* List Everything in Payment Breakdown */}
             {receipt.items.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
-                    <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
+                    <span className="truncate max-w-[180px]">{item.title}</span>
                     <span>{item.amount === 0 ? 'Free' : `₹ ${item.amount}`}</span>
                 </div>
             ))}
