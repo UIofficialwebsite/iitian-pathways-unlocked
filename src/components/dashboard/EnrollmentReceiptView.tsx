@@ -6,6 +6,7 @@ import { Loader2, Check, Download, Share2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
+// --- Types ---
 interface CourseDetails {
   id: string;
   title: string;
@@ -30,6 +31,7 @@ const EnrollmentReceiptView = () => {
   const [loading, setLoading] = useState(true);
   const [receipt, setReceipt] = useState<ReceiptDetails | null>(null);
 
+  // --- Data Fetching Logic (Same as before) ---
   useEffect(() => {
     const fetchReceiptData = async () => {
       if (!user || !courseId) return;
@@ -70,6 +72,7 @@ const EnrollmentReceiptView = () => {
         let finalOrderId = enrollmentData.order_id || enrollmentData.id;
         let finalStatus = enrollmentData.status || 'Success';
 
+        // Check Payment Table if it's a paid course
         if (finalAmount > 0 && enrollmentData.order_id) {
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
@@ -108,6 +111,7 @@ const EnrollmentReceiptView = () => {
     fetchReceiptData();
   }, [user, courseId, toast]);
 
+  // --- Helper: Format Date ---
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-GB', {
@@ -120,21 +124,29 @@ const EnrollmentReceiptView = () => {
     }
   };
 
+  const formatValidTill = (dateString: string | null) => {
+    if (!dateString) return "Lifetime Access";
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
   if (loading) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-[#4f46e5]" />
       </div>
     );
   }
 
   if (!receipt) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-slate-600 gap-4 min-h-[60vh]">
-        <h2 className="text-xl font-bold">Receipt Not Found</h2>
-        <p className="text-sm text-slate-500">We couldn't find the transaction details for this course.</p>
-        <Link to="/dashboard">
-          <Button variant="outline">Return to Dashboard</Button>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-[#64748b]">
+        <h2 className="text-xl font-bold mb-2">Receipt Not Found</h2>
+        <Link to="/dashboard/enrollments">
+          <Button variant="outline">Back to Enrollments</Button>
         </Link>
       </div>
     );
@@ -142,80 +154,122 @@ const EnrollmentReceiptView = () => {
 
   const isFree = receipt.amount === 0;
 
+  // --- Render (Exact Design Implementation) ---
   return (
-    <div className="mx-auto max-w-5xl py-8 px-4">
-      {/* Back Link */}
-      <div className="mb-6">
-        <Link to="/dashboard/enrollments" className="inline-flex items-center text-sm text-slate-500 hover:text-indigo-600 transition-colors">
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Enrollments
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
-        {/* Left Column */}
+    <div className="min-h-screen bg-[#f5f8ff] font-['Inter',sans-serif] p-4 md:p-8 flex justify-center">
+      <div className="w-full max-w-[1000px] grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
+        
+        {/* --- Left Column --- */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-10 text-center flex flex-col items-center">
-            <div className="w-11 h-11 bg-emerald-500 text-white rounded-full flex items-center justify-center mb-4">
+          
+          {/* Status Banner */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-10 text-center">
+            <div className="w-11 h-11 bg-[#10b981] text-white rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-6 h-6" strokeWidth={3} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-6">Payment Successful</h1>
+            <h1 className="text-2xl font-bold text-[#334155] mb-6">Payment Successful</h1>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" /> Download Receipt
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <Share2 className="w-4 h-4" /> Share Receipt
-              </Button>
+              <button className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
+                <Download className="w-4 h-4" />
+                Download Receipt
+              </button>
+              <button className="flex items-center gap-2 bg-white border border-[#e2e8f0] px-[18px] py-2.5 rounded-lg text-sm text-[#334155] hover:border-[#4f46e5] hover:text-[#4f46e5] transition-colors">
+                <Share2 className="w-4 h-4" />
+                Share Receipt
+              </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <div className="flex justify-between text-sm text-slate-500 mb-5">
+          {/* Details Card */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+            <div className="flex justify-between text-[13px] text-[#64748b] mb-5">
               <span>Order Id: {receipt.orderId}</span>
               <span>Order Date: {formatDate(receipt.date)}</span>
             </div>
 
-            <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-slate-100 rounded-lg p-4 gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
               <div className="flex gap-4 items-center w-full">
                 <img 
-                  src={receipt.course.image_url || "https://via.placeholder.com/90x60"} 
+                  src={receipt.course.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} 
                   alt={receipt.course.title} 
-                  className="w-[90px] h-[60px] bg-slate-200 rounded-md object-cover flex-shrink-0"
+                  className="w-[90px] h-[60px] bg-[#e2e8f0] rounded-md object-cover flex-shrink-0"
                 />
                 <div className="flex-grow">
-                  <h3 className="text-base font-medium text-slate-800 mb-1 leading-tight">
+                  <h3 className="text-base font-medium text-[#334155] mb-1 leading-tight">
                     {receipt.course.title}
                   </h3>
-                  <p className="text-sm text-slate-500 mb-1">
-                    Price: <span className="text-emerald-600 font-medium">{isFree ? 'Free' : `₹${receipt.amount.toLocaleString()}`}</span>
+                  <p className="text-sm text-[#64748b] mb-1">
+                    Price: <span className="text-[#10b981] font-medium">{isFree ? 'Free' : `₹${receipt.amount}`}</span>
                   </p>
-                  <span className="inline-block bg-emerald-100 text-emerald-800 text-[11px] px-2 py-0.5 rounded">Active</span>
+                  <span className="inline-block bg-[#dcfce7] text-[#166534] text-[11px] px-2 py-0.5 rounded">
+                    Active
+                  </span>
                 </div>
               </div>
               <Link to={`/courses/${receipt.course.id}`} className="w-full sm:w-auto">
-                <Button className="w-full sm:w-auto bg-[#eef2ff] text-indigo-600 hover:bg-indigo-50 border-none hover:text-indigo-700">
+                <button className="w-full sm:w-auto bg-[#eef2ff] text-[#4f46e5] border-none px-5 py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-100 transition-colors whitespace-nowrap cursor-pointer">
                   Go to Batch
-                </Button>
+                </button>
               </Link>
+            </div>
+
+            <div className="mt-6 bg-[#fafbff] p-4 rounded-lg">
+              <label className="text-xs text-[#64748b] block mb-1">Valid Till:</label>
+              <p className="text-base text-[#334155]">
+                {formatValidTill(receipt.course.end_date)}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* --- Right Column --- */}
         <div className="flex flex-col gap-6">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-[17px] font-bold text-slate-800 mb-5">Payment Details</h2>
-            <div className="flex justify-between text-sm text-slate-500 mb-3">
-              <span>Price (1 item)</span>
-              <span>{isFree ? '₹0' : `₹${receipt.amount.toLocaleString()}`}</span>
+          
+          {/* Summary Card */}
+          <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+            <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Price (1 items)</span>
+              <span>{isFree ? '₹ 0' : `₹ ${receipt.amount}`}</span>
             </div>
-            <div className="border-t border-slate-200 my-4"></div>
-            <div className="flex justify-between text-base font-medium text-slate-800">
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Discount</span>
+              <span>₹ 0</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Delivery Charges</span>
+              <span>₹ 0</span>
+            </div>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3">
+              <span>Coupon Disc.</span>
+              <span>₹ 0</span>
+            </div>
+            <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
               <span>Total Amount</span>
-              <span>{isFree ? '₹0' : `₹${receipt.amount.toLocaleString()}`}</span>
+              <span>{isFree ? '₹ 0' : `₹ ${receipt.amount}`}</span>
             </div>
           </div>
+
+          {/* Help Card */}
+          <div className="bg-gradient-to-br from-white to-[#f9faff] rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+            <div className="flex justify-between items-center">
+              <div className="flex-1 pr-4">
+                <h2 className="text-[17px] font-bold text-[#334155] mb-1">Need help?</h2>
+                <p className="text-[13px] text-[#64748b] leading-[1.4] mb-4">
+                  Get in touch and we will be happy to help you.
+                </p>
+                <button className="bg-[#4f46e5] text-white border-none px-6 py-2.5 rounded-lg text-sm font-medium cursor-pointer hover:bg-indigo-700 transition-colors">
+                  Contact Us
+                </button>
+              </div>
+              <img 
+                src="https://illustrations.popsy.co/blue/customer-support.svg" 
+                className="w-20 opacity-80" 
+                alt="support"
+              />
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
