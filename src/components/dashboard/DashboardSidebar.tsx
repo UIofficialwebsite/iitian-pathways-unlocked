@@ -2,17 +2,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
-  LayoutDashboard, 
   Library, 
-  Briefcase, 
-  Users, 
   Phone, 
-  Info, 
   ShieldCheck, 
-  LayoutGrid, 
-  Zap,
   Home,
-  BookOpen
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -35,11 +28,74 @@ interface DashboardSidebarProps {
   activeView: ActiveView;
 }
 
-// Custom Icon for FastTrack Batches (Lightning in a circle)
+// --- Custom Icons as Functional Components ---
+
+const StudyPortalIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    strokeWidth="2" 
+    stroke="currentColor" 
+    className={className}
+  >
+    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+  </svg>
+);
+
+const RegularBatchIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    strokeWidth="2" 
+    stroke="currentColor" 
+    className={className}
+  >
+    <rect x="3" y="4" width="18" height="12" rx="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 16v4" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M8 20h8" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
 const FastTrackIcon = ({ className }: { className?: string }) => (
-  <div className={cn("flex items-center justify-center border border-current rounded-full", className)}>
-    <Zap className="h-2.5 w-2.5" strokeWidth={2} />
-  </div>
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    strokeWidth="2" 
+    stroke="currentColor" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M13 7L9 12h3l-1 5 4-5h-3l1-5z" />
+  </svg>
+);
+
+const WorkIcon = ({ className }: { className?: string }) => (
+  <svg 
+    viewBox="0 0 24 24" 
+    fill="currentColor" 
+    xmlns="http://www.w3.org/2000/svg" 
+    className={className}
+  >
+    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M12 8.5h-1V8c0-.28-.22-.5-.5-.5h-2c-.28 0-.5.22-.5.5v.5H7c-.28 0-.5.22-.5.5v2.5c0 .28.22.5.5.5h1.5v-.5h2v.5H12c.28 0 .5-.22.5-.5V9c0-.28-.22-.5-.5-.5zm-3-.5h1v.5H9V8z"/>
+  </svg>
+);
+
+const InfoIcon = ({ className }: { className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    fill="none" 
+    viewBox="0 0 24 24" 
+    strokeWidth="2" 
+    stroke="currentColor" 
+    className={className}
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8h.01M12 12v4" />
+  </svg>
 );
 
 const DashboardSidebar: React.FC<DashboardSidebarProps> = ({ 
@@ -48,7 +104,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  const SidebarButton = ({ icon: Icon, label, viewName }: { icon: any, label: string, viewName: ActiveView }) => (
+  const SidebarButton = ({ icon: Icon, label, viewName, iconType = 'component' }: { icon: any, label: string, viewName: ActiveView, iconType?: 'component' | 'image' }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange(viewName)}
@@ -59,12 +115,16 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           : "text-gray-700 hover:bg-gray-100 border border-transparent"
       )}
     >
-      <Icon className="h-4 w-4" />
+      {iconType === 'component' ? (
+        <Icon className="h-4 w-4" />
+      ) : (
+        <img src={Icon} alt={label} className="h-4 w-4 object-contain" />
+      )}
       {label}
     </Button>
   );
 
-  const PlaceholderButton = ({ icon: Icon, label }: { icon: any, label: string }) => (
+  const PlaceholderButton = ({ icon: Icon, label, iconType = 'component' }: { icon: any, label: string, iconType?: 'component' | 'image' }) => (
     <Button 
       variant="ghost" 
       onClick={() => onViewChange('coming_soon')}
@@ -73,7 +133,11 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
         "text-gray-700 hover:bg-gray-100 border border-transparent"
       )}
     >
-      <Icon className="h-4 w-4" />
+      {iconType === 'component' ? (
+        <Icon className="h-4 w-4" />
+      ) : (
+        <img src={Icon} alt={label} className="h-4 w-4 object-contain" />
+      )}
       {label}
     </Button>
   );
@@ -86,7 +150,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <div>
             <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Learn Digitally</h4>
             <div className="mt-2 space-y-1">
-              <SidebarButton icon={LayoutDashboard} label="Study Portal" viewName="studyPortal" />
+              <SidebarButton icon={StudyPortalIcon} label="Study Portal" viewName="studyPortal" />
               <SidebarButton icon={Library} label="Digital Library" viewName="library" />
             </div>
           </div>
@@ -94,7 +158,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
           <div>
             <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Academic Programs</h4>
             <div className="mt-2 space-y-1">
-              <SidebarButton icon={LayoutGrid} label="Regular Batches" viewName="regularBatches" />
+              <SidebarButton icon={RegularBatchIcon} label="Regular Batches" viewName="regularBatches" />
               <SidebarButton icon={FastTrackIcon} label="FastTrack Batches" viewName="fastTrackBatches" />
             </div>
           </div>
@@ -107,11 +171,21 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 onClick={() => window.open('/career', '_blank')}
                 className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <Briefcase className="h-4 w-4" />
+                <WorkIcon className="h-4 w-4" />
                 Work @UI
               </Button>
-              <PlaceholderButton icon={Users} label="Career Consult" />
-              <PlaceholderButton icon={BookOpen} label="Upskilling" />
+              
+              <PlaceholderButton 
+                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769177688/consultation_jtgrze.jpg" 
+                label="Career Consult" 
+                iconType="image"
+              />
+              
+              <PlaceholderButton 
+                icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769177980/creative-idea-flat-line-icon-600nw-2470397429_ux6kot.webp" 
+                label="Upskilling" 
+                iconType="image"
+              />
             </div>
           </div>
 
@@ -125,7 +199,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 onClick={() => window.open('/about', '_blank')}
                 className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <Info className="h-4 w-4" />
+                <InfoIcon className="h-4 w-4" />
                 About Us
               </Button>
 
