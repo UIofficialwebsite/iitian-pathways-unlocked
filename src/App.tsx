@@ -8,40 +8,63 @@ import { BackendIntegratedWrapper } from "@/components/BackendIntegratedWrapper"
 import { LoginModalProvider } from "@/context/LoginModalContext";
 import GlobalLoginModal from "@/components/auth/GlobalLoginModal";
 import ScrollPersistence from "@/components/ScrollPersistence";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, ComponentType } from "react";
 
-// Lazy Load Pages
-const Index = lazy(() => import("./pages/Index"));
-const Auth = lazy(() => import("./pages/Auth"));
-const CourseListing = lazy(() => import("./pages/CourseListing"));
-const Courses = lazy(() => import("./pages/Courses"));
-const ExamPreparation = lazy(() => import("./pages/ExamPreparation"));
-const JEEPrep = lazy(() => import("./pages/JEEPrep"));
-const NEETPrep = lazy(() => import("./pages/NEETPrep"));
-const IITMBSPrep = lazy(() => import("./pages/IITMBSPrep"));
-const IITMBSSubjectNotesPage = lazy(() => import("./pages/IITMBSSubjectNotesPage"));
-const Career = lazy(() => import("./pages/Career"));
-const CareerOpportunities = lazy(() => import("./pages/CareerOpportunities"));
-const JobDetails = lazy(() => import("./pages/JobDetails"));
-const About = lazy(() => import("./pages/About"));
-const CourseDetail = lazy(() => import("./pages/CourseDetail"));
-const BatchConfiguration = lazy(() => import("./pages/BatchConfiguration")); 
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const ProfileComplete = lazy(() => import("./pages/ProfileComplete"));
-const GoogleCallback = lazy(() => import("./pages/GoogleCallback"));
-const StudentGoogleCallback = lazy(() => import("./pages/StudentGoogleCallback"));
-const AdminGoogleCallback = lazy(() => import("./pages/AdminGoogleCallback"));
-const StudentLogin = lazy(() => import("./pages/StudentLogin"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const InternVerification = lazy(() => import("./pages/InternVerification"));
-const EmployeeVerification = lazy(() => import("./pages/EmployeeVerification"));
-const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
-const TermsOfService = lazy(() => import("./pages/TermsOfService"));
-const FAQ = lazy(() => import("./pages/FAQ"));
-const IITMCalculators = lazy(() => import("./pages/IITMCalculators"));
-const NewsDetail = lazy(() => import("./pages/NewsDetail"));
+// Helper to handle chunk loading errors with auto-reload
+function lazyWithRetry<T extends ComponentType<any>>(
+  componentImport: () => Promise<{ default: T }>
+): React.LazyExoticComponent<T> {
+  return lazy(() =>
+    componentImport().catch((error) => {
+      // Check if it's a chunk loading error
+      if (
+        error.message?.includes('Failed to fetch dynamically imported module') ||
+        error.message?.includes('Loading chunk') ||
+        error.message?.includes('Loading CSS chunk')
+      ) {
+        // Clear cache and reload
+        console.warn('Chunk loading failed, reloading page...', error);
+        window.location.reload();
+        // Return a never-resolving promise to prevent render during reload
+        return new Promise(() => {});
+      }
+      throw error;
+    })
+  );
+}
+
+// Lazy Load Pages with retry
+const Index = lazyWithRetry(() => import("./pages/Index"));
+const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const CourseListing = lazyWithRetry(() => import("./pages/CourseListing"));
+const Courses = lazyWithRetry(() => import("./pages/Courses"));
+const ExamPreparation = lazyWithRetry(() => import("./pages/ExamPreparation"));
+const JEEPrep = lazyWithRetry(() => import("./pages/JEEPrep"));
+const NEETPrep = lazyWithRetry(() => import("./pages/NEETPrep"));
+const IITMBSPrep = lazyWithRetry(() => import("./pages/IITMBSPrep"));
+const IITMBSSubjectNotesPage = lazyWithRetry(() => import("./pages/IITMBSSubjectNotesPage"));
+const Career = lazyWithRetry(() => import("./pages/Career"));
+const CareerOpportunities = lazyWithRetry(() => import("./pages/CareerOpportunities"));
+const JobDetails = lazyWithRetry(() => import("./pages/JobDetails"));
+const About = lazyWithRetry(() => import("./pages/About"));
+const CourseDetail = lazyWithRetry(() => import("./pages/CourseDetail"));
+const BatchConfiguration = lazyWithRetry(() => import("./pages/BatchConfiguration")); 
+const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
+const Dashboard = lazyWithRetry(() => import("./pages/Dashboard"));
+const ProfileComplete = lazyWithRetry(() => import("./pages/ProfileComplete"));
+const GoogleCallback = lazyWithRetry(() => import("./pages/GoogleCallback"));
+const StudentGoogleCallback = lazyWithRetry(() => import("./pages/StudentGoogleCallback"));
+const AdminGoogleCallback = lazyWithRetry(() => import("./pages/AdminGoogleCallback"));
+const StudentLogin = lazyWithRetry(() => import("./pages/StudentLogin"));
+const AdminLogin = lazyWithRetry(() => import("./pages/AdminLogin"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard"));
+const InternVerification = lazyWithRetry(() => import("./pages/InternVerification"));
+const EmployeeVerification = lazyWithRetry(() => import("./pages/EmployeeVerification"));
+const PrivacyPolicy = lazyWithRetry(() => import("./pages/PrivacyPolicy"));
+const TermsOfService = lazyWithRetry(() => import("./pages/TermsOfService"));
+const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
+const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
+const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
 
 // REMOVED: const EnrollmentReceipt = lazy(...) <--- This was causing the error
 
