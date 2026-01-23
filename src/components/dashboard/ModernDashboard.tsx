@@ -19,7 +19,7 @@ import LibrarySection from "./LibrarySection";
 import RegularBatchesTab from "./RegularBatchesTab";
 import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
 import HelpCentre from "./HelpCentre";
-import CourseDetail from "@/pages/CourseDetail"; // Restored Import
+import CourseDetail from "@/pages/CourseDetail"; 
 import EnrollmentReceiptView from "./EnrollmentReceiptView";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -65,24 +65,21 @@ const ModernDashboard: React.FC = () => {
   const location = useLocation();
   const { toast } = useToast();
 
-  // Handle title update from CourseDetail
   const handleTitleLoad = useCallback((title: string) => {
     setSelectedCourseTitle(title);
   }, []);
 
-  // Close Detail View
   const handleCloseDetail = () => {
     setSelectedCourseId(null);
     setSelectedCourseTitle(null);
   };
 
-  // Sync Tab Changes
   useEffect(() => {
     const targetView = (tab as ActiveView) || "studyPortal";
     if (targetView !== activeView) {
       setIsViewLoading(true);
       setActiveView(targetView);
-      handleCloseDetail(); // Close detail if user switches main tabs
+      handleCloseDetail();
       
       const timer = setTimeout(() => {
         setIsViewLoading(false);
@@ -91,7 +88,6 @@ const ModernDashboard: React.FC = () => {
     }
   }, [tab]); 
 
-  // Load Profile
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -142,9 +138,8 @@ const ModernDashboard: React.FC = () => {
     navigate(`/dashboard/${view}`);
   };
 
-  // --- Handlers ---
   const handleCourseClick = (courseId: string) => {
-    setSelectedCourseId(courseId); // Open in-dashboard view
+    setSelectedCourseId(courseId);
   };
 
   const isLoading = authLoading || loadingProfile;
@@ -157,6 +152,7 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
+  // Wrapper for standard pages that need padding/centering
   const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
     <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
       {children}
@@ -191,11 +187,11 @@ const ModernDashboard: React.FC = () => {
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar scroll-smooth">
             {isViewLoading ? (
-               <ContentWrapper><DashboardLoader /></ContentWrapper>
+               <div className="h-full flex items-center justify-center"><DashboardLoader /></div>
             ) : (
               <div className="h-full flex flex-col">
                 
-                {/* --- COURSE DETAIL VIEW (REPLACES LIST IF SELECTED) --- */}
+                {/* --- COURSE DETAIL VIEW (Full Screen Mode) --- */}
                 {selectedCourseId ? (
                   <div className="flex flex-col h-full bg-white animate-in fade-in slide-in-from-bottom-2 duration-300">
                     {/* Sticky Detail Header */}
@@ -213,7 +209,7 @@ const ModernDashboard: React.FC = () => {
                       </h2>
                     </div>
                     
-                    {/* Detail Body - Scrollable */}
+                    {/* Detail Body */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                       <CourseDetail 
                         customCourseId={selectedCourseId} 
@@ -255,9 +251,9 @@ const ModernDashboard: React.FC = () => {
                       </ContentWrapper>
                     )}
 
-                    {/* Regular Batches - No ContentWrapper for Full Width Control */}
+                    {/* Regular Batches - FULL WIDTH (No Wrapper) */}
                     {activeView === 'regularBatches' && (
-                      <div className="flex-1 relative h-full">
+                      <div className="flex-1 h-full overflow-hidden">
                         <RegularBatchesTab 
                           focusArea={profile?.program_type || 'General'} 
                           onSelectCourse={handleCourseClick} 
@@ -265,9 +261,9 @@ const ModernDashboard: React.FC = () => {
                       </div>
                     )}
 
-                    {/* FastTrack Batches - No ContentWrapper for Full Width Control */}
+                    {/* FastTrack Batches - FULL WIDTH (No Wrapper) */}
                     {activeView === 'fastTrackBatches' && (
-                      <div className="flex-1 relative h-full">
+                      <div className="flex-1 h-full overflow-hidden">
                         <FastTrackBatchesTab 
                           focusArea={profile?.program_type || 'General'} 
                           onSelectCourse={handleCourseClick}
