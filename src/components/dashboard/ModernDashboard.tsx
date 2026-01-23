@@ -18,6 +18,7 @@ import MyEnrollments from "./MyEnrollments";
 import LibrarySection from "./LibrarySection"; 
 import RegularBatchesTab from "./RegularBatchesTab";
 import FastTrackBatchesTab from "./FastTrackBatchesTab"; 
+import HelpCentre from "./HelpCentre";
 import CourseDetail from "@/pages/CourseDetail";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -208,6 +209,13 @@ const ModernDashboard: React.FC = () => {
                 
                 {activeView === 'profile' && (
                   <ContentWrapper><MyProfile /></ContentWrapper>
+                )}
+
+                {/* HELP CENTRE VIEW */}
+                {activeView === 'contact' && (
+                  <div className="h-full flex flex-col">
+                    <HelpCentre />
+                  </div>
                 )}
 
                 {activeView === 'enrollments' && (
