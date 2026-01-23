@@ -55,10 +55,9 @@ const EnrollmentReceiptView = () => {
 
       try {
         // 1. Get the initial enrollment to find the Order ID
-        // Updated query to fetch valid_till
         const { data: initialEnrollment, error: initialError } = await supabase
           .from('enrollments')
-          .select('order_id, created_at, status, courses(id, title, image_url, end_date, valid_till)')
+          .select('order_id, created_at, status, courses(id, title, image_url, end_date)')
           .eq('user_id', user.id)
           .eq('course_id', courseId)
           .order('created_at', { ascending: false })
@@ -92,8 +91,7 @@ const EnrollmentReceiptView = () => {
                 id,
                 title,
                 image_url,
-                end_date,
-                valid_till
+                end_date
               )
             `)
             .eq('order_id', orderId);
@@ -103,8 +101,10 @@ const EnrollmentReceiptView = () => {
           if (allEnrollments) {
             // Sort: Clicked course first, then by price descending
             const sortedEnrollments = allEnrollments.sort((a, b) => {
-               if (a.courses?.id === courseId) return -1;
-               if (b.courses?.id === courseId) return 1;
+               const aId = (a.courses as any)?.id;
+               const bId = (b.courses as any)?.id;
+               if (aId === courseId) return -1;
+               if (bId === courseId) return 1;
                return (b.amount || 0) - (a.amount || 0);
             });
 
@@ -112,8 +112,8 @@ const EnrollmentReceiptView = () => {
               const isAddon = !!item.subject_name;
               const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
               
-              // Use valid_till if available, otherwise check end_date (or null)
-              const validityDate = item.courses?.valid_till; 
+              // Use end_date for validity
+              const validityDate = item.courses?.end_date; 
 
               return {
                 title: displayTitle,
@@ -147,18 +147,18 @@ const EnrollmentReceiptView = () => {
           // Fallback: Single item
           const singleCourse = initialEnrollment.courses as any;
           finalItems = [{
-            title: singleCourse.title,
+            title: singleCourse?.title || 'Unknown Course',
             amount: 0, 
-            validTill: singleCourse.valid_till, 
-            image_url: singleCourse.image_url,
-            id: singleCourse.id,
+            validTill: singleCourse?.end_date, 
+            image_url: singleCourse?.image_url,
+            id: singleCourse?.id,
             type: 'Batch'
           }];
           finalTotal = 0;
         }
 
         setReceipt({
-          orderId: orderId || initialEnrollment.courses?.id || 'N/A',
+          orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
           date: finalDate,
           totalAmount: finalTotal,
           status: finalStatus,

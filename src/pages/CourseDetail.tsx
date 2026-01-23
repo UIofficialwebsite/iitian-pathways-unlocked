@@ -259,49 +259,85 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     enrolling
   };
 
+  // For dashboard view, render without the outer container wrapper
+  if (isDashboardView) {
+    return (
+      <>
+        <CourseHeader course={course} isDashboardView={isDashboardView} />
+        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
+
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24 lg:pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-7 space-y-8">
+              <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
+              <div ref={sectionRefs.curriculum}>
+                <SubjectsSection course={course} addons={addons} />
+              </div>
+              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
+              <div ref={sectionRefs.access}><CourseAccessGuide /></div>
+              <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
+            </div>
+            
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:block lg:col-span-5 relative">
+              <div className="sticky top-32 z-20 transition-all duration-300">
+                <EnrollmentCard {...commonEnrollmentProps} />
+              </div>
+            </aside>
+
+            {/* Mobile Fixed Bottom Bar */}
+            <div className="lg:hidden block">
+              <MobileEnrollmentBar {...commonEnrollmentProps} />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
   return (
-    // Changed pt-20 to pt-16 to reduce space above header
-    <div className={cn("bg-background", !isDashboardView && "min-h-screen pt-16")}>
-       {!isDashboardView && <NavBar />}
+    <div className="bg-background min-h-screen pt-16">
+      <NavBar />
        
-       <main className="w-full">
-         <CourseHeader course={course} isDashboardView={isDashboardView} />
+      <main className="w-full">
+        <CourseHeader course={course} isDashboardView={isDashboardView} />
 
-         <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
+        <StickyTabNav tabs={tabs} sectionRefs={sectionRefs} isDashboardView={isDashboardView} />
 
-         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24 lg:pb-10">
-           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-             
-             <div className="lg:col-span-7 space-y-8">
-               <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
-               <div ref={sectionRefs.curriculum}>
-                  <SubjectsSection course={course} addons={addons} />
-               </div>
-               <div ref={sectionRefs.about}><AboutSection course={course} /></div>
-               <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
-               <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
-               <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
-               <div ref={sectionRefs.access}><CourseAccessGuide /></div>
-               <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
-             </div>
-             
-             {/* Desktop Sidebar */}
-             <aside className="hidden lg:block lg:col-span-5 relative">
-                <div className={cn("sticky z-20 transition-all duration-300", isDashboardView ? "top-32" : "top-32")}>
-                  <EnrollmentCard {...commonEnrollmentProps} />
-                </div>
-             </aside>
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-10 pb-24 lg:pb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <div className="lg:col-span-7 space-y-8">
+              <div ref={sectionRefs.features}><FeaturesSection course={course} /></div>
+              <div ref={sectionRefs.curriculum}>
+                <SubjectsSection course={course} addons={addons} />
+              </div>
+              <div ref={sectionRefs.about}><AboutSection course={course} /></div>
+              <div ref={sectionRefs.moreDetails}><MoreDetailsSection /></div>
+              <div ref={sectionRefs.schedule}><ScheduleSection scheduleData={scheduleData} /></div>
+              <div ref={sectionRefs.ssp}><SSPPortalSection /></div>
+              <div ref={sectionRefs.access}><CourseAccessGuide /></div>
+              <div ref={sectionRefs.faqs}><FAQSection faqs={faqs} /></div>
+            </div>
+            
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:block lg:col-span-5 relative">
+              <div className="sticky top-32 z-20 transition-all duration-300">
+                <EnrollmentCard {...commonEnrollmentProps} />
+              </div>
+            </aside>
 
-             {/* Mobile Fixed Bottom Bar */}
-             <div className="lg:hidden block">
-               <MobileEnrollmentBar {...commonEnrollmentProps} />
-             </div>
-
-           </div>
-         </div>
-       </main>
+            {/* Mobile Fixed Bottom Bar */}
+            <div className="lg:hidden block">
+              <MobileEnrollmentBar {...commonEnrollmentProps} />
+            </div>
+          </div>
+        </div>
+      </main>
        
-       {!isDashboardView && <Footer />}
+      <Footer />
     </div>
   );
 };
