@@ -12,10 +12,7 @@ import {
   Share2, 
   Info, 
   Check, 
-  ArrowLeft,
-  Layers,
-  LayoutDashboard, 
-  Library 
+  ArrowLeft
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardTitle } from '@/components/ui/card';
@@ -687,7 +684,11 @@ const EnrolledView = ({
               <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+              <img 
+                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159265/3104538_uud5dy.png" 
+                alt="My Batches" 
+                className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
+              />
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
               <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
             </div>
@@ -699,7 +700,11 @@ const EnrolledView = ({
               <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+              <img 
+                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159445/11068821_ckspzd.png" 
+                alt="Dashboard" 
+                className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
+              />
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
               <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
             </div>
@@ -709,7 +714,11 @@ const EnrolledView = ({
                 <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                <img 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159565/5423885_wux9rc.png" 
+                  alt="Library" 
+                  className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
+                />
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
                 <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
               </div>
