@@ -506,10 +506,10 @@ const EnrolledView = ({
 
   if (viewMode === 'description') {
     return (
-      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-gray-50 overflow-hidden">
+      <div className="flex flex-col h-[calc(100vh-4rem)] sm:h-[calc(100vh-5rem)] bg-background overflow-hidden">
         
-        <div className="flex-none bg-white z-20 shadow-sm">
-           <div className="px-4 md:px-6 py-2 border-b border-gray-100">
+        <div className="flex-none z-20">
+           <div className="px-4 md:px-6 py-2 border-b border-gray-100 bg-background">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -521,7 +521,7 @@ const EnrolledView = ({
               </Button>
            </div>
 
-           <div className="premium-course-header p-4 sm:p-6 text-white relative overflow-hidden">
+           <div className="premium-course-header w-full px-4 sm:px-6 py-3 sm:py-4 text-white relative overflow-hidden">
               <div className="relative z-10 flex flex-col gap-3 sm:gap-4">
                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div className="flex items-center gap-2 text-blue-200 text-[10px] sm:text-xs font-medium bg-black/20 px-2 sm:px-3 py-1 rounded-full w-fit border border-white/10">
