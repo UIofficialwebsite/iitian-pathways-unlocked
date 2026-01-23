@@ -4,8 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle } from 'lucide-react';
-// We no longer import the constants file
+import { Loader2, ChevronRight } from 'lucide-react';
 
 // Define the shape of the options we fetch
 interface FocusOption {
@@ -35,15 +34,6 @@ interface FocusAreaModalProps {
   profile: UserProfile | null;
   onProfileUpdate: (updatedProfile: UserProfile) => void;
 }
-
-// Map icon strings from database to actual components
-const iconMap: { [key: string]: React.ElementType } = {
-  GraduationCap: GraduationCap,
-  UserCheck: UserCheck,
-  Laptop: Laptop,
-  Microscope: Microscope,
-  default: Circle,
-};
 
 const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profile, onProfileUpdate }) => {
   const { user } = useAuth();
@@ -173,8 +163,8 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[94vw] max-w-[420px] p-0 gap-0 rounded-xl overflow-hidden">
-        <DialogHeader className="px-4 py-3 border-b bg-muted/30">
+      <DialogContent className="w-[94vw] max-w-[420px] p-0 gap-0 rounded-xl overflow-hidden bg-white">
+        <DialogHeader className="px-4 py-3 border-b bg-white">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           <DialogDescription className="text-xs text-muted-foreground">{description}</DialogDescription>
         </DialogHeader>
@@ -187,21 +177,28 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
           <div className="space-y-2.5 px-4 py-4">
             {currentOptions.length > 0 ? (
               currentOptions.map(option => {
-                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
+                const isSelected = selectedValue === option.value_to_save;
                 return (
                   <Button
                     key={option.id}
-                    variant={selectedValue === option.value_to_save ? "default" : "outline"}
-                    className="w-full justify-between h-12 text-left text-sm rounded-md" // Changed rounded-xl to rounded-md
+                    // Apply explicit black styling regardless of selection to match "box is black" instruction
+                    // Adjust hover state for better UX
+                    className={`w-full justify-between h-12 text-left text-sm rounded-md transition-all border-0
+                      ${isSelected 
+                        ? 'bg-black text-white hover:bg-gray-800 ring-2 ring-offset-2 ring-black' 
+                        : 'bg-black text-white hover:bg-gray-800'
+                      }`}
                     onClick={() => handleOptionClick(option)}
                   >
                     <div className="flex items-center">
-                      <Icon className="h-5 w-5 mr-2.5" />
+                      {/* Icons removed as requested ("remove that logo of round round") */}
                       <div>
-                        <p className="font-medium text-[13px]">{option.label}</p>
+                        {/* Added capitalize class as requested */}
+                        <p className="font-medium text-[13px] capitalize">{option.label}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-4 w-4" />
+                    {/* Kept the > as requested */}
+                    <ChevronRight className="h-4 w-4 text-white/70" />
                   </Button>
                 );
               })
@@ -214,7 +211,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
               <Button
                 variant="ghost"
                 size="sm"
-                className="mt-2"
+                className="mt-2 text-gray-500 hover:text-gray-900"
                 onClick={() => {
                   const newPath = [...selectionPath.slice(0, -1)];
                   setSelectionPath(newPath);
