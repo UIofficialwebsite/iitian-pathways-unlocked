@@ -42,6 +42,8 @@ const TermsOfService = lazy(() => import("./pages/TermsOfService"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const IITMCalculators = lazy(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazy(() => import("./pages/NewsDetail"));
+// NEW IMPORT
+const EnrollmentReceipt = lazy(() => import("./pages/EnrollmentReceipt"));
 
 const queryClient = new QueryClient();
 
@@ -76,6 +78,9 @@ const App = () => (
                   <Route path="/courses/listing/:examCategory" element={<CourseListing />} />
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
+                  
+                  {/* NEW ROUTE: Enrollment Receipt */}
+                  <Route path="/enrollment/:courseId" element={<EnrollmentReceipt />} />
                   
                   {/* Exam Prep */}
                   <Route path="/exam-preparation" element={<ExamPreparation />} />
