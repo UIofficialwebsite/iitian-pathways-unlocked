@@ -102,7 +102,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
               </SheetContent>
             </Sheet>
 
-            {/* Logo - Hidden on very small screens if needed to save space, but kept for now */}
+            {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center gap-2">
               <img
                 className="h-8 w-auto"
@@ -118,10 +118,10 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           {/* Right: Focus Area & User Menu */}
           <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* Focus Area Box (Black, Capitalized, Arrow) - Optimized for Mobile */}
+            {/* Focus Area Box (Low Opacity Black, Capitalized, Arrow) */}
             <div 
               onClick={() => setIsFocusModalOpen(true)}
-              className="flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 cursor-pointer bg-black text-white rounded-md shadow-sm hover:bg-gray-900 transition-all select-none max-w-[140px] sm:max-w-none"
+              className="flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 cursor-pointer bg-black/80 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-black/70 transition-all select-none max-w-[140px] sm:max-w-none"
             >
               {getProfileDisplay()}
               <span className="text-white text-[10px] sm:text-sm font-medium ml-0.5 sm:ml-1">&gt;</span>
@@ -129,7 +129,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
 
             <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
-            {/* User Greeting - Hidden on mobile */}
+            {/* User Greeting */}
             <span className="text-sm font-medium text-gray-700 hidden sm:block">
               Hi, {userName}
             </span>
