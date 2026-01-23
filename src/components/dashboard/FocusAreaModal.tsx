@@ -192,7 +192,7 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
                   <Button
                     key={option.id}
                     variant={selectedValue === option.value_to_save ? "default" : "outline"}
-                    className="w-full justify-between h-12 text-left text-sm"
+                    className="w-full justify-between h-12 text-left text-sm rounded-md" // Changed rounded-xl to rounded-md
                     onClick={() => handleOptionClick(option)}
                   >
                     <div className="flex items-center">
@@ -232,4 +232,3 @@ const FocusAreaModal: React.FC<FocusAreaModalProps> = ({ isOpen, onClose, profil
 };
 
 export default FocusAreaModal;
-
