@@ -78,7 +78,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
 
   return (
     <>
-      <div className="sticky top-0 z-40 w-full h-16 bg-white border-b border-gray-200 font-['Inter',sans-serif]">
+      <div className="sticky top-0 z-30 w-full h-16 bg-white border-b border-gray-200 font-['Inter',sans-serif]">
         <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
           
           {/* Left: Mobile Menu & Logo */}
@@ -90,7 +90,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
                   <Menu className="h-6 w-6" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0">
+              <SheetContent side="left" className="w-72 p-0 z-[10060]">
                 <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
                   <DashboardSidebar 
                     profile={profile} 
