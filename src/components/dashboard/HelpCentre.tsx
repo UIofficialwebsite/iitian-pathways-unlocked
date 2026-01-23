@@ -3,7 +3,7 @@ import { Search, ChevronRight, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface FAQItem {
   question: string;
-  answer: React.ReactNode; // Changed to ReactNode to support links
+  answer: React.ReactNode; 
 }
 
 const HelpCentre = () => {
@@ -16,26 +16,26 @@ const HelpCentre = () => {
       question: "Where can I find notes and PYQs?",
       answer: (
         <span>
-          Enrolled batch class notes are available on the{" "}
+          Enrolled batch class notes will be in the{" "}
           <a 
             href="https://ssp.unknowniitians.live" 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-700 underline underline-offset-2 font-medium"
+            className="text-blue-600 hover:text-blue-700 underline underline-offset-2"
           >
             SSP Portal
           </a>. 
-          For free notes and PYQs, please visit the <strong>Digital Library</strong> or <strong>Exam Preparation</strong> section for more resources.
+          For free notes and PYQs, please check the <strong>Digital Library</strong> or <strong>Exam Preparation</strong> sections.
         </span>
       )
     },
     {
-      question: "How do I join a live class?",
-      answer: "Live classes are conducted according to the schedule. You can join them directly by navigating to the Dashboard and accessing the 'My Classroom' section."
+      question: "How do I join live classes?",
+      answer: "Live classes are conducted according to the schedule. You can join them from the dashboard by navigating to the 'My Classroom' section."
     },
     {
-      question: "Can I download lectures for offline viewing?",
-      answer: "No, offline viewing is currently not possible. You will need an active internet connection to access and watch the lectures."
+      question: "Is offline viewing possible?",
+      answer: "Offline viewing is not possible."
     },
     {
       question: "How to update my profile details?",
@@ -46,8 +46,8 @@ const HelpCentre = () => {
       answer: "Please ensure you have selected the correct 'Focus Area' (e.g., JEE, NEET). You can switch your focus area from the sidebar top menu."
     },
     {
-      question: "How to contact support for payment issues?",
-      answer: "Please email us at support@unknowniitians.live with your transaction ID and registered email address."
+      question: "How to contact support?",
+      answer: "Please email us at support@unknowniitians.live with your query."
     }
   ];
 
@@ -60,7 +60,7 @@ const HelpCentre = () => {
   return (
     <div className="w-full flex justify-center py-6 sm:py-10 px-4 sm:px-5 bg-[#fcfdfe] min-h-full font-sans">
       <div className="bg-white w-full max-w-[960px] rounded-2xl p-6 sm:p-10 shadow-[0_10px_30px_rgba(0,0,0,0.03)] h-fit border border-gray-100/50">
-        
+
         {/* Top Navigation */}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-5">
           <div className="bg-[#f4f7fa] p-1.5 rounded-xl flex gap-1 w-full sm:w-auto">
@@ -126,7 +126,7 @@ const HelpCentre = () => {
                         <ChevronRight className="w-5 h-5" />
                       </div>
                     </div>
-                    
+
                     {/* Accordion Answer */}
                     <div 
                       className={`grid transition-all duration-300 ease-in-out ${
@@ -135,7 +135,7 @@ const HelpCentre = () => {
                     >
                       <div className="overflow-hidden">
                         <div className="px-6 pb-5 pt-0">
-                          <div className="text-[15px] font-normal text-gray-900 leading-relaxed border-t border-blue-100/50 pt-4 font-sans">
+                          <div className="text-[15px] font-normal text-black leading-relaxed border-t border-blue-100/50 pt-4 font-sans">
                             {item.answer}
                           </div>
                         </div>
