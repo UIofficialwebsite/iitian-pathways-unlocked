@@ -28,8 +28,8 @@ interface UserProfile {
   [key: string]: any;
 }
 
-// Ensure 'fastTrackBatches' is included in the ActiveView type
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'coming_soon';
+// Added 'contact' to ActiveView type
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'contact' | 'coming_soon';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
@@ -160,7 +160,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
             <div>
               <h4 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">More</h4>
               <div className="mt-2 space-y-1">
-                <PlaceholderButton icon={Phone} label="Contact Us" />
+                <SidebarButton icon={Phone} label="Contact Us" viewName="contact" />
                 
                 <Button 
                   variant="ghost" 
