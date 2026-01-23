@@ -5,10 +5,7 @@ import {
   Library, 
   Phone, 
   ShieldCheck, 
-  Home,
-  BookOpen, // Fallback
-  LayoutGrid, // Fallback
-  Zap // Fallback
+  Home
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
@@ -22,7 +19,8 @@ interface UserProfile {
   [key: string]: any;
 }
 
-export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'coming_soon' | 'contact';
+// FIX: Added 'receipt' to the type definition below
+export type ActiveView = 'dashboard' | 'profile' | 'enrollments' | 'studyPortal' | 'library' | 'regularBatches' | 'fastTrackBatches' | 'coming_soon' | 'contact' | 'receipt';
 
 interface DashboardSidebarProps {
   profile: UserProfile | null;
@@ -31,7 +29,7 @@ interface DashboardSidebarProps {
   activeView: ActiveView;
 }
 
-// --- Custom Icons as Functional Components ---
+// ... (Rest of the file remains EXACTLY the same, just the type definition changed)
 
 const StudyPortalIcon = ({ className }: { className?: string }) => (
   <svg 
@@ -196,7 +194,7 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 onClick={() => window.open('/career', '_blank')}
                 className="w-full flex items-center justify-start gap-3 px-2 py-2 text-sm font-medium rounded-md transition-colors text-gray-700 hover:bg-gray-100 border border-transparent"
               >
-                <WorkIcon className="h-6 w-6" /> {/* Increased size */}
+                <WorkIcon className="h-6 w-6" /> 
                 Work @UI
               </Button>
               
@@ -204,14 +202,14 @@ const DashboardSidebar: React.FC<DashboardSidebarProps> = ({
                 icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769179994/consultation_jtgrze.png" 
                 label="Career Consult" 
                 iconType="image"
-                iconClassName="h-7 w-7" /* Increased size */
+                iconClassName="h-7 w-7" 
               />
               
               <PlaceholderButton 
                 icon="https://res.cloudinary.com/dkywjijpv/image/upload/v1769179438/creative-idea-flat-line-icon-600nw-2470397429_ux6kot.png" 
                 label="Upskilling" 
                 iconType="image"
-                iconClassName="h-7 w-7" /* Increased size */
+                iconClassName="h-7 w-7" 
               />
             </div>
           </div>
