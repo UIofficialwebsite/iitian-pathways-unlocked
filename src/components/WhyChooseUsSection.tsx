@@ -34,7 +34,7 @@ const features = [
     bgColor: "bg-[#f5f3ff]", // Purple
     fadeColor: "rgba(139, 92, 246, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288346/image_9_lsbln5.png",
-    // Increased size for Network image as requested (was 170px)
+    // Increased size for Network image
     imgStyle: "h-[220px] w-auto object-contain",
   },
 ];
@@ -61,6 +61,8 @@ const WhyChooseUsSection = () => {
               key={index}
               className={`
                 group relative border border-[#d1d5db] rounded-xl overflow-hidden ${feature.bgColor} flex flex-col transition-all duration-500 ease-in-out hover:shadow-md
+                /* Alignment: Center on Mobile, Top (Start) on PC */
+                justify-center lg:justify-start
                 min-h-[250px] sm:min-h-[280px] /* Mobile/Tablet Height */
                 lg:h-[300px] lg:hover:h-[420px] /* PC: Normal Height -> Expands on Hover */
               `}
@@ -82,7 +84,7 @@ const WhyChooseUsSection = () => {
               </div>
 
               {/* Image Section (Bottom) 
-                  - Visible ONLY on PC (hidden md:flex)
+                  - Visible ONLY on PC (hidden lg:flex)
                   - Slides up on hover
               */}
               <div className="absolute bottom-0 left-0 right-0 h-[220px] flex items-end justify-center z-[5] translate-y-full transition-transform duration-500 ease-out group-hover:translate-y-0 hidden lg:flex pointer-events-none">
