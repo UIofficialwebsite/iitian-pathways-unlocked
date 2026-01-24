@@ -34,7 +34,8 @@ const categories = [
 
 const CategoriesSection = () => {
   return (
-    <section className="py-20 bg-gray-50 font-['Inter',sans-serif]">
+    // Changed bg-gray-50 to bg-white as requested
+    <section className="py-20 bg-white font-['Inter',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* --- Header Section --- */}
         <div className="text-center mb-12">
