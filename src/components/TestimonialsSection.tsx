@@ -84,22 +84,22 @@ const TestimonialsSection = () => {
   const gridTestimonials = testimonials.slice(1, 4);
 
   return (
-    <section className="py-24 bg-white font-['Inter',sans-serif]">
+    <section className="py-24 bg-white font-['Inter',sans-serif] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6">
         
         {/* Header Section */}
-        <div className="text-center mb-[70px]">
-          <h1 className="text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
+        <div className="text-center mb-[50px] lg:mb-[70px]">
+          <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
             Students <span className="text-red-500">❤️</span> Unknown IITians
           </h1>
-          <p className="text-[#64748b] text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
+          <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
             See what our students have to say us
           </p>
         </div>
 
-        {/* Featured Row (Unique Tinted Card) */}
+        {/* Featured Row (Unique Tinted Card) - Stays as a single block */}
         {featuredTestimonial && (
-          <div className="mb-6">
+          <div className="mb-8 lg:mb-6">
             <div className="relative border border-black/10 rounded-lg bg-slate-50 overflow-hidden flex flex-col">
               {/* Corner Fade */}
               <div 
@@ -109,7 +109,7 @@ const TestimonialsSection = () => {
               
               <div className="relative z-10 p-8 lg:p-[45px]">
                 <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
-                <p className="text-[17px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
+                <p className="text-[16px] lg:text-[17px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
                   {featuredTestimonial.text}
                 </p>
                 <div className="">
@@ -125,12 +125,19 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {/* Grid Row (Standard Blocks) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Grid Row (Standard Blocks) - Scrollable on Mobile */}
+        <div className="
+          flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
+          md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 md:overflow-visible
+          scrollbar-hide
+        ">
           {gridTestimonials.map((testimonial, index) => (
             <div 
               key={index}
-              className="relative border border-black/10 rounded-lg bg-white overflow-hidden flex flex-col h-full"
+              className="
+                relative border border-black/10 rounded-lg bg-white overflow-hidden flex flex-col 
+                snap-center min-w-[85vw] sm:min-w-[350px] md:min-w-0 h-auto md:h-full
+              "
             >
               {/* Corner Fade */}
               <div 
@@ -138,7 +145,7 @@ const TestimonialsSection = () => {
                 style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.03) 0%, transparent 60%)' }}
               />
 
-              <div className="relative z-10 p-[35px] lg:p-[45px] flex flex-col h-full">
+              <div className="relative z-10 p-[30px] lg:p-[45px] flex flex-col h-full">
                 <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
                 <p className="text-[15px] leading-[1.75] text-slate-700 mb-[30px] font-normal flex-grow">
                   {testimonial.text}
