@@ -7,34 +7,36 @@ const categories = [
     title: "NEET",
     tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/neet",
-    // Mobile: Static purple fade (Always visible)
-    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.12),transparent_70%)]",
-    // Desktop: Expanding violet circle (Visible only on hover)
-    desktopFade: "bg-[#f5f3ff]",
+    // Mobile: Static purple fade (Bottom Right)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.15),transparent_70%)]",
+    // PC: Semi-Circle Glow from Top Right
+    desktopGlow: "bg-purple-50", // Base color for the arc
+    desktopGlowHover: "group-hover:bg-purple-100", // Darker glow on hover
   },
   {
     title: "JEE",
     tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/jee",
-    // Mobile: Static blue fade (Always visible)
-    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.12),transparent_70%)]",
-    // Desktop: Expanding blue circle (Visible only on hover)
-    desktopFade: "bg-[#eff6ff]",
+    // Mobile: Static blue fade (Bottom Right)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.15),transparent_70%)]",
+    // PC: Semi-Circle Glow from Top Right
+    desktopGlow: "bg-blue-50",
+    desktopGlowHover: "group-hover:bg-blue-100",
   },
   {
     title: "IITM BS",
     tags: ["Data Science", "Electronic Systems"],
     link: "/exam-preparation/iitm-bs",
-    // Mobile: Static green fade (Always visible)
-    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_70%)]",
-    // Desktop: Expanding green circle (Visible only on hover)
-    desktopFade: "bg-[#f0fdf4]",
+    // Mobile: Static green fade (Bottom Right)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.15),transparent_70%)]",
+    // PC: Semi-Circle Glow from Top Right
+    desktopGlow: "bg-emerald-50",
+    desktopGlowHover: "group-hover:bg-emerald-100",
   },
 ];
 
 const CategoriesSection = () => {
   return (
-    // Changed bg-gray-50 to bg-white as requested
     <section className="py-20 bg-white font-['Inter',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* --- Header Section --- */}
@@ -53,14 +55,23 @@ const CategoriesSection = () => {
               key={index} 
               className="group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-gray-300 flex flex-col justify-between"
             >
-              {/* --- MOBILE: Static Corner Fade (Always Visible) --- */}
+              {/* --- MOBILE: Static Corner Fade (Bottom Right - Unchanged) --- */}
               <div 
                 className={`absolute inset-0 pointer-events-none md:hidden ${category.mobileFade}`} 
               />
 
-              {/* --- PC: Hover Spread Effect (Expands on Hover) --- */}
+              {/* --- PC: Semi-Circle Arc Pattern (Top Right to Bottom) --- 
+                  - Positioned at -top-24 -right-24 to create a large arc 
+                  - Initially visible (desktopGlow)
+                  - Glows/Expands on hover (scale-110)
+              */}
               <div 
-                className={`hidden md:block absolute top-1/2 left-1/2 w-[150%] h-[150%] rounded-full ${category.desktopFade} transform -translate-x-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-transform duration-500 ease-out pointer-events-none`} 
+                className={`hidden md:block absolute -top-24 -right-24 w-[300px] h-[300px] rounded-full blur-3xl transition-all duration-500 ease-out transform pointer-events-none opacity-60 group-hover:scale-125 group-hover:opacity-100 ${category.desktopGlow} ${category.desktopGlowHover}`} 
+              />
+              
+              {/* Optional: A sharper arc line for the "pattern" feel */}
+              <div 
+                className={`hidden md:block absolute -top-10 -right-10 w-[200px] h-[200px] rounded-full border-[1.5px] border-dashed border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none`}
               />
 
               {/* --- Card Content --- */}
@@ -83,16 +94,16 @@ const CategoriesSection = () => {
                   </div>
                 </div>
 
-                {/* Footer: Explore Text + Monochrome Convex Arrow Circle */}
+                {/* Footer: Monochrome Black/White Design */}
                 <div className="mt-auto flex items-center justify-between">
                   {/* Text: Always Black */}
                   <span className="text-[15px] font-medium text-gray-900 transition-colors duration-300">
                     Explore Resources 
                   </span>
                   
-                  {/* The Arrow Circle: 
-                      1. Initially: White Bg, Gray Border, Black Arrow
-                      2. Hover: Fills with BLACK, White Arrow
+                  {/* Arrow Circle: 
+                      - Initial: White bg, Gray border, Black Arrow
+                      - Hover: Fills Black, White Arrow
                   */}
                   <span className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:shadow-none group-hover:scale-105">
                     <ArrowRight className="h-5 w-5 text-gray-900 transition-colors duration-300 group-hover:text-white" />
