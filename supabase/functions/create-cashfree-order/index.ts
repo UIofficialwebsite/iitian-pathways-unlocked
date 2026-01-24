@@ -26,11 +26,23 @@ serve(async (req: Request) => {
       amount, 
       userId, 
       customerPhone, 
-      customerEmail 
+      customerEmail,
+      // Discount fields from frontend
+      discountApplied,
+      discountType, // 'percent' or 'flat'
+      discountValue, // The percentage or flat amount
+      couponCode, // The coupon code used
+      netAmount // Final amount after discount
     } = await req.json();
 
     const orderId = `order_${Date.now()}_${userId}`;
-    const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
+    
+    // Encode discount info into the redirect URL so verify function can access it
+    const discountParams = discountApplied 
+      ? `&discount_applied=true&discount_type=${encodeURIComponent(discountType || '')}&discount_value=${discountValue || 0}&coupon_code=${encodeURIComponent(couponCode || '')}&net_amount=${netAmount || amount}`
+      : `&discount_applied=false&net_amount=${amount}`;
+    
+    const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}${discountParams}`;
 
     // Initialize Supabase client early to fetch user and course data
     const supabase = createClient(supabaseUrl, supabaseKey);
