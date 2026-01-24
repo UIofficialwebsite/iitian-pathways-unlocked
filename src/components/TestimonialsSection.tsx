@@ -21,7 +21,6 @@ type DatabaseTestimonial = {
   testimonial_text: string;
 };
 
-// Expanded Fallback Data
 const fallbackTestimonialsData: Testimonial[] = [
   {
     text: "The mentorship at Unknown IITians is unparalleled. Transitioning from complex concepts to intuitive problem-solving was made possible by the structured approach and the genuine support of the community. It’s more than just a platform; it’s an ecosystem that focuses on high-yield results.",
@@ -94,29 +93,28 @@ const TestimonialsSection = () => {
     fetchTestimonials();
   }, []);
 
-  // Split data: First one is featured, ALL others go to grid
+  // Split data
   const featuredTestimonial = testimonials[0];
-  const gridTestimonials = testimonials.slice(1);
+  const scrollableTestimonials = testimonials.slice(1);
 
   return (
-    // Section Bg changed to bg-gray-50 for light greyish look
-    <section className="py-24 bg-gray-50 font-['Inter',sans-serif] overflow-hidden">
+    // Changed bg-gray-50 to bg-gray-100 for a slightly darker grey background
+    <section className="py-24 bg-gray-100 font-['Inter',sans-serif] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6">
         
         {/* Header Section */}
         <div className="text-center mb-[50px] lg:mb-[70px]">
           <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
-            Students <span className="text-red-500">❤️</span> Unknown IITians
+            ❤️<span className="text-red-500">for</span> Unknown IITians
           </h1>
           <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
             See what our students have to say about us
           </p>
         </div>
 
-        {/* Featured Row (Unique Card) */}
+        {/* --- ROW 1: Featured Testimonial --- */}
         {featuredTestimonial && (
           <div className="mb-8 lg:mb-10">
-            {/* Card bg is white to stand out against gray section */}
             <div className="relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
               {/* Corner Fade */}
               <div 
@@ -142,21 +140,28 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {/* Grid Row (Standard Blocks) */}
+        {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- 
+            - Enabled flex-nowrap and overflow-x-auto for ALL screens
+            - This ensures it stays as a single row that scrolls horizontally
+        */}
         <div className="
-          flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
-          md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 md:overflow-visible
+          flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
+          md:mx-0 md:px-0 md:gap-6
           scrollbar-hide
         ">
-          {gridTestimonials.map((testimonial, index) => (
+          {scrollableTestimonials.map((testimonial, index) => (
             <div 
               key={index}
               className="
-                relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col 
-                snap-center min-w-[85vw] sm:min-w-[350px] md:min-w-0 h-auto md:h-full
+                relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col flex-shrink-0
+                snap-center 
+                /* Mobile Width */
+                min-w-[85vw] sm:min-w-[350px] 
+                /* Desktop Width - Fixed width to allow scrolling */
+                lg:min-w-[400px] lg:max-w-[400px]
+                h-auto
               "
             >
-              {/* Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.02) 0%, transparent 60%)' }}
