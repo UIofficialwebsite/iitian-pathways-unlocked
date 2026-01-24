@@ -50,7 +50,7 @@ const CategoriesSection = () => {
             <Link 
               to={category.link} 
               key={index} 
-              className="group relative block h-[240px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:border-gray-900 flex flex-col justify-between"
+              className="group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:border-gray-900 flex flex-col justify-between hover:shadow-lg"
             >
               {/* --- MOBILE DESIGN: Static Corner Fade (Always Visible, No Hover Required) --- */}
               <div 
@@ -74,7 +74,7 @@ const CategoriesSection = () => {
                     {category.tags.map((tag, i) => (
                       <span 
                         key={i} 
-                        className="bg-gray-50 border border-gray-200 text-gray-600 text-[13px] px-3.5 py-1.5 rounded-md font-medium transition-colors duration-300 group-hover:bg-white"
+                        className="bg-gray-50 border border-gray-200 text-gray-600 text-[13px] px-3.5 py-1.5 rounded-md font-medium transition-colors duration-300 group-hover:bg-white/80"
                       >
                         {tag}
                       </span>
@@ -82,10 +82,15 @@ const CategoriesSection = () => {
                   </div>
                 </div>
 
-                {/* Footer Link with Arrow Animation */}
+                {/* Footer Link with "Arrow Fills" Animation */}
                 <div className="mt-auto flex items-center text-[15px] font-medium text-gray-600 transition-colors duration-300 group-hover:text-gray-900">
                   Explore Resources 
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  
+                  {/* The Arrow Container: Fills on hover */}
+                  <span className="ml-3 flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-transparent transition-all duration-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:scale-105">
+                    {/* The Arrow Icon: Turns white on hover */}
+                    <ArrowRight className="h-4 w-4 text-gray-600 transition-colors duration-300 group-hover:text-white" />
+                  </span>
                 </div>
               </div>
             </Link>
