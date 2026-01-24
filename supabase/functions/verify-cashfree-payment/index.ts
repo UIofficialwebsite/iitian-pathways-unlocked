@@ -15,13 +15,6 @@ serve(async (req: Request) => {
   const orderId = url.searchParams.get("order_id");
   const passedRedirectUrl = url.searchParams.get("redirect_url");
   const frontendUrl = passedRedirectUrl ? decodeURIComponent(passedRedirectUrl) : "https://preview.lovable.app";
-  
-  // Extract discount parameters from URL (passed from create-cashfree-order)
-  const discountApplied = url.searchParams.get("discount_applied") === "true";
-  const discountType = url.searchParams.get("discount_type") ? decodeURIComponent(url.searchParams.get("discount_type")!) : null;
-  const discountValue = parseFloat(url.searchParams.get("discount_value") || "0") || null;
-  const couponCode = url.searchParams.get("coupon_code") ? decodeURIComponent(url.searchParams.get("coupon_code")!) : null;
-  const netAmount = parseFloat(url.searchParams.get("net_amount") || "0") || null;
 
   try {
     // 1. Validate Secrets & Setup Client
@@ -161,12 +154,60 @@ serve(async (req: Request) => {
         || null;
     }
 
-    // 9. Insert Payment Record with ALL data including discount info
+    // 9. Extract discount/offer info from Cashfree response
+    // Cashfree returns offer details in payment_offers or offer_details
+    let discountApplied = false;
+    let discountType: string | null = null;
+    let discountValue: number | null = null;
+    let couponCode: string | null = null;
+    let netAmount: number = orderData.order_amount;
+
+    // Check for offers in payment details (Cashfree Offers feature)
+    const offers = paymentDetails?.payment_offers || paymentDetails?.offers || [];
+    if (offers && offers.length > 0) {
+      const appliedOffer = offers[0]; // Get the first applied offer
+      discountApplied = true;
+      discountType = appliedOffer.offer_type || appliedOffer.discount_type || 'flat';
+      discountValue = appliedOffer.discount_amount || appliedOffer.cashback_amount || appliedOffer.offer_amount || 0;
+      couponCode = appliedOffer.offer_id || appliedOffer.promo_code || appliedOffer.offer_code || null;
+      
+      // Net amount is the actual amount charged after discount
+      netAmount = paymentDetails?.payment_amount || orderData.order_amount;
+      
+      console.log("🎫 Offer Applied:", JSON.stringify(appliedOffer));
+    }
+
+    // Also check order-level discount info (order_splits or discount fields)
+    if (!discountApplied && orderData.order_splits) {
+      const discountSplit = orderData.order_splits.find((s: any) => s.split_type === 'discount');
+      if (discountSplit) {
+        discountApplied = true;
+        discountType = 'flat';
+        discountValue = discountSplit.amount || 0;
+        netAmount = orderData.order_amount - discountValue;
+      }
+    }
+
+    // Check if payment amount differs from order amount (indicates discount)
+    if (!discountApplied && paymentDetails?.payment_amount && paymentDetails.payment_amount < orderData.order_amount) {
+      discountApplied = true;
+      discountType = 'flat';
+      discountValue = orderData.order_amount - paymentDetails.payment_amount;
+      netAmount = paymentDetails.payment_amount;
+      console.log("💰 Discount detected from amount difference:", discountValue);
+    }
+
+    // If no discount, net_amount equals order_amount
+    if (!discountApplied) {
+      netAmount = orderData.order_amount;
+    }
+
+    // 10. Insert Payment Record with ALL data including Cashfree discount info
     const paymentInsertData = {
       order_id: orderId,
       payment_id: paymentDetails?.cf_payment_id?.toString() || orderData.cf_order_id || null,
       user_id: userId || null,
-      amount: orderData.order_amount,
+      amount: orderData.order_amount, // Original order amount
       status: finalStatus,
       payment_mode: paymentDetails?.payment_group || paymentDetails?.payment_method?.type || "unknown",
       payment_time: paymentDetails?.payment_time || paymentDetails?.payment_completion_time || null,
@@ -177,12 +218,12 @@ serve(async (req: Request) => {
       raw_response: { order: orderData, payment: paymentDetails },
       batch: mainBatchName,
       courses: coursesString,
-      // Discount tracking fields
+      // Discount tracking fields from Cashfree
       discount_applied: discountApplied,
       discount_type: discountApplied ? discountType : null,
       discount_value: discountApplied ? discountValue : null,
-      coupon_code: discountApplied ? couponCode : null,
-      net_amount: netAmount || orderData.order_amount // Final amount received
+      coupon_code: couponCode,
+      net_amount: netAmount // Final amount actually received
     };
 
     console.log("📝 Inserting Payment:", JSON.stringify(paymentInsertData));
