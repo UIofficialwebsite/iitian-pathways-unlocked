@@ -856,7 +856,11 @@ export type Database = {
           created_at: string
           customer_email: string | null
           customer_phone: string | null
+          discount_applied: boolean | null
+          discount_type: string | null
+          discount_value: number | null
           id: string
+          net_amount: number | null
           order_id: string
           payment_group: string | null
           payment_id: string | null
@@ -874,7 +878,11 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_phone?: string | null
+          discount_applied?: boolean | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
+          net_amount?: number | null
           order_id: string
           payment_group?: string | null
           payment_id?: string | null
@@ -892,7 +900,11 @@ export type Database = {
           created_at?: string
           customer_email?: string | null
           customer_phone?: string | null
+          discount_applied?: boolean | null
+          discount_type?: string | null
+          discount_value?: number | null
           id?: string
+          net_amount?: number | null
           order_id?: string
           payment_group?: string | null
           payment_id?: string | null
