@@ -32,10 +32,9 @@ serve(async (req: Request) => {
     const orderId = `order_${Date.now()}_${userId}`;
     const verifyUrl = `${supabaseUrl}/functions/v1/verify-cashfree-payment?order_id=${orderId}&redirect_url=${encodeURIComponent(origin)}`;
 
-    // Initialize Supabase client early to fetch user and course data
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch user's name from profiles table
+    // Fetch user's name
     const { data: profile } = await supabase
       .from('profiles')
       .select('full_name, student_name')
@@ -44,7 +43,7 @@ serve(async (req: Request) => {
 
     const customerName = profile?.full_name || profile?.student_name || "Customer";
 
-    // Fetch course details (title + mandatory subjects)
+    // Fetch course details
     const { data: course } = await supabase
       .from('courses')
       .select('title, subject')
@@ -53,23 +52,26 @@ serve(async (req: Request) => {
 
     const batchName = course?.title || "Unknown Batch";
 
-    // Parse mandatory subjects (comma-separated in courses.subject)
     const mandatorySubjects: string[] = course?.subject
       ? course.subject.split(',').map((s: string) => s.trim()).filter(Boolean)
       : [];
 
-    // Get addon names from course_addons
     let addonNames: string[] = [];
+    let addonsData: any[] = [];
+    
     if (selectedSubjects && selectedSubjects.length > 0) {
-      const { data: addons } = await supabase
+      // FIX: Use a Set to ensure the IDs we query for are unique
+      const uniqueSelectedIds = [...new Set(selectedSubjects)];
+      const { data: addons, error: addonsError } = await supabase
         .from('course_addons')
-        .select('subject_name')
-        .in('id', selectedSubjects);
+        .select('id, subject_name, price')
+        .in('id', uniqueSelectedIds);
       
-      addonNames = addons?.map(a => a.subject_name).filter(Boolean) || [];
+      if (addonsError) throw new Error(`Failed to fetch addons: ${addonsError.message}`);
+      addonsData = addons || [];
+      addonNames = addonsData.map(a => a.subject_name).filter(Boolean);
     }
 
-    // Combine mandatory + addon subjects (unique values)
     const allSubjects = [...new Set([...mandatorySubjects, ...addonNames])];
     const coursesString = allSubjects.length > 0 ? allSubjects.join(", ") : "No subjects";
 
@@ -114,83 +116,42 @@ serve(async (req: Request) => {
 
     const orderData = await cashfreeResponse.json();
 
+    // 2. Database Logic - UPSERT STRATEGY
+    const upsertRows = [];
 
-    // 2. Database Logic - Supabase client already initialized above
+    // A. Handle Main Course Logic
+    // If the amount > 0 and the main course isn't already owned, we prep the main row
+    // Note: We use .upsert with 'onConflict' to prevent duplicate key errors
+    upsertRows.push({
+      user_id: userId,
+      course_id: courseId,
+      order_id: orderId,
+      status: 'pending',
+      amount: amount, 
+      subject_name: null, // null represents the main batch
+    });
 
-    // A. Fetch Add-on details
-    let addonsData: any[] = [];
-    if (selectedSubjects && selectedSubjects.length > 0) {
-      const { data: addons, error: addonsError } = await supabase
-        .from('course_addons')
-        .select('id, subject_name, price')
-        .in('id', selectedSubjects);
-
-      if (addonsError) throw new Error(`Failed to fetch addons: ${addonsError.message}`);
-      addonsData = addons || [];
-    }
-
-    // B. Check if a "Main Course" row already exists for this user/course
-    const { data: existingMainEnrollment, error: fetchError } = await supabase
-      .from('enrollments')
-      .select('id, amount')
-      .eq('user_id', userId)
-      .eq('course_id', courseId)
-      .is('subject_name', null) // subject_name IS NULL identifies the main batch row
-      .maybeSingle();
-
-    if (fetchError) {
-      console.error("Error fetching existing enrollment:", fetchError);
-    }
-
-    const enrollmentRows = [];
-
-    // C. Handle Main Course Logic
-    if (existingMainEnrollment) {
-      // UPDATE EXISTING: Sum up the price
-      const currentTotal = Number(existingMainEnrollment.amount) || 0;
-      const newTransactionAmount = Number(amount) || 0;
-      
-      const { error: updateError } = await supabase
-        .from('enrollments')
-        .update({ 
-          amount: currentTotal + newTransactionAmount,
-          // We DO NOT update status here to avoid blocking access if it was already 'success'
-        })
-        .eq('id', existingMainEnrollment.id);
-
-      if (updateError) throw new Error(`Failed to update existing course price: ${updateError.message}`);
-      
-    } else {
-      // CREATE NEW: User's first time buying this batch
-      enrollmentRows.push({
-        user_id: userId,
-        course_id: courseId,
-        order_id: orderId,
-        status: 'pending',
-        amount: amount, // Initial total
-        subject_name: null,
-        payment_id: null
-      });
-    }
-
-    // D. Handle Add-ons (Always insert new rows for specific subject tracking)
+    // B. Handle Add-ons
     addonsData.forEach((addon) => {
-      enrollmentRows.push({
+      upsertRows.push({
         user_id: userId,
         course_id: courseId,
         order_id: orderId,
         status: 'pending',
-        amount: addon.price, // Individual subject price
+        amount: addon.price,
         subject_name: addon.subject_name,
-        payment_id: null
       });
     });
 
-    // E. Perform Bulk Insert (Only if we have new rows to add)
-    if (enrollmentRows.length > 0) {
+    // C. Perform Bulk Upsert
+    // This will update the order_id and status if the user_id/course_id/subject_name combo exists
+    if (upsertRows.length > 0) {
       const { error: dbError } = await supabase
         .from('enrollments')
-        .insert(enrollmentRows);
+        .upsert(upsertRows, { 
+          onConflict: 'user_id,course_id,subject_name',
+          ignoreDuplicates: false 
+        });
 
       if (dbError) throw new Error(`DB Error: ${dbError.message}`);
     }
