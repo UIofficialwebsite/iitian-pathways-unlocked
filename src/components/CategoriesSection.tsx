@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
@@ -6,28 +5,38 @@ import { ArrowRight } from "lucide-react";
 const categories = [
   {
     title: "NEET",
-    description: "Comprehensive resources for medical aspirants",
-    color: "bg-gradient-to-br from-[#D946EF] to-[#8B5CF6]",
+    tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/neet",
+    // Mobile: Static purple fade at bottom right (Always visible)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.12),transparent_70%)]",
+    // Desktop: Expanding violet circle (Visible only on hover)
+    desktopFade: "bg-[#f5f3ff]", 
   },
   {
     title: "JEE",
-    description: "Advanced preparation for engineering entrance",
-    color: "bg-gradient-to-br from-[#3B82F6] to-[#2563EB]",
+    tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/jee",
+    // Mobile: Static blue fade (Always visible)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.12),transparent_70%)]",
+    // Desktop: Expanding blue circle (Visible only on hover)
+    desktopFade: "bg-[#eff6ff]",
   },
   {
     title: "IITM BS",
-    description: "Specialized content for Data Science & Electronic Systems",
-    color: "bg-gradient-to-br from-[#10B981] to-[#059669]",
+    tags: ["Data Science", "Electronic Systems"],
     link: "/exam-preparation/iitm-bs",
+    // Mobile: Static green fade (Always visible)
+    mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_70%)]",
+    // Desktop: Expanding green circle (Visible only on hover)
+    desktopFade: "bg-[#f0fdf4]",
   },
 ];
 
 const CategoriesSection = () => {
   return (
-    <section className="py-20 bg-gray-50">
+    <section className="py-20 bg-gray-50 font-['Inter',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* --- Header Section (Preserved) --- */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900">Explore Our Categories</h2>
           <p className="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">
@@ -35,17 +44,48 @@ const CategoriesSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* --- Card Grid --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {categories.map((category, index) => (
-            <Link to={category.link} key={index} className="block h-full">
+            <Link 
+              to={category.link} 
+              key={index} 
+              className="group relative block h-[240px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:border-gray-900 flex flex-col justify-between"
+            >
+              {/* --- MOBILE DESIGN: Static Corner Fade (Always Visible, No Hover Required) --- */}
               <div 
-                className={`${category.color} text-white rounded-2xl p-8 h-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-              >
-                <h3 className="text-3xl font-bold mb-4">{category.title}</h3>
-                <p className="text-white/90 text-lg mb-6">{category.description}</p>
-                <div className="flex items-center text-white font-medium mt-auto">
-                  <span>Explore Resources</span>
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                className={`absolute inset-0 pointer-events-none md:hidden ${category.mobileFade}`} 
+              />
+
+              {/* --- PC DESIGN: Hover Spread Effect (Hidden Default, Expands on Hover) --- */}
+              <div 
+                className={`hidden md:block absolute top-1/2 left-1/2 w-[150%] h-[150%] rounded-full ${category.desktopFade} transform -translate-x-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-transform duration-500 ease-out pointer-events-none`} 
+              />
+
+              {/* --- Card Content --- */}
+              <div className="relative z-10 flex flex-col h-full">
+                <div>
+                  <h3 className="text-[26px] font-semibold text-gray-900 mb-6 tracking-tight">
+                    {category.title}
+                  </h3>
+                  
+                  {/* Sub-parts / Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {category.tags.map((tag, i) => (
+                      <span 
+                        key={i} 
+                        className="bg-gray-50 border border-gray-200 text-gray-600 text-[13px] px-3.5 py-1.5 rounded-md font-medium transition-colors duration-300 group-hover:bg-white"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Footer Link with Arrow Animation */}
+                <div className="mt-auto flex items-center text-[15px] font-medium text-gray-600 transition-colors duration-300 group-hover:text-gray-900">
+                  Explore Resources 
+                  <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
                 </div>
               </div>
             </Link>
