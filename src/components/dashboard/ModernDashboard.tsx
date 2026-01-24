@@ -5,10 +5,13 @@ import { Database } from "@/integrations/supabase/types";
 import { Loader2, ArrowLeft } from "lucide-react"; 
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
+
 import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
+
+// Import the views
 import StudyPortal from "./StudyPortal";
 import MyProfile from "./MyProfile";
 import MyEnrollments from "./MyEnrollments";
@@ -45,13 +48,19 @@ const ModernDashboard: React.FC = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  
   const { tab } = useParams<{ tab?: string }>();
+  
   const [activeView, setActiveView] = useState<ActiveView>((tab as ActiveView) || "studyPortal");
   const [isViewLoading, setIsViewLoading] = useState(false);
+  
+  // --- Detail View State ---
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedCourseTitle, setSelectedCourseTitle] = useState<string | null>(null);
+  
   const [activeLibraryTab, setActiveLibraryTab] = useState<string>('PYQs (Previous Year Questions)');
   const [activeVideo, setActiveVideo] = useState<ContentItem | null>(null);
+  
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -71,6 +80,7 @@ const ModernDashboard: React.FC = () => {
       setIsViewLoading(true);
       setActiveView(targetView);
       handleCloseDetail();
+      
       const timer = setTimeout(() => {
         setIsViewLoading(false);
       }, 800);
@@ -84,6 +94,7 @@ const ModernDashboard: React.FC = () => {
       navigate("/login", { state: { from: location } });
       return;
     }
+
     const fetchProfile = async () => {
       setLoadingProfile(true);
       try {
@@ -92,7 +103,9 @@ const ModernDashboard: React.FC = () => {
           .select("*")
           .eq("id", user.id)
           .single();
+
         if (error && error.code !== "PGRST116") throw error;
+
         if (data) {
           setProfile(data);
           if (!data.program_type) setIsFocusModalOpen(true);
@@ -106,6 +119,7 @@ const ModernDashboard: React.FC = () => {
         setLoadingProfile(false);
       }
     };
+
     fetchProfile();
   }, [user, authLoading, navigate, location, toast]);
 
@@ -138,14 +152,16 @@ const ModernDashboard: React.FC = () => {
     );
   }
 
-  const ContentWrapper = ({ children, wrapperKey }: { children: React.ReactNode, wrapperKey?: string }) => (
-    <div key={wrapperKey} className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
+  // Wrapper for standard pages that need padding/centering
+  const ContentWrapper = ({ children }: { children: React.ReactNode }) => (
+    <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8">
       {children}
     </div>
   );
 
   return (
     <div className="flex flex-col h-screen w-full bg-gray-50/50 overflow-hidden font-sans">
+      {/* GLOBAL TOP NAV */}
       <div className="z-30 w-full bg-white border-b border-gray-200 shadow-sm shrink-0">
         <DashboardTopNav
           onViewChange={handleViewChange} 
@@ -154,7 +170,9 @@ const ModernDashboard: React.FC = () => {
           activeView={activeView}
         />
       </div>
+
       <div className="flex-1 flex overflow-hidden">
+        {/* SIDEBAR */}
         <aside className="hidden lg:block w-[288px] border-r bg-white shrink-0">
           <div className="h-full">
             <DashboardSidebar
@@ -165,13 +183,18 @@ const ModernDashboard: React.FC = () => {
             />
           </div>
         </aside>
+
+        {/* MAIN CONTENT AREA */}
         <main className="flex-1 overflow-y-auto bg-gray-50/50 relative custom-scrollbar scroll-smooth">
             {isViewLoading ? (
                <div className="h-full flex items-center justify-center"><DashboardLoader /></div>
             ) : (
               <div className="h-full flex flex-col">
+                
+                {/* --- COURSE DETAIL VIEW (Full Screen Mode) --- */}
                 {selectedCourseId ? (
                   <div className="flex flex-col h-full bg-white animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    {/* Sticky Detail Header */}
                     <div className="sticky top-0 z-[10] h-[64px] bg-white border-b px-6 flex items-center gap-4 shrink-0 shadow-sm">
                       <button 
                         onClick={handleCloseDetail}
@@ -185,6 +208,8 @@ const ModernDashboard: React.FC = () => {
                         {selectedCourseTitle || 'Course Details'}
                       </h2>
                     </div>
+                    
+                    {/* Detail Body */}
                     <div className="flex-1 overflow-y-auto custom-scrollbar">
                       <CourseDetail 
                         customCourseId={selectedCourseId} 
@@ -194,30 +219,39 @@ const ModernDashboard: React.FC = () => {
                     </div>
                   </div>
                 ) : (
+                  /* --- STANDARD DASHBOARD VIEWS --- */
                   <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 h-full flex flex-col">
+                    
                     {activeView === 'studyPortal' && (
-                      <ContentWrapper wrapperKey={`portal-${profile?.id}-${profile?.program_type}`}>
+                      <ContentWrapper>
                         <StudyPortal profile={profile} onViewChange={handleViewChange} />
                       </ContentWrapper>
                     )}
+                    
                     {activeView === 'profile' && (
                       <ContentWrapper><MyProfile /></ContentWrapper>
                     )}
+
+                    {/* @ts-ignore */}
                     {activeView === 'receipt' && (
                       <ContentWrapper>
                         <EnrollmentReceiptView />
                       </ContentWrapper>
                     )}
+
                     {activeView === 'contact' && (
                       <div className="h-full flex flex-col">
                         <HelpCentre />
                       </div>
                     )}
+
                     {activeView === 'enrollments' && (
                       <ContentWrapper>
                         <MyEnrollments onSelectCourse={handleCourseClick} />
                       </ContentWrapper>
                     )}
+
+                    {/* Regular Batches - FULL WIDTH (No Wrapper) */}
                     {activeView === 'regularBatches' && (
                       <div className="flex-1 h-full overflow-hidden">
                         <RegularBatchesTab 
@@ -226,6 +260,8 @@ const ModernDashboard: React.FC = () => {
                         />
                       </div>
                     )}
+
+                    {/* FastTrack Batches - FULL WIDTH (No Wrapper) */}
                     {activeView === 'fastTrackBatches' && (
                       <div className="flex-1 h-full overflow-hidden">
                         <FastTrackBatchesTab 
@@ -234,6 +270,7 @@ const ModernDashboard: React.FC = () => {
                         />
                       </div>
                     )}
+
                     {activeView === 'library' && (
                       <LibrarySection 
                         profile={profile} 
@@ -249,6 +286,7 @@ const ModernDashboard: React.FC = () => {
             )}
         </main>
       </div>
+
       <FocusAreaModal
         isOpen={isFocusModalOpen}
         onClose={() => setIsFocusModalOpen(false)}
