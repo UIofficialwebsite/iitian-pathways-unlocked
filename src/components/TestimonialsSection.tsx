@@ -21,7 +21,7 @@ type DatabaseTestimonial = {
   testimonial_text: string;
 };
 
-// Fallback testimonials in case database fetch fails
+// Expanded Fallback Data
 const fallbackTestimonialsData: Testimonial[] = [
   {
     text: "The mentorship at Unknown IITians is unparalleled. Transitioning from complex concepts to intuitive problem-solving was made possible by the structured approach and the genuine support of the community. It’s more than just a platform; it’s an ecosystem that focuses on high-yield results.",
@@ -42,6 +42,21 @@ const fallbackTestimonialsData: Testimonial[] = [
     text: "Their structured notes and targeted practice papers were exactly what I needed to bridge the gap. I actually enjoy the learning process now without the extra fluff.",
     name: "Rohan Das",
     role: "IITM BS Student | Programming",
+  },
+  {
+    text: "Coming from a non-tech background, I was intimidated by Python. The assignments and live doubt sessions here gave me the confidence to not just pass but excel.",
+    name: "Priya Sharma",
+    role: "IITM BS Degree | Python",
+  },
+  {
+    text: "The mock tests are incredibly close to the actual exam pattern. It helped me manage my time better and identifying my weak areas before the main day.",
+    name: "Vikram Singh",
+    role: "JEE Main | Class 12",
+  },
+  {
+    text: "Simple, effective, and to the point. The community support is the cherry on top—whenever I was stuck, there was someone to help out immediately.",
+    name: "Anjali Menon",
+    role: "NEET Aspirant | Biology",
   },
 ];
 
@@ -79,12 +94,13 @@ const TestimonialsSection = () => {
     fetchTestimonials();
   }, []);
 
-  // Split data: First one is featured, next 3 are grid items
+  // Split data: First one is featured, ALL others go to grid
   const featuredTestimonial = testimonials[0];
-  const gridTestimonials = testimonials.slice(1, 4);
+  const gridTestimonials = testimonials.slice(1);
 
   return (
-    <section className="py-24 bg-white font-['Inter',sans-serif] overflow-hidden">
+    // Section Bg changed to bg-gray-50 for light greyish look
+    <section className="py-24 bg-gray-50 font-['Inter',sans-serif] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6">
         
         {/* Header Section */}
@@ -93,30 +109,31 @@ const TestimonialsSection = () => {
             Students <span className="text-red-500">❤️</span> Unknown IITians
           </h1>
           <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
-            See what our students have to say us
+            See what our students have to say about us
           </p>
         </div>
 
-        {/* Featured Row (Unique Tinted Card) - Stays as a single block */}
+        {/* Featured Row (Unique Card) */}
         {featuredTestimonial && (
-          <div className="mb-8 lg:mb-6">
-            <div className="relative border border-black/10 rounded-lg bg-slate-50 overflow-hidden flex flex-col">
+          <div className="mb-8 lg:mb-10">
+            {/* Card bg is white to stand out against gray section */}
+            <div className="relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
               {/* Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
-                style={{ background: 'radial-gradient(circle at bottom right, rgba(30, 58, 138, 0.08) 0%, transparent 70%)' }}
+                style={{ background: 'radial-gradient(circle at bottom right, rgba(30, 58, 138, 0.05) 0%, transparent 70%)' }}
               />
               
-              <div className="relative z-10 p-8 lg:p-[45px]">
-                <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
-                <p className="text-[16px] lg:text-[17px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
+              <div className="relative z-10 p-8 lg:p-[50px]">
+                <div className="text-[55px] text-black/5 font-serif leading-none mb-3">“</div>
+                <p className="text-[16px] lg:text-[18px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
                   {featuredTestimonial.text}
                 </p>
                 <div className="">
-                  <h4 className="text-[18px] font-semibold text-[#0f172a] mb-1">
+                  <h4 className="text-[19px] font-semibold text-[#0f172a] mb-1">
                     {featuredTestimonial.name}
                   </h4>
-                  <p className="text-[13px] text-[#64748b] font-medium flex items-center gap-2.5">
+                  <p className="text-[14px] text-[#64748b] font-medium flex items-center gap-2.5">
                     {featuredTestimonial.role}
                   </p>
                 </div>
@@ -125,7 +142,7 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {/* Grid Row (Standard Blocks) - Scrollable on Mobile */}
+        {/* Grid Row (Standard Blocks) */}
         <div className="
           flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
           md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 md:overflow-visible
@@ -135,23 +152,23 @@ const TestimonialsSection = () => {
             <div 
               key={index}
               className="
-                relative border border-black/10 rounded-lg bg-white overflow-hidden flex flex-col 
+                relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col 
                 snap-center min-w-[85vw] sm:min-w-[350px] md:min-w-0 h-auto md:h-full
               "
             >
               {/* Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
-                style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.03) 0%, transparent 60%)' }}
+                style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.02) 0%, transparent 60%)' }}
               />
 
-              <div className="relative z-10 p-[30px] lg:p-[45px] flex flex-col h-full">
+              <div className="relative z-10 p-[30px] lg:p-[40px] flex flex-col h-full">
                 <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
                 <p className="text-[15px] leading-[1.75] text-slate-700 mb-[30px] font-normal flex-grow">
                   {testimonial.text}
                 </p>
                 <div className="mt-auto">
-                  <h4 className="text-[18px] font-semibold text-[#0f172a] mb-1">
+                  <h4 className="text-[17px] font-semibold text-[#0f172a] mb-1">
                     {testimonial.name}
                   </h4>
                   <p className="text-[13px] text-[#64748b] font-medium flex items-center gap-2.5">
