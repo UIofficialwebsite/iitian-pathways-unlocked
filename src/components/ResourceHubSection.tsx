@@ -22,11 +22,15 @@ const ResourceHubSection = () => {
           {/* Card 1: Reference Batches (Blue) */}
           <Link 
             to="#" 
-            className="group relative border border-[#d1d5db] rounded-[14px] h-[300px] flex flex-col overflow-hidden bg-[#f0f9ff] transition-all duration-300 hover:shadow-lg"
+            className="group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#f0f9ff] transition-all duration-300 hover:shadow-lg
+            /* Mobile: Auto height, padded */
+            h-auto p-8
+            /* Desktop: Fixed height, larger padding */
+            lg:h-[300px] lg:p-[45px]"
           >
-            {/* Hover Arrow */}
+            {/* Hover Arrow (Desktop only mostly, but kept for consistency) */}
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100" 
+              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -40,21 +44,28 @@ const ResourceHubSection = () => {
             />
 
             {/* Content (Text) */}
-            <div className="relative z-10 p-[40px]">
-              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-[90%]">
+            <div className="relative z-10 mb-6 lg:mb-0">
+              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
                 Reference Batches
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed max-w-[90%]">
+              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
                 Structured courses led by top faculty that break down complicated concepts into easily understandable modules.
               </p>
             </div>
 
-            {/* Image - Bottom Right */}
-            <div className="absolute bottom-0 right-0 z-[5] transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-2">
+            {/* Image Section 
+                - Mobile: Static, Centered, After Text (mt-auto)
+                - Desktop: Absolute Bottom-Right, Slide Effect
+            */}
+            <div className="relative mt-auto flex justify-center lg:mt-0 lg:block lg:absolute lg:bottom-0 lg:right-0 lg:z-[5] lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-2">
               <img 
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769295469/image_10_r87scl.png" 
                 alt="Reference Batches" 
-                className="h-[150px] w-auto object-contain translate-x-4 translate-y-2"
+                className="
+                  /* Mobile Size & Reset */
+                  h-[140px] w-auto object-contain
+                  /* Desktop Positioning */
+                  lg:h-[150px] lg:translate-x-4 lg:translate-y-2"
               />
             </div>
           </Link>
@@ -62,11 +73,13 @@ const ResourceHubSection = () => {
           {/* Card 2: Notes (Beige) */}
           <Link 
             to="#" 
-            className="group relative border border-[#d1d5db] rounded-[14px] h-[300px] flex flex-col overflow-hidden bg-[#fffbeb] transition-all duration-300 hover:shadow-lg"
+            className="group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#fffbeb] transition-all duration-300 hover:shadow-lg
+            h-auto p-8
+            lg:h-[300px] lg:p-[45px]"
           >
             {/* Hover Arrow */}
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100" 
+              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -80,21 +93,23 @@ const ResourceHubSection = () => {
             />
 
             {/* Content (Text) */}
-            <div className="relative z-10 p-[40px]">
-              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-[90%]">
+            <div className="relative z-10 mb-6 lg:mb-0">
+              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
                 Notes
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed max-w-[90%]">
+              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
                 Access detailed, concise study materials that simplify complex ideas into high-yield language for quick revision.
               </p>
             </div>
 
-            {/* Image - Bottom Right */}
-            <div className="absolute bottom-0 right-0 z-[5] transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-2">
+            {/* Image Section */}
+            <div className="relative mt-auto flex justify-center lg:mt-0 lg:block lg:absolute lg:bottom-0 lg:right-0 lg:z-[5] lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-2">
               <img 
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769294911/download_4_psl2o2.png" 
                 alt="Notes" 
-                className="h-[140px] w-auto object-contain translate-x-2 translate-y-2"
+                className="
+                  h-[130px] w-auto object-contain
+                  lg:h-[140px] lg:translate-x-2 lg:translate-y-2"
               />
             </div>
           </Link>
@@ -102,11 +117,13 @@ const ResourceHubSection = () => {
           {/* Card 3: Lectures (Green) */}
           <Link 
             to="#" 
-            className="group relative border border-[#d1d5db] rounded-[14px] h-[300px] flex flex-col overflow-hidden bg-[#f0fdf4] transition-all duration-300 hover:shadow-lg"
+            className="group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#f0fdf4] transition-all duration-300 hover:shadow-lg
+            h-auto p-8
+            lg:h-[300px] lg:p-[45px]"
           >
             {/* Hover Arrow */}
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100" 
+              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -120,21 +137,23 @@ const ResourceHubSection = () => {
             />
 
             {/* Content (Text) */}
-            <div className="relative z-10 p-[40px]">
-              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-[90%]">
+            <div className="relative z-10 mb-6 lg:mb-0">
+              <h2 className="text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
                 Lectures
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed max-w-[90%]">
+              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
                 High-quality video sessions that provide step-by-step explanations, ensuring you master every concept with ease.
               </p>
             </div>
 
-            {/* Image - Bottom Right */}
-            <div className="absolute bottom-0 right-0 z-[5] transition-transform duration-500 ease-out group-hover:scale-105 group-hover:-translate-y-2">
+            {/* Image Section */}
+            <div className="relative mt-auto flex justify-center lg:mt-0 lg:block lg:absolute lg:bottom-0 lg:right-0 lg:z-[5] lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-2">
               <img 
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769293814/unnamed_13_xriziz.png" 
                 alt="Lectures" 
-                className="h-[160px] w-auto object-contain translate-x-4 translate-y-4"
+                className="
+                  h-[150px] w-auto object-contain
+                  lg:h-[160px] lg:translate-x-4 lg:translate-y-4"
               />
             </div>
           </Link>
