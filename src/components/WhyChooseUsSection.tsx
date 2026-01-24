@@ -7,8 +7,8 @@ const features = [
     bgColor: "bg-[#fffbeb]", // Yellow
     fadeColor: "rgba(251, 191, 36, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288362/40328746312_uuvdif.png",
-    // Sized to fit in bottom half
-    imgStyle: "h-[180px] w-auto object-contain", 
+    // Standard size
+    imgStyle: "h-[190px] w-auto object-contain", 
   },
   {
     title: "Expert Mentorship",
@@ -16,8 +16,8 @@ const features = [
     bgColor: "bg-[#fff1f2]", // Pink
     fadeColor: "rgba(244, 63, 94, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288411/image_zulvw8.png",
-    // Fixed height, anchored top to show face/chest
-    imgStyle: "h-[200px] w-full object-cover object-top", 
+    // Cropped top
+    imgStyle: "h-[220px] w-full object-cover object-top", 
   },
   {
     title: "98% Positive",
@@ -25,7 +25,8 @@ const features = [
     bgColor: "bg-[#ecfeff]", // Cyan
     fadeColor: "rgba(6, 182, 212, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288352/7081009_azrzqg.png",
-    imgStyle: "h-[160px] w-auto object-contain",
+    // Standard size
+    imgStyle: "h-[170px] w-auto object-contain",
   },
   {
     title: "20k+ Network",
@@ -33,7 +34,8 @@ const features = [
     bgColor: "bg-[#f5f3ff]", // Purple
     fadeColor: "rgba(139, 92, 246, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288346/image_9_lsbln5.png",
-    imgStyle: "h-[170px] w-auto object-contain",
+    // Increased size for Network image as requested (was 170px)
+    imgStyle: "h-[220px] w-auto object-contain",
   },
 ];
 
@@ -57,18 +59,19 @@ const WhyChooseUsSection = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`group relative border border-[#d1d5db] rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md ${feature.bgColor} h-[400px] flex flex-col`}
+              className={`
+                group relative border border-[#d1d5db] rounded-xl overflow-hidden ${feature.bgColor} flex flex-col transition-all duration-500 ease-in-out hover:shadow-md
+                min-h-[250px] sm:min-h-[280px] /* Mobile/Tablet Height */
+                lg:h-[300px] lg:hover:h-[420px] /* PC: Normal Height -> Expands on Hover */
+              `}
             >
-              {/* Static Corner Fade (Background Decoration) */}
+              {/* Static Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: `radial-gradient(circle at bottom right, ${feature.fadeColor} 0%, transparent 70%)` }}
               />
 
-              {/* Text Content Section (Top Half) 
-                  - Fixed padding
-                  - Z-index ensures it stays above background
-              */}
+              {/* Text Content (Top) */}
               <div className="relative z-[10] p-8 pb-0">
                 <h3 className="text-[30px] font-semibold text-[#0f172a] mb-4 tracking-tight">
                   {feature.title}
@@ -78,12 +81,11 @@ const WhyChooseUsSection = () => {
                 </p>
               </div>
 
-              {/* Image Section (Bottom Half)
-                  - Absolute positioning at bottom
-                  - Translates up from 100% (hidden) to 0% (visible) on hover
-                  - No Scaling (Zoom) Effect
+              {/* Image Section (Bottom) 
+                  - Visible ONLY on PC (hidden md:flex)
+                  - Slides up on hover
               */}
-              <div className="absolute bottom-0 left-0 right-0 h-[220px] flex items-end justify-center z-[5] translate-y-full transition-transform duration-500 ease-out group-hover:translate-y-0 hidden md:flex pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 h-[220px] flex items-end justify-center z-[5] translate-y-full transition-transform duration-500 ease-out group-hover:translate-y-0 hidden lg:flex pointer-events-none">
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
