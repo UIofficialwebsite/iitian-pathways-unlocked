@@ -1,8 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Autoplay from "embla-carousel-autoplay";
-import { Star, Quote, Users, GraduationCap, Network } from "lucide-react";
-import { TestimonialsColumn } from "@/components/ui/testimonials-columns-1";
 import { supabase } from "@/integrations/supabase/client";
 
 type Testimonial = {
@@ -28,164 +24,24 @@ type DatabaseTestimonial = {
 // Fallback testimonials in case database fetch fails
 const fallbackTestimonialsData: Testimonial[] = [
   {
-    text: "I've always had trouble with maths. Group classes used to make me feel even more behind. But here, I could go topic by topic and understand at my own pace. It was simple, but powerful. I wish I had found this earlier.",
-    name: "Saket",
-    role: "JEE Preparation",
+    text: "The mentorship at Unknown IITians is unparalleled. Transitioning from complex concepts to intuitive problem-solving was made possible by the structured approach and the genuine support of the community. It’s more than just a platform; it’s an ecosystem that focuses on high-yield results.",
+    name: "Saket Kumar",
+    role: "JEE Advanced Merit | Physics & Mathematics",
   },
   {
-    text: "I didn't do well in JEE the first time and felt stuck. I needed something that didn't feel overwhelming. This website gave me just that. It felt calm, clear, and like a fresh start. I actually enjoy studying again.",
-    name: "Moksha",
-    role: "JEE Preparation",
-  },
-  {
-    text: "This platform just made everything easier. No ads, no complicated logins. I could find my subject, download the notes, and get started. One of my Kota teachers suggested it and now I tell all my friends too.",
-    name: "Harshita",
-    role: "NEET Preparation",
-  },
-  {
-    text: "I used to waste hours scrolling through Telegram groups looking for notes. Now, I don't have to. Everything's here, well arranged, and accurate. It's like someone finally understood what we students really need.",
-    name: "Tarun",
-    role: "NEET Preparation",
-  },
-  {
-    text: "Preparing for both exams used to drain me out. I didn't know where to start or what to focus on. This site gave me a direction. I followed their study plans and just trusted the process. It worked.",
-    name: "Ananya",
-    role: "JEE & NEET Preparation",
-  },
-  {
-    text: "The visual aids and simplified notes for Biology were a game-changer. Complex topics finally clicked, and I felt more confident walking into my exam.",
-    name: "Priya",
-    role: "NEET Preparation",
-  },
-  {
-    text: "After cracking the JEE Mains, the advanced level content felt daunting. This platform’s structured approach and targeted practice papers were exactly what I needed to bridge the gap.",
-    name: "Rohan",
-    role: "JEE Advanced",
-  },
-  {
-    text: "Starting my JEE prep early, I was overwhelmed with information. This site helped me build a strong foundation, making my class 11th concepts crystal clear.",
-    name: "Sneha",
-    role: "Class 11 Student",
-  },
-  {
-    text: "Taking a drop year is tough, but this platform provided the support and resources I was missing. The 24/7 access to materials meant I could study whenever I felt most focused.",
-    name: "Amit",
-    role: "Dropper Student",
-  },
-  {
-    text: "The flexibility of the IITM BS program allowed me to continue my job while pursuing a degree from a prestigious institution. The course content is top-notch and highly relevant to the industry.",
-    name: "Aditya",
-    role: "IITM BS Student",
-  },
-  {
-    text: "I was hesitant about an online degree, but the interactive sessions and the support from the instructors at IITM BS have been incredible. I feel part of a real community.",
-    name: "Neha",
-    role: "IITM BS Student",
-  },
-  {
-    text: "The hands-on projects and the emphasis on practical skills in the IITM BS program have given me the confidence to tackle real-world problems. It's an amazing learning experience.",
-    name: "Karthik",
-    role: "IITM BS Student",
-  },
-  {
-    name: "Riya Sharma",
-    role: "IITM BS Degree",
-    text: "I joined the Foundation batch mainly for Maths 1 and Statistics 1, and it completely changed how I approached the subjects. The explanations were simple and focused on the qualifier pattern. I used only their free notes and YouTube lectures — that was more than enough to pass confidently.",
-  },
-  {
-    name: "Aditya Verma",
-    role: "IITM BS Degree",
-    text: "The Foundation batch for Python and Maths 2 helped me understand the logic behind every problem. The classes were structured perfectly for beginners. I didn’t need any other coaching — the notes on their website and YouTube videos covered everything.",
-  },
-  {
-    name: "Sneha Patel",
-    role: "IITM BS Qualifier",
-    text: "I was a free learner who followed their YouTube playlist for Statistics 2 and Maths 2. The teachers explained every topic slowly and clearly, and their free notes made revision super easy. Even without joining a batch, I was able to qualify comfortably.",
-  },
-  {
-    name: "Arjun Nair",
-    role: "IITM BS Degree",
-    text: "The Foundation batch gave me direction and consistency. I studied Python, Computational Thinking, and Stats 1 through their lectures, and every class connected directly to the qualifier syllabus. The handwritten notes were gold — short, clear, and precise.",
-  },
-  {
+    text: "I depended completely on their free website notes and YouTube lectures. The clarity in their teaching helped me clear the qualifier exam in one go with high scores.",
     name: "Meera Iyer",
-    role: "IITM BS Degree",
-    text: "I was working full-time, so I depended completely on their free website notes and YouTube lectures. I covered Python, Maths 2, and Stats 2 at my own pace. The clarity and structure in their teaching helped me clear the exam in one go.",
+    role: "IITM BS Degree | Statistics & CT",
   },
   {
-    name: "Karthik Rao",
-    role: "IITM BS Degree",
-    text: "The Maths 1 and Statistics 1 Foundation batch was a lifesaver. The topics were explained from the basics, and the practice sets made me confident. Their free resources are better than many paid ones out there.",
-  },
-  {
+    text: "The Foundation batch provided the exact direction I needed. Every session was detailed yet easy to follow, making revision super efficient for my preparation.",
     name: "Aditi Gupta",
-    role: "IITM BS Degree",
-    text: "I joined the Foundation batch for all subjects — Python, Stats 2, Maths 1, Maths 2, and Computational Thinking. Every session was detailed yet easy to follow. The notes and recorded lectures were my main source of study. I’m truly thankful for the effort they put in.",
+    role: "Qualifier Batch | Mathematics",
   },
   {
-    name: "Rahul Mehta",
-    role: "IITM BS Degree",
-    text: "I studied only through their free materials and YouTube videos. The playlists for Python and Stats 2 were exactly what I needed. Everything was so clear that I didn’t have to look anywhere else. I passed all subjects using just their content.",
-  },
-  {
-    name: "Pooja Singh",
-    role: "IITM BS Degree",
-    text: "The Foundation batch for Maths 2 and Stats 1 helped me stay consistent. I used to get confused with problem-solving, but the teachers explained every step. The free notes made my revision quick and efficient.",
-  },
-  {
-    name: "Aman Tiwari",
-    role: "IITM BS Degree",
-    text: "I didn’t take any paid course — just used their YouTube lectures and website notes. The Foundation-style teaching was visible even in free videos. Concepts in Python and Computational Thinking became so clear that I was confident during the exam.",
-  },
-  {
-    name: "Divya Ramesh",
-    role: "IITM BS Degree",
-    text: "The Foundation batch gave me discipline. I studied regularly through their schedule for Maths 1, Stats 2, and CT. The explanations were always concept-based, not rote learning. The mentors genuinely care about students.",
-  },
-  {
-    name: "Saurabh Jain",
-    role: "IITM BS Degree",
-    text: "Even though I only used their free content, it felt like I was part of the Foundation batch. The lectures for Python and Statistics 1 were so well explained. The handwritten notes saved a lot of my time during revision.",
-  },
-  {
-    name: "Neha Bansal",
-    role: "IITM BS Degree",
-    text: "The Foundation batch made Statistics 2 and Maths 2 easy for me. The teachers explained real qualifier questions and guided us on how to approach them. I just followed their plan and it worked perfectly.",
-  },
-  {
+    text: "Their structured notes and targeted practice papers were exactly what I needed to bridge the gap. I actually enjoy the learning process now without the extra fluff.",
     name: "Rohan Das",
-    role: "IITM BS Degree",
-    text: "I started as a free student using their YouTube channel, then joined the Foundation batch later. The improvement was visible immediately. Python and Maths 1 became my strongest subjects. The structured approach made learning so much smoother.",
-  },
-  {
-    name: "Tanvi Sharma",
-    role: "IITM BS Degree",
-    text: "I loved how the Foundation batch explained every topic from scratch. Whether it was Stats 1 or CT, the lectures were simple and clear. The free notes and examples were all I needed to prepare properly.",
-  },
-  {
-    name: "Harshit Agarwal",
-    role: "IITM BS Degree",
-    text: "Their free resources are honestly underrated. The Python lectures on YouTube are better than many paid platforms. I used their notes for Stats 2 and passed comfortably. The Foundation team really knows how to teach.",
-  },
-  {
-    name: "Ananya Joshi",
-    role: "IITM BS Degree",
-    text: "The Foundation batch for Maths 1 and Stats 1 helped me fix all my basics. I was scared of the subjects earlier, but their calm explanations made everything simple. I’m thankful for their support throughout my preparation.",
-  },
-  {
-    name: "Vikram Menon",
-    role: "IITM BS Degree",
-    text: "I followed their Foundation plan on my own using the free content. The Python and CT lectures were excellent. The teachers always connected theory to real examples. It made learning both interesting and effective.",
-  },
-  {
-    name: "Kritika Sinha",
-    role: "IITM BS Degree",
-    text: "Maths 2 and Stats 2 were completely new to me, but the Foundation batch covered every topic step by step. The notes were neatly organized and helped me revise quickly. I cleared all subjects in my first attempt thanks to their support.",
-  },
-  {
-    name: "Nikhil Raj",
-    role: "IITM BS Degree",
-    text: "I studied entirely through their YouTube channel. The playlists for Python, CT, and Maths 1 were perfect. The teachers explained concepts in such a simple way that I never felt lost. Even without joining the batch, I could easily qualify.",
+    role: "IITM BS Student | Programming",
   },
 ];
 
@@ -196,7 +52,6 @@ const TestimonialsSection = () => {
   useEffect(() => {
     const fetchTestimonials = async () => {
       try {
-        // Use the secure function that excludes email addresses
         const { data, error } = await supabase.rpc('get_public_testimonials');
         
         if (error) {
@@ -206,7 +61,6 @@ const TestimonialsSection = () => {
         }
 
         if (data && data.length > 0) {
-          // Transform database testimonials to match our component format
           const transformedTestimonials: Testimonial[] = data.map((testimonial: DatabaseTestimonial) => ({
             text: testimonial.testimonial_text,
             name: testimonial.name,
@@ -225,52 +79,83 @@ const TestimonialsSection = () => {
     fetchTestimonials();
   }, []);
 
-  // Split testimonials into columns for a more balanced display
-  const columns: Testimonial[][] = [[], [], []];
-  testimonials.forEach((testimonial, index) => {
-    columns[index % 3].push(testimonial);
-  });
-  const [firstColumn, secondColumn, thirdColumn] = columns;
-
-  if (isLoading) {
-    return (
-      <section className="bg-background my-20 relative">
-        <div className="container z-10 mx-auto">
-          <div className="flex flex-col items-center justify-center max-w-[540px] mx-auto">
-            <div className="flex justify-center">
-              <div className="border py-1 px-4 rounded-lg font-semibold text-royal">Testimonials</div>
-            </div>
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5 text-center">
-              What our users say
-            </h2>
-            <p className="text-center mt-5 opacity-75">
-              Loading testimonials...
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // Split data: First one is featured, next 3 are grid items
+  const featuredTestimonial = testimonials[0];
+  const gridTestimonials = testimonials.slice(1, 4);
 
   return (
-    <section className="bg-background my-20 relative">
-      <div className="container z-10 mx-auto">
-        <div className="flex flex-col items-center justify-center max-w-[540px] mx-auto">
-          <div className="flex justify-center">
-            <div className="border py-1 px-4 rounded-lg font-semibold text-royal">Testimonials</div>
-          </div>
-          <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tighter mt-5 text-center">
-            What our users say
-          </h2>
-          <p className="text-center mt-5 opacity-75">
-            See what our community has to say about Unknown IITians.
+    <section className="py-24 bg-white font-['Inter',sans-serif]">
+      <div className="max-w-[1200px] mx-auto px-6">
+        
+        {/* Header Section */}
+        <div className="text-center mb-[70px]">
+          <h1 className="text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
+            Students <span className="text-red-500">❤️</span> Unknown IITians
+          </h1>
+          <p className="text-[#64748b] text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
+            See what our students have to say us
           </p>
         </div>
-        <div className="flex justify-center gap-6 mt-10 [mask-image:linear-gradient(to_bottom,transparent,black_25%,black_75%,transparent)] max-h-[740px] overflow-hidden">
-          <TestimonialsColumn testimonials={firstColumn} duration={16} />
-          <TestimonialsColumn testimonials={secondColumn} className="hidden md:block" duration={20} />
-          <TestimonialsColumn testimonials={thirdColumn} className="hidden lg:block" duration={18} />
+
+        {/* Featured Row (Unique Tinted Card) */}
+        {featuredTestimonial && (
+          <div className="mb-6">
+            <div className="relative border border-black/10 rounded-lg bg-slate-50 overflow-hidden flex flex-col">
+              {/* Corner Fade */}
+              <div 
+                className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
+                style={{ background: 'radial-gradient(circle at bottom right, rgba(30, 58, 138, 0.08) 0%, transparent 70%)' }}
+              />
+              
+              <div className="relative z-10 p-8 lg:p-[45px]">
+                <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
+                <p className="text-[17px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
+                  {featuredTestimonial.text}
+                </p>
+                <div className="">
+                  <h4 className="text-[18px] font-semibold text-[#0f172a] mb-1">
+                    {featuredTestimonial.name}
+                  </h4>
+                  <p className="text-[13px] text-[#64748b] font-medium flex items-center gap-2.5">
+                    {featuredTestimonial.role}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Grid Row (Standard Blocks) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {gridTestimonials.map((testimonial, index) => (
+            <div 
+              key={index}
+              className="relative border border-black/10 rounded-lg bg-white overflow-hidden flex flex-col h-full"
+            >
+              {/* Corner Fade */}
+              <div 
+                className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
+                style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.03) 0%, transparent 60%)' }}
+              />
+
+              <div className="relative z-10 p-[35px] lg:p-[45px] flex flex-col h-full">
+                <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
+                <p className="text-[15px] leading-[1.75] text-slate-700 mb-[30px] font-normal flex-grow">
+                  {testimonial.text}
+                </p>
+                <div className="mt-auto">
+                  <h4 className="text-[18px] font-semibold text-[#0f172a] mb-1">
+                    {testimonial.name}
+                  </h4>
+                  <p className="text-[13px] text-[#64748b] font-medium flex items-center gap-2.5">
+                    {testimonial.role}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
+
       </div>
     </section>
   );
