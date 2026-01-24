@@ -7,8 +7,7 @@ const features = [
     bgColor: "bg-[#fffbeb]", // Yellow
     fadeColor: "rgba(251, 191, 36, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288362/40328746312_uuvdif.png",
-    // Standard size
-    imgStyle: "h-[190px] w-auto object-contain", 
+    imgStyle: "h-[160px] lg:h-[190px] w-auto object-contain", // Adjusted for mobile/PC
   },
   {
     title: "Expert Mentorship",
@@ -16,8 +15,8 @@ const features = [
     bgColor: "bg-[#fff1f2]", // Pink
     fadeColor: "rgba(244, 63, 94, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288411/image_zulvw8.png",
-    // Cropped top
-    imgStyle: "h-[220px] w-full object-cover object-top", 
+    // Mobile: contain/cover based on need. PC: object-top
+    imgStyle: "h-[180px] lg:h-[220px] w-full object-contain lg:object-cover lg:object-top", 
   },
   {
     title: "98% Positive",
@@ -25,8 +24,7 @@ const features = [
     bgColor: "bg-[#ecfeff]", // Cyan
     fadeColor: "rgba(6, 182, 212, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288352/7081009_azrzqg.png",
-    // Standard size
-    imgStyle: "h-[170px] w-auto object-contain",
+    imgStyle: "h-[140px] lg:h-[170px] w-auto object-contain",
   },
   {
     title: "20k+ Network",
@@ -34,8 +32,7 @@ const features = [
     bgColor: "bg-[#f5f3ff]", // Purple
     fadeColor: "rgba(139, 92, 246, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288346/image_9_lsbln5.png",
-    // Increased size for Network image
-    imgStyle: "h-[220px] w-auto object-contain",
+    imgStyle: "h-[180px] lg:h-[220px] w-auto object-contain",
   },
 ];
 
@@ -61,21 +58,49 @@ const WhyChooseUsSection = () => {
               key={index}
               className={`
                 group relative border border-[#d1d5db] rounded-xl overflow-hidden ${feature.bgColor} flex flex-col transition-all duration-500 ease-in-out hover:shadow-md
-                /* Alignment: Center on Mobile, Top (Start) on PC */
-                justify-center lg:justify-start
-                min-h-[250px] sm:min-h-[280px] /* Mobile/Tablet Height */
-                lg:h-[300px] lg:hover:h-[420px] /* PC: Normal Height -> Expands on Hover */
+                /* Mobile: Height auto to fit image+text. PC: Fixed height that expands */
+                h-auto lg:h-[300px] lg:hover:h-[420px]
               `}
             >
-              {/* Static Corner Fade */}
+              {/* Static Corner Fade (Background) */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: `radial-gradient(circle at bottom right, ${feature.fadeColor} 0%, transparent 70%)` }}
               />
 
-              {/* Text Content (Top) */}
-              <div className="relative z-[10] p-8 pb-0">
-                <h3 className="text-[30px] font-semibold text-[#0f172a] mb-4 tracking-tight">
+              {/* MOBILE LAYOUT:
+                  - Flex Column
+                  - Image First (order-1)
+                  - Text Second (order-2)
+                  
+                  PC LAYOUT:
+                  - Image is Absolute Bottom (Hidden/Sliding)
+                  - Text is Top (Padded)
+              */}
+
+              {/* 1. IMAGE SECTION */}
+              <div className={`
+                /* Mobile Styles: Relative, Visible, Order-1, Centered */
+                relative w-full flex justify-center items-end order-1 pt-6 pb-2 lg:hidden
+                /* PC Styles: Absolute, Bottom aligned, Hidden initially, Slide animation */
+                lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:h-[220px] lg:p-0 lg:pt-0 lg:pb-0 lg:order-none lg:translate-y-full lg:group-hover:translate-y-0 lg:transition-transform lg:duration-500 lg:ease-out lg:flex lg:z-[5] lg:pointer-events-none
+              `}>
+                <img 
+                  src={feature.image} 
+                  alt={feature.title} 
+                  className={`max-w-[90%] ${feature.imgStyle}`} 
+                />
+              </div>
+
+              {/* 2. TEXT CONTENT SECTION */}
+              <div className={`
+                relative z-[10] p-6 lg:p-8 
+                /* Mobile: Order-2 (After Image), Center Aligned */
+                order-2 text-center
+                /* PC: Order-none (Default), Top Aligned (justify-start from parent), Left Aligned Text? No, Center per design */
+                lg:pb-0 lg:order-none
+              `}>
+                <h3 className="text-[26px] lg:text-[30px] font-semibold text-[#0f172a] mb-3 lg:mb-4 tracking-tight">
                   {feature.title}
                 </h3>
                 <p className="text-[#4b5563] text-sm leading-relaxed">
@@ -83,17 +108,6 @@ const WhyChooseUsSection = () => {
                 </p>
               </div>
 
-              {/* Image Section (Bottom) 
-                  - Visible ONLY on PC (hidden lg:flex)
-                  - Slides up on hover
-              */}
-              <div className="absolute bottom-0 left-0 right-0 h-[220px] flex items-end justify-center z-[5] translate-y-full transition-transform duration-500 ease-out group-hover:translate-y-0 hidden lg:flex pointer-events-none">
-                <img 
-                  src={feature.image} 
-                  alt={feature.title} 
-                  className={`max-w-[90%] ${feature.imgStyle}`} 
-                />
-              </div>
             </div>
           ))}
         </div>
