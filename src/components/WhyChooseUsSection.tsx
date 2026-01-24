@@ -7,7 +7,8 @@ const features = [
     bgColor: "bg-[#fffbeb]", // Yellow
     fadeColor: "rgba(251, 191, 36, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288362/40328746312_uuvdif.png",
-    imgStyle: "h-[190px] w-auto object-contain mb-0", 
+    // Sized to fit in bottom half
+    imgStyle: "h-[180px] w-auto object-contain", 
   },
   {
     title: "Expert Mentorship",
@@ -15,7 +16,8 @@ const features = [
     bgColor: "bg-[#fff1f2]", // Pink
     fadeColor: "rgba(244, 63, 94, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288411/image_zulvw8.png",
-    imgStyle: "h-[220px] w-full object-cover object-top mb-[-10px]", 
+    // Fixed height, anchored top to show face/chest
+    imgStyle: "h-[200px] w-full object-cover object-top", 
   },
   {
     title: "98% Positive",
@@ -23,7 +25,7 @@ const features = [
     bgColor: "bg-[#ecfeff]", // Cyan
     fadeColor: "rgba(6, 182, 212, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288352/7081009_azrzqg.png",
-    imgStyle: "h-[180px] w-auto object-contain mb-0",
+    imgStyle: "h-[160px] w-auto object-contain",
   },
   {
     title: "20k+ Network",
@@ -31,7 +33,7 @@ const features = [
     bgColor: "bg-[#f5f3ff]", // Purple
     fadeColor: "rgba(139, 92, 246, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288346/image_9_lsbln5.png",
-    imgStyle: "h-[190px] w-auto object-contain mb-0",
+    imgStyle: "h-[170px] w-auto object-contain",
   },
 ];
 
@@ -50,24 +52,24 @@ const WhyChooseUsSection = () => {
           </p>
         </div>
 
-        {/* Stats Grid: 4 cols on PC, 2 cols on Tablet/Mobile */}
+        {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`group relative border border-[#d1d5db] rounded-xl p-8 min-h-[340px] flex flex-col justify-start text-center overflow-hidden transition-all duration-300 hover:shadow-md ${feature.bgColor}`}
+              className={`group relative border border-[#d1d5db] rounded-xl overflow-hidden transition-all duration-300 hover:shadow-md ${feature.bgColor} h-[400px] flex flex-col`}
             >
-              {/* Static Corner Fade (Always Visible) */}
+              {/* Static Corner Fade (Background Decoration) */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: `radial-gradient(circle at bottom right, ${feature.fadeColor} 0%, transparent 70%)` }}
               />
 
-              {/* Text Content 
-                  - Increased negative translate to -translate-y-14 (approx 56px up)
-                  - This ensures text moves clear of the image 
+              {/* Text Content Section (Top Half) 
+                  - Fixed padding
+                  - Z-index ensures it stays above background
               */}
-              <div className="relative z-[10] transition-transform duration-500 ease-out group-hover:-translate-y-14 pt-4">
+              <div className="relative z-[10] p-8 pb-0">
                 <h3 className="text-[30px] font-semibold text-[#0f172a] mb-4 tracking-tight">
                   {feature.title}
                 </h3>
@@ -76,11 +78,12 @@ const WhyChooseUsSection = () => {
                 </p>
               </div>
 
-              {/* Hover Image Animation:
-                 - Slides up from bottom
-                 - z-[5] ensures it sits behind text if they were to touch, but translate prevents overlap
+              {/* Image Section (Bottom Half)
+                  - Absolute positioning at bottom
+                  - Translates up from 100% (hidden) to 0% (visible) on hover
+                  - No Scaling (Zoom) Effect
               */}
-              <div className="absolute bottom-0 left-0 right-0 flex justify-center z-[5] translate-y-[120%] transition-transform duration-500 ease-out group-hover:translate-y-0 hidden md:flex pointer-events-none">
+              <div className="absolute bottom-0 left-0 right-0 h-[220px] flex items-end justify-center z-[5] translate-y-full transition-transform duration-500 ease-out group-hover:translate-y-0 hidden md:flex pointer-events-none">
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
