@@ -15,6 +15,13 @@ serve(async (req: Request) => {
   const orderId = url.searchParams.get("order_id");
   const passedRedirectUrl = url.searchParams.get("redirect_url");
   const frontendUrl = passedRedirectUrl ? decodeURIComponent(passedRedirectUrl) : "https://preview.lovable.app";
+  
+  // Extract discount parameters from URL (passed from create-cashfree-order)
+  const discountApplied = url.searchParams.get("discount_applied") === "true";
+  const discountType = url.searchParams.get("discount_type") ? decodeURIComponent(url.searchParams.get("discount_type")!) : null;
+  const discountValue = parseFloat(url.searchParams.get("discount_value") || "0") || null;
+  const couponCode = url.searchParams.get("coupon_code") ? decodeURIComponent(url.searchParams.get("coupon_code")!) : null;
+  const netAmount = parseFloat(url.searchParams.get("net_amount") || "0") || null;
 
   try {
     // 1. Validate Secrets & Setup Client
@@ -154,7 +161,7 @@ serve(async (req: Request) => {
         || null;
     }
 
-    // 9. Insert Payment Record with ALL data
+    // 9. Insert Payment Record with ALL data including discount info
     const paymentInsertData = {
       order_id: orderId,
       payment_id: paymentDetails?.cf_payment_id?.toString() || orderData.cf_order_id || null,
@@ -169,7 +176,13 @@ serve(async (req: Request) => {
       customer_phone: orderData.customer_details?.customer_phone || null,
       raw_response: { order: orderData, payment: paymentDetails },
       batch: mainBatchName,
-      courses: coursesString
+      courses: coursesString,
+      // Discount tracking fields
+      discount_applied: discountApplied,
+      discount_type: discountApplied ? discountType : null,
+      discount_value: discountApplied ? discountValue : null,
+      coupon_code: discountApplied ? couponCode : null,
+      net_amount: netAmount || orderData.order_amount // Final amount received
     };
 
     console.log("📝 Inserting Payment:", JSON.stringify(paymentInsertData));

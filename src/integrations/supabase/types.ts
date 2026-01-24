@@ -852,6 +852,7 @@ export type Database = {
         Row: {
           amount: number | null
           batch: string | null
+          coupon_code: string | null
           courses: string | null
           created_at: string
           customer_email: string | null
@@ -874,6 +875,7 @@ export type Database = {
         Insert: {
           amount?: number | null
           batch?: string | null
+          coupon_code?: string | null
           courses?: string | null
           created_at?: string
           customer_email?: string | null
@@ -896,6 +898,7 @@ export type Database = {
         Update: {
           amount?: number | null
           batch?: string | null
+          coupon_code?: string | null
           courses?: string | null
           created_at?: string
           customer_email?: string | null
