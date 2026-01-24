@@ -7,7 +7,7 @@ const features = [
     bgColor: "bg-[#fffbeb]", // Yellow
     fadeColor: "rgba(251, 191, 36, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288362/40328746312_uuvdif.png",
-    imgStyle: "h-[180px] w-auto object-contain mb-[-10px]", // Standard sizing
+    imgStyle: "h-[190px] w-auto object-contain mb-0", 
   },
   {
     title: "Expert Mentorship",
@@ -15,8 +15,7 @@ const features = [
     bgColor: "bg-[#fff1f2]", // Pink
     fadeColor: "rgba(244, 63, 94, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288411/image_zulvw8.png",
-    // Crop strategy: Anchored to top to show face/chest, fixed height to cut off lower body
-    imgStyle: "h-[210px] w-full object-cover object-top mb-[-20px]", 
+    imgStyle: "h-[220px] w-full object-cover object-top mb-[-10px]", 
   },
   {
     title: "98% Positive",
@@ -24,7 +23,7 @@ const features = [
     bgColor: "bg-[#ecfeff]", // Cyan
     fadeColor: "rgba(6, 182, 212, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288352/7081009_azrzqg.png",
-    imgStyle: "h-[170px] w-auto object-contain mb-[-10px]",
+    imgStyle: "h-[180px] w-auto object-contain mb-0",
   },
   {
     title: "20k+ Network",
@@ -32,7 +31,7 @@ const features = [
     bgColor: "bg-[#f5f3ff]", // Purple
     fadeColor: "rgba(139, 92, 246, 0.12)",
     image: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769288346/image_9_lsbln5.png",
-    imgStyle: "h-[180px] w-auto object-contain mb-[-10px]",
+    imgStyle: "h-[190px] w-auto object-contain mb-0",
   },
 ];
 
@@ -56,7 +55,7 @@ const WhyChooseUsSection = () => {
           {features.map((feature, index) => (
             <div
               key={index}
-              className={`group relative border border-[#d1d5db] rounded-xl p-8 min-h-[280px] flex flex-col justify-start text-center overflow-hidden transition-all duration-300 hover:shadow-md ${feature.bgColor}`}
+              className={`group relative border border-[#d1d5db] rounded-xl p-8 min-h-[340px] flex flex-col justify-start text-center overflow-hidden transition-all duration-300 hover:shadow-md ${feature.bgColor}`}
             >
               {/* Static Corner Fade (Always Visible) */}
               <div 
@@ -64,8 +63,11 @@ const WhyChooseUsSection = () => {
                 style={{ background: `radial-gradient(circle at bottom right, ${feature.fadeColor} 0%, transparent 70%)` }}
               />
 
-              {/* Text Content (Pushed up slightly on hover to make room for image) */}
-              <div className="relative z-[10] transition-transform duration-500 group-hover:-translate-y-2">
+              {/* Text Content 
+                  - Increased negative translate to -translate-y-14 (approx 56px up)
+                  - This ensures text moves clear of the image 
+              */}
+              <div className="relative z-[10] transition-transform duration-500 ease-out group-hover:-translate-y-14 pt-4">
                 <h3 className="text-[30px] font-semibold text-[#0f172a] mb-4 tracking-tight">
                   {feature.title}
                 </h3>
@@ -75,15 +77,14 @@ const WhyChooseUsSection = () => {
               </div>
 
               {/* Hover Image Animation:
-                 - Initially hidden below the card (translate-y-[120%])
-                 - Slides up on hover (translate-y-0)
-                 - Visible only on PC (hidden md:block)
+                 - Slides up from bottom
+                 - z-[5] ensures it sits behind text if they were to touch, but translate prevents overlap
               */}
               <div className="absolute bottom-0 left-0 right-0 flex justify-center z-[5] translate-y-[120%] transition-transform duration-500 ease-out group-hover:translate-y-0 hidden md:flex pointer-events-none">
                 <img 
                   src={feature.image} 
                   alt={feature.title} 
-                  className={`max-w-[85%] ${feature.imgStyle}`} 
+                  className={`max-w-[90%] ${feature.imgStyle}`} 
                 />
               </div>
             </div>
