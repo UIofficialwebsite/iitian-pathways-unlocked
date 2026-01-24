@@ -428,7 +428,7 @@ const EnrolledView = ({
 
   const batchSelectionSheet = (
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[150]">
+      <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[50000] !bg-white !opacity-100">
         <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
           <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
           <SheetDescription className="text-sm text-gray-500">
