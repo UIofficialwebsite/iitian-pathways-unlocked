@@ -203,39 +203,44 @@ serve(async (req: Request) => {
     }
 
     // 10. Insert Payment Record with ALL data including Cashfree discount info
-    const paymentInsertData = {
-      order_id: orderId,
-      payment_id: paymentDetails?.cf_payment_id?.toString() || orderData.cf_order_id || null,
-      user_id: userId || null,
-      amount: orderData.order_amount, // Original order amount
-      status: finalStatus,
-      payment_mode: paymentDetails?.payment_group || paymentDetails?.payment_method?.type || "unknown",
-      payment_time: paymentDetails?.payment_time || paymentDetails?.payment_completion_time || null,
-      payment_group: paymentDetails?.payment_group || null,
-      utr: utr,
-      customer_email: orderData.customer_details?.customer_email || null,
-      customer_phone: orderData.customer_details?.customer_phone || null,
-      raw_response: { order: orderData, payment: paymentDetails },
-      batch: mainBatchName,
-      courses: coursesString,
-      // Discount tracking fields from Cashfree
-      discount_applied: discountApplied,
-      discount_type: discountApplied ? discountType : null,
-      discount_value: discountApplied ? discountValue : null,
-      coupon_code: couponCode,
-      net_amount: netAmount // Final amount actually received
-    };
+    // Only insert into payments table if the final status is success
+    if (finalStatus === "success") {
+      const paymentInsertData = {
+        order_id: orderId,
+        payment_id: paymentDetails?.cf_payment_id?.toString() || orderData.cf_order_id || null,
+        user_id: userId || null,
+        amount: orderData.order_amount, // Original order amount
+        status: finalStatus,
+        payment_mode: paymentDetails?.payment_group || paymentDetails?.payment_method?.type || "unknown",
+        payment_time: paymentDetails?.payment_time || paymentDetails?.payment_completion_time || null,
+        payment_group: paymentDetails?.payment_group || null,
+        utr: utr,
+        customer_email: orderData.customer_details?.customer_email || null,
+        customer_phone: orderData.customer_details?.customer_phone || null,
+        raw_response: { order: orderData, payment: paymentDetails },
+        batch: mainBatchName,
+        courses: coursesString,
+        // Discount tracking fields from Cashfree
+        discount_applied: discountApplied,
+        discount_type: discountApplied ? discountType : null,
+        discount_value: discountApplied ? discountValue : null,
+        coupon_code: couponCode,
+        net_amount: netAmount // Final amount actually received
+      };
 
-    console.log("📝 Inserting Payment:", JSON.stringify(paymentInsertData));
+      console.log("📝 Inserting Payment:", JSON.stringify(paymentInsertData));
 
-    const { error: insertError } = await supabase
-      .from("payments")
-      .insert(paymentInsertData);
+      const { error: insertError } = await supabase
+        .from("payments")
+        .insert(paymentInsertData);
 
-    if (insertError) {
-      console.error("❌ DB INSERT ERROR:", insertError.message);
+      if (insertError) {
+        console.error("❌ DB INSERT ERROR:", insertError.message);
+      } else {
+        console.log(`✅ Payment Saved: Batch=[${mainBatchName}], Courses=[${coursesString}], UTR=[${utr}]`);
+      }
     } else {
-      console.log(`✅ Payment Saved: Batch=[${mainBatchName}], Courses=[${coursesString}], UTR=[${utr}]`);
+      console.log(`ℹ️ Skipping payment table insert: Status is ${finalStatus}`);
     }
 
     // 10. Update Enrollment Status
