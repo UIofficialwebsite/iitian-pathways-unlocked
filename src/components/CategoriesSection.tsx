@@ -7,52 +7,28 @@ const categories = [
     title: "NEET",
     tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/neet",
-    // Mobile: Static purple fade
+    // Mobile: Static purple fade (Always visible)
     mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(124,58,237,0.12),transparent_70%)]",
-    // Desktop: Expanding violet circle
+    // Desktop: Expanding violet circle (Visible only on hover)
     desktopFade: "bg-[#f5f3ff]",
-    // Theme Colors
-    theme: {
-      text: "text-purple-600",
-      border: "border-purple-200",
-      hoverBg: "group-hover:bg-purple-600",
-      hoverBorder: "group-hover:border-purple-600",
-      lightBorder: "group-hover:border-purple-100", // Subtle border change for card
-    }
   },
   {
     title: "JEE",
     tags: ["Class 11", "Class 12", "Dropper"],
     link: "/exam-preparation/jee",
-    // Mobile: Static blue fade
+    // Mobile: Static blue fade (Always visible)
     mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(37,99,235,0.12),transparent_70%)]",
-    // Desktop: Expanding blue circle
+    // Desktop: Expanding blue circle (Visible only on hover)
     desktopFade: "bg-[#eff6ff]",
-    // Theme Colors
-    theme: {
-      text: "text-blue-600",
-      border: "border-blue-200",
-      hoverBg: "group-hover:bg-blue-600",
-      hoverBorder: "group-hover:border-blue-600",
-      lightBorder: "group-hover:border-blue-100",
-    }
   },
   {
     title: "IITM BS",
     tags: ["Data Science", "Electronic Systems"],
     link: "/exam-preparation/iitm-bs",
-    // Mobile: Static green fade
+    // Mobile: Static green fade (Always visible)
     mobileFade: "bg-[radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.12),transparent_70%)]",
-    // Desktop: Expanding green circle
+    // Desktop: Expanding green circle (Visible only on hover)
     desktopFade: "bg-[#f0fdf4]",
-    // Theme Colors
-    theme: {
-      text: "text-emerald-600",
-      border: "border-emerald-200",
-      hoverBg: "group-hover:bg-emerald-600",
-      hoverBorder: "group-hover:border-emerald-600",
-      lightBorder: "group-hover:border-emerald-100",
-    }
   },
 ];
 
@@ -74,7 +50,7 @@ const CategoriesSection = () => {
             <Link 
               to={category.link} 
               key={index} 
-              className={`group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:shadow-xl flex flex-col justify-between ${category.theme.lightBorder}`}
+              className="group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:shadow-xl hover:border-gray-300 flex flex-col justify-between"
             >
               {/* --- MOBILE: Static Corner Fade (Always Visible) --- */}
               <div 
@@ -106,18 +82,19 @@ const CategoriesSection = () => {
                   </div>
                 </div>
 
-                {/* Footer: Explore Text + Colored Convex Arrow Circle */}
+                {/* Footer: Explore Text + Monochrome Convex Arrow Circle */}
                 <div className="mt-auto flex items-center justify-between">
-                  <span className={`text-[15px] font-medium transition-colors duration-300 ${category.theme.text} group-hover:text-gray-900`}>
+                  {/* Text: Always Black */}
+                  <span className="text-[15px] font-medium text-gray-900 transition-colors duration-300">
                     Explore Resources 
                   </span>
                   
                   {/* The Arrow Circle: 
-                      1. Initially: Colored Border & Colored Icon
-                      2. PC Hover: Fills with Color & White Icon
+                      1. Initially: White Bg, Gray Border, Black Arrow
+                      2. Hover: Fills with BLACK, White Arrow
                   */}
-                  <span className={`flex items-center justify-center w-10 h-10 rounded-full border bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 ${category.theme.border} ${category.theme.hoverBg} ${category.theme.hoverBorder} group-hover:shadow-none group-hover:scale-105`}>
-                    <ArrowRight className={`h-5 w-5 transition-colors duration-300 ${category.theme.text} group-hover:text-white`} />
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-200 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] transition-all duration-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:shadow-none group-hover:scale-105">
+                    <ArrowRight className="h-5 w-5 text-gray-900 transition-colors duration-300 group-hover:text-white" />
                   </span>
                 </div>
               </div>
