@@ -295,7 +295,9 @@ const BatchConfiguration = () => {
     try {
       if (!courseId) throw new Error("Course information is missing");
 
-      const newAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
+      // FIX: Ensure unique addon IDs before sending to backend to prevent DB unique constraint violations
+      const rawAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
+      const newAddonIds = Array.from(new Set(rawAddonIds));
 
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
