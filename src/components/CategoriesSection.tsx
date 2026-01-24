@@ -50,14 +50,14 @@ const CategoriesSection = () => {
             <Link 
               to={category.link} 
               key={index} 
-              className="group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:border-gray-900 flex flex-col justify-between hover:shadow-lg"
+              className="group relative block h-[260px] bg-white border border-gray-200 rounded-xl p-8 overflow-hidden transition-all duration-300 hover:border-gray-900 hover:shadow-lg flex flex-col justify-between"
             >
-              {/* --- MOBILE DESIGN: Static Corner Fade (Always Visible, No Hover Required) --- */}
+              {/* --- MOBILE DESIGN: Static Corner Fade (Always Visible) --- */}
               <div 
                 className={`absolute inset-0 pointer-events-none md:hidden ${category.mobileFade}`} 
               />
 
-              {/* --- PC DESIGN: Hover Spread Effect (Hidden Default, Expands on Hover) --- */}
+              {/* --- PC DESIGN: Hover Spread Effect (Expands on Hover) --- */}
               <div 
                 className={`hidden md:block absolute top-1/2 left-1/2 w-[150%] h-[150%] rounded-full ${category.desktopFade} transform -translate-x-1/2 -translate-y-1/2 scale-0 group-hover:scale-100 transition-transform duration-500 ease-out pointer-events-none`} 
               />
@@ -82,14 +82,15 @@ const CategoriesSection = () => {
                   </div>
                 </div>
 
-                {/* Footer Link with "Arrow Fills" Animation */}
-                <div className="mt-auto flex items-center text-[15px] font-medium text-gray-600 transition-colors duration-300 group-hover:text-gray-900">
-                  Explore Resources 
+                {/* Footer: Explore Text + Convex Arrow Circle on Right */}
+                <div className="mt-auto flex items-center justify-between">
+                  <span className="text-[15px] font-medium text-gray-600 transition-colors duration-300 group-hover:text-gray-900">
+                    Explore Resources 
+                  </span>
                   
-                  {/* The Arrow Container: Fills on hover */}
-                  <span className="ml-3 flex items-center justify-center w-8 h-8 rounded-full border border-gray-300 bg-transparent transition-all duration-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:scale-105">
-                    {/* The Arrow Icon: Turns white on hover */}
-                    <ArrowRight className="h-4 w-4 text-gray-600 transition-colors duration-300 group-hover:text-white" />
+                  {/* Circular Convex Arrow: White w/ Shadow -> Fills Black on Hover */}
+                  <span className="flex items-center justify-center w-10 h-10 rounded-full border border-gray-100 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.08)] transition-all duration-300 group-hover:bg-gray-900 group-hover:border-gray-900 group-hover:shadow-none group-hover:scale-105">
+                    <ArrowRight className="h-5 w-5 text-gray-400 transition-colors duration-300 group-hover:text-white" />
                   </span>
                 </div>
               </div>
