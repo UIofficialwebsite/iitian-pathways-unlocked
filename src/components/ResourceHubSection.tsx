@@ -3,23 +3,20 @@ import { Link } from "react-router-dom";
 
 const ResourceHubSection = () => {
   return (
-    <section className="py-24 bg-white font-['Inter',sans-serif] overflow-hidden">
+    <section className="py-16 lg:py-24 bg-white font-['Inter',sans-serif] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6">
         
         {/* Header Section */}
-        <div className="text-center mb-[50px] lg:mb-[70px]">
-          <h1 className="text-[30px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight">
+        <div className="text-center mb-[40px] lg:mb-[70px]">
+          <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight">
             Study Resources
           </h1>
-          <p className="text-[#64748b] text-[16px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
+          <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
             A comprehensive array of academic materials designed to simplify complex concepts and enhance your learning journey.
           </p>
         </div>
 
-        {/* Resource Grid / Scroll Container 
-            - Mobile: Flex row, horizontal scroll, snap behavior
-            - Desktop: Grid, standard columns
-        */}
+        {/* Resource Grid / Scroll Container */}
         <div className="
           flex overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
           md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 md:pb-0 md:mx-0 md:px-0 md:overflow-visible
@@ -31,15 +28,15 @@ const ResourceHubSection = () => {
             to="#" 
             className="
               group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#f0f9ff] transition-all duration-300 hover:shadow-lg snap-center
-              /* Mobile Dimensions: Fixed min-width for horizontal scroll */
+              /* Mobile: Fixed Width & Auto Height */
               min-w-[85vw] sm:min-w-[350px] h-auto p-8
-              /* Desktop Dimensions: Fixed height */
-              lg:h-[320px] lg:p-[45px] lg:min-w-0
+              /* PC: Taller Fixed Height to prevent overlap */
+              lg:h-[380px] lg:p-[45px] lg:min-w-0
             "
           >
-            {/* Hover Arrow (Desktop) */}
+            {/* Arrow: Visible on ALL devices now */}
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
+              className="absolute top-[25px] right-[25px] lg:top-[30px] lg:right-[30px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 z-20" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -52,19 +49,22 @@ const ResourceHubSection = () => {
               style={{ background: 'radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12) 0%, transparent 70%)' }}
             />
 
-            {/* Content (Text) */}
-            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left">
-              <h2 className="text-[24px] lg:text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
+            {/* Content (Text) 
+                - Mobile: Normal spacing
+                - PC: Huge bottom padding (pb-[140px]) to reserve space for image 
+            */}
+            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left lg:pb-[140px]">
+              <h2 className="text-[22px] lg:text-[26px] font-semibold text-[#0f172a] mb-3 lg:mb-4 tracking-tight w-full lg:w-[90%]">
                 Reference Batches
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
-                Structured courses led by top faculty that break down complicated concepts into easily understandable modules.
+              <p className="text-[#4b5563] text-[14px] lg:text-[15px] font-normal leading-relaxed w-full">
+                Structured courses led by top faculty that break down complicated concepts into easily understandable modules for comprehensive exam readiness.
               </p>
             </div>
 
             {/* Image Section 
-                - Mobile: Static, Centered, Bigger (h-[180px])
-                - Desktop: Absolute Bottom-Center (flex justify-center), Slide Effect
+                - Mobile: Static, Centered
+                - PC: Absolute Bottom-Center
             */}
             <div className="
               relative mt-auto flex justify-center 
@@ -75,9 +75,7 @@ const ResourceHubSection = () => {
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769295469/image_10_r87scl.png" 
                 alt="Reference Batches" 
                 className="
-                  /* Mobile Size */
-                  h-[180px] w-auto object-contain
-                  /* Desktop Size & Alignment */
+                  h-[160px] w-auto object-contain
                   lg:h-[160px]"
               />
             </div>
@@ -89,11 +87,11 @@ const ResourceHubSection = () => {
             className="
               group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#fffbeb] transition-all duration-300 hover:shadow-lg snap-center
               min-w-[85vw] sm:min-w-[350px] h-auto p-8
-              lg:h-[320px] lg:p-[45px] lg:min-w-0
+              lg:h-[380px] lg:p-[45px] lg:min-w-0
             "
           >
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
+              className="absolute top-[25px] right-[25px] lg:top-[30px] lg:right-[30px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 z-20" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -105,12 +103,12 @@ const ResourceHubSection = () => {
               style={{ background: 'radial-gradient(circle at bottom right, rgba(245, 158, 11, 0.12) 0%, transparent 70%)' }}
             />
 
-            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left">
-              <h2 className="text-[24px] lg:text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
+            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left lg:pb-[140px]">
+              <h2 className="text-[22px] lg:text-[26px] font-semibold text-[#0f172a] mb-3 lg:mb-4 tracking-tight w-full lg:w-[90%]">
                 Notes
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
-                Access detailed, concise study materials that simplify complex ideas into high-yield language for quick revision.
+              <p className="text-[#4b5563] text-[14px] lg:text-[15px] font-normal leading-relaxed w-full">
+                Access detailed, concise study materials that simplify complex ideas into high-yield language for quick revision and deep conceptual clarity.
               </p>
             </div>
 
@@ -123,7 +121,7 @@ const ResourceHubSection = () => {
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769294911/download_4_psl2o2.png" 
                 alt="Notes" 
                 className="
-                  h-[170px] w-auto object-contain
+                  h-[150px] w-auto object-contain
                   lg:h-[150px]"
               />
             </div>
@@ -135,11 +133,11 @@ const ResourceHubSection = () => {
             className="
               group relative border border-[#d1d5db] rounded-[14px] flex flex-col overflow-hidden bg-[#f0fdf4] transition-all duration-300 hover:shadow-lg snap-center
               min-w-[85vw] sm:min-w-[350px] h-auto p-8
-              lg:h-[320px] lg:p-[45px] lg:min-w-0
+              lg:h-[380px] lg:p-[45px] lg:min-w-0
             "
           >
             <svg 
-              className="absolute top-[30px] right-[30px] opacity-0 transition-opacity duration-300 z-20 group-hover:opacity-100 hidden lg:block" 
+              className="absolute top-[25px] right-[25px] lg:top-[30px] lg:right-[30px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 z-20" 
               width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0f172a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
             >
               <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -151,12 +149,12 @@ const ResourceHubSection = () => {
               style={{ background: 'radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12) 0%, transparent 70%)' }}
             />
 
-            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left">
-              <h2 className="text-[24px] lg:text-[26px] font-semibold text-[#0f172a] mb-4 tracking-tight w-full lg:w-[90%]">
+            <div className="relative z-10 mb-6 lg:mb-0 text-center lg:text-left lg:pb-[140px]">
+              <h2 className="text-[22px] lg:text-[26px] font-semibold text-[#0f172a] mb-3 lg:mb-4 tracking-tight w-full lg:w-[90%]">
                 Lectures
               </h2>
-              <p className="text-[#4b5563] text-[15px] font-normal leading-relaxed w-full lg:max-w-[90%]">
-                High-quality video sessions that provide step-by-step explanations, ensuring you master every concept with ease.
+              <p className="text-[#4b5563] text-[14px] lg:text-[15px] font-normal leading-relaxed w-full">
+                High-quality video sessions that provide step-by-step explanations, ensuring you master every concept with ease and practical insight.
               </p>
             </div>
 
@@ -169,7 +167,7 @@ const ResourceHubSection = () => {
                 src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769293814/unnamed_13_xriziz.png" 
                 alt="Lectures" 
                 className="
-                  h-[190px] w-auto object-contain
+                  h-[170px] w-auto object-contain
                   lg:h-[170px]"
               />
             </div>
