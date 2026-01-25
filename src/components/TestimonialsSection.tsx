@@ -126,7 +126,7 @@ const TestimonialsSection = () => {
     animationFrameId = requestAnimationFrame(scroll);
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isPaused, infiniteScrollableTestimonials]); // Depend on the processed list
+  }, [isPaused, infiniteScrollableTestimonials]);
 
   return (
     <section className="py-24 bg-gray-100 font-['Inter',sans-serif] overflow-hidden">
@@ -135,7 +135,6 @@ const TestimonialsSection = () => {
         {/* Header Section */}
         <div className="text-center mb-[50px] lg:mb-[70px]">
           <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
-            {/* Changed 'text-red-500' to 'text-black' */}
             ❤️<span className="text-black">for</span> Unknown IITians
           </h1>
           <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
@@ -146,12 +145,13 @@ const TestimonialsSection = () => {
         {/* --- ROW 1: Featured Testimonial --- */}
         {featuredTestimonial && (
           <div className="mb-8 lg:mb-10">
-            {/* Changed border-black/5 to border-black */}
-            <div className="relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
-              {/* Corner Fade - Preserved */}
+            <div className="relative border border-black rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
+              {/* Premium Corner Color Effect (Indigo/Slate Blend) */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
-                style={{ background: 'radial-gradient(circle at bottom right, rgba(30, 58, 138, 0.05) 0%, transparent 70%)' }}
+                style={{ 
+                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%)' 
+                }}
               />
               
               <div className="relative z-10 p-8 lg:p-[50px]">
@@ -172,10 +172,7 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- 
-            - Auto-scrolls via useEffect
-            - Pauses on hover/touch for manual scrolling
-        */}
+        {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- */}
         <div 
           ref={scrollRef}
           onMouseEnter={() => setIsPaused(true)}
@@ -190,21 +187,22 @@ const TestimonialsSection = () => {
         >
           {infiniteScrollableTestimonials.map((testimonial, index) => (
             <div 
-              key={`${index}-${testimonial.name}`} // Unique key for duplicated items
-              // Changed border-black/5 to border-black
+              key={`${index}-${testimonial.name}`}
               className="
-                relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col flex-shrink-0
+                relative border border-black rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col flex-shrink-0
                 /* Mobile Width */
                 min-w-[85vw] sm:min-w-[350px] 
-                /* Desktop Width - Fixed width to allow scrolling */
+                /* Desktop Width */
                 lg:min-w-[400px] lg:max-w-[400px]
                 h-auto
               "
             >
-              {/* Corner Fade - Preserved */}
+              {/* Premium Corner Color Effect (Indigo/Slate Blend) - Applied to ALL cards */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
-                style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.02) 0%, transparent 60%)' }}
+                style={{ 
+                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%)' 
+                }}
               />
 
               <div className="relative z-10 p-[30px] lg:p-[40px] flex flex-col h-full">
