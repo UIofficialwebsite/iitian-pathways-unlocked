@@ -15,12 +15,14 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const { toast } = useToast();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
-  const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
+  const CLIENT_ID = "29616950088-p64jd8affh5s0q1c3eq48fgfn9mu28e2.apps.googleusercontent.com";
 
   const handleCredentialResponse = async (response: any) => {
     setIsLoading(true);
     try {
-      // 1. Send the Google ID Token to Supabase
+      console.log("Google ID Token received, exchanging with Supabase...");
+      
+      // 1. Exchange the Google ID Token for a Supabase Session
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential,
@@ -28,13 +30,16 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       if (error) throw error;
 
-      // 2. Success! Supabase session is created.
+      // 2. Session created successfully in Supabase!
+      console.log("Supabase Login Successful:", data);
+      
       toast({
         title: "Welcome back!",
         description: `Signed in as ${data.user?.user_metadata?.full_name || 'User'}`,
       });
 
-      onSuccess();
+      if (onSuccess) onSuccess();
+
     } catch (error: any) {
       console.error("Auth Error:", error);
       toast({
@@ -47,7 +52,6 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   };
 
   useEffect(() => {
-    // Load script if missing
     const loadScript = () => {
       if (document.getElementById('google-client-script')) return;
       const script = document.createElement('script');
@@ -68,11 +72,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: handleCredentialResponse,
-          auto_select: false,
+          auto_select: false, // Disable auto-select to prevent loops
           cancel_on_tap_outside: true,
         });
 
-        // Render the INVISIBLE button (captures clicks)
+        // Render the "Invisible" Google button on top of our custom button
+        // This ensures the click event is trusted by the browser
         window.google.accounts.id.renderButton(
           googleBtnRef.current,
           { theme: "outline", size: "large", type: "standard" } 
@@ -87,7 +92,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
   return (
     <div className="w-full relative group flex justify-center">
-        {/* Custom UI Button */}
+        {/* Custom Design Button (Visible) */}
         <Button 
             variant="outline" 
             type="button"
@@ -114,7 +119,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
             )}
         </Button>
 
-        {/* Invisible Overlay Button */}
+        {/* Invisible Overlay (The Real Click Target) */}
         <div 
             ref={googleBtnRef} 
             className="absolute inset-0 z-20 opacity-0 cursor-pointer overflow-hidden h-[50px] w-full max-w-[380px] mx-auto rounded-xl"
