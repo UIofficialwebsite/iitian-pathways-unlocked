@@ -10,7 +10,6 @@ import {
   Clock, 
   HelpCircle, 
   Mail, 
-  ChevronDown,
   Search
 } from "lucide-react";
 import { 
@@ -200,49 +199,61 @@ const InternVerification = () => {
               </form>
             </div>
 
-            {/* Right Column: FAQ/Support */}
-            <div className="bg-white border border-slate-200 shadow-sm p-8 h-full">
-               <div className="mb-6 pb-4 border-b border-slate-100">
-                <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <HelpCircle className="w-5 h-5 text-slate-400" />
+            {/* Right Column: FAQ/Support (Styled like CourseDetail) */}
+            <div className="h-full">
+               <div className="mb-4">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  <HelpCircle className="w-5 h-5 text-slate-900" />
                   Common Questions
                 </h2>
               </div>
               
-              <Accordion type="single" collapsible className="w-full space-y-4">
-                <AccordionItem value="item-1" className="border border-slate-100 px-4 rounded-none bg-slate-50/50">
-                  <AccordionTrigger className="hover:no-underline py-3 text-slate-800 font-medium text-sm">
+              <Accordion type="single" collapsible className="w-full space-y-3">
+                {/* FAQ Item 1 */}
+                <AccordionItem 
+                  value="item-1" 
+                  className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
+                >
+                  <AccordionTrigger className="text-sm font-semibold text-blue-900 px-4 py-3 hover:no-underline hover:text-blue-800 text-left">
                     <div className="flex items-center gap-3">
-                      <Clock className="w-4 h-4 text-slate-400" />
+                      <Clock className="w-4 h-4 text-blue-800 flex-shrink-0" />
                       Verification Speed
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 text-sm pb-3 pl-7">
+                  <AccordionContent className="px-4 pb-4 text-slate-700 text-sm">
                     The database is queried in real-time. Results are displayed instantly upon submission.
                   </AccordionContent>
                 </AccordionItem>
                 
-                <AccordionItem value="item-2" className="border border-slate-100 px-4 rounded-none bg-slate-50/50">
-                  <AccordionTrigger className="hover:no-underline py-3 text-slate-800 font-medium text-sm">
+                {/* FAQ Item 2 */}
+                <AccordionItem 
+                  value="item-2" 
+                  className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
+                >
+                  <AccordionTrigger className="text-sm font-semibold text-blue-900 px-4 py-3 hover:no-underline hover:text-blue-800 text-left">
                     <div className="flex items-center gap-3">
-                      <XCircle className="w-4 h-4 text-slate-400" />
+                      <XCircle className="w-4 h-4 text-blue-800 flex-shrink-0" />
                       Invalid ID?
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 text-sm pb-3 pl-7">
+                  <AccordionContent className="px-4 pb-4 text-slate-700 text-sm">
                     Ensure the ID matches the format on your offer letter (e.g., UI12345 or INT001).
                   </AccordionContent>
                 </AccordionItem>
                 
-                <AccordionItem value="item-3" className="border border-slate-100 px-4 rounded-none bg-slate-50/50">
-                  <AccordionTrigger className="hover:no-underline py-3 text-slate-800 font-medium text-sm">
+                {/* FAQ Item 3 */}
+                <AccordionItem 
+                  value="item-3" 
+                  className="bg-blue-50 border border-blue-100 rounded-lg shadow-sm"
+                >
+                  <AccordionTrigger className="text-sm font-semibold text-blue-900 px-4 py-3 hover:no-underline hover:text-blue-800 text-left">
                     <div className="flex items-center gap-3">
-                      <Mail className="w-4 h-4 text-slate-400" />
+                      <Mail className="w-4 h-4 text-blue-800 flex-shrink-0" />
                       Support Contact
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-600 text-sm pb-3 pl-7">
-                    For discrepancies, please contact HR at <a href="mailto:hr@unknowniitians.com" className="text-blue-700 underline">hr@unknowniitians.com</a>
+                  <AccordionContent className="px-4 pb-4 text-slate-700 text-sm">
+                    For discrepancies, please contact HR at <a href="mailto:hr@unknowniitians.com" className="text-blue-700 underline font-medium">hr@unknowniitians.com</a>
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
