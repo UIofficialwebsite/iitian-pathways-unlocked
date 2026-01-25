@@ -36,11 +36,11 @@ const ResourceHubSection = () => {
     },
   ];
 
-  // Shared content component to ensure internal layout is identical on both views
-  const ResourceCardContent = ({ resource, isDesktop = false }: { resource: typeof resources[0], isDesktop?: boolean }) => (
+  // Unified Card Content - Enforcing PC Layout (absolute image, fixed padding) on Mobile too
+  const ResourceCardContent = ({ resource }: { resource: typeof resources[0] }) => (
     <>
       <svg 
-        className={`absolute top-[25px] right-[25px] ${isDesktop ? 'lg:top-[30px] lg:right-[30px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100' : 'z-20'} transition-opacity duration-300`} 
+        className="absolute top-[25px] right-[25px] lg:top-[30px] lg:right-[30px] opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-300 z-20" 
         width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={resource.iconColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
       >
         <line x1="7" y1="17" x2="17" y2="7"></line>
@@ -52,20 +52,25 @@ const ResourceHubSection = () => {
         style={{ background: `radial-gradient(circle at bottom right, ${resource.gradientColor} 0%, transparent 70%)` }}
       />
 
-      {/* Content Text - Logic preserves exact original padding and alignment */}
-      <div className={`relative z-10 mb-6 ${isDesktop ? 'lg:mb-0 text-center lg:text-left lg:pb-[140px]' : 'text-center'}`}>
-        <h2 className={`text-[22px] ${isDesktop ? 'lg:text-[26px]' : ''} font-semibold text-[#0f172a] mb-3 ${isDesktop ? 'lg:mb-4' : ''} tracking-tight w-full ${isDesktop ? 'lg:w-[90%]' : ''}`}>
+      {/* TEXT SECTION:
+        - Forced 'pb-[140px]' on ALL screens to reserve space for the image (matches PC dimension logic).
+      */}
+      <div className="relative z-10 text-center lg:text-left pb-[140px]">
+        <h2 className="text-[22px] lg:text-[26px] font-semibold text-[#0f172a] mb-3 lg:mb-4 tracking-tight w-full lg:w-[90%]">
           {resource.title}
         </h2>
-        <p className={`text-[#4b5563] text-[14px] ${isDesktop ? 'lg:text-[15px]' : ''} font-normal leading-relaxed w-full`}>
+        <p className="text-[#4b5563] text-[14px] lg:text-[15px] font-normal leading-relaxed w-full">
           {resource.description}
         </p>
       </div>
 
-      <div className={`
-        relative mt-auto flex justify-center 
-        ${isDesktop ? 'lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-[5] lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-4' : ''}
-      `}>
+      {/* IMAGE SECTION:
+        - Forced 'absolute bottom-0' on ALL screens (matches PC dimension/layout logic).
+      */}
+      <div className="
+        absolute bottom-0 left-0 right-0 z-[5] flex justify-center
+        lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-4
+      ">
         <img 
           src={resource.imageSrc} 
           alt={resource.title} 
@@ -89,10 +94,9 @@ const ResourceHubSection = () => {
           </p>
         </div>
 
-        {/* MOBILE SLIDER: 
-          - Restored 'pb-8' to container to prevent vertical cutting off (Dimensions fix).
-          - Uses InfiniteSlider for automatic + manual feel (slow on hover).
-          - Cards use EXACT original classes: 'min-w-[85vw] sm:min-w-[350px] h-auto p-8'.
+        {/* --- MOBILE VIEW: Infinite Slider (One Row) --- */}
+        {/* - Added 'pb-8' for shadow space.
+           - Removed static grid classes.
         */}
         <div className="block md:hidden -mx-6 pb-8">
           <InfiniteSlider 
@@ -104,21 +108,22 @@ const ResourceHubSection = () => {
               <Link 
                 key={`mobile-${index}`}
                 to="#" 
+                // FIXED DIMENSIONS:
+                // - Forced 'h-[380px]' (Same as PC)
+                // - Forced 'p-[45px]' (Same as PC padding for consistency)
                 className={`
                   group relative border ${resource.borderClass} rounded-[14px] flex flex-col overflow-hidden ${resource.bgClass} transition-all duration-300 hover:shadow-lg snap-center
-                  min-w-[85vw] sm:min-w-[350px] h-auto p-8
+                  min-w-[85vw] sm:min-w-[350px]
+                  h-[380px] p-[30px] sm:p-[45px]
                 `}
               >
-                <ResourceCardContent resource={resource} isDesktop={false} />
+                <ResourceCardContent resource={resource} />
               </Link>
             ))}
           </InfiniteSlider>
         </div>
 
-        {/* DESKTOP GRID: 
-          - Completely hidden on mobile.
-          - Preserves 3-column grid layout with exact original dimensions (h-[380px]).
-        */}
+        {/* --- DESKTOP VIEW: Static Grid (3 Columns) --- */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
           {resources.map((resource, index) => (
             <Link 
@@ -126,10 +131,10 @@ const ResourceHubSection = () => {
               to="#" 
               className={`
                 group relative border ${resource.borderClass} rounded-[14px] flex flex-col overflow-hidden ${resource.bgClass} transition-all duration-300 hover:shadow-lg
-                lg:h-[380px] lg:p-[45px] lg:min-w-0
+                h-[380px] p-[45px] min-w-0
               `}
             >
-              <ResourceCardContent resource={resource} isDesktop={true} />
+              <ResourceCardContent resource={resource} />
             </Link>
           ))}
         </div>
