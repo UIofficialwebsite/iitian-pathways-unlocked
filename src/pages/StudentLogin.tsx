@@ -7,8 +7,9 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { FcGoogle } from "react-icons/fc";
 import NavBar from "@/components/NavBar";
+// Import the updated GoogleAuth component
+import GoogleAuth from "@/components/auth/GoogleAuth";
 
 const StudentLogin = () => {
   const [email, setEmail] = useState("");
@@ -27,6 +28,7 @@ const StudentLogin = () => {
 
     try {
       if (isSignUp) {
+        // ... (Existing sign up logic) ...
         const { data: existingUsers, error: checkError } = await supabase
           .from('profiles')
           .select('email')
@@ -65,6 +67,7 @@ const StudentLogin = () => {
         });
         navigate("/profile/complete");
       } else {
+        // ... (Existing login logic) ...
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -77,21 +80,7 @@ const StudentLogin = () => {
           description: "Welcome back!",
         });
         
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, phone')
-            .eq('id', data.user.id)
-            .single();
-          
-          if (!profile || !profile.full_name || !profile.phone) {
-            navigate("/profile/complete");
-          } else {
-            navigate("/");
-          }
-        } catch (error) {
-          navigate("/profile/complete");
-        }
+        checkProfileAndNavigate(data.user.id);
       }
     } catch (error: any) {
       toast({
@@ -104,23 +93,37 @@ const StudentLogin = () => {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
+  // Helper to handle navigation after successful login (Email or Google)
+  const checkProfileAndNavigate = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}/auth/google-callback`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      });
-      setIsLoading(false);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', userId)
+        .single();
+      
+      const returnUrl = localStorage.getItem('auth_return_url');
+
+      if (!profile || !profile.full_name || !profile.phone) {
+        navigate("/profile/complete");
+      } else if (returnUrl) {
+        localStorage.removeItem('auth_return_url');
+        navigate(returnUrl);
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      // Fallback if profile check fails
+      navigate("/profile/complete");
+    }
+  };
+
+  const onGoogleSuccess = async () => {
+    // GoogleAuth component handles the Supabase handshake.
+    // We just need to check the user profile and navigate.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        await checkProfileAndNavigate(user.id);
     }
   };
 
@@ -148,16 +151,14 @@ const StudentLogin = () => {
           </h2>
 
           <div className="space-y-4 text-left">
-            <Button 
-              variant="outline" 
-              type="button" 
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border-gray-300 hover:bg-gray-50 hover:text-black transition-all"
-              onClick={handleGoogleLogin}
-              disabled={isLoading}
-            >
-              <FcGoogle className="h-5 w-5" />
-              Continue with Google
-            </Button>
+            {/* Replaced the manual Button with the GoogleAuth component.
+                This provides the "frontend handshake" via the Google SDK.
+            */}
+            <GoogleAuth 
+                isLoading={isLoading} 
+                setIsLoading={setIsLoading} 
+                onSuccess={onGoogleSuccess}
+            />
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
