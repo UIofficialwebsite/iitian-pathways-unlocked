@@ -63,7 +63,7 @@ const TestimonialsSection = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonialsData);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Refs and state for auto-scroll
+  // Refs and State for Auto-Scroll
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
@@ -101,9 +101,10 @@ const TestimonialsSection = () => {
   const featuredTestimonial = testimonials[0];
   const scrollableTestimonials = testimonials.slice(1);
   
-  // Duplicate data for infinite scroll effect
+  // Duplicate data to create a seamless infinite loop
   const infiniteScrollableTestimonials = [...scrollableTestimonials, ...scrollableTestimonials];
 
+  // Auto-scroll logic
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer) return;
@@ -112,11 +113,11 @@ const TestimonialsSection = () => {
 
     const scroll = () => {
       if (!isPaused && scrollContainer) {
-        // If we've scrolled past the first set (halfway), reset to 0 to loop
+        // If we have scrolled halfway (the length of the original list), reset to 0 to loop seamlessly
         if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
           scrollContainer.scrollLeft = 0;
         } else {
-          scrollContainer.scrollLeft += 0.5; // Adjust speed here (0.5 is slow and smooth)
+          scrollContainer.scrollLeft += 0.5; // Adjust speed (0.5 is slow/smooth)
         }
       }
       animationFrameId = requestAnimationFrame(scroll);
@@ -125,16 +126,16 @@ const TestimonialsSection = () => {
     animationFrameId = requestAnimationFrame(scroll);
 
     return () => cancelAnimationFrame(animationFrameId);
-  }, [isPaused, scrollableTestimonials]);
+  }, [isPaused, infiniteScrollableTestimonials]); // Depend on the processed list
 
   return (
-    // Changed bg-gray-50 to bg-gray-100 for a slightly darker grey background
     <section className="py-24 bg-gray-100 font-['Inter',sans-serif] overflow-hidden">
       <div className="max-w-[1200px] mx-auto px-6">
         
         {/* Header Section */}
         <div className="text-center mb-[50px] lg:mb-[70px]">
           <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
+            {/* Changed 'text-red-500' to 'text-black' */}
             ❤️<span className="text-black">for</span> Unknown IITians
           </h1>
           <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
@@ -147,7 +148,7 @@ const TestimonialsSection = () => {
           <div className="mb-8 lg:mb-10">
             {/* Changed border-black/5 to border-black */}
             <div className="relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
-              {/* Corner Fade */}
+              {/* Corner Fade - Preserved */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: 'radial-gradient(circle at bottom right, rgba(30, 58, 138, 0.05) 0%, transparent 70%)' }}
@@ -173,8 +174,7 @@ const TestimonialsSection = () => {
 
         {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- 
             - Auto-scrolls via useEffect
-            - Pauses on hover/touch
-            - Removed snap classes to allow smooth auto-scroll
+            - Pauses on hover/touch for manual scrolling
         */}
         <div 
           ref={scrollRef}
@@ -190,7 +190,7 @@ const TestimonialsSection = () => {
         >
           {infiniteScrollableTestimonials.map((testimonial, index) => (
             <div 
-              key={`${index}-${testimonial.name}`}
+              key={`${index}-${testimonial.name}`} // Unique key for duplicated items
               // Changed border-black/5 to border-black
               className="
                 relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col flex-shrink-0
@@ -201,6 +201,7 @@ const TestimonialsSection = () => {
                 h-auto
               "
             >
+              {/* Corner Fade - Preserved */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ background: 'radial-gradient(circle at bottom right, rgba(0, 0, 0, 0.02) 0%, transparent 60%)' }}
