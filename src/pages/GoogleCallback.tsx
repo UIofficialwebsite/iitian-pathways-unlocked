@@ -17,41 +17,36 @@ const GoogleCallback = () => {
           const user = data.session.user;
           
           // Check if profile is complete
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('profile_completed')
-              .eq('id', user.id)
-              .single();
-            
-            toast({
-              title: "Login successful!",
-              description: "Welcome!",
-            });
-            
-            if (!profile || !profile.profile_completed) {
-              // Profile incomplete, send to auth page (which shows Setup)
-              // NOTE: We do NOT remove the 'auth_return_url' yet, Auth.tsx will handle it after setup
-              navigate("/auth");
-            } else {
-              // --- NEW LOGIC: Retrieve return URL ---
-              const returnUrl = localStorage.getItem('auth_return_url');
-              if (returnUrl) {
-                localStorage.removeItem('auth_return_url');
-                navigate(returnUrl);
-              } else {
-                navigate("/");
-              }
-              // --------------------------------------
-            }
-          } catch (error) {
-            console.error("Error checking profile:", error);
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('profile_completed')
+            .eq('id', user.id)
+            .single();
+          
+          toast({
+            title: "Login successful!",
+            description: "Welcome back!",
+          });
+          
+          // If profile is NOT complete, they must finish setup
+          if (!profile || !profile.profile_completed) {
             navigate("/auth");
+          } else {
+            // RETRIEVE THE SAVED PATH
+            const returnUrl = localStorage.getItem('auth_return_url');
+            if (returnUrl) {
+              localStorage.removeItem('auth_return_url');
+              navigate(returnUrl);
+            } else {
+              // Fallback to home if no path was saved
+              navigate("/");
+            }
           }
         } else {
           throw new Error("No session found");
         }
       } catch (error: any) {
+        console.error("Auth Callback Error:", error);
         toast({
           title: "Authentication failed",
           description: error.message || "An error occurred during authentication",
@@ -67,10 +62,11 @@ const GoogleCallback = () => {
   }, [navigate, toast]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="text-center">
-        <h2 className="text-2xl font-semibold mb-2">Authenticating...</h2>
-        <p className="text-gray-600">Please wait while we complete your sign-in</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+        <h2 className="text-2xl font-semibold mb-2">Finishing sign-in...</h2>
+        <p className="text-gray-600">Please wait a moment while we redirect you.</p>
       </div>
     </div>
   );
