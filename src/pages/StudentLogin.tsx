@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import NavBar from "@/components/NavBar";
-// Import the updated GoogleAuth component
+// Import the GoogleAuth component
 import GoogleAuth from "@/components/auth/GoogleAuth";
 
 const StudentLogin = () => {
@@ -22,13 +22,37 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Helper function to check profile status and redirect after login
+  const checkProfileAndNavigate = async (userId: string) => {
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone')
+        .eq('id', userId)
+        .single();
+      
+      const returnUrl = localStorage.getItem('auth_return_url');
+
+      if (!profile || !profile.full_name || !profile.phone) {
+        navigate("/profile/complete");
+      } else if (returnUrl) {
+        localStorage.removeItem('auth_return_url');
+        navigate(returnUrl);
+      } else {
+        navigate("/");
+      }
+    } catch (error) {
+      // Fallback if profile check fails
+      navigate("/profile/complete");
+    }
+  };
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       if (isSignUp) {
-        // ... (Existing sign up logic) ...
         const { data: existingUsers, error: checkError } = await supabase
           .from('profiles')
           .select('email')
@@ -67,7 +91,6 @@ const StudentLogin = () => {
         });
         navigate("/profile/complete");
       } else {
-        // ... (Existing login logic) ...
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -80,7 +103,9 @@ const StudentLogin = () => {
           description: "Welcome back!",
         });
         
-        checkProfileAndNavigate(data.user.id);
+        if (data.user) {
+          await checkProfileAndNavigate(data.user.id);
+        }
       }
     } catch (error: any) {
       toast({
@@ -93,34 +118,8 @@ const StudentLogin = () => {
     }
   };
 
-  // Helper to handle navigation after successful login (Email or Google)
-  const checkProfileAndNavigate = async (userId: string) => {
-    try {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name, phone')
-        .eq('id', userId)
-        .single();
-      
-      const returnUrl = localStorage.getItem('auth_return_url');
-
-      if (!profile || !profile.full_name || !profile.phone) {
-        navigate("/profile/complete");
-      } else if (returnUrl) {
-        localStorage.removeItem('auth_return_url');
-        navigate(returnUrl);
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      // Fallback if profile check fails
-      navigate("/profile/complete");
-    }
-  };
-
+  // Handler for when Google Login completes successfully
   const onGoogleSuccess = async () => {
-    // GoogleAuth component handles the Supabase handshake.
-    // We just need to check the user profile and navigate.
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
         await checkProfileAndNavigate(user.id);
@@ -151,8 +150,9 @@ const StudentLogin = () => {
           </h2>
 
           <div className="space-y-4 text-left">
+            
             {/* Replaced the manual Button with the GoogleAuth component.
-                This provides the "frontend handshake" via the Google SDK.
+              This will render the Google-provided Sign-In button.
             */}
             <GoogleAuth 
                 isLoading={isLoading} 
