@@ -2,26 +2,43 @@ import React from "react";
 import NavBar from "@/components/NavBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import WelcomeSection from "@/components/WelcomeSection";
-import CategoriesSection from "@/components/CategoriesSection";
 import WhyChooseUsSection from "@/components/WhyChooseUsSection";
-import ResourceHubSection from "@/components/ResourceHubSection";
+import IITMBSNotesSection from "@/components/IITMBSNotesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
+import AnnouncementBar from "@/components/AnnouncementBar";
 import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
+import VideoSection from "@/components/VideoSection";
+import PartnershipsSection from "@/components/PartnershipsSection";
 
 const Index = () => {
   return (
-    <>
+    <div className="min-h-screen bg-white">
+      <AnnouncementBar />
       <NavBar />
-      <HeroCarousel />
-      <WelcomeSection />
-      <CategoriesSection />
-      <WhyChooseUsSection />
-      <ResourceHubSection />
-      <TestimonialsSection />
+      
+      <main>
+        <HeroCarousel />
+        <WelcomeSection />
+        <WhyChooseUsSection />
+        <VideoSection />
+        
+        {/* Moved TestimonialsSection here, BEFORE the Study Material */}
+        <TestimonialsSection />
+
+        {/* Study Material Section */}
+        <div id="study-material">
+          <IITMBSNotesSection />
+        </div>
+
+        <PartnershipsSection />
+        <NewsletterSection />
+      </main>
+
       <Footer />
       <FloatingAnnouncementToggle />
-    </>
+    </div>
   );
 };
 
