@@ -16,20 +16,11 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
   const handleSuccess = async (credentialResponse: CredentialResponse) => {
     setIsLoading(true);
+    // ... (rest of your logic)
     
-    // Logic to remember return URL
-    let returnTo = window.location.pathname + window.location.search;
-    if (['/auth', '/student-login', '/admin-login'].includes(window.location.pathname)) {
-        returnTo = location.state?.from?.pathname 
-          ? location.state.from.pathname + (location.state.from.search || '')
-          : '/';
-    }
-    localStorage.setItem('auth_return_url', returnTo);
-
     try {
       if (!credentialResponse.credential) throw new Error("No Google credential received");
 
-      // Sign in to Supabase using the Google ID token
       const { error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: credentialResponse.credential,
@@ -50,11 +41,11 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   };
 
   return (
-    <div className="w-full flex justify-center">
+    <div className="w-full flex justify-center py-2">
       <GoogleLogin
         onSuccess={handleSuccess}
         onError={() => {
-            toast({ title: "Login Failed", variant: "destructive" });
+            console.log('Login Failed');
             setIsLoading(false);
         }}
         theme="outline"
