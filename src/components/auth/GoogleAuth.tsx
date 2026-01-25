@@ -15,7 +15,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const { toast } = useToast();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
-  const CLIENT_ID = "29616950088-p64jd8affh5s0q1c3eq48fgfn9mu28e2.apps.googleusercontent.com";
+  const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
 
   const handleCredentialResponse = async (response: any) => {
     setIsLoading(true);
