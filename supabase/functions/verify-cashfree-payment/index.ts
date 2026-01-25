@@ -184,7 +184,7 @@ serve(async (req: Request) => {
         discountApplied = true;
         discountType = 'flat';
         discountValue = discountSplit.amount || 0;
-        netAmount = orderData.order_amount - discountValue;
+        netAmount = orderData.order_amount - (discountValue || 0);
       }
     }
 
