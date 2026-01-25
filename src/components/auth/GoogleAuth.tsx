@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from "lucide-react";
@@ -12,25 +12,61 @@ interface GoogleAuthProps {
 
 const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSuccess }) => {
   const { toast } = useToast();
-  const googleBtnRef = useRef<HTMLDivElement>(null);
-  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+  const [tokenClient, setTokenClient] = useState<any>(null);
+  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+  
   const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
 
-  const handleCredentialResponse = (response: any) => {
+  // 1. Initialize the Google Token Client
+  useEffect(() => {
+    const initClient = () => {
+      if (window.google) {
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              await fetchUserProfile(tokenResponse.access_token);
+            }
+          },
+        });
+        setTokenClient(client);
+        setIsScriptLoaded(true);
+      }
+    };
+
+    // Check if script is already loaded
+    if (window.google) {
+      initClient();
+    } else {
+      // Add a listener or interval to wait for the script from index.html
+      const interval = setInterval(() => {
+        if (window.google) {
+          initClient();
+          clearInterval(interval);
+        }
+      }, 500);
+      return () => clearInterval(interval);
+    }
+  }, []);
+
+  // 2. Fetch User Profile using the Access Token
+  const fetchUserProfile = async (accessToken: string) => {
     setIsLoading(true);
     try {
-      // 1. Decode ID Token locally
-      const base64Url = response.credential.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-
-      const userData = JSON.parse(jsonPayload);
-
-      // 2. Save Data & Dispatch Event (This notifies useAuth immediately)
+      const response = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch user profile');
+      
+      const userData = await response.json();
+      
+      // 3. Save to Local Storage & Dispatch Event
       localStorage.setItem('google_user', JSON.stringify(userData));
-      localStorage.setItem('google_id_token', response.credential);
+      // We store the access token as the "id_token" for simplicity in useAuth
+      localStorage.setItem('google_id_token', accessToken); 
+      
       window.dispatchEvent(new Event('google-auth-change'));
 
       toast({
@@ -40,69 +76,39 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       onSuccess();
     } catch (error) {
-      console.error("Auth Error:", error);
+      console.error("Profile Fetch Error:", error);
       toast({
-        title: "Authentication Failed",
+        title: "Login Failed",
+        description: "Could not retrieve user information.",
         variant: "destructive",
       });
       setIsLoading(false);
     }
   };
 
-  useEffect(() => {
-    // 1. Load the Google Script if missing
-    const loadScript = () => {
-      if (document.getElementById('google-client-script')) return;
-      const script = document.createElement('script');
-      script.src = "https://accounts.google.com/gsi/client";
-      script.id = "google-client-script";
-      script.async = true;
-      script.defer = true;
-      script.onload = () => setIsGoogleLoaded(true);
-      document.head.appendChild(script);
-    };
-
-    loadScript();
-
-    // 2. Initialize the Button when script is ready
-    const interval = setInterval(() => {
-      // Check if window.google exists AND our ref is attached to the DOM
-      if (window.google && googleBtnRef.current) {
-        setIsGoogleLoaded(true);
-        
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: handleCredentialResponse,
-          auto_select: false,
-          cancel_on_tap_outside: true,
-        });
-
-        // Render invisible button over our custom UI
-        window.google.accounts.id.renderButton(
-          googleBtnRef.current,
-          { theme: "outline", size: "large", type: "standard", width: "400" } 
-        );
-        
-        clearInterval(interval);
-      }
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
+  // 4. Handle Button Click
+  const handleGoogleClick = () => {
+    if (!tokenClient) {
+      toast({ title: "Please wait", description: "Google services are still loading..." });
+      return;
+    }
+    // Programmatically open the popup
+    tokenClient.requestAccessToken();
+  };
 
   return (
-    <div className="w-full relative group flex justify-center">
-        {/* CUSTOM DESIGN BUTTON (Visible) */}
+    <div className="w-full flex justify-center">
         <Button 
             variant="outline" 
             type="button"
+            onClick={handleGoogleClick}
             className={cn(
-              "w-full max-w-[380px] h-[50px] bg-white text-black border-gray-300 font-medium text-base relative z-10",
+              "w-full max-w-[380px] h-[50px] bg-white text-black border-gray-300 font-medium text-base",
               "flex items-center justify-center gap-3 transition-all duration-200",
-              "group-hover:bg-gray-50 group-hover:scale-[1.01]", 
+              "hover:bg-gray-50 hover:scale-[1.01]", 
               "rounded-xl shadow-sm"
             )}
-            disabled={isLoading || !isGoogleLoaded}
+            disabled={isLoading || !isScriptLoaded}
         >
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -114,17 +120,10 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                <span className="text-gray-700">Continue with Google</span>
+                <span className="text-gray-700">{isScriptLoaded ? "Continue with Google" : "Loading..."}</span>
               </>
             )}
         </Button>
-
-        {/* INVISIBLE OVERLAY (Click Target) */}
-        {/* This div sits exactly on top of the button above. When user clicks, they click this. */}
-        <div 
-            ref={googleBtnRef} 
-            className="absolute inset-0 z-20 opacity-0 cursor-pointer overflow-hidden h-[50px] w-full max-w-[380px] mx-auto rounded-xl"
-        ></div>
     </div>
   );
 };
