@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,7 +22,6 @@ serve(async (req: Request) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     const cashfreeKey = Deno.env.get("CASHFREE_KEY");
     const cashfreeSecret = Deno.env.get("CASHFREE_SECRET");
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
 
     if (!supabaseUrl || !supabaseKey || !cashfreeKey || !cashfreeSecret) {
       console.error("❌ Critical: Missing API Keys in Secrets");
@@ -157,23 +155,29 @@ serve(async (req: Request) => {
     }
 
     // 9. Extract discount/offer info from Cashfree response
+    // Cashfree returns offer details in payment_offers or offer_details
     let discountApplied = false;
     let discountType: string | null = null;
     let discountValue: number | null = null;
     let couponCode: string | null = null;
     let netAmount: number = orderData.order_amount;
 
+    // Check for offers in payment details (Cashfree Offers feature)
     const offers = paymentDetails?.payment_offers || paymentDetails?.offers || [];
     if (offers && offers.length > 0) {
-      const appliedOffer = offers[0];
+      const appliedOffer = offers[0]; // Get the first applied offer
       discountApplied = true;
       discountType = appliedOffer.offer_type || appliedOffer.discount_type || 'flat';
       discountValue = appliedOffer.discount_amount || appliedOffer.cashback_amount || appliedOffer.offer_amount || 0;
       couponCode = appliedOffer.offer_id || appliedOffer.promo_code || appliedOffer.offer_code || null;
+      
+      // Net amount is the actual amount charged after discount
       netAmount = paymentDetails?.payment_amount || orderData.order_amount;
+      
       console.log("🎫 Offer Applied:", JSON.stringify(appliedOffer));
     }
 
+    // Also check order-level discount info (order_splits or discount fields)
     if (!discountApplied && orderData.order_splits) {
       const discountSplit = orderData.order_splits.find((s: any) => s.split_type === 'discount');
       if (discountSplit) {
@@ -184,6 +188,7 @@ serve(async (req: Request) => {
       }
     }
 
+    // Check if payment amount differs from order amount (indicates discount)
     if (!discountApplied && paymentDetails?.payment_amount && paymentDetails.payment_amount < orderData.order_amount) {
       discountApplied = true;
       discountType = 'flat';
@@ -192,17 +197,19 @@ serve(async (req: Request) => {
       console.log("💰 Discount detected from amount difference:", discountValue);
     }
 
+    // If no discount, net_amount equals order_amount
     if (!discountApplied) {
       netAmount = orderData.order_amount;
     }
 
     // 10. Insert Payment Record with ALL data including Cashfree discount info
+    // Only insert into payments table if the final status is success
     if (finalStatus === "success") {
       const paymentInsertData = {
         order_id: orderId,
         payment_id: paymentDetails?.cf_payment_id?.toString() || orderData.cf_order_id || null,
         user_id: userId || null,
-        amount: orderData.order_amount,
+        amount: orderData.order_amount, // Original order amount
         status: finalStatus,
         payment_mode: paymentDetails?.payment_group || paymentDetails?.payment_method?.type || "unknown",
         payment_time: paymentDetails?.payment_time || paymentDetails?.payment_completion_time || null,
@@ -213,11 +220,12 @@ serve(async (req: Request) => {
         raw_response: { order: orderData, payment: paymentDetails },
         batch: mainBatchName,
         courses: coursesString,
+        // Discount tracking fields from Cashfree
         discount_applied: discountApplied,
         discount_type: discountApplied ? discountType : null,
         discount_value: discountApplied ? discountValue : null,
         coupon_code: couponCode,
-        net_amount: netAmount
+        net_amount: netAmount // Final amount actually received
       };
 
       console.log("📝 Inserting Payment:", JSON.stringify(paymentInsertData));
@@ -230,69 +238,12 @@ serve(async (req: Request) => {
         console.error("❌ DB INSERT ERROR:", insertError.message);
       } else {
         console.log(`✅ Payment Saved: Batch=[${mainBatchName}], Courses=[${coursesString}], UTR=[${utr}]`);
-
-        // --- EMAIL INTEGRATION START ---
-        if (resendApiKey && paymentInsertData.customer_email) {
-          try {
-            console.log("📧 Attempting to send confirmation email to:", paymentInsertData.customer_email);
-            const resend = new Resend(resendApiKey);
-
-            const emailHtml = `
-              <div style="font-family: Arial, sans-serif; color: #333;">
-                <h1 style="color: #4F46E5;">Welcome to ${mainBatchName}!</h1>
-                <p>Hello,</p>
-                <p>Congratulations! Your enrollment has been confirmed.</p>
-                
-                <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">Enrollment Details</h3>
-                  <p><strong>Batch:</strong> ${mainBatchName}</p>
-                  <p><strong>Subjects Enrolled:</strong> ${coursesString}</p>
-                  <p><strong>Amount Paid:</strong> ₹${netAmount}</p>
-                  <p><strong>Transaction ID:</strong> ${paymentInsertData.payment_id}</p>
-                </div>
-
-                <p>You can access your Student Support Portal and study materials here:</p>
-                <p>
-                  <a href="https://ssp.unknowniitians.com" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
-                    Access Student Portal
-                  </a>
-                </p>
-                <p style="color: #666; font-size: 14px; margin-top: 5px;">
-                  Or visit: <a href="https://ssp.unknowniitians.com">ssp.unknowniitians.com</a>
-                </p>
-
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
-                <p style="color: #888; font-size: 12px;">
-                  If you have any questions, please contact our support team.
-                </p>
-              </div>
-            `;
-
-            const { data: emailData, error: emailError } = await resend.emails.send({
-              from: 'Acme <onboarding@resend.dev>', // Update this with your verified sender if you have one
-              to: [paymentInsertData.customer_email],
-              subject: `Enrollment Confirmed: ${mainBatchName}`,
-              html: emailHtml,
-            });
-
-            if (emailError) {
-              console.error("❌ Email Sending Failed:", emailError);
-            } else {
-              console.log("✅ Email Sent Successfully:", emailData);
-            }
-          } catch (emailErr) {
-            console.error("⚠️ Unexpected error sending email:", emailErr);
-          }
-        } else {
-          console.warn("⚠️ Skipping email: Missing RESEND_API_KEY or Customer Email");
-        }
-        // --- EMAIL INTEGRATION END ---
       }
     } else {
       console.log(`ℹ️ Skipping payment table insert: Status is ${finalStatus}`);
     }
 
-    // 11. Update Enrollment Status
+    // 10. Update Enrollment Status
     const { error: updateError } = await supabase
       .from("enrollments")
       .update({ 
@@ -305,7 +256,7 @@ serve(async (req: Request) => {
       console.error("⚠️ Enrollment Update Error:", updateError.message);
     }
 
-    // 12. Redirect
+    // 11. Redirect
     const redirectUrl = `${frontendUrl}/dashboard?payment=${finalStatus}`;
     console.log(`🔄 Redirecting to: ${redirectUrl}`);
     return new Response(null, { status: 302, headers: { Location: redirectUrl } });
