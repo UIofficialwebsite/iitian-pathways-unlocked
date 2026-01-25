@@ -87,7 +87,7 @@ const ExamPrepHeader: React.FC<ExamPrepHeaderProps> = ({
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
                 <Link to="/exam-preparation" className="text-gray-500 hover:text-black uppercase text-[11px] font-normal tracking-wider transition-colors">
-                  School Prep
+                  Exam Prep
                 </Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
