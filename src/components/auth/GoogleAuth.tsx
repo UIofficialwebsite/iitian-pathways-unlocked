@@ -1,21 +1,21 @@
 import React, { useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
 
 interface GoogleAuthProps {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  onSuccess?: (userData: any) => void;
+  onSuccess?: () => void;
 }
 
 const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSuccess }) => {
   const { toast } = useToast();
+  // Your Client ID
   const CLIENT_ID = "29616950088-p64jd8affh5s0q1c3eq48fgfn9mu28e2.apps.googleusercontent.com";
 
-  const handleCredentialResponse = async (response: any) => {
+  const handleCredentialResponse = (response: any) => {
     setIsLoading(true);
     try {
-      // Decode the JWT (ID Token) to get user info locally
+      // 1. Decode JWT locally
       const base64Url = response.credential.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(atob(base64).split('').map((c) => {
@@ -24,7 +24,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       const userData = JSON.parse(jsonPayload);
 
-      // Store the session locally (LocalStorage)
+      // 2. Save to Local Storage
       localStorage.setItem('google_user', JSON.stringify(userData));
       localStorage.setItem('google_id_token', response.credential);
 
@@ -33,15 +33,16 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
         description: `Welcome, ${userData.name}!`,
       });
 
-      if (onSuccess) onSuccess(userData);
+      // 3. Navigate/Reload
+      if (onSuccess) {
+         onSuccess();
+      } else {
+         // Force reload to ensure useAuth picks up the new storage
+         window.location.href = '/dashboard'; 
+      }
+
     } catch (error) {
-      console.error("GIS Error:", error);
-      toast({
-        title: "Auth Error",
-        description: "Failed to process Google login.",
-        variant: "destructive",
-      });
-    } finally {
+      console.error("GIS Login Error:", error);
       setIsLoading(false);
     }
   };
@@ -49,50 +50,50 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   useEffect(() => {
     const initGis = () => {
       if (window.google) {
+        // Initialize with your Client ID
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: handleCredentialResponse,
-          auto_select: false,
+          auto_select: true, // Attempt to auto-select if one account exists
+          cancel_on_tap_outside: false, // Keep the prompt open
         });
+        
+        // Render the Button
+        const btnContainer = document.getElementById("googleBtnWrapper");
+        if (btnContainer) {
+            window.google.accounts.id.renderButton(
+              btnContainer,
+              { theme: "outline", size: "large", width: "100%" } // Responsive width
+            );
+        }
 
-        // Optional: Render the standard Google button into a div
-        window.google.accounts.id.renderButton(
-          document.getElementById("googleBtn"),
-          { theme: "outline", size: "large", width: 380 }
-        );
+        // --- THE "ASK THEM" LOGIC ---
+        // If we are mounting this component, it means the user is likely not logged in.
+        // We trigger the One Tap prompt to "ask" them to sign in.
+        window.google.accounts.id.prompt((notification: any) => {
+           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+               console.log("One Tap skipped or not displayed");
+           }
+        });
       }
     };
 
-    // Load GIS script if not present
-    if (!document.getElementById('google-gis-script')) {
-      const script = document.createElement('script');
-      script.src = "https://accounts.google.com/gsi/client";
-      script.id = "google-gis-script";
-      script.async = true;
-      script.defer = true;
-      script.onload = initGis;
-      document.head.appendChild(script);
+    // Load Script if missing
+    if (!window.google) {
+        const script = document.createElement('script');
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initGis;
+        document.head.appendChild(script);
     } else {
-      initGis();
+        initGis();
     }
   }, []);
 
   return (
-    <div className="w-full flex flex-col items-center gap-3 py-2">
-      {/* This div will be replaced by the official Google button */}
-      <div id="googleBtn" className="w-full max-w-[380px] flex justify-center"></div>
-      
-      {/* Fallback button if you want to trigger it manually */}
-      {!isLoading && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={() => window.google?.accounts.id.prompt()}
-          className="text-xs text-gray-500"
-        >
-          Can't see the button? Click here
-        </Button>
-      )}
+    <div className="w-full flex justify-center py-2">
+      <div id="googleBtnWrapper" className="w-full max-w-[380px] min-h-[40px]"></div>
     </div>
   );
 };
