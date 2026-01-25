@@ -15,6 +15,8 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const { toast } = useToast();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
+  
+  // 1. Precise Client ID as requested
   const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
 
   const handleCredentialResponse = async (response: any) => {
@@ -22,7 +24,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
     try {
       console.log("Google ID Token received, exchanging with Supabase...");
       
-      // 1. Exchange the Google ID Token for a Supabase Session
+      // 2. Exchange Google Token for Supabase Session
       const { data, error } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: response.credential,
@@ -30,15 +32,16 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       if (error) throw error;
 
-      // 2. Session created successfully in Supabase!
       console.log("Supabase Login Successful:", data);
       
-      toast({
-        title: "Welcome back!",
-        description: `Signed in as ${data.user?.user_metadata?.full_name || 'User'}`,
-      });
-
-      if (onSuccess) onSuccess();
+      // 3. Optional: Verify profile exists (your triggers should handle this)
+      if (data.session) {
+         toast({
+          title: "Welcome back!",
+          description: `Signed in as ${data.user?.user_metadata?.full_name || 'User'}`,
+        });
+        if (onSuccess) onSuccess();
+      }
 
     } catch (error: any) {
       console.error("Auth Error:", error);
@@ -52,47 +55,65 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   };
 
   useEffect(() => {
+    // 4. Dynamic Script Loading (Prevents race conditions in index.html)
     const loadScript = () => {
-      if (document.getElementById('google-client-script')) return;
+      const existingScript = document.getElementById('google-client-script');
+      if (existingScript) {
+        setIsGoogleLoaded(true);
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = "https://accounts.google.com/gsi/client";
       script.id = "google-client-script";
       script.async = true;
       script.defer = true;
       script.onload = () => setIsGoogleLoaded(true);
+      script.onerror = () => console.error("Failed to load Google Sign-In script");
       document.head.appendChild(script);
     };
 
     loadScript();
 
+    // 5. Initialize Google Button once script is ready
     const interval = setInterval(() => {
-      if (window.google && googleBtnRef.current) {
+      if (window.google && window.google.accounts && googleBtnRef.current) {
         setIsGoogleLoaded(true);
         
-        window.google.accounts.id.initialize({
-          client_id: CLIENT_ID,
-          callback: handleCredentialResponse,
-          auto_select: false, // Disable auto-select to prevent loops
-          cancel_on_tap_outside: true,
-        });
+        try {
+          window.google.accounts.id.initialize({
+            client_id: CLIENT_ID,
+            callback: handleCredentialResponse,
+            auto_select: false,
+            cancel_on_tap_outside: true,
+            ux_mode: 'popup', // Ensures it opens in a popup, not a redirect
+          });
 
-        // Render the "Invisible" Google button on top of our custom button
-        // This ensures the click event is trusted by the browser
-        window.google.accounts.id.renderButton(
-          googleBtnRef.current,
-          { theme: "outline", size: "large", type: "standard" } 
-        );
+          // Render the "Invisible" Google button (iframe) on top of our custom button
+          // This captures the click securely while showing your custom UI underneath
+          window.google.accounts.id.renderButton(
+            googleBtnRef.current,
+            { 
+              theme: "outline", 
+              size: "large", 
+              type: "standard",
+              width: googleBtnRef.current.clientWidth // Matches container width
+            } 
+          );
+        } catch (err) {
+          console.error("Google GSI Initialization Error:", err);
+        }
         
         clearInterval(interval);
       }
     }, 500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [CLIENT_ID]);
 
   return (
     <div className="w-full relative group flex justify-center">
-        {/* Custom Design Button (Visible) */}
+        {/* Custom Design Button (Visible Layer - Z-Index 10) */}
         <Button 
             variant="outline" 
             type="button"
@@ -119,10 +140,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
             )}
         </Button>
 
-        {/* Invisible Overlay (The Real Click Target) */}
+        {/* Invisible Overlay (Click Target - Z-Index 20) */}
+        {/* We keep opacity-0 so the user sees our custom button, but clicks this one */}
         <div 
             ref={googleBtnRef} 
             className="absolute inset-0 z-20 opacity-0 cursor-pointer overflow-hidden h-[50px] w-full max-w-[380px] mx-auto rounded-xl"
+            style={{ height: '50px' }}
         ></div>
     </div>
   );
