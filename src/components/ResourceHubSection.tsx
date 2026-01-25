@@ -10,7 +10,7 @@ const ResourceHubSection = () => {
       bgClass: "bg-[#f0f9ff]",
       borderClass: "border-[#d1d5db]",
       gradientColor: "rgba(14, 165, 233, 0.12)",
-      iconColor: "#0f172a", // Dark Blue/Black
+      iconColor: "#0f172a",
       imageSrc: "https://res.cloudinary.com/dkywjijpv/image/upload/v1769295469/image_10_r87scl.png",
       imageHeight: "h-[160px]",
     },
@@ -36,7 +36,7 @@ const ResourceHubSection = () => {
     },
   ];
 
-  // Common Card Content Component to avoid duplication between Mobile/Desktop views
+  // Shared content component to ensure internal layout is identical on both views
   const ResourceCardContent = ({ resource, isDesktop = false }: { resource: typeof resources[0], isDesktop?: boolean }) => (
     <>
       <svg 
@@ -47,13 +47,12 @@ const ResourceHubSection = () => {
         <polyline points="7 7 17 7 17 17"></polyline>
       </svg>
 
-      {/* Static Corner Fade */}
       <div 
         className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
         style={{ background: `radial-gradient(circle at bottom right, ${resource.gradientColor} 0%, transparent 70%)` }}
       />
 
-      {/* Content Text */}
+      {/* Content Text - Logic preserves exact original padding and alignment */}
       <div className={`relative z-10 mb-6 ${isDesktop ? 'lg:mb-0 text-center lg:text-left lg:pb-[140px]' : 'text-center'}`}>
         <h2 className={`text-[22px] ${isDesktop ? 'lg:text-[26px]' : ''} font-semibold text-[#0f172a] mb-3 ${isDesktop ? 'lg:mb-4' : ''} tracking-tight w-full ${isDesktop ? 'lg:w-[90%]' : ''}`}>
           {resource.title}
@@ -63,7 +62,6 @@ const ResourceHubSection = () => {
         </p>
       </div>
 
-      {/* Image Section */}
       <div className={`
         relative mt-auto flex justify-center 
         ${isDesktop ? 'lg:mt-0 lg:absolute lg:bottom-0 lg:left-0 lg:right-0 lg:z-[5] lg:transition-transform lg:duration-500 lg:ease-out lg:group-hover:scale-105 lg:group-hover:-translate-y-4' : ''}
@@ -91,19 +89,23 @@ const ResourceHubSection = () => {
           </p>
         </div>
 
-        {/* --- MOBILE VIEW: Infinite Slider (One Row) --- */}
-        <div className="block md:hidden -mx-6">
+        {/* MOBILE SLIDER: 
+          - Restored 'pb-8' to container to prevent vertical cutting off (Dimensions fix).
+          - Uses InfiniteSlider for automatic + manual feel (slow on hover).
+          - Cards use EXACT original classes: 'min-w-[85vw] sm:min-w-[350px] h-auto p-8'.
+        */}
+        <div className="block md:hidden -mx-6 pb-8">
           <InfiniteSlider 
             gap={20} 
-            duration={45} // Slower speed for readability
-            durationOnHover={200} // Significant slowdown (almost pause) on hover/touch
+            duration={45} 
+            durationOnHover={200}
           >
             {resources.map((resource, index) => (
               <Link 
                 key={`mobile-${index}`}
                 to="#" 
                 className={`
-                  group relative border ${resource.borderClass} rounded-[14px] flex flex-col overflow-hidden ${resource.bgClass} transition-all duration-300 hover:shadow-lg
+                  group relative border ${resource.borderClass} rounded-[14px] flex flex-col overflow-hidden ${resource.bgClass} transition-all duration-300 hover:shadow-lg snap-center
                   min-w-[85vw] sm:min-w-[350px] h-auto p-8
                 `}
               >
@@ -113,7 +115,10 @@ const ResourceHubSection = () => {
           </InfiniteSlider>
         </div>
 
-        {/* --- DESKTOP VIEW: Static Grid (3 Columns) --- */}
+        {/* DESKTOP GRID: 
+          - Completely hidden on mobile.
+          - Preserves 3-column grid layout with exact original dimensions (h-[380px]).
+        */}
         <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6">
           {resources.map((resource, index) => (
             <Link 
