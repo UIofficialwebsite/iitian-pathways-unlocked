@@ -150,7 +150,7 @@ const TestimonialsSection = () => {
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
-                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%)' 
+                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.04) 0%, rgba(99, 102, 241, 0.01) 50%, transparent 70%)' 
                 }}
               />
               
@@ -197,11 +197,12 @@ const TestimonialsSection = () => {
                 h-auto
               "
             >
-              {/* Premium Corner Color Effect (Indigo/Slate Blend) - Applied to ALL cards */}
+              {/* Premium Light Light Soft Effect */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
-                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.08) 0%, rgba(99, 102, 241, 0.02) 40%, transparent 70%)' 
+                  // Very light, soft premium gradient
+                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.04) 0%, rgba(99, 102, 241, 0.01) 40%, transparent 60%)' 
                 }}
               />
 
