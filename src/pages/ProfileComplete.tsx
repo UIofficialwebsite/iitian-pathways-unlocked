@@ -1,12 +1,13 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { useProfileForm } from '@/hooks/useProfileForm';
 import ProfileForm from '@/components/profile/ProfileForm';
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const ProfileComplete = () => {
+  useDocumentTitle(SEO_TITLES.PROFILE_COMPLETE);
   const formProps = useProfileForm();
 
   return (

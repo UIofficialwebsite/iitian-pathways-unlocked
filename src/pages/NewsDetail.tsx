@@ -4,6 +4,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Loader2, Printer } from "lucide-react";
+import { useDocumentTitle, getNewsTitleSEO } from "@/utils/seoManager";
 
 const NewsDetail = () => {
   const { newsId } = useParams<{ newsId: string }>();
@@ -14,6 +15,9 @@ const NewsDetail = () => {
     newsUpdates.find(item => item.id === newsId),
     [newsUpdates, newsId]
   );
+
+  // Dynamic page title based on news data
+  useDocumentTitle(newsItem ? getNewsTitleSEO(newsItem.title) : "News & Updates");
 
   if (contentLoading) {
     return (

@@ -10,6 +10,7 @@ import {
   Briefcase
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useDocumentTitle, getJobTitleSEO } from "@/utils/seoManager";
 
 const JobDetails = () => {
   const { jobId } = useParams<{ jobId: string }>();
@@ -35,6 +36,9 @@ const JobDetails = () => {
         ? [rawJob.skills] 
         : []
   } : null;
+
+  // Dynamic page title based on job data
+  useDocumentTitle(job ? getJobTitleSEO(job.title) : "Job Details");
 
   // Inject Manrope font dynamically and set URL
   useEffect(() => {

@@ -14,9 +14,18 @@ import {
   Newspaper,
   CalendarDays,
 } from "lucide-react";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const Courses = () => {
   const { examCategory } = useParams<{ examCategory?: string }>();
+  
+  // Dynamic title based on category
+  const categoryTitles: Record<string, string> = {
+    'jee': SEO_TITLES.JEE_COURSES,
+    'neet': SEO_TITLES.NEET_COURSES,
+    'iitm-bs': SEO_TITLES.IITM_COURSES,
+  };
+  useDocumentTitle(examCategory ? categoryTitles[examCategory] || SEO_TITLES.ALL_COURSES : SEO_TITLES.ALL_COURSES);
   const navigate = useNavigate();
   const location = useLocation();
   const { courses, contentLoading } = useBackend();

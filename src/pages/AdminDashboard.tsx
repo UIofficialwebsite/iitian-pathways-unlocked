@@ -17,8 +17,10 @@ import DatesManagerTab from "@/components/admin/DatesManagerTab";
 import JobsManagerTab from "@/components/admin/JobsManagerTab";
 import EmployeeManagerTab from "@/components/admin/EmployeeManagerTab";
 import AdminManagementTab from "@/components/admin/AdminManagementTab";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const AdminDashboard = () => {
+  useDocumentTitle(SEO_TITLES.ADMIN_DASHBOARD);
   const [activeTab, setActiveTab] = useState("content-management");
   const { isLoading, user, isAdmin } = useAuth();
 

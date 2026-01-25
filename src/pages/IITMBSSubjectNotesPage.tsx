@@ -11,6 +11,7 @@ import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import { useDocumentTitle, getIITMNotesTitleSEO } from "@/utils/seoManager";
 
 const IITMBSSubjectNotesPage = () => {
   const { branch, level, subjectSlug } = useParams<{ branch: string; level: string; subjectSlug: string }>();
@@ -20,6 +21,9 @@ const IITMBSSubjectNotesPage = () => {
   const { handleDownload, downloadCounts } = useDownloadHandler();
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
+  
+  // Dynamic page title based on subject and level
+  useDocumentTitle(selectedSubject ? getIITMNotesTitleSEO(selectedSubject, level || "Foundation") : "IITM BS Notes");
   const [searchQuery, setSearchQuery] = useState("");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   
