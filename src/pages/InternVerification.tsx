@@ -1,11 +1,9 @@
-
 import React, { useState } from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, XCircle, FileText, HelpCircle, Info, Download } from "lucide-react";
+import { CheckCircle, XCircle, Download, HelpCircle } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
@@ -37,7 +35,6 @@ const InternVerification = () => {
     }
 
     try {
-      // Query employee by code and full name
       const { data, error } = await supabase
         .from("employees")
         .select("*")
@@ -62,7 +59,6 @@ const InternVerification = () => {
           variant: "destructive",
         });
       } else {
-        // Show current status and details
         let statusText = "";
         if (data.status === 'active') {
           statusText = "Active";
@@ -74,9 +70,7 @@ const InternVerification = () => {
 
         setVerificationResult({
           verified: true,
-          message: data.status === 'active' 
-            ? `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} is currently ACTIVE.` 
-            : `${data.employee_type === 'intern' ? 'Intern' : 'Employee'} record found. The ${data.employee_type} status is ${statusText.toUpperCase()}.`,
+          message: "Record matched successfully.",
           details: {
             name: data.full_name,
             employeeId: data.employee_code,
@@ -86,7 +80,6 @@ const InternVerification = () => {
             startDate: data.start_date ? new Date(data.start_date).toLocaleDateString() : "N/A",
             endDate: data.end_date ? new Date(data.end_date).toLocaleDateString() : "N/A",
             status: statusText,
-            isActive: data.is_active,
             verificationCertificateUrl: data.verification_certificate_url
           }
         });
@@ -125,283 +118,191 @@ const InternVerification = () => {
   };
 
   return (
-    <>
+    <div className="bg-[#f2f4f7] min-h-screen flex flex-col font-['Inter',sans-serif]">
       <NavBar />
       
-      <main className="pt-20 pb-16">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-r from-royal to-royal-dark text-white py-12 sm:py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">Intern & Employee Verification Portal</h1>
-            <p className="text-lg sm:text-xl max-w-3xl mx-auto">
-              Verify intern and employee credentials at Unknown IITians
-            </p>
+      <main className="flex-grow pt-24 pb-16 px-4">
+        <div className="max-w-[1000px] mx-auto">
+          
+          {/* Page Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-2">
+              Internship Verification Center
+            </h1>
+            <p className="text-gray-500">Official platform to check completion and roles.</p>
           </div>
-        </section>
 
-        {/* Verification Form */}
-        <section className="py-10 sm:py-16 bg-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Card className="border-none shadow-premium overflow-hidden">
-              <CardHeader className="bg-gradient-to-r from-royal/5 to-royal/10 pb-6">
-                <CardTitle className="text-2xl text-center flex items-center justify-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Verify Employment Status
-                </CardTitle>
-                <CardDescription className="text-center">
-                  Enter your credentials to verify your employment history
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-6 sm:p-8">
-                <form onSubmit={handleVerify} className="space-y-6">
-                  <div className="space-y-2">
-                    <label htmlFor="employee-id" className="block text-sm font-medium text-gray-700">
-                      Employee ID
-                    </label>
-                    <Input
-                      id="employee-id"
-                      placeholder="Enter Employee ID (e.g., UI12345 or INT001)"
-                      value={employeeId}
-                      onChange={(e) => setEmployeeId(e.target.value)}
-                      required
-                      className="w-full"
-                    />
-                    <p className="text-xs text-gray-500">Enter the ID in the format UI12345 for employees or INT001 for interns</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="employee-name" className="block text-sm font-medium text-gray-700">
-                      Full Name
-                    </label>
-                    <Input
-                      id="employee-name"
-                      placeholder="Enter Full Name as in records"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                      className="w-full"
-                    />
-                    <p className="text-xs text-gray-500">Enter the full name exactly as provided in employment documents</p>
-                  </div>
-                  
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-royal to-royal-dark hover:from-royal-dark hover:to-royal text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                  >
-                    {loading ? "Verifying..." : "Verify Employee"}
-                  </button>
-                </form>
+          {/* Top Layout: Search + FAQ */}
+          <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr] gap-6 mb-6">
+            
+            {/* Left Column: Search Form */}
+            <div className="bg-white border border-gray-300 p-8 shadow-sm">
+              <h2 className="text-xl font-bold mb-6 border-l-4 border-blue-800 pl-3 text-gray-900">
+                Check Details
+              </h2>
+              
+              <form onSubmit={handleVerify} className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="employee-id" className="block text-sm font-semibold text-gray-600">
+                    Intern ID Number
+                  </label>
+                  <Input
+                    id="employee-id"
+                    placeholder="Example: INT12345"
+                    value={employeeId}
+                    onChange={(e) => setEmployeeId(e.target.value)}
+                    required
+                    className="w-full p-3 h-12 border-gray-300 focus:border-blue-800 rounded-none focus:ring-0 text-base"
+                  />
+                </div>
                 
-                {verificationResult && (
-                  <div className={`mt-8 p-4 sm:p-6 rounded-lg ${
-                    verificationResult.verified 
-                      ? 'bg-green-50 border border-green-100' 
-                      : 'bg-red-50 border border-red-100'
-                  }`}>
-                    <div className="flex items-center mb-4">
-                      {verificationResult.verified ? (
-                        <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 mr-2" />
-                      ) : (
-                        <XCircle className="h-5 w-5 sm:h-6 sm:w-6 text-red-600 mr-2" />
-                      )}
-                      <h3 className={`font-bold text-lg ${
-                        verificationResult.verified ? 'text-green-800' : 'text-red-800'
-                      }`}>
-                        {verificationResult.verified ? 'Verification Successful' : 'Verification Failed'}
-                      </h3>
-                    </div>
-                    
-                    <p className={`mb-4 ${
-                      verificationResult.verified ? 'text-green-700' : 'text-red-700'
-                    }`}>
-                      {verificationResult.message}
-                    </p>
-                    
-                    {verificationResult.verified && verificationResult.details && (
-                      <div className="mt-6 space-y-4">
-                        <h4 className="font-semibold text-gray-900">Employment Details:</h4>
-                        <div className="bg-white rounded-md p-4 border border-gray-200 overflow-x-auto">
-                          <table className="min-w-full">
-                            <tbody className="divide-y divide-gray-200">
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Name:</td>
-                                <td className="py-2">{verificationResult.details.name}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Employee ID:</td>
-                                <td className="py-2">{verificationResult.details.employeeId}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Position:</td>
-                                <td className="py-2">{verificationResult.details.position}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Department:</td>
-                                <td className="py-2">{verificationResult.details.department}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Type:</td>
-                                <td className="py-2 capitalize">{verificationResult.details.employeeType}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Start Date:</td>
-                                <td className="py-2">{verificationResult.details.startDate}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">End Date:</td>
-                                <td className="py-2">{verificationResult.details.endDate}</td>
-                              </tr>
-                              <tr>
-                                <td className="py-2 pr-4 font-medium text-gray-700">Status:</td>
-                                <td className="py-2">
-                                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                    verificationResult.details.status === 'Active'
-                                      ? 'bg-green-100 text-green-800'
-                                      : verificationResult.details.status === 'Completed'
-                                      ? 'bg-blue-100 text-blue-800'
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {verificationResult.details.status}
-                                  </span>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </div>
+                <div className="space-y-2">
+                  <label htmlFor="employee-name" className="block text-sm font-semibold text-gray-600">
+                    Full Name
+                  </label>
+                  <Input
+                    id="employee-name"
+                    placeholder="Enter full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full p-3 h-12 border-gray-300 focus:border-blue-800 rounded-none focus:ring-0 text-base"
+                  />
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-blue-800 hover:bg-blue-900 text-white font-semibold py-6 text-sm uppercase rounded-none tracking-wide transition-colors"
+                >
+                  {loading ? "Searching..." : "Search Records"}
+                </Button>
+              </form>
+            </div>
 
-                        <div className="mt-4 text-center">
-                          <button
-                            onClick={handleDownloadCertificate}
-                            className="inline-flex items-center gap-2 bg-gradient-to-r from-royal to-royal-dark hover:from-royal-dark hover:to-royal text-white font-semibold py-2 px-4 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-                          >
-                            <Download className="h-4 w-4" />
-                            Download Verification Certificate
-                          </button>
-                        </div>
-                      </div>
-                    )}
+            {/* Right Column: FAQ / Common Questions */}
+            <div className="bg-white border border-gray-300 p-8 shadow-sm h-fit">
+              <h2 className="text-xl font-bold mb-6 border-l-4 border-blue-800 pl-3 text-gray-900">
+                Common Questions
+              </h2>
+              
+              <Accordion type="single" collapsible className="w-full">
+                <AccordionItem value="item-1" className="border-b-gray-100">
+                  <AccordionTrigger className="text-blue-800 font-semibold hover:no-underline hover:text-blue-900 py-3 text-sm">
+                    How fast is this?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-500 text-sm">
+                    Results show up instantly after you click search.
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="item-2" className="border-b-gray-100">
+                  <AccordionTrigger className="text-blue-800 font-semibold hover:no-underline hover:text-blue-900 py-3 text-sm">
+                    ID not working?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-500 text-sm">
+                    Double-check your certificate for the correct ID format (e.g., INT001 or UI12345).
+                  </AccordionContent>
+                </AccordionItem>
+                
+                <AccordionItem value="item-3" className="border-b-0">
+                  <AccordionTrigger className="text-blue-800 font-semibold hover:no-underline hover:text-blue-900 py-3 text-sm">
+                    Need more help?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-500 text-sm">
+                    Email us at <a href="mailto:hr@unknowniitians.com" className="underline">hr@unknowniitians.com</a>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          </div>
+
+          {/* Bottom Section: Results (conditionally rendered) */}
+          {verificationResult && (
+            <div className="bg-white border border-gray-300 p-8 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold border-l-4 border-blue-800 pl-3 text-gray-900">
+                  Information Found
+                </h2>
+                {verificationResult.verified ? (
+                  <div className="flex items-center text-green-700 bg-green-50 px-3 py-1 text-sm font-bold">
+                    <CheckCircle className="w-4 h-4 mr-2" /> VERIFIED MATCH
+                  </div>
+                ) : (
+                  <div className="flex items-center text-red-700 bg-red-50 px-3 py-1 text-sm font-bold">
+                    <XCircle className="w-4 h-4 mr-2" /> NO RECORD FOUND
                   </div>
                 )}
-
-                <div className="mt-8 text-center text-gray-600 text-sm">
-                  <p>If you need further assistance, please contact:</p>
-                  <p className="font-medium mt-1">hr@unknowniitians.com</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* FAQ Section */}
-        <section className="py-10 sm:py-16 bg-gray-50">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold flex items-center justify-center gap-2 mb-4">
-                <HelpCircle className="h-6 w-6 text-royal" />
-                Frequently Asked Questions
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                Find answers to common questions about the intern verification portal
-              </p>
-            </div>
-
-            <Card className="border-none shadow-md">
-              <CardContent className="p-6">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="item-1">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      What is the Intern Verification Portal?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      A secure platform to verify roles and identities at Unknown IITians.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-2">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      How secure is the Intern Verification Portal?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Highly secure; only authorized personnel can access records.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-3">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      How can I become an employee at Unknown IITians?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Fill out the form: <a href="https://docs.google.com/forms/d/e/1FAIpQLSfG0--xi-qdseHlJWihF_d_BV4ic67L-uon0YgWh5avNmtwqg/viewform" target="_blank" rel="noopener noreferrer" className="text-royal hover:underline font-medium">Apply Here</a>.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-4">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      Who can verify intern records on the portal?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Only authorized employees and designated individuals.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-5">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      What information is available on the portal?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Intern roles, verification status, and related details.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-6">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      How do I verify my role as an intern or employee?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Log in to the portal to view and verify your role.
-                    </AccordionContent>
-                  </AccordionItem>
-                  
-                  <AccordionItem value="item-7">
-                    <AccordionTrigger className="text-royal hover:text-royal-dark font-medium">
-                      What if I encounter issues with the portal?
-                    </AccordionTrigger>
-                    <AccordionContent className="text-gray-600">
-                      Contact support at <a href="mailto:help.unknowniitians@gmail.com" className="text-royal hover:underline font-medium">help.unknowniitians@gmail.com</a>.
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-
-        {/* Additional Information */}
-        <section className="py-10 bg-white">
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="bg-royal/5 rounded-lg p-6 border border-royal/10">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <Info className="h-6 w-6 text-royal" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-royal mb-2">Need Additional Help?</h3>
-                  <p className="text-gray-600 mb-4">
-                    If you need further assistance with verification or have any other questions about your employment status, please don't hesitate to reach out to our HR department.
-                  </p>
-                  <Button variant="outline" className="border-royal text-royal hover:bg-royal hover:text-white">
-                    Contact HR Support
-                  </Button>
-                </div>
               </div>
+
+              {verificationResult.verified && verificationResult.details ? (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse mt-2">
+                      <thead>
+                        <tr className="bg-gray-50 border-y-2 border-gray-200">
+                          <th className="py-4 px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Name</th>
+                          <th className="py-4 px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">ID Number</th>
+                          <th className="py-4 px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Department</th>
+                          <th className="py-4 px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Work Period</th>
+                          <th className="py-4 px-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-gray-200 hover:bg-gray-50 transition-colors">
+                          <td className="py-4 px-4 font-semibold text-gray-900">{verificationResult.details.name}</td>
+                          <td className="py-4 px-4 text-gray-500 font-mono text-sm">{verificationResult.details.employeeId}</td>
+                          <td className="py-4 px-4 text-gray-700">{verificationResult.details.department}</td>
+                          <td className="py-4 px-4 text-gray-700 text-sm">
+                            {verificationResult.details.startDate} - {verificationResult.details.endDate}
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex items-center text-xs font-bold px-2 py-1 uppercase ${
+                              verificationResult.details.status === 'Active' ? 'text-green-700 bg-green-100' :
+                              verificationResult.details.status === 'Completed' ? 'text-blue-700 bg-blue-100' :
+                              'text-red-700 bg-red-100'
+                            }`}>
+                              {verificationResult.details.status === 'Active' && '✓ '}
+                              {verificationResult.details.status}
+                            </span>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="mt-8 pt-6 border-t border-gray-100 flex gap-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={handleDownloadCertificate}
+                      className="rounded-none border-gray-900 text-gray-900 font-semibold hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download Certificate
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => window.print()}
+                      className="rounded-none border-gray-900 text-gray-900 font-semibold hover:bg-gray-50"
+                    >
+                      Print Page
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="mb-2">{verificationResult.message}</p>
+                  <p className="text-sm">Please verify the Employee ID and Name and try again.</p>
+                </div>
+              )}
             </div>
-          </div>
-        </section>
+          )}
+
+        </div>
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 };
 
