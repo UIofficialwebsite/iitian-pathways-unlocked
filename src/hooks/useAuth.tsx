@@ -25,38 +25,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkAdminStatus = async (currentUser: User | null) => {
     if (!currentUser) {
-       setIsAdmin(false);
-       setIsSuperAdmin(false);
-       setUserRole(null);
-       return;
+       setIsAdmin(false); setIsSuperAdmin(false); setUserRole(null); return;
     }
     // Direct Google users are strictly students
     if (currentUser.app_metadata?.provider === 'google_direct_client') {
-      setIsAdmin(false);
-      setIsSuperAdmin(false);
-      setUserRole('student');
-      return;
+      setIsAdmin(false); setIsSuperAdmin(false); setUserRole('student'); return;
     }
-    // Logic for other users...
-    setIsAdmin(false);
-    setUserRole('student');
+    // Fallback for regular Supabase users...
+    setIsAdmin(false); setUserRole('student');
   };
 
   const signOut = async () => {
+    // Clear LOCAL first
     localStorage.removeItem('google_user');
     localStorage.removeItem('google_id_token');
+    
+    // Clear SUPABASE second
     await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    window.dispatchEvent(new Event('google-auth-change')); // Notify other tabs/components
+    
+    setUser(null); setSession(null);
+    window.dispatchEvent(new Event('google-auth-change')); 
     window.location.href = '/';
   };
 
-  // Define the initialization logic as a reusable function
   const initializeAuth = useCallback(async () => {
     setIsLoading(true);
 
-    // 1. Check Local Google Session
+    // 1. Check Local Google Session FIRST
     const localGoogleUser = localStorage.getItem('google_user');
     const localIdToken = localStorage.getItem('google_id_token');
 
@@ -89,14 +84,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(googleUser);
         setSession(googleSession);
         setIsLoading(false);
-        return; 
+        return; // Stop here if Google user found
       } catch (e) {
-        console.error("Auth Error", e);
         localStorage.removeItem('google_user');
       }
     }
 
-    // 2. Fallback to Supabase
+    // 2. Fallback to Supabase (Only if no Google user)
     try {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
@@ -109,17 +103,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    // Run initial check
     initializeAuth();
 
-    // Listen for custom event from GoogleAuth component
-    const handleAuthChange = () => {
-      initializeAuth();
-    };
-
+    // Listen for our custom event
+    const handleAuthChange = () => initializeAuth();
     window.addEventListener('google-auth-change', handleAuthChange);
     
-    // Listen for Supabase changes
+    // Listen for Supabase changes (only updates if we aren't using Google)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!localStorage.getItem('google_user')) {
         setSession(session);
