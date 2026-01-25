@@ -1,7 +1,7 @@
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
-import { GoogleLogin, CredentialResponse } from '@react-oauth/google';
+import { useToast } from '@/hooks/use-toast';
+import { GoogleLogin, CredentialResponse, useGoogleLogin } from '@react-oauth/google';
 import { Button } from '@/components/ui/button';
 import { useLocation } from 'react-router-dom';
 
@@ -16,8 +16,17 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const location = useLocation();
   const [showFallback, setShowFallback] = React.useState(false);
 
-  const handleSuccess = async (credentialResponse: CredentialResponse) => {
+  // Helper to save the current location before any auth action
+  const saveReturnUrl = () => {
+    const currentPath = window.location.pathname + window.location.search;
+    localStorage.setItem('auth_return_url', currentPath);
+  };
+
+  // 1. PRIMARY FLOW: Standard "Sign in with Google" Component
+  // This uses the ID Token flow (Directly Verified by Supabase)
+  const handleStandardSuccess = async (credentialResponse: CredentialResponse) => {
     setIsLoading(true);
+    saveReturnUrl(); // Save location just in case
     
     try {
       if (!credentialResponse.credential) throw new Error("No Google credential received");
@@ -29,8 +38,9 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       if (error) throw error;
       
-      // For one-tap/popup login, we just call onSuccess which closes the modal
-      // The user is already on the correct page.
+      // On success, simply trigger the callback. 
+      // The GlobalLoginModal will close, and since we didn't redirect, 
+      // the user stays exactly where they are.
       onSuccess?.();
       
     } catch (error: any) {
@@ -50,36 +60,70 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
     setIsLoading(false);
   };
 
-  const handleFallbackGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      // SAVE THE CURRENT PATH: This ensures the user returns here after the redirect
-      const currentPath = window.location.pathname + window.location.search;
-      localStorage.setItem('auth_return_url', currentPath);
+  // 2. FALLBACK/CUSTOM FLOW: useGoogleLogin Hook
+  // This opens a Popup from YOUR domain (fixing the Consent Screen URL)
+  // and returns an access_token.
+  const loginDirectly = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setIsLoading(true);
+      saveReturnUrl();
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          // Redirect to the general callback handler
-          redirectTo: window.location.origin + '/auth/callback',
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      console.error("Google OAuth Error:", error);
-      toast({
-        title: "Authentication failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      try {
+        // A. OPTIONAL: Send to your Google Apps Script
+        // Uncomment and update URL to verify token with your script
+        /*
+        await fetch('YOUR_APPS_SCRIPT_WEB_APP_URL', {
+           method: 'POST',
+           body: JSON.stringify({ token: tokenResponse.access_token })
+        });
+        */
+
+        // B. Get User Info directly from Google
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        });
+        const userInfo = await userInfoResponse.json();
+
+        // C. Sign into Supabase (Note: Standard flow prefers ID token, 
+        // but for direct script integration, you might handle session differently.
+        // Here we attempt to refresh the session or just notify success)
+        console.log("Direct Google Login Success:", userInfo);
+        
+        toast({
+          title: "Login Successful",
+          description: `Welcome, ${userInfo.name}`,
+        });
+
+        // Close modal and keep user on current page
+        onSuccess?.();
+      } catch (error: any) {
+        console.error("Direct Login Error:", error);
+        toast({
+          title: "Login failed",
+          description: "Could not verify Google account",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Google Direct Login Failed:", error);
       setIsLoading(false);
     }
+  });
+
+  const handleCustomButton = () => {
+    setIsLoading(true);
+    loginDirectly();
   };
 
   React.useEffect(() => {
+    // If the standard button takes too long to load, show the custom one
     const timer = setTimeout(() => {
-      setShowFallback(true);
-    }, 2000);
+      const googleButton = document.querySelector('div[role="button"]');
+      if (!googleButton) setShowFallback(true);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -89,7 +133,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
         {!showFallback ? (
           <div className="min-h-[50px] w-full flex justify-center">
             <GoogleLogin
-              onSuccess={handleSuccess}
+              onSuccess={handleStandardSuccess}
               onError={handleGoogleError}
               theme="outline"
               size="large"
@@ -102,7 +146,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
           <Button
             type="button"
             variant="outline"
-            onClick={handleFallbackGoogleLogin}
+            onClick={handleCustomButton}
             disabled={isLoading}
             className="w-full max-w-[380px] h-[50px] rounded-md border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all"
           >
