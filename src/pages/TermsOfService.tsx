@@ -3,7 +3,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const SECTIONS = [
   { id: 'agreement', title: '1. Agreement' },
@@ -20,7 +20,7 @@ const SECTIONS = [
 ];
 
 const TermsOfService = () => {
-  useDocumentTitle(SEO_TITLES.TERMS_OF_SERVICE);
+  usePageSEO(SEO_TITLES.TERMS_OF_SERVICE, "/terms-of-service");
   const [activeSection, setActiveSection] = useState('agreement');
 
   useEffect(() => {

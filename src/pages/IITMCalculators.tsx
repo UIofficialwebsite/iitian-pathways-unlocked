@@ -9,7 +9,7 @@ import CGPACalculator from "@/components/iitm/CGPACalculator";
 import GradeCalculator from "@/components/iitm/GradeCalculator";
 import MarksPredictor from "@/components/iitm/MarksPredictor"; // Using Unified Component
 import { Level } from "@/components/iitm/types/gradeTypes";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const IITMCalculators = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const IITMCalculators = () => {
     'grade-calculator': SEO_TITLES.IITM_GRADE_CALCULATOR,
     'marks-predictor': SEO_TITLES.IITM_MARKS_PREDICTOR,
   };
-  useDocumentTitle(toolTitles[tool || 'grade-calculator'] || 'IITM BS Tools');
+  usePageSEO(toolTitles[tool || 'grade-calculator'] || 'IITM BS Tools', `/iitm-tools/${tool || 'grade-calculator'}`);
   
   // FIX: Normalize URL params to lowercase to prevent "Foundation" vs "foundation" mismatch
   const safeBranch = (branch?.toLowerCase() === "electronic-systems" || branch?.toLowerCase() === "electronic systems") 

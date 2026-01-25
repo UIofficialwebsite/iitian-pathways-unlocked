@@ -2,10 +2,10 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const NotFound = () => {
-  useDocumentTitle(SEO_TITLES.NOT_FOUND);
+  usePageSEO(SEO_TITLES.NOT_FOUND);
   const location = useLocation();
 
   useEffect(() => {

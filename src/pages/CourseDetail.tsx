@@ -24,7 +24,7 @@ import FAQSection from '@/components/courses/detail/FAQSection';
 import CourseAccessGuide from '@/components/courses/detail/CourseAccessGuide';
 import SubjectsSection from '@/components/courses/detail/SubjectsSection';
 import { useAuth } from '@/hooks/useAuth';
-import { useDocumentTitle, getCourseTitleSEO } from "@/utils/seoManager";
+import { usePageSEO, getCourseTitleSEO } from "@/utils/seoManager";
 
 interface SimpleAddon {
   id: string;
@@ -60,8 +60,8 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
   const [course, setCourse] = useState<Course | null>(null);
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
   
-  // Dynamic title based on course data
-  useDocumentTitle(course ? getCourseTitleSEO(course.title) : "Loading Course...");
+  // Dynamic title and canonical based on course data
+  usePageSEO(course ? getCourseTitleSEO(course.title) : "Loading Course...", courseId ? `/courses/${courseId}` : undefined);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
   

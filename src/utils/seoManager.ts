@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 
 const SITE_NAME = 'Unknown IITians';
+const BASE_URL = 'https://unknowniitians.com';
 
 /**
  * Custom hook to set the document title dynamically
@@ -20,6 +21,44 @@ export const useDocumentTitle = (title: string, appendSiteName: boolean = true) 
       document.title = previousTitle;
     };
   }, [title, appendSiteName]);
+};
+
+/**
+ * Custom hook to set canonical URL dynamically
+ * Cleans the URL by removing trailing slashes and query parameters
+ */
+export const useCanonicalUrl = (customPath?: string) => {
+  useEffect(() => {
+    // Use custom path or current pathname
+    let pathname = customPath || window.location.pathname;
+    
+    // Clean the pathname:
+    // 1. Remove trailing slash (except for root)
+    // 2. Convert to lowercase
+    pathname = pathname.replace(/\/$/, '') || '/';
+    pathname = pathname.toLowerCase();
+    
+    const canonicalUrl = `${BASE_URL}${pathname}`;
+    
+    // Check if canonical link already exists
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+    
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'canonical';
+      document.head.appendChild(link);
+    }
+    
+    link.href = canonicalUrl;
+  }, [customPath]);
+};
+
+/**
+ * Combined hook for setting page SEO (title + canonical)
+ */
+export const usePageSEO = (title: string, canonicalPath?: string) => {
+  useDocumentTitle(title);
+  useCanonicalUrl(canonicalPath);
 };
 
 /**

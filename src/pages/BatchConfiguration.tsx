@@ -8,7 +8,7 @@ import { Loader2, ArrowLeft, Check, ChevronDown, ChevronUp, X } from 'lucide-rea
 import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useLoginModal } from '@/context/LoginModalContext';
-import { useDocumentTitle } from "@/utils/seoManager";
+import { usePageSEO } from "@/utils/seoManager";
 
 // Custom Styles for the Phone Number Modal
 const customStyles = `
@@ -126,7 +126,7 @@ const BatchConfiguration = () => {
   const [course, setCourse] = useState<Course | null>(null);
   
   // Dynamic page title based on course data
-  useDocumentTitle(course ? `Configure Batch - ${course.title}` : "Configure Batch");
+  usePageSEO(course ? `Configure Batch - ${course.title}` : "Configure Batch", courseId ? `/courses/${courseId}/configure` : undefined);
   const [addons, setAddons] = useState<SimpleAddon[]>([]);
   const [selectedAddonIds, setSelectedAddonIds] = useState<string[]>([]);
   

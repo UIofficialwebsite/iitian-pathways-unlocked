@@ -24,8 +24,10 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const Career = () => {
+  usePageSEO(SEO_TITLES.CAREER, "/career");
   const navigate = useNavigate();
 
   const scrollToOpenings = () => {

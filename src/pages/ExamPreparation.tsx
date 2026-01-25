@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { BookOpen, FileText, Users, Calendar, Bell, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
-import { useDocumentTitle } from "@/utils/seoManager";
+import { usePageSEO } from "@/utils/seoManager";
 
 const ExamPreparation = () => {
-  useDocumentTitle("Exam Preparation - JEE, NEET & IITM BS Resources");
+  usePageSEO("Exam Preparation - JEE, NEET & IITM BS Resources", "/exam-preparation");
   const examTypes = [
     {
       title: "NEET - Medical MBBS",
