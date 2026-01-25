@@ -38,7 +38,6 @@ const Index = lazyWithRetry(() => import("./pages/Index"));
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
 const CourseListing = lazyWithRetry(() => import("./pages/CourseListing"));
 const Courses = lazyWithRetry(() => import("./pages/Courses"));
-const ExamPreparation = lazyWithRetry(() => import("./pages/ExamPreparation"));
 const JEEPrep = lazyWithRetry(() => import("./pages/JEEPrep"));
 const NEETPrep = lazyWithRetry(() => import("./pages/NEETPrep"));
 const IITMBSPrep = lazyWithRetry(() => import("./pages/IITMBSPrep"));
@@ -65,8 +64,6 @@ const TermsOfService = lazyWithRetry(() => import("./pages/TermsOfService"));
 const FAQ = lazyWithRetry(() => import("./pages/FAQ"));
 const IITMCalculators = lazyWithRetry(() => import("./pages/IITMCalculators"));
 const NewsDetail = lazyWithRetry(() => import("./pages/NewsDetail"));
-
-// REMOVED: const EnrollmentReceipt = lazy(...) <--- This was causing the error
 
 const queryClient = new QueryClient();
 
@@ -102,10 +99,8 @@ const App = () => (
                   <Route path="/courses/:courseId" element={<CourseDetail />} />
                   <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
                   
-                  {/* REMOVED: Route path="/enrollment/:courseId" ... <--- This was causing the error */}
-                  
                   {/* Exam Prep */}
-                  <Route path="/exam-preparation" element={<ExamPreparation />} />
+                  {/* Removed /exam-preparation route */}
                   <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
                   <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
                   
