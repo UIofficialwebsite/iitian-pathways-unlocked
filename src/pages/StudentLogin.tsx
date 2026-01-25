@@ -6,9 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast"; // Ensure this import path is correct for your project
+import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
-// Import the updated Direct Client GoogleAuth component
+// Uses the Hybrid GoogleAuth component (Client Popup -> Supabase Session)
 import GoogleAuth from "@/components/auth/GoogleAuth";
 
 const StudentLogin = () => {
@@ -22,7 +22,7 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Helper to handle navigation (Used for Email/Pass users only)
+  // Helper to handle navigation
   const checkProfileAndNavigate = async (userId: string) => {
     try {
       const { data: profile } = await supabase
@@ -42,24 +42,22 @@ const StudentLogin = () => {
         navigate("/");
       }
     } catch (error) {
-      // If error (e.g. no profile found), send to completion
       navigate("/profile/complete");
     }
   };
 
-  // --- UPDATED: Direct Client Success Handler ---
-  const onGoogleSuccess = () => {
-    // 1. We do NOT call supabase.auth.getUser() because we are bypassing Supabase Auth for Google.
-    // 2. The GoogleAuth component has already set 'google_user' in localStorage.
-    // 3. We simply navigate to the return URL or Home.
+  // --- HYBRID SUCCESS HANDLER ---
+  const onGoogleSuccess = async () => {
+    // 1. GoogleAuth has already called signInWithIdToken.
+    // 2. We verify the session exists in Supabase.
+    const { data: { user } } = await supabase.auth.getUser();
     
-    const returnUrl = localStorage.getItem('auth_return_url');
-    if (returnUrl) {
-      localStorage.removeItem('auth_return_url');
-      // Use window.location to force a re-render of useAuth hooks if needed
-      window.location.href = returnUrl;
+    if (user) {
+        // 3. Navigate based on profile status
+        await checkProfileAndNavigate(user.id);
     } else {
-      window.location.href = "/";
+        // Fallback if something went wrong
+        navigate("/");
     }
   };
 
@@ -119,7 +117,6 @@ const StudentLogin = () => {
           description: "Welcome back!",
         });
         
-        // For Email users, we still check the profile table
         if (data.user) {
           await checkProfileAndNavigate(data.user.id);
         }
@@ -157,7 +154,7 @@ const StudentLogin = () => {
 
           <div className="space-y-4 text-left">
             
-            {/* UPDATED GOOGLE AUTH CONTAINER */}
+            {/* GOOGLE AUTH CONTAINER */}
             <div className="w-full flex justify-center py-1">
                 <GoogleAuth 
                     isLoading={isLoading} 
