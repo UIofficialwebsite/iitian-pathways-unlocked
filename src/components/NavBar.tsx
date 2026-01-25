@@ -1,56 +1,35 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { 
-  Menu, 
-  X, 
-  Atom, 
-  Stethoscope, 
-  GraduationCap, 
-  BookOpen,
-  ChevronRight,
-  ArrowLeft,
-  LogOut,
-  ChevronDown,
-  CircleUser,
-  PencilLine,
-  Monitor,
-  LayoutDashboard
+  Menu, X, Atom, Stethoscope, GraduationCap, BookOpen,
+  ChevronRight, ArrowLeft, LogOut, ChevronDown, CircleUser,
+  PencilLine, Monitor
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
+  NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink,
+  NavigationMenuList, NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTrigger,
-  SheetClose,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { supabase } from "@/integrations/supabase/client";
 
-// --- STABLE PROFILE MENU COMPONENT (Defined Outside NavBar) ---
+// --- STABLE PROFILE MENU COMPONENT ---
 const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: any) => {
-  const initials = profile?.full_name
-    ? profile.full_name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+  // Priority: 1. Database Profile, 2. Google Metadata, 3. Fallback "User"
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || "User";
+  const displayEmail = user?.email;
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+
+  const initials = displayName
+    ? displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
     : user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
@@ -58,7 +37,7 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: an
       <DropdownMenuTrigger asChild>
         <button className="focus:outline-none flex items-center gap-2 group outline-none">
           <Avatar className="h-9 w-9 border border-gray-200 cursor-pointer group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
-            <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
+            <AvatarImage src={avatarUrl} />
             <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">
               {initials}
             </AvatarFallback>
@@ -73,59 +52,43 @@ const ProfileMenu = ({ user, profile, handleSignOut, navigate, isDashboard }: an
       >
         <DropdownMenuLabel className="font-normal px-5 pb-2">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-[#344054]">{profile?.full_name || "User"}</p>
-            <p className="text-xs leading-none text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-sm font-medium leading-none text-[#344054]">{displayName}</p>
+            <p className="text-xs leading-none text-muted-foreground truncate">{displayEmail}</p>
           </div>
         </DropdownMenuLabel>
         
         <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
         
         <DropdownMenuGroup className="flex flex-col">
-          <DropdownMenuItem 
-            onClick={() => navigate("/dashboard/profile")} 
-            className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-          >
+          <DropdownMenuItem onClick={() => navigate("/dashboard/profile")} className="px-5 py-3.5 cursor-pointer hover:bg-[#f9fafb]">
             <CircleUser className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-            <span className="text-[16px] font-medium tracking-tight">My Profile</span>
+            <span className="text-[16px] font-medium">My Profile</span>
           </DropdownMenuItem>
 
           {!isDashboard ? (
              <>
-               <DropdownMenuItem 
-                 onClick={() => navigate("/dashboard")} 
-                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-               >
+               <DropdownMenuItem onClick={() => navigate("/dashboard")} className="px-5 py-3.5 cursor-pointer hover:bg-[#f9fafb]">
                  <PencilLine className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                 <span className="text-[16px] font-medium tracking-tight">Study</span>
+                 <span className="text-[16px] font-medium">Study</span>
                </DropdownMenuItem>
-
-               <DropdownMenuItem 
-                 onClick={() => navigate("/dashboard/regularBatches")} 
-                 className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-               >
+               <DropdownMenuItem onClick={() => navigate("/dashboard/regularBatches")} className="px-5 py-3.5 cursor-pointer hover:bg-[#f9fafb]">
                  <Monitor className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                 <span className="text-[16px] font-medium tracking-tight">Batches</span>
+                 <span className="text-[16px] font-medium">Batches</span>
                </DropdownMenuItem>
              </>
           ) : (
-             <DropdownMenuItem 
-               onClick={() => navigate("/dashboard/enrollments")} 
-               className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-             >
+             <DropdownMenuItem onClick={() => navigate("/dashboard/enrollments")} className="px-5 py-3.5 cursor-pointer hover:bg-[#f9fafb]">
                <BookOpen className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-               <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
+               <span className="text-[16px] font-medium">My Enrollments</span>
              </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
         
         <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
         
-        <DropdownMenuItem 
-          onClick={handleSignOut} 
-          className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
-        >
+        <DropdownMenuItem onClick={handleSignOut} className="px-5 py-3.5 cursor-pointer text-[#dc2626] hover:bg-[#f9fafb]">
           <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-          <span className="text-[16px] font-medium tracking-tight">Logout</span>
+          <span className="text-[16px] font-medium">Logout</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -143,20 +106,27 @@ const NavBar = () => {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   
   const [profile, setProfile] = useState<{ full_name: string | null } | null>(null);
-
   const isDashboard = location.pathname.startsWith("/dashboard");
 
+  // --- PROFILE FETCH LOGIC ---
   useEffect(() => {
     const getProfile = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .single();
-        if (data) {
-          setProfile({ full_name: data.full_name });
-        }
+      if (!user) return;
+
+      // 1. Try to get real profile from Supabase DB
+      // We use maybeSingle() to avoid 406 errors if row is missing
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (data) {
+        setProfile({ full_name: data.full_name });
+      } 
+      // 2. Fallback to Google metadata if DB is empty
+      else if (user.user_metadata?.full_name) {
+        setProfile({ full_name: user.user_metadata.full_name });
       }
     };
     getProfile();
@@ -197,7 +167,7 @@ const NavBar = () => {
     <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-[10000] h-16 font-['Inter',sans-serif]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full">
         
-        {/* --- DESKTOP LAYOUT --- */}
+        {/* DESKTOP LAYOUT */}
         <div className="hidden md:flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
@@ -206,8 +176,8 @@ const NavBar = () => {
           </div>
 
           <div className="flex items-center justify-center space-x-8">
-            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Home</Link>
-            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">About</Link>
+            <Link to="/" className="text-gray-700 hover:text-royal transition-colors font-medium">Home</Link>
+            <Link to="/about" className="text-gray-700 hover:text-royal transition-colors font-medium">About</Link>
             
             <NavigationMenu className="static">
               <NavigationMenuList>
@@ -265,7 +235,7 @@ const NavBar = () => {
               </NavigationMenuList>
             </NavigationMenu>
             
-            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium font-sans">Career</Link>
+            <Link to="/career" className="text-gray-700 hover:text-royal transition-colors font-medium">Career</Link>
           </div>
 
           <div className="flex items-center">
@@ -280,7 +250,7 @@ const NavBar = () => {
             ) : (
               <Button 
                 onClick={openLogin}
-                className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-sans font-medium"
+                className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white px-6 font-medium"
               >
                 Sign In/Register
               </Button>
@@ -288,7 +258,7 @@ const NavBar = () => {
           </div>
         </div>
 
-        {/* --- MOBILE LAYOUT --- */}
+        {/* MOBILE LAYOUT */}
         <div className="md:hidden flex items-center justify-between h-full">
           <div className="flex items-center gap-3">
             <Sheet open={isSheetOpen} onOpenChange={(open) => { setIsSheetOpen(open); if(!open) setActivePane("main"); }}>
@@ -297,7 +267,6 @@ const NavBar = () => {
                   <Menu className="h-7 w-7 text-black" />
                 </Button>
               </SheetTrigger>
-              
               <SheetContent side="left" className="w-full max-w-none p-0 flex flex-col z-[50000] border-none font-['Inter',sans-serif] !bg-white !opacity-100">
                 <SheetHeader className="px-5 py-5 flex flex-row items-center justify-between border-b border-[#eeeeee] space-y-0 min-h-[73px] bg-white">
                   <div className="flex items-center gap-4">
