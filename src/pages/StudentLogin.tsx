@@ -151,14 +151,15 @@ const StudentLogin = () => {
 
           <div className="space-y-4 text-left">
             
-            {/* Replaced the manual Button with the GoogleAuth component.
-              This will render the Google-provided Sign-In button.
-            */}
-            <GoogleAuth 
-                isLoading={isLoading} 
-                setIsLoading={setIsLoading} 
-                onSuccess={onGoogleSuccess}
-            />
+            {/* GOOGLE AUTH COMPONENT */}
+            {/* Added 'w-full' to ensure it takes up space */}
+            <div className="w-full">
+                <GoogleAuth 
+                    isLoading={isLoading} 
+                    setIsLoading={setIsLoading} 
+                    onSuccess={onGoogleSuccess}
+                />
+            </div>
 
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
