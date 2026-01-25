@@ -1,35 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6RHR92DBXF"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-6RHR92DBXF');
+    </script>
+
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="/favicon.ico?v=1" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IITian Pathways | Dashboard</title>
-    <meta name="description" content="Premium Academic Dashboard" />
-    <meta name="author" content="IITian Pathways" />
+    ```
 
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="
-        default-src 'self'; 
-        script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sdk.cashfree.com https://www.youtube.com https://s.ytimg.com https://accounts.google.com/gsi/client; 
-        style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; 
-        font-src 'self' https://fonts.gstatic.com; 
-        img-src * self data: blob: https://lh3.googleusercontent.com; 
-        frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://sdk.cashfree.com https://api.cashfree.com https://sandbox.cashfree.com https://accounts.google.com/;
-        connect-src 'self' https://qzrvctpwefhmcduariuw.supabase.co wss://qzrvctpwefhmcduariuw.supabase.co https://*.cashfree.com https://accounts.google.com/gsi/ https://www.googleapis.com;
-      "
-    />
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-  </head>
+### 2. Update Content Security Policy (CSP)
+Because your `index.html` has a strict `http-equiv="Content-Security-Policy"`, the analytics script will be blocked unless you whitelist the Google domains. 
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+In the same `index.html` file, update your CSP meta tag to include `https://www.googletagmanager.com` and `https://www.google-analytics.com`.
+
+**Update these specific directives:**
+* **`script-src`**: Add `https://www.googletagmanager.com`
+* **`connect-src`**: Add `https://www.google-analytics.com`
+
+**Your updated CSP tag should look like this:**
+```html
+<meta
+  http-equiv="Content-Security-Policy"
+  content="
+    default-src 'self'; 
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://sdk.cashfree.com https://www.youtube.com https://s.ytimg.com https://accounts.google.com/gsi/client https://www.googletagmanager.com; 
+    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com/gsi/style; 
+    font-src 'self' https://fonts.gstatic.com; 
+    img-src * self data: blob: https://lh3.googleusercontent.com; 
+    frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://sdk.cashfree.com https://api.cashfree.com https://sandbox.cashfree.com https://accounts.google.com/;
+    connect-src 'self' https://qzrvctpwefhmcduariuw.supabase.co wss://qzrvctpwefhmcduariuw.supabase.co https://*.cashfree.com https://accounts.google.com/gsi/ https://www.googleapis.com https://www.google-analytics.com;
+  "
+/>
