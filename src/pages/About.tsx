@@ -4,8 +4,10 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import PartnershipsSection from "@/components/PartnershipsSection";
 import { Timeline } from "@/components/ui/timeline";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const About = () => {
+  usePageSEO(SEO_TITLES.ABOUT, "/about");
   const timelineData = [
     {
       title: "2024",

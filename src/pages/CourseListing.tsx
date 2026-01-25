@@ -11,11 +11,11 @@ import {
   Home,
   X
 } from "lucide-react";
-import { useDocumentTitle, getCourseListingTitleSEO } from "@/utils/seoManager";
+import { usePageSEO, getCourseListingTitleSEO } from "@/utils/seoManager";
 
 const CourseListing = () => {
   const { examCategory } = useParams<{ examCategory?: string }>();
-  useDocumentTitle(getCourseListingTitleSEO(examCategory || 'all'));
+  usePageSEO(getCourseListingTitleSEO(examCategory || 'all'), `/courses/listing/${examCategory || 'all'}`);
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
   const { courses, contentLoading } = useBackend();

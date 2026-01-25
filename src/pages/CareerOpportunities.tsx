@@ -17,6 +17,7 @@ import { useBackend } from "@/components/BackendIntegratedWrapper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 // --- RESUME DROP CARD ---
 const ResumeDropCard = () => {
@@ -111,6 +112,7 @@ const HeroBanner = ({
 };
 
 const CareerOpportunities = () => {
+  usePageSEO(SEO_TITLES.CAREER_OPENINGS, "/career/openings");
   const { jobs, contentLoading } = useBackend();
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();

@@ -5,10 +5,10 @@ import ProfileSetup from "@/components/profile/ProfileSetup";
 import LoginCard from "@/components/auth/LoginCard"; 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const Auth = () => {
-  useDocumentTitle(SEO_TITLES.AUTH);
+  usePageSEO(SEO_TITLES.AUTH, "/auth");
   const [showProfileSetup, setShowProfileSetup] = useState(false);
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();

@@ -8,10 +8,10 @@ import TestimonialsSection from "@/components/TestimonialsSection";
 import ResourceHubSection from "@/components/ResourceHubSection";
 import Footer from "@/components/Footer";
 import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const Index = () => {
-  useDocumentTitle(SEO_TITLES.HOME);
+  usePageSEO(SEO_TITLES.HOME, "/");
   return (
     <>
       <NavBar />

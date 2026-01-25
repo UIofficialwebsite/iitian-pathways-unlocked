@@ -4,10 +4,10 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { useProfileForm } from '@/hooks/useProfileForm';
 import ProfileForm from '@/components/profile/ProfileForm';
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const ProfileComplete = () => {
-  useDocumentTitle(SEO_TITLES.PROFILE_COMPLETE);
+  usePageSEO(SEO_TITLES.PROFILE_COMPLETE, "/profile/complete");
   const formProps = useProfileForm();
 
   return (

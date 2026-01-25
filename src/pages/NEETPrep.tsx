@@ -12,10 +12,10 @@ import ImportantDatesTab from "@/components/ImportantDatesTab";
 import NEETPYQTab from "@/components/NEETPYQTab";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
 import { X } from "lucide-react";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const NEETPrep = () => {
-  useDocumentTitle(SEO_TITLES.NEET_PREP);
+  usePageSEO(SEO_TITLES.NEET_PREP, "/exam-preparation/neet");
   const { notes, pyqs, contentLoading } = useBackend();
   const navigate = useNavigate();
   const location = useLocation();

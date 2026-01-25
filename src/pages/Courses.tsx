@@ -14,7 +14,7 @@ import {
   Newspaper,
   CalendarDays,
 } from "lucide-react";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES, useCanonicalUrl } from "@/utils/seoManager";
 
 const Courses = () => {
   const { examCategory } = useParams<{ examCategory?: string }>();
@@ -25,7 +25,10 @@ const Courses = () => {
     'neet': SEO_TITLES.NEET_COURSES,
     'iitm-bs': SEO_TITLES.IITM_COURSES,
   };
-  useDocumentTitle(examCategory ? categoryTitles[examCategory] || SEO_TITLES.ALL_COURSES : SEO_TITLES.ALL_COURSES);
+  usePageSEO(
+    examCategory ? categoryTitles[examCategory] || SEO_TITLES.ALL_COURSES : SEO_TITLES.ALL_COURSES,
+    examCategory ? `/courses/category/${examCategory}` : "/courses"
+  );
   const navigate = useNavigate();
   const location = useLocation();
   const { courses, contentLoading } = useBackend();

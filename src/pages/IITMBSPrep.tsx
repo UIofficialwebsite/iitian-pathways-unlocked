@@ -20,7 +20,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 // --- NEW IMPORTS FOR TOOLS ---
 import MarksPredictor from "@/components/iitm/MarksPredictor";
@@ -44,7 +44,7 @@ const FilledArrow = ({ isOpen }: { isOpen: boolean }) => (
 );
 
 const IITMBSPrep = () => {
-  useDocumentTitle(SEO_TITLES.IITM_PREP);
+  usePageSEO(SEO_TITLES.IITM_PREP, "/exam-preparation/iitm-bs");
   
   const navigate = useNavigate();
   const location = useLocation();

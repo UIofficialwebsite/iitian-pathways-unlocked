@@ -3,10 +3,10 @@ import React from "react";
 // import Footer from "@/components/Footer"; // Removed
 import ModernDashboard from "@/components/dashboard/ModernDashboard";
 import OptimizedAuthWrapper from "@/components/OptimizedAuthWrapper";
-import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const Dashboard = () => {
-  useDocumentTitle(SEO_TITLES.DASHBOARD);
+  usePageSEO(SEO_TITLES.DASHBOARD, "/dashboard");
   return (
     <>
       {/* <NavBar /> Removed */}

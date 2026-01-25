@@ -11,7 +11,7 @@ import { slugify } from "@/utils/urlHelpers";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { useDocumentTitle, getIITMNotesTitleSEO } from "@/utils/seoManager";
+import { usePageSEO, getIITMNotesTitleSEO } from "@/utils/seoManager";
 
 const IITMBSSubjectNotesPage = () => {
   const { branch, level, subjectSlug } = useParams<{ branch: string; level: string; subjectSlug: string }>();
@@ -22,8 +22,11 @@ const IITMBSSubjectNotesPage = () => {
   
   const [selectedSubject, setSelectedSubject] = useState<string>("");
   
-  // Dynamic page title based on subject and level
-  useDocumentTitle(selectedSubject ? getIITMNotesTitleSEO(selectedSubject, level || "Foundation") : "IITM BS Notes");
+  // Dynamic page title and canonical based on subject and level
+  usePageSEO(
+    selectedSubject ? getIITMNotesTitleSEO(selectedSubject, level || "Foundation") : "IITM BS Notes",
+    branch && level && subjectSlug ? `/exam-preparation/iitm-bs/notes/${branch}/${level}/${subjectSlug}` : undefined
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [bannerImage, setBannerImage] = useState<string | null>(null);
   
