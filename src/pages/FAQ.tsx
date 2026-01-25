@@ -2,8 +2,10 @@ import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const FAQ = () => {
+  useDocumentTitle(SEO_TITLES.FAQ);
   const faqs = [
     {
       question: "What is Unknown IITians?",

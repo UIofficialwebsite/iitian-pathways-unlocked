@@ -10,8 +10,10 @@ import { useToast } from "@/hooks/use-toast";
 import NavBar from "@/components/NavBar";
 // Uses the Hybrid GoogleAuth component (Client Popup -> Supabase Session)
 import GoogleAuth from "@/components/auth/GoogleAuth";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const StudentLogin = () => {
+  useDocumentTitle(SEO_TITLES.STUDENT_LOGIN);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);

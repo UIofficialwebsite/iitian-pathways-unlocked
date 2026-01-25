@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import NavBar from '@/components/NavBar';
 import Footer from '@/components/Footer';
@@ -10,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { Search, User, Calendar, Building, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 interface Employee {
   id: string;
@@ -25,6 +25,7 @@ interface Employee {
 }
 
 const EmployeeVerification = () => {
+  useDocumentTitle(SEO_TITLES.EMPLOYEE_VERIFICATION);
   const [employeeCode, setEmployeeCode] = useState('');
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(false);

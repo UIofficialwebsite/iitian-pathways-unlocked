@@ -1,4 +1,3 @@
-
 import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
@@ -7,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { BookOpen, FileText, Users, Calendar, Bell, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
+import { useDocumentTitle } from "@/utils/seoManager";
 
 const ExamPreparation = () => {
+  useDocumentTitle("Exam Preparation - JEE, NEET & IITM BS Resources");
   const examTypes = [
     {
       title: "NEET - Medical MBBS",

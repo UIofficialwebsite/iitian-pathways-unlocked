@@ -9,8 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Shield } from "lucide-react";
 import NavBar from "@/components/NavBar";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const AdminLogin = () => {
+  useDocumentTitle(SEO_TITLES.ADMIN_LOGIN);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);

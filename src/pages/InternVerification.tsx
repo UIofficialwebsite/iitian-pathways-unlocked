@@ -23,8 +23,10 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const InternVerification = () => {
+  useDocumentTitle(SEO_TITLES.INTERN_VERIFICATION);
   const [employeeId, setEmployeeId] = useState("");
   const [name, setName] = useState("");
   const [verificationResult, setVerificationResult] = useState<null | { verified: boolean, message: string, details?: any }>(null);

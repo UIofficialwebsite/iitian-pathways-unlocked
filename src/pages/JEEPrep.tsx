@@ -12,8 +12,10 @@ import NewsUpdatesTab from "@/components/NewsUpdatesTab";
 import ImportantDatesTab from "@/components/ImportantDatesTab";
 import { ChevronDown, X } from "lucide-react";
 import { buildExamUrl, getTabFromUrl } from "@/utils/urlHelpers";
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const JEEPrep = () => {
+  useDocumentTitle(SEO_TITLES.JEE_PREP);
   const { notes, pyqs, contentLoading } = useBackend();
   const navigate = useNavigate();
   const location = useLocation();

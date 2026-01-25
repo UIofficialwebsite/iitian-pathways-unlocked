@@ -3,6 +3,7 @@ import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
 import { cn } from '@/lib/utils';
 import { ChevronRight } from 'lucide-react';
+import { useDocumentTitle, SEO_TITLES } from "@/utils/seoManager";
 
 const SECTIONS = [
   { id: 'introduction', title: '1. Introduction' },
@@ -14,6 +15,7 @@ const SECTIONS = [
 ];
 
 const PrivacyPolicy = () => {
+  useDocumentTitle(SEO_TITLES.PRIVACY_POLICY);
   const [activeSection, setActiveSection] = useState('introduction');
 
   useEffect(() => {
