@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const GoogleCallback = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,7 +16,7 @@ const GoogleCallback = () => {
         if (data?.session?.user) {
           const user = data.session.user;
           
-          // Check if profile is complete
+          // Check if profile is complete (Optional check from your original code)
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('profile_completed')
@@ -28,28 +28,35 @@ const GoogleCallback = () => {
             description: "Welcome back!",
           });
           
-          // If profile is NOT complete, they must finish setup
           if (!profile || !profile.profile_completed) {
+            // New users go to auth setup
             navigate("/auth");
           } else {
-            // RETRIEVE THE SAVED PATH
+            // --- RETURN URL LOGIC ---
+            // Retrieve the path we saved before login started
             const returnUrl = localStorage.getItem('auth_return_url');
+            
             if (returnUrl) {
+              // Clear it so it doesn't persist forever
               localStorage.removeItem('auth_return_url');
+              // Navigate back to where they were (e.g., /courses/123)
               navigate(returnUrl);
             } else {
-              // Fallback to home if no path was saved
+              // Default fallback
               navigate("/");
             }
           }
         } else {
-          throw new Error("No session found");
+          // If no session, wait briefly then redirect (helps with race conditions)
+           setTimeout(() => {
+              navigate("/auth");
+           }, 2000);
         }
       } catch (error: any) {
         console.error("Auth Callback Error:", error);
         toast({
           title: "Authentication failed",
-          description: error.message || "An error occurred during authentication",
+          description: "Could not complete sign-in process.",
           variant: "destructive",
         });
         navigate("/auth");
@@ -63,10 +70,12 @@ const GoogleCallback = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-        <h2 className="text-2xl font-semibold mb-2">Finishing sign-in...</h2>
-        <p className="text-gray-600">Please wait a moment while we redirect you.</p>
+      <div className="flex flex-col items-center max-w-sm w-full bg-white p-8 rounded-lg shadow-sm">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mx-auto mb-6"></div>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">Finalizing Sign-in...</h2>
+        <p className="text-sm text-gray-500 text-center">
+          We are redirecting you back to your previous page.
+        </p>
       </div>
     </div>
   );
