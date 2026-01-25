@@ -17,7 +17,6 @@ interface Note {
   description: string;
   week: number;
   subject?: string;
-  exam_type?: string; // Added to handle exam_type safely
   file_link?: string;
   download_count?: number;
 }
@@ -44,27 +43,16 @@ const IITMBSNotesSection = ({ subject, notes: propNotes, downloads: propDownload
   // Create an array of week numbers (1-12)
   const weeks = Array.from({ length: 12 }, (_, i) => (i + 1).toString());
   
-  // FIXED: Safe filtering logic that handles null/undefined values
-  const subjectNotes = propNotes || backendNotes.filter(note => {
-    // Safely convert to lowercase with fallback to empty string
-    const noteSubject = (note.subject || "").toLowerCase();
-    const targetSubject = (subject || "").toLowerCase();
-    const noteExamType = (note.exam_type || "").toLowerCase();
-
-    // Match subject safely
-    const isSubjectMatch = noteSubject === targetSubject;
-
-    // Match exam type safely
-    const isExamTypeMatch = noteExamType.includes('iitm') || noteExamType.includes('bs');
-
-    return isSubjectMatch && isExamTypeMatch;
-  });
+  // Use backend notes if no props notes provided, filter by subject and exam type
+  const subjectNotes = propNotes || backendNotes.filter(note => 
+    note.subject?.toLowerCase() === subject.toLowerCase() && 
+    (note.exam_type?.toLowerCase().includes('iitm') || note.exam_type?.toLowerCase().includes('bs'))
+  );
   
   // Convert backend notes to expected format and filter by selected week
   const notesWithWeeks = subjectNotes.map(note => ({
     ...note,
-    // Ensure week is valid, fallback to random if missing (or handle as needed)
-    week: note.week || Math.floor(Math.random() * 12) + 1, 
+    week: Math.floor(Math.random() * 12) + 1, // Temporary week assignment
     description: note.description || `${subject} study materials`
   }));
 
