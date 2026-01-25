@@ -14,7 +14,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const { toast } = useToast();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
-  const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
+  const CLIENT_ID = "29616950088-p64jd8affh5s0q1c3eq48fgfn9mu28e2.apps.googleusercontent.com";
 
   const handleCredentialResponse = (response: any) => {
     setIsLoading(true);
@@ -28,7 +28,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
       const userData = JSON.parse(jsonPayload);
 
-      // 2. Save Data & Dispatch Event
+      // 2. Save Data & Dispatch Event (This notifies useAuth immediately)
       localStorage.setItem('google_user', JSON.stringify(userData));
       localStorage.setItem('google_id_token', response.credential);
       window.dispatchEvent(new Event('google-auth-change'));
@@ -50,6 +50,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   };
 
   useEffect(() => {
+    // 1. Load the Google Script if missing
     const loadScript = () => {
       if (document.getElementById('google-client-script')) return;
       const script = document.createElement('script');
@@ -63,9 +64,12 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
 
     loadScript();
 
+    // 2. Initialize the Button when script is ready
     const interval = setInterval(() => {
+      // Check if window.google exists AND our ref is attached to the DOM
       if (window.google && googleBtnRef.current) {
         setIsGoogleLoaded(true);
+        
         window.google.accounts.id.initialize({
           client_id: CLIENT_ID,
           callback: handleCredentialResponse,
@@ -76,7 +80,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
         // Render invisible button over our custom UI
         window.google.accounts.id.renderButton(
           googleBtnRef.current,
-          { theme: "outline", size: "large", type: "standard" } 
+          { theme: "outline", size: "large", type: "standard", width: "400" } 
         );
         
         clearInterval(interval);
@@ -87,15 +91,15 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   }, []);
 
   return (
-    <div className="w-full relative group">
-        {/* ORIGINAL DESIGN BUTTON (Visible) */}
+    <div className="w-full relative group flex justify-center">
+        {/* CUSTOM DESIGN BUTTON (Visible) */}
         <Button 
             variant="outline" 
             type="button"
             className={cn(
-              "w-full h-12 bg-white text-black border-none font-medium text-base relative z-10",
+              "w-full max-w-[380px] h-[50px] bg-white text-black border-gray-300 font-medium text-base relative z-10",
               "flex items-center justify-center gap-3 transition-all duration-200",
-              "group-hover:bg-gray-200 group-hover:scale-[1.02]", 
+              "group-hover:bg-gray-50 group-hover:scale-[1.01]", 
               "rounded-xl shadow-sm"
             )}
             disabled={isLoading || !isGoogleLoaded}
@@ -110,7 +114,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Sign in with Google
+                <span className="text-gray-700">Continue with Google</span>
               </>
             )}
         </Button>
@@ -119,7 +123,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
         {/* This div sits exactly on top of the button above. When user clicks, they click this. */}
         <div 
             ref={googleBtnRef} 
-            className="absolute inset-0 z-20 opacity-0 cursor-pointer overflow-hidden h-12 w-full rounded-xl"
+            className="absolute inset-0 z-20 opacity-0 cursor-pointer overflow-hidden h-[50px] w-full max-w-[380px] mx-auto rounded-xl"
         ></div>
     </div>
   );
