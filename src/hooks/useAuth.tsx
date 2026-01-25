@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
+// We keep the client only for DB/RPC calls if needed, but NOT for auth session
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -24,123 +25,102 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    // We need user info for the checks
-    if (!currentUser?.id || !currentUser?.email) {
-      setIsAdmin(false);
-      setIsSuperAdmin(false);
-      setUserRole(null);
-      return;
+    // If purely client-side Google Auth, we default to Student.
+    // Logic for admin checks via Supabase DB (profiles table) can remain 
+    // if you have a way to match the Google email to a profile row.
+    if (!currentUser) {
+       setIsAdmin(false);
+       setIsSuperAdmin(false);
+       setUserRole(null);
+       return;
     }
 
-    try {
-      // Use RPC function to check admin status - this bypasses RLS issues
-      const { data: isAdminResult, error: adminError } = await supabase
-        .rpc('is_current_user_admin');
-      
-      if (adminError) {
-        console.error('useAuth: Error checking admin status:', adminError);
-        setIsAdmin(false);
-        setIsSuperAdmin(false);
-      } else {
-        setIsAdmin(isAdminResult || false);
-      }
-
-      // Check if super admin using RPC function
-      if (isAdminResult) {
-        const { data: isSuperAdminResult, error: superAdminError } = await supabase
-          .rpc('is_super_admin', { user_email: currentUser.email });
-        
-        if (superAdminError) {
-          console.error('useAuth: Error checking super admin status:', superAdminError);
-          setIsSuperAdmin(false);
-        } else {
-          setIsSuperAdmin(isSuperAdminResult || false);
-        }
-        
-        setUserRole(isSuperAdminResult ? 'super_admin' : 'admin');
-      } else {
-        setIsSuperAdmin(false);
-        
-        // Check profiles table for role using 'id'
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', currentUser.id)
-          .maybeSingle();
-        
-        if (profileError && profileError.code !== 'PGRST116') {
-          if (profileError.code !== '42501') {
-            console.error('useAuth: Error checking profiles:', profileError);
-          }
-        }
-
-        setUserRole(profile?.role || 'student');
-      }
-      
-    } catch (error) {
-      console.error('useAuth: Error in checkAdminStatus:', error);
-      setIsAdmin(false);
-      setIsSuperAdmin(false);
-      setUserRole('student');
-    }
+    // Default to student for all direct Google logins
+    setIsAdmin(false);
+    setIsSuperAdmin(false);
+    setUserRole('student');
   };
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      setSession(null);
-      setIsAdmin(false);
-      setIsSuperAdmin(false);
-      setUserRole(null);
-    } catch (error) {
-      console.error('useAuth: Error signing out:', error);
-    }
+    // STRICT: Only clear local storage. No Supabase signOut call.
+    localStorage.removeItem('google_user');
+    localStorage.removeItem('google_id_token');
+    
+    setUser(null);
+    setSession(null);
+    setIsAdmin(false);
+    setIsSuperAdmin(false);
+    setUserRole(null);
+    
+    // Force reload to reset all app states/cache
+    window.location.href = '/';
   };
 
   useEffect(() => {
-    setIsLoading(true);
+    const initializeAuth = async () => {
+      setIsLoading(true);
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
-      } catch (error) {
-        console.error('useAuth: Error getting initial session:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+      // --- STRICT CHECK: ONLY LOCAL STORAGE ---
+      const localGoogleUser = localStorage.getItem('google_user');
+      const localIdToken = localStorage.getItem('google_id_token');
 
-    getInitialSession();
+      if (localGoogleUser && localIdToken) {
+        try {
+          const parsedUser = JSON.parse(localGoogleUser);
+          
+          // Construct User object from Local Data
+          const googleUser: User = {
+            id: parsedUser.sub,
+            aud: 'google_client',
+            role: 'authenticated',
+            email: parsedUser.email,
+            email_confirmed_at: new Date().toISOString(),
+            phone: '',
+            confirmed_at: new Date().toISOString(),
+            last_sign_in_at: new Date().toISOString(),
+            app_metadata: {
+              provider: 'google_direct_client',
+              providers: ['google']
+            },
+            user_metadata: {
+              full_name: parsedUser.name,
+              avatar_url: parsedUser.picture,
+              ...parsedUser
+            },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            is_anonymous: false
+          };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (event === 'SIGNED_OUT') {
-          setIsAdmin(false);
-          setIsSuperAdmin(false);
-          setUserRole(null);
+          const googleSession: Session = {
+            access_token: localIdToken,
+            token_type: 'bearer',
+            expires_in: 3600,
+            refresh_token: '',
+            user: googleUser
+          };
+
+          setUser(googleUser);
+          setSession(googleSession);
+        } catch (e) {
+          console.error("Corrupt local session, clearing...", e);
+          localStorage.removeItem('google_user');
+          localStorage.removeItem('google_id_token');
+          setUser(null);
         }
+      } else {
+        // No local user found -> User is null
+        setUser(null);
+        setSession(null);
       }
-    );
-
-    return () => {
-      subscription.unsubscribe();
+      
+      setIsLoading(false);
     };
-  }, []);
 
-  // Re-check admin status when user changes or loading completes
-  useEffect(() => {
-    // Only check status if not loading to prevent race conditions
-    if (!isLoading) {
-      checkAdminStatus(user).catch(console.error);
-    }
-  }, [user, isLoading]);
+    initializeAuth();
+    // Note: No supabase.auth.onAuthStateChange listener here. 
+    // We rely entirely on the manual storage check above.
+  }, []);
 
   return (
     <AuthContext.Provider value={{
@@ -160,8 +140,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
