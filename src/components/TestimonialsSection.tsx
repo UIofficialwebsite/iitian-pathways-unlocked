@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type Testimonial = {
@@ -62,6 +62,10 @@ const fallbackTestimonialsData: Testimonial[] = [
 const TestimonialsSection = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(fallbackTestimonialsData);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Refs and state for auto-scroll
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -96,6 +100,32 @@ const TestimonialsSection = () => {
   // Split data
   const featuredTestimonial = testimonials[0];
   const scrollableTestimonials = testimonials.slice(1);
+  
+  // Duplicate data for infinite scroll effect
+  const infiniteScrollableTestimonials = [...scrollableTestimonials, ...scrollableTestimonials];
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let animationFrameId: number;
+
+    const scroll = () => {
+      if (!isPaused && scrollContainer) {
+        // If we've scrolled past the first set (halfway), reset to 0 to loop
+        if (scrollContainer.scrollLeft >= scrollContainer.scrollWidth / 2) {
+          scrollContainer.scrollLeft = 0;
+        } else {
+          scrollContainer.scrollLeft += 0.5; // Adjust speed here (0.5 is slow and smooth)
+        }
+      }
+      animationFrameId = requestAnimationFrame(scroll);
+    };
+
+    animationFrameId = requestAnimationFrame(scroll);
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPaused, scrollableTestimonials]);
 
   return (
     // Changed bg-gray-50 to bg-gray-100 for a slightly darker grey background
@@ -105,7 +135,7 @@ const TestimonialsSection = () => {
         {/* Header Section */}
         <div className="text-center mb-[50px] lg:mb-[70px]">
           <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
-            ❤️<span className="text-red-500">for</span> Unknown IITians
+            ❤️<span className="text-black">for</span> Unknown IITians
           </h1>
           <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
             See what our students have to say about us
@@ -115,7 +145,8 @@ const TestimonialsSection = () => {
         {/* --- ROW 1: Featured Testimonial --- */}
         {featuredTestimonial && (
           <div className="mb-8 lg:mb-10">
-            <div className="relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
+            {/* Changed border-black/5 to border-black */}
+            <div className="relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col">
               {/* Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
@@ -141,20 +172,28 @@ const TestimonialsSection = () => {
         )}
 
         {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- 
-            - Enabled flex-nowrap and overflow-x-auto for ALL screens
-            - This ensures it stays as a single row that scrolls horizontally
+            - Auto-scrolls via useEffect
+            - Pauses on hover/touch
+            - Removed snap classes to allow smooth auto-scroll
         */}
-        <div className="
-          flex flex-nowrap overflow-x-auto snap-x snap-mandatory gap-5 pb-8 -mx-6 px-6 
-          md:mx-0 md:px-0 md:gap-6
-          scrollbar-hide
-        ">
-          {scrollableTestimonials.map((testimonial, index) => (
+        <div 
+          ref={scrollRef}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => setIsPaused(false)}
+          className="
+            flex flex-nowrap overflow-x-auto gap-5 pb-8 -mx-6 px-6 
+            md:mx-0 md:px-0 md:gap-6
+            scrollbar-hide
+          "
+        >
+          {infiniteScrollableTestimonials.map((testimonial, index) => (
             <div 
-              key={index}
+              key={`${index}-${testimonial.name}`}
+              // Changed border-black/5 to border-black
               className="
-                relative border border-black/5 rounded-xl bg-white shadow-sm overflow-hidden flex flex-col flex-shrink-0
-                snap-center 
+                relative border border-black rounded-xl bg-white shadow-sm overflow-hidden flex flex-col flex-shrink-0
                 /* Mobile Width */
                 min-w-[85vw] sm:min-w-[350px] 
                 /* Desktop Width - Fixed width to allow scrolling */
