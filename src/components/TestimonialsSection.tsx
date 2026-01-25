@@ -23,7 +23,7 @@ type DatabaseTestimonial = {
 
 const fallbackTestimonialsData: Testimonial[] = [
   {
-    text: "The mentorship at Unknown IITians is unparalleled. Transitioning from complex concepts to intuitive problem-solving was made possible by the structured approach and the genuine support of the community. It’s more than just a platform; it’s an ecosystem that focuses on high-yield results.",
+    text: "The mentorship at Unknown IITians is unparalleled. Transitioning from complex concepts to intuitive problem-solving was made possible by the structured approach and the genuine support of the community. It's more than just a platform; it's an ecosystem that focuses on high-yield results.",
     name: "Saket Kumar",
     role: "JEE Advanced Merit | Physics & Mathematics",
   },
@@ -129,24 +129,24 @@ const TestimonialsSection = () => {
   }, [isPaused, infiniteScrollableTestimonials]);
 
   return (
-    <section className="py-24 bg-gray-100 font-['Inter',sans-serif] overflow-hidden">
-      <div className="max-w-[1200px] mx-auto px-6">
+    <section className="py-12 md:py-24 bg-gray-100 font-['Inter',sans-serif] overflow-hidden">
+      <div className="max-w-[1200px] mx-auto px-4 md:px-6 scale-[0.9] md:scale-100 origin-top">
         
         {/* Header Section */}
-        <div className="text-center mb-[50px] lg:mb-[70px]">
-          <h1 className="text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-3 tracking-tight flex items-center justify-center gap-3">
+        <div className="text-center mb-[30px] md:mb-[50px] lg:mb-[70px]">
+          <h1 className="text-[22px] md:text-[28px] lg:text-[34px] font-semibold text-[#0f172a] mb-2 md:mb-3 tracking-tight flex items-center justify-center gap-2 md:gap-3">
             ❤️<span className="text-black">for</span> Unknown IITians
           </h1>
-          <p className="text-[#64748b] text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
+          <p className="text-[#64748b] text-[13px] md:text-[15px] lg:text-[17px] font-normal max-w-[700px] mx-auto leading-relaxed">
             See what our students have to say about us
           </p>
         </div>
 
-        {/* --- ROW 1: Featured Testimonial --- */}
+        {/* --- ROW 1: Featured Testimonial (Rectangular) --- */}
         {featuredTestimonial && (
-          <div className="mb-8 lg:mb-10">
+          <div className="mb-4 md:mb-8 lg:mb-10">
             <div className="relative border border-black rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
-              {/* Corner Fade (Keeping Indigo for Row 1 to distinguish, or matching if desired. Keeping original soft blue/indigo here.) */}
+              {/* Corner Fade */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
@@ -154,16 +154,16 @@ const TestimonialsSection = () => {
                 }}
               />
               
-              <div className="relative z-10 p-8 lg:p-[50px]">
-                <div className="text-[55px] text-black/5 font-serif leading-none mb-3">“</div>
-                <p className="text-[16px] lg:text-[18px] leading-[1.75] text-slate-700 mb-[30px] font-normal max-w-[95%] lg:max-w-[85%]">
+              <div className="relative z-10 p-5 md:p-8 lg:p-[50px]">
+                <div className="text-[35px] md:text-[55px] text-black/5 font-serif leading-none mb-2 md:mb-3">"</div>
+                <p className="text-[13px] md:text-[16px] lg:text-[18px] leading-[1.65] md:leading-[1.75] text-slate-700 mb-4 md:mb-[30px] font-normal">
                   {featuredTestimonial.text}
                 </p>
-                <div className="">
-                  <h4 className="text-[19px] font-semibold text-[#0f172a] mb-1">
+                <div>
+                  <h4 className="text-[15px] md:text-[19px] font-semibold text-[#0f172a] mb-0.5 md:mb-1">
                     {featuredTestimonial.name}
                   </h4>
-                  <p className="text-[14px] text-[#64748b] font-medium flex items-center gap-2.5">
+                  <p className="text-[11px] md:text-[14px] text-[#64748b] font-medium flex items-center gap-2">
                     {featuredTestimonial.role}
                   </p>
                 </div>
@@ -172,7 +172,7 @@ const TestimonialsSection = () => {
           </div>
         )}
 
-        {/* --- ROW 2: Horizontal Scroll Strip (All other reviews) --- */}
+        {/* --- ROW 2: Horizontal Scroll Strip (Small squares on mobile, 2 per view) --- */}
         <div 
           ref={scrollRef}
           onMouseEnter={() => setIsPaused(true)}
@@ -180,8 +180,9 @@ const TestimonialsSection = () => {
           onTouchStart={() => setIsPaused(true)}
           onTouchEnd={() => setIsPaused(false)}
           className="
-            flex flex-nowrap overflow-x-auto gap-5 pb-8 -mx-6 px-6 
-            md:mx-0 md:px-0 md:gap-6
+            flex flex-nowrap overflow-x-auto gap-3 pb-4 -mx-4 px-4 snap-x snap-mandatory
+            md:gap-5 md:pb-8 md:-mx-6 md:px-6
+            lg:mx-0 lg:px-0 lg:gap-6
             scrollbar-hide
           "
         >
@@ -189,33 +190,31 @@ const TestimonialsSection = () => {
             <div 
               key={`${index}-${testimonial.name}`}
               className="
-                relative border border-black rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col flex-shrink-0
-                /* Mobile Width */
-                min-w-[85vw] sm:min-w-[350px] 
-                /* Desktop Width */
+                relative border border-black rounded-lg md:rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col flex-shrink-0 snap-start
+                min-w-[calc(50vw-24px)] w-[calc(50vw-24px)] aspect-square
+                sm:min-w-[280px] sm:w-auto sm:aspect-auto
                 lg:min-w-[400px] lg:max-w-[400px]
                 h-auto
               "
             >
-              {/* Premium Violish Type (Soft Violet/Purple Gradient) */}
+              {/* Soft Violet Gradient */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
-                  // Using Violet (139, 92, 246) and soft Purple tones
                   background: 'radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.08) 0%, rgba(167, 139, 250, 0.03) 50%, transparent 70%)' 
                 }}
               />
 
-              <div className="relative z-10 p-[30px] lg:p-[40px] flex flex-col h-full">
-                <div className="text-[55px] text-black/5 font-serif leading-none mb-2">“</div>
-                <p className="text-[15px] leading-[1.75] text-slate-700 mb-[30px] font-normal flex-grow">
+              <div className="relative z-10 p-3 md:p-[30px] lg:p-[40px] flex flex-col h-full">
+                <div className="text-[28px] md:text-[55px] text-black/5 font-serif leading-none mb-1 md:mb-2">"</div>
+                <p className="text-[10px] md:text-[15px] leading-[1.5] md:leading-[1.75] text-slate-700 mb-2 md:mb-[30px] font-normal flex-grow line-clamp-4 md:line-clamp-none">
                   {testimonial.text}
                 </p>
                 <div className="mt-auto">
-                  <h4 className="text-[17px] font-semibold text-[#0f172a] mb-1">
+                  <h4 className="text-[11px] md:text-[17px] font-semibold text-[#0f172a] mb-0.5 md:mb-1 truncate">
                     {testimonial.name}
                   </h4>
-                  <p className="text-[13px] text-[#64748b] font-medium flex items-center gap-2.5">
+                  <p className="text-[9px] md:text-[13px] text-[#64748b] font-medium truncate">
                     {testimonial.role}
                   </p>
                 </div>
