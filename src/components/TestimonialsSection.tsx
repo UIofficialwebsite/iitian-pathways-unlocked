@@ -146,7 +146,7 @@ const TestimonialsSection = () => {
         {featuredTestimonial && (
           <div className="mb-8 lg:mb-10">
             <div className="relative border border-black rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
-              {/* Premium Corner Color Effect (Indigo/Slate Blend) */}
+              {/* Corner Fade (Keeping Indigo for Row 1 to distinguish, or matching if desired. Keeping original soft blue/indigo here.) */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
@@ -197,12 +197,12 @@ const TestimonialsSection = () => {
                 h-auto
               "
             >
-              {/* Premium Light Light Soft Effect */}
+              {/* Premium Violish Type (Soft Violet/Purple Gradient) */}
               <div 
                 className="absolute bottom-0 right-0 w-full h-full pointer-events-none z-[1]" 
                 style={{ 
-                  // Very light, soft premium gradient
-                  background: 'radial-gradient(circle at bottom right, rgba(79, 70, 229, 0.04) 0%, rgba(99, 102, 241, 0.01) 40%, transparent 60%)' 
+                  // Using Violet (139, 92, 246) and soft Purple tones
+                  background: 'radial-gradient(circle at bottom right, rgba(139, 92, 246, 0.08) 0%, rgba(167, 139, 250, 0.03) 50%, transparent 70%)' 
                 }}
               />
 
