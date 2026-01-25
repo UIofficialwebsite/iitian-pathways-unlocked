@@ -7,7 +7,7 @@ import IITMBSNotesSection from "@/components/IITMBSNotesSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
 import NewsletterSection from "@/components/NewsletterSection";
 import Footer from "@/components/Footer";
-import AnnouncementBar from "@/components/AnnouncementBar";
+import { AnnouncementBar } from "@/components/AnnouncementBar"; // Fixed: Changed to named import
 import FloatingAnnouncementToggle from "@/components/FloatingAnnouncementToggle";
 import VideoSection from "@/components/VideoSection";
 import PartnershipsSection from "@/components/PartnershipsSection";
@@ -24,7 +24,7 @@ const Index = () => {
         <WhyChooseUsSection />
         <VideoSection />
         
-        {/* Moved TestimonialsSection here, BEFORE the Study Material */}
+        {/* Testimonials Section (Placed before Study Material) */}
         <TestimonialsSection />
 
         {/* Study Material Section */}
