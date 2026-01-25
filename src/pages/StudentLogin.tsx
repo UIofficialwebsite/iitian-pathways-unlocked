@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import NavBar from "@/components/NavBar";
-// Import the GoogleAuth component
+// Import the updated GoogleAuth component
 import GoogleAuth from "@/components/auth/GoogleAuth";
 
 const StudentLogin = () => {
@@ -22,7 +22,7 @@ const StudentLogin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Helper function to check profile status and redirect after login
+  // Helper to handle navigation after successful login
   const checkProfileAndNavigate = async (userId: string) => {
     try {
       const { data: profile } = await supabase
@@ -42,8 +42,14 @@ const StudentLogin = () => {
         navigate("/");
       }
     } catch (error) {
-      // Fallback if profile check fails
       navigate("/profile/complete");
+    }
+  };
+
+  const onGoogleSuccess = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        await checkProfileAndNavigate(user.id);
     }
   };
 
@@ -118,24 +124,13 @@ const StudentLogin = () => {
     }
   };
 
-  // Handler for when Google Login completes successfully
-  const onGoogleSuccess = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-        await checkProfileAndNavigate(user.id);
-    }
-  };
-
   return (
     <>
       <NavBar />
-      {/* Background container matches Auth.tsx */}
       <div className="min-h-screen flex items-center justify-center bg-[#f5f5f5] p-4 pt-24 font-['Inter',sans-serif]">
         
-        {/* THE MODAL CARD */}
         <div className="bg-white w-full max-w-[420px] rounded-[28px] relative px-6 py-10 text-center shadow-[0_10px_40px_rgba(0,0,0,0.1)] transition-all duration-300">
           
-          {/* Illustration Area */}
           <div className="mb-8 flex justify-center">
             <div className="w-36 h-36 bg-[#fef3c7] flex items-center justify-center [clip-path:polygon(100%_50%,95.11%_65.45%,80.9%_76.94%,65.45%_85.39%,50%_100%,34.55%_85.39%,19.1%_76.94%,4.89%_65.45%,0%_50%,4.89%_34.55%,19.1%_23.06%,34.55%_14.61%,50%_0%,65.45%_14.61%,80.9%_23.06%,95.11%_34.55%)] transform transition-transform duration-300 hover:scale-105">
               <div className="w-12 h-20 bg-white border-2 border-[#1a1a1a] rounded-lg relative flex items-center justify-center">
@@ -151,9 +146,8 @@ const StudentLogin = () => {
 
           <div className="space-y-4 text-left">
             
-            {/* GOOGLE AUTH COMPONENT */}
-            {/* Added 'w-full' to ensure it takes up space */}
-            <div className="w-full">
+            {/* GOOGLE AUTH BUTTON CONTAINER */}
+            <div className="w-full flex justify-center py-1">
                 <GoogleAuth 
                     isLoading={isLoading} 
                     setIsLoading={setIsLoading} 
@@ -251,7 +245,6 @@ const StudentLogin = () => {
             </form>
           </div>
 
-          {/* Footer toggle */}
           <div className="mt-8 text-sm text-center">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}
             <button 
