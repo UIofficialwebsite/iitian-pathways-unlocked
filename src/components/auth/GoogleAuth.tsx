@@ -69,24 +69,23 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   React.useEffect(() => {
     const timer = setTimeout(() => {
       setShowFallback(true);
-    }, 3000); 
+    }, 2000); // Reduced delay slightly to improve perceived speed
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div className="w-full flex flex-col items-center gap-3 py-2">
-      {/* Container with fixed dimensions to match LoginCard layout */}
-      <div className="w-full max-w-[350px] flex justify-center">
+      <div className="w-full max-w-[400px] flex justify-center">
         {!showFallback ? (
-          <div className="min-h-[44px] w-full">
+          <div className="min-h-[50px] w-full flex justify-center">
             <GoogleLogin
               onSuccess={handleSuccess}
               onError={handleGoogleError}
               theme="outline"
               size="large"
-              width="350" // Explicitly sets the SDK button width
+              width="380" // Increased width for PC visibility
               text="continue_with"
-              shape="pill"
+              shape="rectangular" // Changed from pill to rectangular for slight round corners
             />
           </div>
         ) : (
@@ -95,7 +94,8 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
             variant="outline"
             onClick={handleFallbackGoogleLogin}
             disabled={isLoading}
-            className="w-full h-[44px] rounded-full border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all"
+            // Updated to 'rounded-md' for slight corners and increased height/width
+            className="w-full max-w-[380px] h-[50px] rounded-md border-gray-300 hover:bg-gray-50 flex items-center justify-center gap-3 shadow-sm transition-all"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -115,7 +115,7 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-gray-700 font-medium">
+            <span className="text-gray-700 font-medium text-base">
               {isLoading ? "Signing in..." : "Continue with Google"}
             </span>
           </Button>
