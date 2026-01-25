@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-// We keep the client only for DB/RPC calls if needed, but NOT for auth session
 import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
@@ -25,102 +24,114 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [userRole, setUserRole] = useState<string | null>(null);
 
   const checkAdminStatus = async (currentUser: User | null) => {
-    // If purely client-side Google Auth, we default to Student.
-    // Logic for admin checks via Supabase DB (profiles table) can remain 
-    // if you have a way to match the Google email to a profile row.
     if (!currentUser) {
        setIsAdmin(false);
        setIsSuperAdmin(false);
        setUserRole(null);
        return;
     }
-
-    // Default to student for all direct Google logins
+    // Direct Google users are strictly students
+    if (currentUser.app_metadata?.provider === 'google_direct_client') {
+      setIsAdmin(false);
+      setIsSuperAdmin(false);
+      setUserRole('student');
+      return;
+    }
+    // Logic for other users...
     setIsAdmin(false);
-    setIsSuperAdmin(false);
     setUserRole('student');
   };
 
   const signOut = async () => {
-    // STRICT: Only clear local storage. No Supabase signOut call.
     localStorage.removeItem('google_user');
     localStorage.removeItem('google_id_token');
-    
+    await supabase.auth.signOut();
     setUser(null);
     setSession(null);
-    setIsAdmin(false);
-    setIsSuperAdmin(false);
-    setUserRole(null);
-    
-    // Force reload to reset all app states/cache
+    window.dispatchEvent(new Event('google-auth-change')); // Notify other tabs/components
     window.location.href = '/';
   };
 
-  useEffect(() => {
-    const initializeAuth = async () => {
-      setIsLoading(true);
+  // Define the initialization logic as a reusable function
+  const initializeAuth = useCallback(async () => {
+    setIsLoading(true);
 
-      // --- STRICT CHECK: ONLY LOCAL STORAGE ---
-      const localGoogleUser = localStorage.getItem('google_user');
-      const localIdToken = localStorage.getItem('google_id_token');
+    // 1. Check Local Google Session
+    const localGoogleUser = localStorage.getItem('google_user');
+    const localIdToken = localStorage.getItem('google_id_token');
 
-      if (localGoogleUser && localIdToken) {
-        try {
-          const parsedUser = JSON.parse(localGoogleUser);
-          
-          // Construct User object from Local Data
-          const googleUser: User = {
-            id: parsedUser.sub,
-            aud: 'google_client',
-            role: 'authenticated',
-            email: parsedUser.email,
-            email_confirmed_at: new Date().toISOString(),
-            phone: '',
-            confirmed_at: new Date().toISOString(),
-            last_sign_in_at: new Date().toISOString(),
-            app_metadata: {
-              provider: 'google_direct_client',
-              providers: ['google']
-            },
-            user_metadata: {
-              full_name: parsedUser.name,
-              avatar_url: parsedUser.picture,
-              ...parsedUser
-            },
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            is_anonymous: false
-          };
+    if (localGoogleUser && localIdToken) {
+      try {
+        const parsedUser = JSON.parse(localGoogleUser);
+        const googleUser: User = {
+          id: parsedUser.sub,
+          aud: 'google_client',
+          role: 'authenticated',
+          email: parsedUser.email,
+          email_confirmed_at: new Date().toISOString(),
+          phone: '',
+          confirmed_at: new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
+          app_metadata: { provider: 'google_direct_client', providers: ['google'] },
+          user_metadata: { full_name: parsedUser.name, avatar_url: parsedUser.picture, ...parsedUser },
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          is_anonymous: false
+        };
+        const googleSession: Session = {
+          access_token: localIdToken,
+          token_type: 'bearer',
+          expires_in: 3600,
+          refresh_token: '',
+          user: googleUser
+        };
 
-          const googleSession: Session = {
-            access_token: localIdToken,
-            token_type: 'bearer',
-            expires_in: 3600,
-            refresh_token: '',
-            user: googleUser
-          };
-
-          setUser(googleUser);
-          setSession(googleSession);
-        } catch (e) {
-          console.error("Corrupt local session, clearing...", e);
-          localStorage.removeItem('google_user');
-          localStorage.removeItem('google_id_token');
-          setUser(null);
-        }
-      } else {
-        // No local user found -> User is null
-        setUser(null);
-        setSession(null);
+        setUser(googleUser);
+        setSession(googleSession);
+        setIsLoading(false);
+        return; 
+      } catch (e) {
+        console.error("Auth Error", e);
+        localStorage.removeItem('google_user');
       }
-      
+    }
+
+    // 2. Fallback to Supabase
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user ?? null);
+    } catch (error) {
+      console.error(error);
+    } finally {
       setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Run initial check
+    initializeAuth();
+
+    // Listen for custom event from GoogleAuth component
+    const handleAuthChange = () => {
+      initializeAuth();
     };
 
-    initializeAuth();
-    // Note: No supabase.auth.onAuthStateChange listener here. 
-    // We rely entirely on the manual storage check above.
-  }, []);
+    window.addEventListener('google-auth-change', handleAuthChange);
+    
+    // Listen for Supabase changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!localStorage.getItem('google_user')) {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
+    });
+
+    return () => {
+      window.removeEventListener('google-auth-change', handleAuthChange);
+      subscription.unsubscribe();
+    };
+  }, [initializeAuth]);
 
   return (
     <AuthContext.Provider value={{
