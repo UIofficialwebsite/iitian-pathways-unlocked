@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@4.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -238,6 +239,85 @@ serve(async (req: Request) => {
         console.error("❌ DB INSERT ERROR:", insertError.message);
       } else {
         console.log(`✅ Payment Saved: Batch=[${mainBatchName}], Courses=[${coursesString}], UTR=[${utr}]`);
+        
+        // Send Enrollment Confirmation Email
+        if (paymentInsertData.customer_email) {
+          try {
+            const resendApiKey = Deno.env.get("RESEND_API_KEY");
+            if (resendApiKey) {
+              const resend = new Resend(resendApiKey);
+              const { error: emailError } = await resend.emails.send({
+                from: "Unknown IITians <desk@unknowniitians.com>",
+                to: [paymentInsertData.customer_email],
+                subject: `Enrollment Confirmed: ${mainBatchName}`,
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #1E3A8A;">Welcome to ${mainBatchName}!</h1>
+                    
+                    <p>Hello,</p>
+                    
+                    <p><strong>Congratulations!</strong> Your enrollment has been confirmed.</p>
+                    
+                    <h2 style="color: #1E3A8A; border-bottom: 2px solid #1E3A8A; padding-bottom: 8px;">Enrollment Details</h2>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+                      <tr>
+                        <td style="padding: 8px 0; font-weight: bold;">Batch:</td>
+                        <td style="padding: 8px 0;">${mainBatchName}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-weight: bold;">Subjects:</td>
+                        <td style="padding: 8px 0;">${coursesString}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-weight: bold;">Amount Paid:</td>
+                        <td style="padding: 8px 0;">₹${netAmount}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 8px 0; font-weight: bold;">Registered Email:</td>
+                        <td style="padding: 8px 0;">${paymentInsertData.customer_email}</td>
+                      </tr>
+                    </table>
+                    
+                    <h2 style="color: #1E3A8A; border-bottom: 2px solid #1E3A8A; padding-bottom: 8px;">How to Access Your Classes</h2>
+                    
+                    <p>You can join your classes through the <strong>Student Service Portal</strong>. You can get recordings of the classes, access notes, and connect with your teachers and admin through the portal. Your class batch group is also available there.</p>
+                    
+                    <p style="background-color: #FEF3C7; padding: 12px; border-radius: 6px;">
+                      <strong>⚠️ Important:</strong> Only login through your registered email mentioned above.
+                    </p>
+                    
+                    <p style="text-align: center; margin: 24px 0;">
+                      <a href="https://ssp.unknowniitians.com" 
+                         style="background-color: #1E3A8A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block;">
+                        Access Portal
+                      </a>
+                    </p>
+                    
+                    <p>If you have any questions, please contact our support team.</p>
+                    
+                    <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+                    
+                    <p style="color: #6B7280; font-size: 12px; text-align: center;">
+                      This is a computer generated email
+                    </p>
+                  </div>
+                `,
+              });
+
+              if (emailError) {
+                console.error("📧 Email Error:", emailError);
+              } else {
+                console.log("📧 Confirmation email sent to:", paymentInsertData.customer_email);
+              }
+            } else {
+              console.warn("📧 RESEND_API_KEY not configured, skipping email");
+            }
+          } catch (emailErr) {
+            console.error("📧 Email sending failed:", emailErr);
+            // Don't fail the whole flow if email fails
+          }
+        }
       }
     } else {
       console.log(`ℹ️ Skipping payment table insert: Status is ${finalStatus}`);
