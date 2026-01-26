@@ -1,7 +1,3 @@
-{
-type: uploaded file
-fileName: uiofficialwebsite/ui-main-website/UI-Main-Website-dba9b15b91a968cd2011f0abab4c5938878c7c64/src/components/dashboard/EnrollmentReceiptView.tsx
-fullContent:
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -243,9 +239,9 @@ const EnrollmentReceiptView = () => {
     try {
       const element = receiptRef.current;
       
-      // Improved PDF generation with multi-page support
+      // Generate Canvas from the HTML element
       const canvas = await html2canvas(element, { 
-        scale: 2, 
+        scale: 2, // Higher scale for better clarity
         useCORS: true, 
         logging: false, 
         backgroundColor: '#ffffff' 
@@ -254,8 +250,9 @@ const EnrollmentReceiptView = () => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
-      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+      // A4 Size dimensions in mm
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
       
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
@@ -263,13 +260,13 @@ const EnrollmentReceiptView = () => {
       let heightLeft = imgHeight;
       let position = 0;
 
-      // Add first page
+      // Add the first page
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // Add new pages if the content is longer than one page
+      // Loop to create additional pages if content overflows
       while (heightLeft > 0) {
-        position -= pdfHeight; // Move the image up to show the next slice
+        position -= pdfHeight; // Move the image up to show the next segment
         pdf.addPage();
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
