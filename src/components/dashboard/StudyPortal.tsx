@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -290,7 +291,7 @@ const EnrolledView = ({
       setSelectedBatchId(newBatchId);
       setTempSelectedBatchId(newBatchId);
     }
-  }, [enrollments]);
+  }, [enrollments, selectedBatchId]);
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
@@ -393,35 +394,45 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
-  const handleContinue = () => {
+  const handleContinue = useCallback(() => {
     const newBatchId = tempSelectedBatchId;
+    
+    console.log('[BatchSwitch] Current selectedBatchId:', selectedBatchId);
+    console.log('[BatchSwitch] Temp selectedBatchId (new):', newBatchId);
     
     // Only proceed if we have a valid new selection that differs from current
     if (!newBatchId || newBatchId === selectedBatchId) {
+      console.log('[BatchSwitch] Same batch or invalid, closing sheet');
       setIsSheetOpen(false);
       return;
     }
     
-    // 1. Force clear all stale data to show loading state
-    setFullCourseData(null);
-    setScheduleData([]);
-    setFaqs(undefined);
-    setActiveTab('features');
+    console.log('[BatchSwitch] Switching to new batch:', newBatchId);
     
-    // 2. Update the batch ID - this triggers the useEffect to fetch new data
-    setSelectedBatchId(newBatchId);
+    // Use flushSync to force synchronous state updates
+    flushSync(() => {
+      // 1. Force clear all stale data to show loading state
+      setFullCourseData(null);
+      setScheduleData([]);
+      setFaqs(undefined);
+      setActiveTab('features');
+      
+      // 2. Update the batch ID - this triggers the useEffect to fetch new data
+      setSelectedBatchId(newBatchId);
+      
+      // 3. Close sheet and ALWAYS reset view mode to main
+      setIsSheetOpen(false);
+      setViewMode('main');
+    });
     
-    // 3. Show confirmation toast
+    // 4. Show confirmation toast (outside flushSync)
     const newBatch = enrollments.find(e => e.course_id === newBatchId);
+    console.log('[BatchSwitch] New batch data:', newBatch?.title);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
     });
-    
-    // 4. Close sheet and ALWAYS reset view mode to main
-    setIsSheetOpen(false);
-    setViewMode('main');
-  };
+  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast]);
 
   const handleDescription = () => {
     setViewMode('description');
