@@ -44,36 +44,8 @@ const GoogleAuth: React.FC<GoogleAuthProps> = ({ isLoading, setIsLoading, onSucc
   const { toast } = useToast();
   const googleBtnRef = useRef<HTMLDivElement>(null);
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
-  const [originWarningShown, setOriginWarningShown] = useState(false);
   
   const CLIENT_ID = "30618354424-bvvml6gfui5fmtnn6fdh6nbf51fb3tcr.apps.googleusercontent.com";
-
-  // Show origin warning reminder
-  useEffect(() => {
-    if (!originWarningShown) {
-      const currentOrigin = window.location.origin;
-      console.warn(
-        `%c⚠️ GOOGLE AUTH REMINDER ⚠️\n\n` +
-        `If you see "[GSI_LOGGER]: The given origin is not allowed" errors,\n` +
-        `you MUST add the following URL to your Google Cloud Console:\n\n` +
-        `📍 Origin to add: ${currentOrigin}\n\n` +
-        `Steps:\n` +
-        `1. Go to https://console.cloud.google.com/apis/credentials\n` +
-        `2. Click on your OAuth 2.0 Client ID\n` +
-        `3. Under "Authorized JavaScript origins", add: ${currentOrigin}\n` +
-        `4. Save and wait 5-10 minutes for changes to propagate`,
-        'color: #ff6b00; font-size: 14px; font-weight: bold; background: #fff3e0; padding: 10px; border-radius: 8px;'
-      );
-      
-      toast({
-        title: "⚠️ Google Auth Setup Required",
-        description: `Add "${currentOrigin}" to Authorized JavaScript Origins in Google Cloud Console`,
-        duration: 10000,
-      });
-      
-      setOriginWarningShown(true);
-    }
-  }, [originWarningShown, toast]);
 
   const handleCredentialResponse = async (response: { credential: string }) => {
     setIsLoading(true);
