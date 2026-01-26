@@ -63,6 +63,7 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
       );
     }
     
+    // Default to SUCCESS for Expired or Completed but previously purchased
     return (
       <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80 font-medium text-[10px] sm:text-xs px-1.5 py-0.5 sm:px-2.5 sm:py-0.5">
         SUCCESS
@@ -169,6 +170,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       try {
         setLoading(true);
         // 1. Fetch raw enrollments WITH amount and status
+        // Expanded status check to include expired/completed/inactive so purchased history persists
         const { data: rawData, error } = await supabase
           .from('enrollments')
           .select(`
@@ -186,7 +188,10 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
             )
           `)
           .eq('user_id', user.id)
-          .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']); // Only show successful/active enrollments
+          .in('status', [
+            'success', 'active', 'paid', 'completed', 'expired', 'inactive',
+            'SUCCESS', 'ACTIVE', 'PAID', 'COMPLETED', 'EXPIRED', 'INACTIVE'
+          ]); 
 
         if (error) throw error;
 
@@ -209,7 +214,10 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
           // Determine Status Priority
           let calculatedStatus: GroupedEnrollment['status'] = 'Pending';
           
-          const isRowActive = ['success', 'paid', 'active'].includes(dbStatus);
+          // Consider all these statuses as "Purchased" (Active row)
+          const isRowActive = [
+            'success', 'paid', 'active', 'completed', 'expired', 'inactive'
+          ].includes(dbStatus);
           
           if (isRowActive) {
              if (endDate && today > endDate) {
@@ -234,6 +242,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
 
           const groupedEntry = enrollmentsMap.get(course_id)!;
 
+          // If we find an active enrollment for this course, it overrides "Pending"
           if (calculatedStatus === 'Ongoing') {
              groupedEntry.status = 'Ongoing';
           } else if (calculatedStatus === 'Batch Expired' && groupedEntry.status !== 'Ongoing') {
@@ -251,6 +260,7 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
         setGroupedEnrollments(processedEnrollments);
 
       } catch (error: any) {
+        console.error('Enrollment fetch error:', error);
         toast({
           title: "Error",
           description: "Could not fetch enrollments.",
