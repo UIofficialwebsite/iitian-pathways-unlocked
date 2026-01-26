@@ -11,8 +11,8 @@ import { jsPDF } from 'jspdf';
 // --- Types ---
 interface OrderItem {
   title: string;
-  basePrice: number; // Calculated List Price (Gross)
-  netPrice: number;  // Actual Paid Price (Net)
+  basePrice: number; // The List Price (before discount)
+  paidPrice: number; // The Actual Paid Price (after discount)
   validTill: string | null;
   image_url: string | null;
   id: string; 
@@ -22,9 +22,9 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalAmount: number; // Final Net Amount Paid
-  grossAmount: number; // Gross Amount (Subtotal)
-  discount: number;    // Discount Value
+  totalPaid: number;    // Final Amount from payments.net_amount
+  subtotal: number;     // Calculated as Total Paid + Discount
+  discount: number;     // Directly from payments.discount_value
   couponCode: string | null;
   status: string;
   utr: string;
@@ -44,7 +44,6 @@ const EnrollmentReceiptView = () => {
   
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // --- Data Fetching Logic ---
   useEffect(() => {
     const fetchReceiptData = async () => {
       if (!user || !courseId) return;
@@ -69,9 +68,10 @@ const EnrollmentReceiptView = () => {
 
         const orderId = initialEnrollment.order_id;
         
+        // Initialize Defaults
         let finalItems: OrderItem[] = [];
-        let finalTotal = 0;
-        let finalGross = 0;
+        let finalTotalPaid = 0;
+        let finalSubtotal = 0;
         let finalDiscount = 0;
         let finalCoupon: string | null = null;
         let finalDate = initialEnrollment.created_at;
@@ -79,43 +79,34 @@ const EnrollmentReceiptView = () => {
         let finalUtr = '-';
         let finalPaymentTime = new Date(finalDate).toLocaleTimeString();
 
-        // 2. Fetch Payment Record FIRST to establish Totals
+        // 2. Fetch Payment Record (Source of Truth for Pricing)
         let paymentData = null;
         if (orderId) {
           const { data, error } = await supabase
             .from('payments')
-            .select(`
-              amount, 
-              net_amount, 
-              discount_value, 
-              coupon_code, 
-              created_at, 
-              order_id, 
-              status, 
-              utr, 
-              payment_time
-            `)
+            .select('*')
             .eq('order_id', orderId)
             .maybeSingle();
             
           if (!error) paymentData = data;
         }
 
-        // Calculate Global Totals from Payment Data
+        // 3. Determine Global Totals from Payments Table
         if (paymentData) {
-          const netAmount = Number(paymentData.net_amount);
-          const rawAmount = Number(paymentData.amount);
-          const discountVal = Math.abs(Number(paymentData.discount_value) || 0);
+          // DIRECT MAPPING: Read the DB columns directly.
+          const dbNet = Number(paymentData.net_amount);
+          const dbAmount = Number(paymentData.amount);
+          const dbDiscount = Number(paymentData.discount_value);
 
-          // Net (Paid) Amount logic
-          finalTotal = (!isNaN(netAmount) && netAmount > 0) ? netAmount : (rawAmount || 0);
-          finalDiscount = discountVal;
-          
-          // Gross (Base) Amount logic: Gross = Paid + Discount
-          // We prioritize reconstruction to ensure (Gross - Discount == Net) perfectly.
-          // If rawAmount is available and roughly equals (Net + Discount), use it, otherwise reconstruct.
-          finalGross = finalTotal + finalDiscount;
-          
+          // Discount is exactly what is in DB (handle nulls as 0)
+          finalDiscount = dbDiscount || 0;
+
+          // Total Paid is Net Amount. If Net is missing/0 (legacy data), fallback to Amount.
+          finalTotalPaid = (dbNet && dbNet > 0) ? dbNet : (dbAmount || 0);
+
+          // Subtotal Logic: Total Paid + Discount = Original Price (Subtotal)
+          finalSubtotal = finalTotalPaid + finalDiscount;
+
           finalCoupon = paymentData.coupon_code || null;
           finalDate = paymentData.created_at;
           finalStatus = paymentData.status || finalStatus;
@@ -123,7 +114,7 @@ const EnrollmentReceiptView = () => {
           finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
         }
 
-        // 3. Fetch Items and Distribute Totals
+        // 4. Fetch Items (Enrollments) to populate the list
         if (orderId) {
           const { data: allEnrollments, error: allError } = await supabase
             .from('enrollments')
@@ -142,7 +133,7 @@ const EnrollmentReceiptView = () => {
           if (allError) throw allError;
 
           if (allEnrollments) {
-            // Sort: Main course first
+            // Sort: Clicked course first
             const sortedEnrollments = allEnrollments.sort((a, b) => {
                const aId = (a.courses as any)?.id;
                const bId = (b.courses as any)?.id;
@@ -151,37 +142,37 @@ const EnrollmentReceiptView = () => {
                return (b.amount || 0) - (a.amount || 0);
             });
 
-            // Calculate sum of recorded enrollments (usually Net/Paid amounts) to determine ratios
-            const sumEnrollmentAmounts = sortedEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            // Calculate Sum of Enrollments (This is usually the Total Paid amount distributed in enrollments table)
+            const sumEnrollmentPaid = sortedEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
-            // If we didn't have payment data (fallback), assume Sum = Total
+            // Fallback: If no payment record exists, assume Sum of Enrollments = Total Paid
             if (!paymentData) {
-              finalTotal = sumEnrollmentAmounts;
-              finalGross = finalTotal;
-              finalDiscount = 0;
+              finalTotalPaid = sumEnrollmentPaid;
+              finalDiscount = 0; // No payment record = No discount proof
+              finalSubtotal = finalTotalPaid;
             }
 
-            // Map items with calculated Base Price
+            // Map Items
             finalItems = sortedEnrollments.map((item: any) => {
-              const itemNet = Number(item.amount) || 0;
+              const itemPaid = Number(item.amount) || 0;
               const isAddon = !!item.subject_name;
               const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
-              const validityDate = item.courses?.end_date; 
               
-              // Calculate Base Price proportionally
-              // Formula: ItemBase = (ItemNet / TotalNet) * TotalGross
-              let itemBase = 0;
-              if (sumEnrollmentAmounts > 0) {
-                 itemBase = (itemNet / sumEnrollmentAmounts) * finalGross;
-              } else {
-                 itemBase = 0; // Free items
+              // Calculate Item Base Price
+              // Logic: Distribute the global discount proportionally based on the item's paid share.
+              // Formula: Base = Paid + (Paid / TotalPaid) * Discount
+              // This ensures Sum(Base) ≈ Subtotal
+              let itemBase = itemPaid;
+              if (sumEnrollmentPaid > 0 && finalDiscount > 0) {
+                 const share = itemPaid / sumEnrollmentPaid;
+                 itemBase = itemPaid + (share * finalDiscount);
               }
 
               return {
                 title: displayTitle,
                 basePrice: itemBase,
-                netPrice: itemNet,
-                validTill: validityDate,
+                paidPrice: itemPaid,
+                validTill: item.courses?.end_date,
                 image_url: item.courses?.image_url,
                 id: item.courses?.id,
                 type: isAddon ? 'Add-on' : 'Batch'
@@ -189,12 +180,12 @@ const EnrollmentReceiptView = () => {
             });
           }
         } else {
-          // Fallback: Single item, no order ID
+          // Legacy Fallback (No Order ID)
           const singleCourse = initialEnrollment.courses as any;
           finalItems = [{
             title: singleCourse?.title || 'Unknown Course',
             basePrice: 0,
-            netPrice: 0,
+            paidPrice: 0,
             validTill: singleCourse?.end_date, 
             image_url: singleCourse?.image_url,
             id: singleCourse?.id,
@@ -205,8 +196,8 @@ const EnrollmentReceiptView = () => {
         setReceipt({
           orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
           date: finalDate,
-          totalAmount: finalTotal,
-          grossAmount: finalGross,
+          totalPaid: finalTotalPaid,
+          subtotal: finalSubtotal,
           discount: finalDiscount,
           couponCode: finalCoupon,
           status: finalStatus,
@@ -230,42 +221,24 @@ const EnrollmentReceiptView = () => {
     fetchReceiptData();
   }, [user, courseId, toast]);
 
-  // --- Formatters ---
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      });
-    } catch (e) {
-      return dateString;
-    }
+      return new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    } catch (e) { return dateString; }
   };
 
   const formatValidTill = (dateString: string | null) => {
     if (!dateString) return "Lifetime Access";
-    return new Date(dateString).toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
+    return new Date(dateString).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
   };
 
-  // --- Actions ---
   const handleDownloadPDF = async () => {
     if (!receiptRef.current || !receipt) return;
     setIsDownloading(true);
-
     try {
       const element = receiptRef.current;
       const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
@@ -277,7 +250,6 @@ const EnrollmentReceiptView = () => {
       pdf.save(`Invoice_${receipt.orderId}.pdf`);
       toast({ title: "Success", description: "Official invoice downloaded." });
     } catch (error) {
-      console.error("PDF Generation Error:", error);
       toast({ title: "Error", description: "Failed to generate receipt.", variant: "destructive" });
     } finally {
       setIsDownloading(false);
@@ -286,34 +258,21 @@ const EnrollmentReceiptView = () => {
 
   const handleShare = async () => {
     if (!receipt) return;
-    const shareData = {
-      title: 'Enrollment Receipt',
-      text: `Enrollment Receipt for Order ${receipt.orderId}`,
-      url: window.location.href,
-    };
-    if (navigator.share) {
-      try { await navigator.share(shareData); } catch (err) { console.error(err); }
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Link Copied", description: "Receipt link copied to clipboard." });
-    }
+    const shareData = { title: 'Enrollment Receipt', text: `Enrollment Receipt for Order ${receipt.orderId}`, url: window.location.href };
+    if (navigator.share) { try { await navigator.share(shareData); } catch (err) {} } 
+    else { navigator.clipboard.writeText(window.location.href); toast({ title: "Link Copied", description: "Receipt link copied to clipboard." }); }
   };
 
   const handleContactUs = () => {
     if (!receipt) return;
-    const subject = `Support Request: Order ${receipt.orderId}`;
-    const formattedAmount = receipt.totalAmount === 0 ? 'Free' : `₹ ${receipt.totalAmount}`;
-    const orderDate = new Date(receipt.date).toLocaleDateString('en-GB');
-    const body = `Hi Support Team,\n\nI am writing regarding my recent enrollment.\n\n--- ORDER DETAILS ---\nOrder ID: ${receipt.orderId}\nAmount: ${formattedAmount}\nDate: ${orderDate}\n---------------------\n\n[Please describe your issue here]`;
-    const mailtoLink = `mailto:support@unknowniitians.live?cc=unknowniitians@gmail.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const formattedAmount = receipt.totalPaid === 0 ? 'Free' : `₹ ${receipt.totalPaid}`;
+    const mailtoLink = `mailto:support@unknowniitians.live?cc=unknowniitians@gmail.com&subject=Support Request: Order ${receipt.orderId}&body=Order ID: ${receipt.orderId}%0D%0AAmount: ${formattedAmount}`;
     window.location.href = mailtoLink;
   };
 
   if (loading) return <div className="flex items-center justify-center min-h-[60vh]"><Loader2 className="h-8 w-8 animate-spin text-[#4f46e5]" /></div>;
   if (!receipt) return <div className="flex flex-col items-center justify-center min-h-[60vh] text-[#64748b]"><h2 className="text-xl font-bold mb-2">Receipt Not Found</h2><Link to="/dashboard/enrollments"><Button variant="outline">Back to Enrollments</Button></Link></div>;
 
-  const isFree = receipt.totalAmount === 0;
-  
   const mainBatch = receipt.items.find(i => i.type === 'Batch') || receipt.items[0]; 
   const addOns = receipt.items.filter(i => i !== mainBatch);
   const displayItems = receipt.items; 
@@ -321,7 +280,6 @@ const EnrollmentReceiptView = () => {
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
       
-      {/* Back Button */}
       <div className="mb-6">
         <Link to="/dashboard/enrollments" className="inline-flex items-center text-sm text-[#64748b] hover:text-[#4f46e5] transition-colors font-medium">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Enrollments
@@ -329,7 +287,6 @@ const EnrollmentReceiptView = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.7fr_1fr] gap-6">
-        
         {/* Left Column */}
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-10 text-center">
@@ -354,15 +311,13 @@ const EnrollmentReceiptView = () => {
               <span>Order Date: {formatDate(receipt.date)}</span>
             </div>
 
-            {/* Main Batch Card */}
             <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
               <div className="flex gap-4 items-center w-full">
                 <img src={mainBatch.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} alt={mainBatch.title} className="w-[90px] h-[60px] bg-[#e2e8f0] rounded-md object-cover flex-shrink-0" />
                 <div className="flex-grow">
                   <h3 className="text-base font-medium text-[#334155] mb-1 leading-tight">{mainBatch.title}</h3>
-                  {/* Displaying Base Price (List Price) here as requested */}
                   <p className="text-sm text-[#64748b] mb-1">
-                    Base Price: <span className="text-[#334155] font-medium">{mainBatch.basePrice === 0 ? 'Free' : formatCurrency(mainBatch.basePrice)}</span>
+                    <span className="text-[#334155] font-medium">{mainBatch.basePrice === 0 ? 'Free' : formatCurrency(mainBatch.basePrice)}</span>
                   </p>
                   <span className="inline-block bg-[#dcfce7] text-[#166534] text-[11px] px-2 py-0.5 rounded">Active</span>
                 </div>
@@ -372,7 +327,6 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* Add-ons List */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
@@ -385,20 +339,16 @@ const EnrollmentReceiptView = () => {
                         </div>
                         <span className="text-sm text-[#334155] font-medium">{addon.title}</span>
                       </div>
-                      <Link to={`/courses/${addon.id}`} className="text-xs text-[#4f46e5] hover:underline font-medium">
-                        View
-                      </Link>
+                      <Link to={`/courses/${addon.id}`} className="text-xs text-[#4f46e5] hover:underline font-medium">View</Link>
                     </div>
                   ))}
                 </div>
               </div>
             )}
-
+            
             <div className="mt-6 bg-[#fafbff] p-4 rounded-lg">
               <label className="text-xs text-[#64748b] block mb-1">Valid Till:</label>
-              <p className="text-base text-[#334155]">
-                {formatValidTill(mainBatch.validTill)}
-              </p>
+              <p className="text-base text-[#334155]">{formatValidTill(mainBatch.validTill)}</p>
             </div>
           </div>
         </div>
@@ -408,23 +358,24 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Breakdown: Using BASE PRICE for items now */}
+            {/* List breakdown - Showing BASE PRICE for each item */}
             {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
+                    {/* Shows the calculated list price */}
                     <span>{item.basePrice === 0 ? 'Free' : formatCurrency(item.basePrice)}</span>
                 </div>
             ))}
             
             <div className="border-t border-[#e2e8f0] my-3"></div>
             
-            {/* Subtotal - Sum of Base Prices */}
+            {/* Subtotal (Sum of Base Prices) */}
             <div className="flex justify-between text-sm text-[#64748b] mb-2">
-              <span>Subtotal (Base Price)</span>
-              <span>{formatCurrency(receipt.grossAmount)}</span>
+              <span>Subtotal</span>
+              <span>{formatCurrency(receipt.subtotal)}</span>
             </div>
 
-            {/* Discount Section */}
+            {/* Discount - Only Show if Database has a value > 0 */}
             {receipt.discount > 0 && (
               <div className="flex justify-between text-sm text-[#10b981] mb-2 font-medium">
                 <span className="flex items-center gap-1">
@@ -443,7 +394,7 @@ const EnrollmentReceiptView = () => {
             
             <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
               <span>Total Paid</span>
-              <span>{isFree ? '₹ 0.00' : formatCurrency(receipt.totalAmount)}</span>
+              <span>{receipt.totalPaid === 0 ? '₹ 0.00' : formatCurrency(receipt.totalPaid)}</span>
             </div>
           </div>
 
@@ -465,18 +416,7 @@ const EnrollmentReceiptView = () => {
       {/* === HIDDEN FORMAL INVOICE TEMPLATE (PDF Only) === */}
       <div 
         ref={receiptRef}
-        style={{
-          position: 'fixed',
-          left: '-9999px',
-          top: 0,
-          width: '210mm',
-          minHeight: '297mm',
-          backgroundColor: '#ffffff',
-          padding: '40px',
-          fontFamily: "'Inter', sans-serif",
-          color: '#1a1a1a',
-          boxSizing: 'border-box'
-        }}
+        style={{ position: 'fixed', left: '-9999px', top: 0, width: '210mm', minHeight: '297mm', backgroundColor: '#ffffff', padding: '40px', fontFamily: "'Inter', sans-serif", color: '#1a1a1a', boxSizing: 'border-box' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #e5e7eb', paddingBottom: '24px', marginBottom: '32px' }}>
           <div>
@@ -509,7 +449,7 @@ const EnrollmentReceiptView = () => {
             <tr style={{ backgroundColor: '#111827', color: '#ffffff' }}>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px 0 0 6px' }}>Item Description</th>
               <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Base Price</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -531,8 +471,8 @@ const EnrollmentReceiptView = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
           <div style={{ width: '280px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}>
-                <span>Subtotal (Base):</span>
-                <span>{formatCurrency(receipt.grossAmount)}</span>
+                <span>Subtotal:</span>
+                <span>{formatCurrency(receipt.subtotal)}</span>
             </div>
             
             {receipt.discount > 0 && (
@@ -544,7 +484,7 @@ const EnrollmentReceiptView = () => {
             
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}><span>Tax (0%):</span><span>₹ 0.00</span></div>
             <div style={{ borderTop: '2px solid #e5e7eb', margin: '8px 0' }}></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}><span>Total Paid:</span><span>{formatCurrency(receipt.totalAmount)}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}><span>Total Paid:</span><span>{formatCurrency(receipt.totalPaid)}</span></div>
           </div>
         </div>
 
