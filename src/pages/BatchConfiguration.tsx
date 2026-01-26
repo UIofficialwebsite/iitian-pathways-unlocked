@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useLoginModal } from '@/context/LoginModalContext';
 import { usePageSEO } from "@/utils/seoManager";
+import CountryCodeSelect, { CountryCode } from "@/components/ui/CountryCodeSelect";
 
 // Custom Styles for the Phone Number Modal
 const customStyles = `
@@ -684,26 +685,15 @@ const BatchConfiguration = () => {
             <div className="form-group">
               <label className="form-label">Phone Number</label>
               <div className="phone-input-wrapper">
-                <select 
-                  className="dial-code-select"
+                <CountryCodeSelect
                   value={selectedDialCode}
-                  onChange={(e) => {
-                    setSelectedDialCode(e.target.value);
-                    const dialCodeDigits = e.target.value.replace('+', '');
-                    const country = countryCodes.find(c => c.dial_code === dialCodeDigits);
+                  onChange={(value, country) => {
+                    setSelectedDialCode(value);
                     if (country) setExpectedPhoneLength(country.phone_length);
                   }}
-                >
-                  {countryCodes.length === 0 ? (
-                    <option value="+91">+91 IN</option>
-                  ) : (
-                    countryCodes.map((c) => (
-                      <option key={c.dial_code} value={`+${c.dial_code}`}>
-                        +{c.dial_code} {c.code}
-                      </option>
-                    ))
-                  )}
-                </select>
+                  countryCodes={countryCodes as CountryCode[]}
+                  className="dial-code-select-wrapper"
+                />
                 <input 
                   type="tel" 
                   className="form-input phone-number-input"
