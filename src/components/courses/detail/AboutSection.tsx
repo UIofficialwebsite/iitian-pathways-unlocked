@@ -6,6 +6,36 @@ interface AboutSectionProps {
 }
 
 const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
+  
+  // Custom helper to render basic Markdown formatting (Bold, Italic)
+  const renderDescription = (text: string) => {
+    if (!text) return null;
+
+    // First, split by Bold (**text**)
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    
+    const formattedContent = parts.map((part, i) => {
+      // Handle Bold
+      if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+        return <strong key={i} className="font-bold text-[#1a1f36]">{part.slice(2, -2)}</strong>;
+      }
+      
+      // Handle Italics (_text_) within non-bold parts
+      return part.split(/(_.*?_)/g).map((subPart, j) => {
+        if (subPart.startsWith('_') && subPart.endsWith('_') && subPart.length >= 2) {
+          return <em key={`${i}-${j}`} className="italic">{subPart.slice(1, -1)}</em>;
+        }
+        return subPart;
+      });
+    });
+
+    return (
+      <p className="text-[15px] md:text-[16px] leading-relaxed text-[#1a1f36] font-normal font-sans whitespace-pre-line">
+        {formattedContent}
+      </p>
+    );
+  };
+
   return (
     <section className="w-full">
       {/* Container "Holding" Section - Matches Features Design */}
@@ -16,12 +46,9 @@ const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
           About This Course
         </h2>
         
-        {/* Description - Non-bold Inter font */}
+        {/* Description - Rendered with custom markdown formatter */}
         <div className="prose max-w-none">
-          {/* Added whitespace-pre-line to respect line breaks from backend data */}
-          <p className="text-[15px] md:text-[16px] leading-relaxed text-[#1a1f36] font-normal font-sans whitespace-pre-line">
-            {course.description}
-          </p>
+          {renderDescription(course.description)}
         </div>
 
       </div>
