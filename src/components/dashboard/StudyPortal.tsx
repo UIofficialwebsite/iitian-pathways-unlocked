@@ -265,6 +265,17 @@ const EnrolledView = ({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
+  
+  // Ref to track if we're in the middle of a batch switch - prevents validation effect from overriding
+  const isSwitchingBatchRef = useRef(false);
+  
+  // Debug: Log component mount/unmount
+  useEffect(() => {
+    console.log('[BatchSwitch] EnrolledView MOUNTED with initialBatchId:', initialBatchId);
+    return () => {
+      console.log('[BatchSwitch] EnrolledView UNMOUNTING');
+    };
+  }, []);
 
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
@@ -276,32 +287,35 @@ const EnrolledView = ({
   // FIX: Sync selectedBatchId ONLY when enrollments list changes
   // This effect should NOT depend on selectedBatchId to avoid resetting user's selection
   useEffect(() => {
+    // Skip if we're in the middle of a batch switch
+    if (isSwitchingBatchRef.current) {
+      console.log('[BatchSwitch] Skipping validation - batch switch in progress');
+      return;
+    }
+    
     console.log('[BatchSwitch] Enrollments validation effect running, enrollments count:', enrollments.length);
     
     if (enrollments.length === 0) {
-      // No enrollments, clear selection
       console.log('[BatchSwitch] No enrollments, clearing selection');
       setSelectedBatchId('');
       return;
     }
     
-    // Only reset if current selection is invalid - use a ref to get current value without adding dependency
+    // Only reset if current selection is invalid
     setSelectedBatchId(currentId => {
       const isCurrentSelectionValid = enrollments.some(e => e.course_id === currentId);
       console.log('[BatchSwitch] Checking if current selection valid:', currentId, 'Valid:', isCurrentSelectionValid);
       
       if (!isCurrentSelectionValid || !currentId) {
-        // Current selection is no longer valid, reset to first enrollment
         const newBatchId = enrollments[0].course_id;
         console.log('[BatchSwitch] Resetting to first enrollment:', newBatchId);
         setTempSelectedBatchId(newBatchId);
         return newBatchId;
       }
       
-      // Keep current selection
       return currentId;
     });
-  }, [enrollments]); // Only depend on enrollments, NOT selectedBatchId
+  }, [enrollments]);
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
@@ -426,33 +440,37 @@ const EnrolledView = ({
     
     console.log('[BatchSwitch] Switching to new batch:', newBatchId);
     
-    // Close sheet first
+    // Set the switching flag to prevent validation effect from overriding
+    isSwitchingBatchRef.current = true;
+    
+    // Close sheet
     setIsSheetOpen(false);
     
-    // Use requestAnimationFrame to ensure the sheet is fully closed before updating state
-    // This prevents React batching from interfering with the state updates
-    requestAnimationFrame(() => {
-      // 1. Force clear all stale data to show loading state
-      setFullCourseData(null);
-      setScheduleData([]);
-      setFaqs(undefined);
-      setActiveTab('features');
-      setViewMode('main');
-      
-      // 2. Update the batch ID - this triggers the useEffect to fetch new data
-      // Using functional update to ensure we always get the latest state
-      setSelectedBatchId(newBatchId);
-      
-      console.log('[BatchSwitch] State updates dispatched for:', newBatchId);
-      
-      // 3. Show confirmation toast
-      const newBatch = enrollments.find(e => e.course_id === newBatchId);
-      console.log('[BatchSwitch] New batch data:', newBatch?.title);
-      toast({
-        title: "Batch Switched",
-        description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
-      });
+    // Force clear all stale data to show loading state
+    setFullCourseData(null);
+    setScheduleData([]);
+    setFaqs(undefined);
+    setActiveTab('features');
+    setViewMode('main');
+    
+    // Update the batch ID - this triggers the useEffect to fetch new data
+    setSelectedBatchId(newBatchId);
+    
+    console.log('[BatchSwitch] State updates dispatched for:', newBatchId);
+    
+    // Show confirmation toast
+    const newBatch = enrollments.find(e => e.course_id === newBatchId);
+    console.log('[BatchSwitch] New batch data:', newBatch?.title);
+    toast({
+      title: "Batch Switched",
+      description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
     });
+    
+    // Reset the switching flag after a short delay to allow React to process the state update
+    setTimeout(() => {
+      isSwitchingBatchRef.current = false;
+      console.log('[BatchSwitch] Switching flag reset');
+    }, 100);
   }, [tempSelectedBatchId, selectedBatchId, enrollments, toast]);
 
   const handleDescription = () => {
