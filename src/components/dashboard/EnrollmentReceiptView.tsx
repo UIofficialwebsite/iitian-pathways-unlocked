@@ -11,7 +11,7 @@ import { jsPDF } from 'jspdf';
 // --- Types ---
 interface OrderItem {
   title: string;
-  amount: number; // This is the individual item price (likely list price)
+  amount: number; // This is the individual item price
   validTill: string | null;
   image_url: string | null;
   id: string; // course_id
@@ -21,7 +21,7 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalAmount: number; // Final amount paid
+  totalAmount: number; // Final amount paid (Exact)
   subtotal: number;    // Gross amount before discount
   discount: number;    // Total discount value
   couponCode: string | null;
@@ -140,22 +140,19 @@ const EnrollmentReceiptView = () => {
             .maybeSingle();
 
           if (!paymentError && paymentData) {
-            // Logic: 
-            // net_amount is usually the actual paid amount. 
-            // amount might be the gross amount or paid amount depending on gateway logic.
-            // Safe bet: Final Paid = net_amount (if exists) ELSE amount.
-            // Subtotal = Final Paid + Discount.
-            
+            // Use precise numbers
             const netAmount = Number(paymentData.net_amount);
             const rawAmount = Number(paymentData.amount);
             const discountVal = Number(paymentData.discount_value) || 0;
 
-            // If net_amount is present, use it as 'Paid', otherwise use 'amount'
-            finalTotal = !isNaN(netAmount) && netAmount !== 0 ? netAmount : (rawAmount || 0);
+            // Logic: net_amount is the final PAID amount after discounts.
+            // If net_amount is available and valid, use it. Otherwise fallback to raw amount.
+            // We do NOT round these values here to ensure exactness.
+            finalTotal = (!isNaN(netAmount) && netAmount !== 0) ? netAmount : (rawAmount || 0);
             
             finalDiscount = discountVal;
             
-            // Subtotal is what it would have cost without discount
+            // Subtotal is reconstructed: Final Paid + Discount = Original Price
             finalSubtotal = finalTotal + finalDiscount;
             
             finalCoupon = paymentData.coupon_code || null;
@@ -164,7 +161,7 @@ const EnrollmentReceiptView = () => {
             finalUtr = paymentData.utr || '-';
             finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
           } else {
-            // Fallback if no payment record found (e.g. manual entry or legacy)
+            // Fallback if no payment record found
             finalTotal = finalItems.reduce((sum, item) => sum + item.amount, 0);
             finalSubtotal = finalTotal;
             finalDiscount = 0;
@@ -236,12 +233,13 @@ const EnrollmentReceiptView = () => {
     });
   };
 
+  // UPDATED: Using 2 decimal places to be exact
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -302,7 +300,7 @@ const EnrollmentReceiptView = () => {
   const addOns = receipt.items.filter(i => i !== mainBatch);
 
   // Filter Items for display in Payment Summary & PDF
-  const displayItems = receipt.items; // Show all items in list to explain subtotal
+  const displayItems = receipt.items; 
 
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
@@ -347,7 +345,7 @@ const EnrollmentReceiptView = () => {
                 <div className="flex-grow">
                   <h3 className="text-base font-medium text-[#334155] mb-1 leading-tight">{mainBatch.title}</h3>
                   <p className="text-sm text-[#64748b] mb-1">
-                    Value: <span className="text-[#334155] font-medium">{mainBatch.amount === 0 ? 'Free' : `₹${mainBatch.amount}`}</span>
+                    Value: <span className="text-[#334155] font-medium">{mainBatch.amount === 0 ? 'Free' : formatCurrency(mainBatch.amount)}</span>
                   </p>
                   <span className="inline-block bg-[#dcfce7] text-[#166534] text-[11px] px-2 py-0.5 rounded">Active</span>
                 </div>
@@ -397,7 +395,7 @@ const EnrollmentReceiptView = () => {
             {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
-                    <span>{item.amount === 0 ? 'Free' : `₹ ${item.amount}`}</span>
+                    <span>{item.amount === 0 ? 'Free' : formatCurrency(item.amount)}</span>
                 </div>
             ))}
             
@@ -424,11 +422,11 @@ const EnrollmentReceiptView = () => {
               </div>
             )}
 
-            <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Delivery Charges</span><span>₹ 0</span></div>
+            <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Delivery Charges</span><span>₹ 0.00</span></div>
             
             <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
               <span>Total Paid</span>
-              <span>{isFree ? '₹ 0' : formatCurrency(receipt.totalAmount)}</span>
+              <span>{isFree ? '₹ 0.00' : formatCurrency(receipt.totalAmount)}</span>
             </div>
           </div>
 
@@ -506,7 +504,7 @@ const EnrollmentReceiptView = () => {
                 </td>
                 <td style={{ padding: '16px', textAlign: 'right', fontSize: '14px', color: '#4b5563' }}>{item.type === 'Batch' ? 'Digital Course' : 'Add-on'}</td>
                 <td style={{ padding: '16px', textAlign: 'right', fontSize: '14px', fontWeight: '600', color: '#111827' }}>
-                    {item.amount === 0 ? 'Free' : `₹ ${item.amount.toLocaleString('en-IN')}`}
+                    {item.amount === 0 ? 'Free' : formatCurrency(item.amount)}
                 </td>
                 </tr>
             ))}
