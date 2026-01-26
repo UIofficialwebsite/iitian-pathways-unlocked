@@ -2,25 +2,35 @@ import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
+interface HeroCarouselProps {
+  pagePath?: string;
+}
+
+const HeroCarousel = ({ pagePath = "/" }: HeroCarouselProps) => {
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [banners, setBanners] = useState<{ image_url: string; id: string }[]>([]);
+  const [carouselImages, setCarouselImages] = useState<{ src: string; alt: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchBanners = async () => {
       try {
         const { data, error } = await supabase
-          .from('page_banners')
-          .select('*')
-          .eq('page_path', pagePath);
+          .from("page_banners")
+          .select("image_url")
+          .eq("page_path", pagePath);
 
-        if (data) {
-          setBanners(data);
+        if (error) {
+          console.error("Error fetching banners:", error);
+        } else if (data) {
+          const mappedImages = data.map((item) => ({
+            src: item.image_url,
+            alt: "Banner Image",
+          }));
+          setCarouselImages(mappedImages);
         }
-      } catch (error) {
-        console.error("Error fetching banners:", error);
+      } catch (err) {
+        console.error("Unexpected error:", err);
       } finally {
         setLoading(false);
       }
@@ -28,12 +38,6 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
 
     fetchBanners();
   }, [pagePath]);
-
-  // Map database banners to the format expected by the carousel
-  const carouselImages = banners.map(banner => ({
-    src: banner.image_url,
-    alt: "Banner", // Default alt text as it's not in the table
-  }));
 
   const length = carouselImages.length;
 
@@ -51,7 +55,7 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
 
   // Auto-advance the carousel
   useEffect(() => {
-    if (length === 0) return;
+    if (length <= 1) return;
     
     const interval = setInterval(() => {
       nextSlide();
@@ -60,7 +64,7 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
   }, [current, length]);
 
   if (loading) {
-    return <div className="w-full h-[300px] sm:h-[350px] mt-16 animate-pulse bg-gray-200" />;
+    return <div className="w-full h-[300px] bg-gray-100 animate-pulse mt-16" />;
   }
 
   if (!carouselImages.length) {
@@ -69,26 +73,45 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
 
   return (
     <div 
-      className="relative w-full h-[300px] sm:h-[350px] mt-16"
+      className="relative w-full mt-16 group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Vignette overlay when hovered */}
       {isHovered && (
-        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20 z-20 pointer-events-none" />
       )}
       
+      {/* Carousel Images - Using Grid to Stack for Natural Height */}
+      <div className="grid grid-cols-1 grid-rows-1">
+        {carouselImages.map((image, index) => (
+          <div
+            key={index}
+            className={`col-start-1 row-start-1 w-full transition-opacity duration-700 ease-in-out ${
+              index === current ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            <img
+              src={image.src}
+              alt={image.alt}
+              className="w-full h-auto object-contain block" 
+            />
+            <div className="absolute inset-0 bg-black/10 pointer-events-none"></div>
+          </div>
+        ))}
+      </div>
+
       {/* Navigation buttons - only visible on hover */}
-      {isHovered && length > 1 && (
+      {length > 1 && isHovered && (
         <>
           <button
-            className="absolute left-4 top-1/2 z-20 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full p-3 transition-all duration-300 shadow-lg"
+            className="absolute left-4 top-1/2 z-30 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full p-3 transition-all duration-300 shadow-lg"
             onClick={prevSlide}
           >
             <ChevronLeft size={24} className="text-gray-800" />
           </button>
           <button
-            className="absolute right-4 top-1/2 z-20 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full p-3 transition-all duration-300 shadow-lg"
+            className="absolute right-4 top-1/2 z-30 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full p-3 transition-all duration-300 shadow-lg"
             onClick={nextSlide}
           >
             <ChevronRight size={24} className="text-gray-800" />
@@ -96,27 +119,9 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
         </>
       )}
 
-      {/* Carousel images */}
-      {carouselImages.map((image, index) => (
-        <div
-          key={index}
-          className={`absolute w-full h-full transition-all duration-700 ease-in-out ${
-            index === current ? "opacity-100 scale-100" : "opacity-0 scale-105"
-          }`}
-          style={{ zIndex: index === current ? 1 : 0 }}
-        >
-          <img
-            src={image.src}
-            alt={image.alt}
-            className="object-cover w-full h-full"
-          />
-          <div className="absolute inset-0 bg-black/10"></div>
-        </div>
-      ))}
-
-      {/* Navigation dots - positioned below carousel */}
+      {/* Navigation dots - positioned inside at bottom */}
       {length > 1 && (
-        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
           {carouselImages.map((_, index) => (
             <button
               key={index}
@@ -124,7 +129,7 @@ const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
               className={`w-2 h-2 rounded-full transition-all duration-300 ${
                 index === current 
                   ? "bg-royal scale-125 shadow-md" 
-                  : "bg-gray-400 hover:bg-gray-600"
+                  : "bg-white/60 hover:bg-white"
               }`}
             ></button>
           ))}
