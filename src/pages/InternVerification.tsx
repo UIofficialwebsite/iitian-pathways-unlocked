@@ -49,7 +49,6 @@ const InternVerification = () => {
     }
 
     try {
-      // 1. Fetch by Employee ID specifically (more reliable index)
       const { data, error } = await supabase
         .from("employees")
         .select("*")
@@ -67,7 +66,6 @@ const InternVerification = () => {
           message: "No personnel record found matching these credentials."
         });
       } else {
-        // 2. Case-Insensitive Name Matching Logic
         const dbName = data.full_name.toLowerCase().trim();
         const inputName = name.toLowerCase().trim();
 
@@ -77,17 +75,21 @@ const InternVerification = () => {
             message: "Employee ID found, but the provided name does not match our records."
           });
         } else {
-          // Success: Verification Passed
           let statusText = "Active";
           if (data.status === 'completed') statusText = "Completed";
           if (data.status === 'terminated') statusText = "Terminated";
+
+          // Generate consistent DOC ID suffix from Employee ID
+          const cleanId = data.employee_code.replace(/[^a-zA-Z0-9]/g, '');
+          const docSuffix = cleanId.length >= 6 ? cleanId.slice(-6).toUpperCase() : cleanId.toUpperCase().padEnd(6, '0');
 
           setVerificationResult({
             verified: true,
             message: "Record verified in official database.",
             details: {
-              name: data.full_name, // Always show the Official DB Name casing
+              name: data.full_name,
               employeeId: data.employee_code,
+              docId: `UI-VR-${docSuffix}`, // Pattern based on ID
               position: data.position,
               department: data.department,
               employeeType: data.employee_type,
@@ -154,7 +156,6 @@ const InternVerification = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-20">
           
-          {/* LEFT COLUMN: Minimal Header */}
           <div className="lg:col-span-7 space-y-8 pt-4">
             <div>
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-slate-900 mb-4 font-serif">
@@ -166,7 +167,6 @@ const InternVerification = () => {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Formal Form */}
           <div className="lg:col-span-5 w-full">
             <div className="bg-white border border-slate-300 p-8 shadow-sm">
               <div className="mb-6 pb-4 border-b border-slate-200">
@@ -226,7 +226,6 @@ const InternVerification = () => {
             {verificationResult.verified ? (
               <>
                 <div className="border border-slate-200 bg-white shadow-sm max-w-4xl mx-auto">
-                  {/* Formal Header */}
                   <div className="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                       <div className="h-2 w-2 bg-emerald-600 rounded-full"></div>
@@ -277,7 +276,6 @@ const InternVerification = () => {
                   </div>
 
                   <div className="px-8 py-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    {/* Desktop Date Display */}
                     <span className="text-xs text-slate-400 hidden sm:inline">
                       Verified at: {verificationResult.details.verifiedAt}
                     </span>
@@ -297,7 +295,6 @@ const InternVerification = () => {
                   </div>
                 </div>
                 
-                {/* Mobile Date Display (Outside Box) */}
                 <div className="text-center mt-4 sm:hidden">
                   <span className="text-xs text-slate-400 italic">
                     Verified at: {verificationResult.details.verifiedAt}
@@ -379,7 +376,7 @@ const InternVerification = () => {
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Official Verification</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace' }}>DOC ID: UI-VR-{Date.now().toString().slice(-6)}</div>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace' }}>DOC ID: {verificationResult.details.docId}</div>
               </div>
             </div>
 
@@ -400,7 +397,6 @@ const InternVerification = () => {
 
             {/* Formal Details Grid */}
             <div style={{ border: '1px solid #000', marginBottom: '40px' }}>
-              {/* Table Rows (Same as before) */}
               <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
                 <div style={{ width: '40%', padding: '10px', borderRight: '1px solid #000', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', backgroundColor: '#f0f0f0' }}>Employee Name</div>
                 <div style={{ width: '60%', padding: '10px', fontSize: '12px' }}>{verificationResult.details.name}</div>
@@ -430,15 +426,31 @@ const InternVerification = () => {
             {/* Footer / Stamp Area */}
             <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               
-              <div style={{ textAlign: 'left' }}>
+              {/* LEFT: Verification Status & Time */}
+              <div style={{ textAlign: 'left', minWidth: '200px' }}>
+                {/* MOVED VERIFIED STATUS HERE */}
+                <div style={{ 
+                  color: '#16a34a', 
+                  fontSize: '16px', 
+                  fontWeight: '900', 
+                  textTransform: 'uppercase', 
+                  border: '2px solid #16a34a', 
+                  padding: '5px 10px', 
+                  display: 'inline-block',
+                  marginBottom: '15px',
+                  letterSpacing: '1px'
+                }}>
+                  VERIFIED
+                </div>
+                
                 <div style={{ fontSize: '10px', color: '#666', marginBottom: '5px' }}>Date of Verification:</div>
                 <div style={{ fontSize: '12px', fontWeight: 'bold' }}>{verificationResult.details.verifiedAt}</div>
                 <div style={{ fontSize: '10px', color: '#666', marginTop: '5px', fontStyle: 'italic' }}>Computer Generated Document</div>
               </div>
 
-              {/* NEW STAMP DESIGN */}
+              {/* RIGHT: Stamp & Signature */}
               <div style={{ textAlign: 'center' }}>
-                {/* Signature Layer - Absolute positioning context */}
+                {/* Signature Layer */}
                 <div style={{ position: 'relative', width: '140px', height: '140px', margin: '0 auto 10px auto' }}>
                   
                   {/* Circular Stamp */}
@@ -446,7 +458,7 @@ const InternVerification = () => {
                     width: '100%', 
                     height: '100%', 
                     borderRadius: '50%', 
-                    border: '3px double #1e3a8a', 
+                    border: '3px double #1e3a8a', // Double circle border
                     position: 'relative',
                     display: 'flex',
                     flexDirection: 'column',
@@ -456,30 +468,25 @@ const InternVerification = () => {
                     boxSizing: 'border-box',
                     padding: '10px'
                   }}>
-                    {/* Top Curved Text Simulation */}
-                    <div style={{ position: 'absolute', top: '15px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Unknown IITians</div>
+                    {/* Top Text */}
+                    <div style={{ position: 'absolute', top: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Unknown IITians</div>
                     
                     {/* Faint Logo Background */}
                     <img 
                       src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" 
-                      style={{ position: 'absolute', width: '60px', opacity: 0.15, filter: 'grayscale(100%)' }}
+                      style={{ width: '50px', opacity: 0.2, filter: 'grayscale(100%)' }}
                       alt=""
                     />
 
-                    {/* Verified Status */}
-                    <div style={{ zIndex: 10, marginTop: '5px', fontSize: '16px', fontWeight: '900', color: '#16a34a', border: '2px solid #16a34a', padding: '2px 8px', borderRadius: '4px', transform: 'rotate(-5deg)' }}>
-                      VERIFIED
-                    </div>
-
                     {/* Bottom Location Text */}
-                    <div style={{ position: 'absolute', bottom: '15px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>New Delhi</div>
+                    <div style={{ position: 'absolute', bottom: '20px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>New Delhi</div>
                   </div>
 
                   {/* Overlaid Signature */}
                   <img 
                     src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769433351/image_4_1_g6qsah.png" 
                     alt="Signature" 
-                    style={{ position: 'absolute', bottom: '30px', left: '10px', width: '120px', zIndex: 20 }}
+                    style={{ position: 'absolute', bottom: '25px', left: '15px', width: '110px', zIndex: 20 }}
                   />
                 </div>
 
