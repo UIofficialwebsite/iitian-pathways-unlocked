@@ -2,27 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, AlertCircle, Check } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
-// --- TYPES ---
-interface CountryCode {
-  id: number;
-  name: string;
-  dial_code: string;
-  code: string;
-  phone_length?: number; // Optional, assuming the table has this
-}
 
 // Injecting the user's specific CSS styles
 const customStyles = `
@@ -106,11 +90,6 @@ const customStyles = `
     margin-bottom: 8px;
   }
 
-  .form-row {
-    display: flex;
-    gap: 12px;
-  }
-
   .form-input {
     width: 100%;
     padding: 14px;
@@ -184,13 +163,11 @@ const customStyles = `
   }
 `;
 
-// --- UPDATED VERIFICATION COMPONENT ---
+// --- SEPARATE COMPONENT TO FIX CURSOR GLITCH ---
 interface VerificationContentProps {
   isDrawer?: boolean;
   manualPhone: string;
   setManualPhone: (val: string) => void;
-  selectedCountry: CountryCode | null;
-  setSelectedCountry: (val: CountryCode) => void;
   inlineError: string | null;
   setInlineError: (val: string | null) => void;
   handlePhoneSubmit: () => void;
@@ -202,119 +179,54 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
   isDrawer = false,
   manualPhone,
   setManualPhone,
-  selectedCountry,
-  setSelectedCountry,
   inlineError,
   setInlineError,
   handlePhoneSubmit,
   isProcessing,
   onClose
-}) => {
-  const [countryCodes, setCountryCodes] = useState<CountryCode[]>([]);
-  const [loadingCodes, setLoadingCodes] = useState(true);
+}) => (
+  <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
+    {!isDrawer && (
+      <button className="close-icon" onClick={onClose}>&times;</button>
+    )}
 
-  useEffect(() => {
-    const fetchCountryCodes = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('country_codes' as any) // Casting as any since table might not be in types yet
-          .select('*')
-          .order('name');
-        
-        if (data && !error) {
-          setCountryCodes(data);
-          // Default to India if available, else first option
-          const india = data.find((c: CountryCode) => c.code === 'IN' || c.dial_code === '+91');
-          if (india && !selectedCountry) setSelectedCountry(india);
-          else if (data.length > 0 && !selectedCountry) setSelectedCountry(data[0]);
-        }
-      } catch (err) {
-        console.error("Failed to fetch country codes", err);
-      } finally {
-        setLoadingCodes(false);
-      }
-    };
-    fetchCountryCodes();
-  }, [setSelectedCountry, selectedCountry]);
-
-  return (
-    <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
-      {!isDrawer && (
-        <button className="close-icon" onClick={onClose}>&times;</button>
-      )}
-
-      <div className="loading-container">
-        <div className="dot"></div><div className="dot"></div><div className="dot"></div>
-      </div>
-
-      <h2 className="modal-title">Contact Details Required</h2>
-      <p className="modal-description">
-        Please select your country code and provide your phone number to generate your payment receipt.
-      </p>
-
-      <div className="form-group">
-        <label className="form-label">Phone Number</label>
-        
-        <div className="form-row">
-          {/* Country Code Dropdown */}
-          <div className="w-[140px] shrink-0">
-             <Select 
-                disabled={loadingCodes} 
-                value={selectedCountry?.dial_code} 
-                onValueChange={(val) => {
-                  const country = countryCodes.find(c => c.dial_code === val);
-                  if (country) setSelectedCountry(country);
-                }}
-             >
-              <SelectTrigger className="h-[50px] border-black rounded-none bg-white focus:ring-0 focus:ring-offset-0">
-                <SelectValue placeholder="+91">
-                   {selectedCountry ? `${selectedCountry.dial_code} ${selectedCountry.code}` : "+91 IN"}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="max-h-[200px]">
-                {countryCodes.map((country) => (
-                  <SelectItem key={country.id} value={country.dial_code}>
-                    <span className="flex items-center gap-2">
-                       <span className="font-medium">{country.dial_code}</span>
-                       <span className="text-muted-foreground text-xs">{country.code}</span>
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Phone Number Input */}
-          <input 
-            type="tel" 
-            className="form-input" 
-            placeholder={selectedCountry?.phone_length ? `${"0".repeat(selectedCountry.phone_length)}` : "9876543210"}
-            value={manualPhone}
-            onChange={(e) => {
-              // Only allow numbers
-              const val = e.target.value.replace(/\D/g, '');
-              setManualPhone(val);
-              if (inlineError) setInlineError(null); 
-            }}
-          />
-        </div>
-        
-        {inlineError && (
-          <div className="error-message">
-            <AlertCircle className="w-4 h-4 shrink-0" />
-            <span>{inlineError}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="modal-actions">
-        <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing || loadingCodes}>
-          {isProcessing ? "Verifying..." : "Verify & Continue"}
-        </button>
-      </div>
+    <div className="loading-container">
+      <div className="dot"></div><div className="dot"></div><div className="dot"></div>
     </div>
-  );
-};
+
+    <h2 className="modal-title">Contact Details Required</h2>
+    <p className="modal-description">
+      Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+    </p>
+
+    <div className="form-group">
+      <label className="form-label">Phone Number (with Country Code)</label>
+      <input 
+        type="tel" 
+        className="form-input" 
+        placeholder="e.g., +91 9876543210"
+        value={manualPhone}
+        onChange={(e) => {
+          setManualPhone(e.target.value);
+          if (inlineError) setInlineError(null); 
+        }}
+      />
+      
+      {inlineError && (
+        <div className="error-message">
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{inlineError}</span>
+        </div>
+      )}
+    </div>
+
+    <div className="modal-actions">
+      <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
+        {isProcessing ? "Verifying..." : "Verify"}
+      </button>
+    </div>
+  </div>
+);
 
 interface EnrollButtonProps {
   courseId?: string;
@@ -338,10 +250,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
-  
-  // State for the form
   const [manualPhone, setManualPhone] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState<CountryCode | null>(null);
   const [inlineError, setInlineError] = useState<string | null>(null);
   
   const { toast } = useToast();
@@ -384,32 +293,15 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         return;
       }
 
-      // Fetch profile to see if we already have a phone number
-      // We check for both phone AND dial_code to ensure complete data
       const { data: profile } = await supabase
         .from('profiles')
-        .select('phone, dial_code' as any) // Cast as any to avoid type errors if dial_code missing in generated types
+        .select('phone')
         .eq('id', user.id)
         .single();
 
-      // Check if we have a valid phone set up (Local number + Country Code)
-      if (profile?.phone && profile?.dial_code) {
-        // Construct full number for payment gateway
-        const fullPhone = `${profile.dial_code}${profile.phone}`;
-        processPayment(fullPhone);
-      } 
-      // Fallback for legacy data: if only phone exists and it looks like a full number
-      else if (profile?.phone && profile.phone.length >= 10) {
-        // We assume it's a valid number, but maybe prompt user to be safe? 
-        // For now, let's try to proceed if it looks international, otherwise show dialog
-        if (profile.phone.startsWith('+')) {
-            processPayment(profile.phone);
-        } else {
-            // If it's just 10 digits without code, we force update
-            setIsProcessing(false);
-            setManualPhone(profile.phone); // Pre-fill
-            setShowPhoneDialog(true);
-        }
+      // Check if phone exists and has at least 7 digits (International standard minimum)
+      if (profile?.phone && profile.phone.length >= 7) {
+        processPayment(profile.phone);
       } else {
         setIsProcessing(false);
         setShowPhoneDialog(true);
@@ -424,17 +316,12 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const handlePhoneSubmit = async () => {
     setInlineError(null);
 
-    if (!selectedCountry) {
-      setInlineError("Please select a country code.");
-      return;
-    }
-
-    // Validation
-    const cleanPhone = manualPhone.replace(/\D/g, '');
-    const requiredLength = selectedCountry.phone_length || 10; // Default to 10 if not specified
+    // Validation for International Numbers: 
+    // Allow +, -, spaces, and digits. Min length 7, Max length 15.
+    const cleanPhone = manualPhone.replace(/[^0-9+]/g, '');
     
-    if (cleanPhone.length !== requiredLength) {
-      setInlineError(`Phone number must be exactly ${requiredLength} digits for ${selectedCountry.code}.`);
+    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+      setInlineError("Please enter a valid phone number (7-15 digits).");
       return;
     }
 
@@ -443,26 +330,17 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        // Update profile with separate fields
-        // Note: Casting to 'any' allows us to write to dial_code even if types.ts isn't updated yet
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ 
-            phone: cleanPhone,
-            dial_code: selectedCountry.dial_code 
-          } as any) 
+          .update({ phone: manualPhone })
           .eq('id', user.id);
 
         if (updateError) {
           console.error("Failed to update profile phone:", updateError);
-          throw new Error("Failed to save contact details.");
         }
       }
       
-      // Construct full international number for the payment processor
-      const fullPhoneNumber = `${selectedCountry.dial_code}${cleanPhone}`;
-      await processPayment(fullPhoneNumber);
-      
+      await processPayment(manualPhone);
       setShowPhoneDialog(false); 
     } catch (error: any) {
       setIsProcessing(false);
@@ -470,7 +348,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     }
   };
 
-  const processPayment = async (fullPhoneNumber: string) => {
+  const processPayment = async (phoneNumber: string) => {
     setIsProcessing(true);
     setInlineError(null);
 
@@ -480,7 +358,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("User not authenticated");
 
-      console.log("Initiating Payment with phone:", fullPhoneNumber);
+      console.log("Initiating Payment...");
 
       const { data, error } = await supabase.functions.invoke('create-cashfree-order', {
         body: {
@@ -488,7 +366,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
           amount: coursePrice,
           userId: user.id,
           customerEmail: user.email, 
-          customerPhone: fullPhoneNumber, // Sending the complete number
+          customerPhone: phoneNumber,
           selectedSubjects: selectedSubjects 
         },
       });
@@ -567,8 +445,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
               isDrawer={true} 
               manualPhone={manualPhone}
               setManualPhone={setManualPhone}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
               inlineError={inlineError}
               setInlineError={setInlineError}
               handlePhoneSubmit={handlePhoneSubmit}
@@ -584,8 +460,6 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
               isDrawer={false} 
               manualPhone={manualPhone}
               setManualPhone={setManualPhone}
-              selectedCountry={selectedCountry}
-              setSelectedCountry={setSelectedCountry}
               inlineError={inlineError}
               setInlineError={setInlineError}
               handlePhoneSubmit={handlePhoneSubmit}
