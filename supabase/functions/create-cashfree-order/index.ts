@@ -93,7 +93,20 @@ serve(async (req: Request) => {
           customer_details: {
             customer_id: userId,
             customer_name: customerName,
-            customer_phone: customerPhone?.replace(/[^0-9]/g, '').slice(-15) || "",
+            customer_phone: (() => {
+              if (!customerPhone) return "";
+              
+              // Remove spaces, dashes, parentheses - but keep + and digits
+              const cleaned = customerPhone.replace(/[\s\-\(\)]/g, '');
+              
+              // For Indian numbers (+91), Cashfree accepts just 10 digits
+              if (cleaned.startsWith('+91') && cleaned.length === 13) {
+                return cleaned.slice(3); // Return just the 10 digits
+              }
+              
+              // For all other international numbers, keep the + prefix
+              return cleaned.replace(/[^0-9+]/g, '');
+            })(),
             customer_email: customerEmail || "",
           },
           order_meta: {
