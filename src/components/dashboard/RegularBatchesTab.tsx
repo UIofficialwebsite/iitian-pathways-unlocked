@@ -79,12 +79,24 @@ const CourseCard: React.FC<{
 
   return (
     <div className="w-full bg-white rounded-xl overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col transition-all duration-300 h-full">
-      <div className="w-full aspect-video overflow-hidden bg-gray-100 cursor-pointer" onClick={() => onSelect(course.id)}>
-        <img 
-          src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
-          alt={course.title} 
-          className="w-full h-full object-cover" 
-        />
+      {/* --- UPDATED BANNER LOGIC --- */}
+      <div 
+        className="w-full aspect-video overflow-hidden cursor-pointer" 
+        onClick={() => onSelect(course.id)}
+      >
+        {course.image_url ? (
+          <img 
+            src={course.image_url} 
+            alt={course.title} 
+            className="w-full h-full object-cover" 
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-b from-[#fce07c] to-[#f9c83d] flex flex-col justify-center items-center p-4">
+            <div className="text-white/90 text-[20px] md:text-[24px] font-[800] text-center uppercase leading-tight drop-shadow-sm">
+              {course.title}
+            </div>
+          </div>
+        )}
       </div>
       
       <div className="p-5 flex flex-col flex-1">
