@@ -1536,65 +1536,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             </div>
             ))}
         </div>
-
-        {/* BATCH CARDS SECTION (At the end of PDF) */}
-        <div className="mt-12 px-8 break-before-page">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">Selected Course Batch Summary</h2>
-            
-            <div className="grid grid-cols-2 gap-6">
-                {coursesToDisplay.map((course) => (
-                    <div 
-                        key={course.id} 
-                        className="rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white break-inside-avoid flex flex-col"
-                    >
-                        {/* Card Header with Gradient */}
-                        <div className={`h-24 bg-gradient-to-r ${getGradientClass(course.credits)} relative p-4 flex items-end justify-between`}>
-                            <Badge className="bg-white/90 text-black hover:bg-white font-bold backdrop-blur-sm shadow-sm">
-                                {course.id}
-                            </Badge>
-                            <div className="p-1.5 bg-white/20 backdrop-blur-md rounded-full text-white">
-                                <GraduationCap className="w-5 h-5" />
-                            </div>
-                        </div>
-
-                        {/* Card Body */}
-                        <div className="p-5 flex-1 flex flex-col justify-between">
-                            <div>
-                                <h3 className="font-bold text-lg text-gray-900 leading-tight mb-3">
-                                    {course.name}
-                                </h3>
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                    <Badge variant="outline" className="flex items-center gap-1 border-gray-300 text-gray-700">
-                                        <BookOpen className="w-3 h-3" /> {course.credits} Credits
-                                    </Badge>
-                                    <Badge variant="outline" className="flex items-center gap-1 border-gray-300 text-gray-700">
-                                        {course.category}
-                                    </Badge>
-                                </div>
-                            </div>
-                            
-                            <div className="pt-4 border-t border-gray-100 flex items-center text-xs text-gray-500 gap-2">
-                                <Clock className="w-3.5 h-3.5" />
-                                <span>12 Weeks Duration</span>
-                                <span className="text-gray-300">•</span>
-                                <span>Comprehensive Syllabus</span>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-
-        {/* GREY BLOCK FOOTER (At the very end) */}
-        <div className="mt-16 bg-gray-100 py-8 border-t border-gray-200 text-center break-inside-avoid">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-1">Generated via</p>
-            <p className="text-lg font-bold text-primary">ui.dev/iitm-bs</p>
-            <p className="text-xs text-gray-400 mt-2">The Comprehensive Resource Hub for IITM BS Degree</p>
-            <div className="flex justify-center gap-4 mt-4 text-xs text-gray-400">
-                <span>Subject Notes</span> • <span>PYQs</span> • <span>Grade Calculator</span> • <span>Community</span>
-            </div>
-        </div>
-
       </div>
     </>
   );
