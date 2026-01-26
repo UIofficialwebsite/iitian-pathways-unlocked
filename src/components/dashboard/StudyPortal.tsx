@@ -394,28 +394,33 @@ const EnrolledView = ({
   };
 
   const handleContinue = () => {
-    if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
-      // Force clear all stale data immediately to show loading state
-      setFullCourseData(null);
-      setScheduleData([]);
-      setFaqs(undefined);
-      setActiveTab('features');
-      
-      // Update the selected batch ID - this will trigger the useEffect to fetch new data
-      setSelectedBatchId(tempSelectedBatchId);
-      
-      const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
-      toast({
-        title: "Batch Switched",
-        description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
-      });
+    const newBatchId = tempSelectedBatchId;
+    
+    // Only proceed if we have a valid new selection that differs from current
+    if (!newBatchId || newBatchId === selectedBatchId) {
+      setIsSheetOpen(false);
+      return;
     }
     
+    // 1. Force clear all stale data to show loading state
+    setFullCourseData(null);
+    setScheduleData([]);
+    setFaqs(undefined);
+    setActiveTab('features');
+    
+    // 2. Update the batch ID - this triggers the useEffect to fetch new data
+    setSelectedBatchId(newBatchId);
+    
+    // 3. Show confirmation toast
+    const newBatch = enrollments.find(e => e.course_id === newBatchId);
+    toast({
+      title: "Batch Switched",
+      description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
+    });
+    
+    // 4. Close sheet and ALWAYS reset view mode to main
     setIsSheetOpen(false);
-
-    if (sidebarSource === 'main') {
-        setViewMode('main'); 
-    }
+    setViewMode('main');
   };
 
   const handleDescription = () => {
@@ -610,7 +615,7 @@ const EnrolledView = ({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8" key={`main-view-${selectedBatchId}`}>
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
@@ -673,7 +678,7 @@ const EnrolledView = ({
         </div>
         {currentBatchSummary && (
           <EnrollmentListItem 
-            key={currentBatchSummary.course_id}
+            key={`quick-access-${selectedBatchId}`}
             enrollment={currentBatchSummary} 
             onClick={() => setViewMode('description')} 
           />
