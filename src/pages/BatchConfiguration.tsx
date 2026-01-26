@@ -115,6 +115,30 @@ const customStyles = `
     border: none;
     padding: 0;
   }
+  .phone-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .dial-code-select {
+    width: 160px;
+    padding: 14px 10px;
+    font-size: 14px;
+    border: 1px solid #000000;
+    background: white;
+    cursor: pointer;
+    outline: none;
+    color: #000000;
+  }
+  .phone-number-input {
+    flex: 1;
+    min-width: 0;
+  }
+  .phone-hint {
+    font-size: 12px;
+    color: #888888;
+    margin-top: 6px;
+  }
 `;
 
 const BatchConfiguration = () => {
@@ -139,6 +163,13 @@ const BatchConfiguration = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [manualPhone, setManualPhone] = useState("");
+  const [countryCodes, setCountryCodes] = useState<Array<{
+    dial_code: string;
+    name: string;
+    phone_length: number;
+  }>>([]);
+  const [selectedDialCode, setSelectedDialCode] = useState("+91");
+  const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
 
   // --- 1. Fetch Data & Check Enrollment ---
   useEffect(() => {
@@ -253,15 +284,27 @@ const BatchConfiguration = () => {
     try {
       const { data: profile } = await supabase
         .from('profiles')
-        .select('phone')
+        .select('phone, dial_code')
         .eq('id', user.id)
         .single();
 
-      if (profile?.phone && profile.phone.length >= 10) {
-        await processPayment(profile.phone);
+      if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
+        await processPayment(`${profile.dial_code}${profile.phone}`);
       } else {
         setProcessing(false);
         setShowPhoneDialog(true);
+        // Fetch country codes when dialog opens
+        if (countryCodes.length === 0) {
+          const { data } = await supabase
+            .from('country_codes')
+            .select('dial_code, name, phone_length')
+            .order('name');
+          if (data) {
+            setCountryCodes(data);
+            const india = data.find(c => c.dial_code === '91');
+            if (india) setExpectedPhoneLength(india.phone_length);
+          }
+        }
       }
     } catch (error) {
       console.error("Error checking profile:", error);
@@ -271,8 +314,17 @@ const BatchConfiguration = () => {
   };
 
   const handlePhoneSubmit = async () => {
-    if (manualPhone.length < 10) {
-      toast.error("Please enter a valid 10-digit number");
+    const digitsOnly = manualPhone.replace(/[^0-9]/g, '');
+    const dialCodeDigits = selectedDialCode.replace('+', '');
+    const country = countryCodes.find(c => c.dial_code === dialCodeDigits);
+    
+    if (country && digitsOnly.length !== country.phone_length) {
+      toast.error(`Phone number should be ${country.phone_length} digits for ${country.name}`);
+      return;
+    }
+    
+    if (!country && (digitsOnly.length < 5 || digitsOnly.length > 15)) {
+      toast.error("Please enter a valid phone number (5-15 digits).");
       return;
     }
 
@@ -281,13 +333,17 @@ const BatchConfiguration = () => {
     try {
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ phone: manualPhone })
+        .update({ 
+          dial_code: selectedDialCode,
+          phone: manualPhone 
+        })
         .eq('id', user.id);
 
       if (updateError) console.error("Failed to update profile phone:", updateError);
       
+      const fullPhoneNumber = `${selectedDialCode}${manualPhone}`;
       setShowPhoneDialog(false);
-      await processPayment(manualPhone);
+      await processPayment(fullPhoneNumber);
     } catch (error) {
       setProcessing(false);
       console.error(error);
@@ -621,13 +677,53 @@ const BatchConfiguration = () => {
             <button className="close-icon" onClick={() => setShowPhoneDialog(false)}>&times;</button>
             <div className="loading-container"><div className="dot"></div><div className="dot"></div><div className="dot"></div></div>
             <h2 className="modal-title">Contact Details Required</h2>
+            <p className="modal-description">
+              Please provide your phone number to generate your payment receipt.
+            </p>
             <div className="form-group">
               <label className="form-label">Phone Number</label>
-              <input type="tel" className="form-input" placeholder="e.g., 9876543210" value={manualPhone} onChange={(e) => setManualPhone(e.target.value)} />
+              <div className="phone-input-wrapper">
+                <select 
+                  className="dial-code-select"
+                  value={selectedDialCode}
+                  onChange={(e) => {
+                    setSelectedDialCode(e.target.value);
+                    const dialCodeDigits = e.target.value.replace('+', '');
+                    const country = countryCodes.find(c => c.dial_code === dialCodeDigits);
+                    if (country) setExpectedPhoneLength(country.phone_length);
+                  }}
+                >
+                  {countryCodes.length === 0 ? (
+                    <option value="+91">+91 India</option>
+                  ) : (
+                    countryCodes.map((c) => (
+                      <option key={c.dial_code} value={`+${c.dial_code}`}>
+                        +{c.dial_code} {c.name}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <input 
+                  type="tel" 
+                  className="form-input phone-number-input"
+                  placeholder={`${'9'.repeat(expectedPhoneLength)}`}
+                  value={manualPhone}
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+                    setManualPhone(digitsOnly);
+                  }}
+                  maxLength={expectedPhoneLength + 2}
+                />
+              </div>
+              <p className="phone-hint">
+                Enter {expectedPhoneLength} digits for selected country
+              </p>
             </div>
             <div className="modal-actions">
               <button className="btn btn-secondary" onClick={() => setShowPhoneDialog(false)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={processing}>Continue to Enroll</button>
+              <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={processing}>
+                {processing ? "Verifying..." : "Continue to Enroll"}
+              </button>
             </div>
           </div>
         </DialogContent>
