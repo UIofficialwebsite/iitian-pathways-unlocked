@@ -1,25 +1,40 @@
-
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const carouselImages = [
-  {
-    src: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=2000&h=500",
-    alt: "Educational technology and programming",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&q=80&w=2000&h=500",
-    alt: "Coding and software development education",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?auto=format&fit=crop&q=80&w=2000&h=500",
-    alt: "Student working on laptop",
-  },
-];
-
-const HeroCarousel = () => {
+const HeroCarousel = ({ pagePath = "/" }: { pagePath?: string }) => {
   const [current, setCurrent] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [banners, setBanners] = useState<{ image_url: string; id: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('page_banners')
+          .select('*')
+          .eq('page_path', pagePath);
+
+        if (data) {
+          setBanners(data);
+        }
+      } catch (error) {
+        console.error("Error fetching banners:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBanners();
+  }, [pagePath]);
+
+  // Map database banners to the format expected by the carousel
+  const carouselImages = banners.map(banner => ({
+    src: banner.image_url,
+    alt: "Banner", // Default alt text as it's not in the table
+  }));
+
   const length = carouselImages.length;
 
   const nextSlide = () => {
@@ -36,11 +51,17 @@ const HeroCarousel = () => {
 
   // Auto-advance the carousel
   useEffect(() => {
+    if (length === 0) return;
+    
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
     return () => clearInterval(interval);
-  }, [current]);
+  }, [current, length]);
+
+  if (loading) {
+    return <div className="w-full h-[300px] sm:h-[350px] mt-16 animate-pulse bg-gray-200" />;
+  }
 
   if (!carouselImages.length) {
     return null;
@@ -58,7 +79,7 @@ const HeroCarousel = () => {
       )}
       
       {/* Navigation buttons - only visible on hover */}
-      {isHovered && (
+      {isHovered && length > 1 && (
         <>
           <button
             className="absolute left-4 top-1/2 z-20 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm hover:bg-white/90 rounded-full p-3 transition-all duration-300 shadow-lg"
@@ -94,19 +115,21 @@ const HeroCarousel = () => {
       ))}
 
       {/* Navigation dots - positioned below carousel */}
-      <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
-        {carouselImages.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              index === current 
-                ? "bg-royal scale-125 shadow-md" 
-                : "bg-gray-400 hover:bg-gray-600"
-            }`}
-          ></button>
-        ))}
-      </div>
+      {length > 1 && (
+        <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
+          {carouselImages.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                index === current 
+                  ? "bg-royal scale-125 shadow-md" 
+                  : "bg-gray-400 hover:bg-gray-600"
+              }`}
+            ></button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
