@@ -250,18 +250,19 @@ const CustomDashboardTabNav = ({
 // --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
-  onViewChange
+  onViewChange,
+  selectedBatchId,
+  setSelectedBatchId
 } : { 
   enrollments: GroupedEnrollment[];
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments' | 'studyPortal') => void;
+  selectedBatchId: string;
+  setSelectedBatchId: React.Dispatch<React.SetStateAction<string>>;
 }) => {
   const { toast } = useToast();
 
-  // Derive the initial batch ID from props - this only runs on first render
-  const initialBatchId = enrollments.length > 0 ? enrollments[0].course_id : '';
-  
-  const [selectedBatchId, setSelectedBatchId] = useState<string>(initialBatchId);
-  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(initialBatchId);
+  // Temp selection for the sheet (before confirming)
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
@@ -271,7 +272,7 @@ const EnrolledView = ({
   
   // Debug: Log component mount/unmount
   useEffect(() => {
-    console.log('[BatchSwitch] EnrolledView MOUNTED with initialBatchId:', initialBatchId);
+    console.log('[BatchSwitch] EnrolledView MOUNTED with selectedBatchId:', selectedBatchId);
     return () => {
       console.log('[BatchSwitch] EnrolledView UNMOUNTING');
     };
@@ -301,7 +302,7 @@ const EnrolledView = ({
       return;
     }
     
-    // Only reset if current selection is invalid
+    // Only reset if current selection is invalid (use functional update to avoid stale closure)
     setSelectedBatchId(currentId => {
       const isCurrentSelectionValid = enrollments.some(e => e.course_id === currentId);
       console.log('[BatchSwitch] Checking if current selection valid:', currentId, 'Valid:', isCurrentSelectionValid);
@@ -315,7 +316,7 @@ const EnrolledView = ({
       
       return currentId;
     });
-  }, [enrollments]);
+  }, [enrollments, setSelectedBatchId]);
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
@@ -1034,6 +1035,9 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const [groupedEnrollments, setGroupedEnrollments] = useState<GroupedEnrollment[]>([]);
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
+  
+  // LIFTED STATE: Selected batch ID now lives in parent to survive EnrolledView remounts
+  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
 
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
@@ -1130,9 +1134,10 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
         </div>
       ) : hasEnrollments ? (
         <EnrolledView 
-          key={groupedEnrollments.map(e => e.course_id).join('-')}
           enrollments={groupedEnrollments} 
-          onViewChange={onViewChange} 
+          onViewChange={onViewChange}
+          selectedBatchId={selectedBatchId}
+          setSelectedBatchId={setSelectedBatchId}
         />
       ) : (
         <NotEnrolledView 
