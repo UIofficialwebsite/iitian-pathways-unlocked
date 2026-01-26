@@ -167,6 +167,7 @@ const BatchConfiguration = () => {
     dial_code: string;
     name: string;
     phone_length: number;
+    code: string;
   }>>([]);
   const [selectedDialCode, setSelectedDialCode] = useState("+91");
   const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
@@ -297,7 +298,7 @@ const BatchConfiguration = () => {
         if (countryCodes.length === 0) {
           const { data } = await supabase
             .from('country_codes')
-            .select('dial_code, name, phone_length')
+            .select('dial_code, name, phone_length, code')
             .order('name');
           if (data) {
             setCountryCodes(data);
@@ -694,11 +695,11 @@ const BatchConfiguration = () => {
                   }}
                 >
                   {countryCodes.length === 0 ? (
-                    <option value="+91">+91 India</option>
+                    <option value="+91">+91 IN</option>
                   ) : (
                     countryCodes.map((c) => (
                       <option key={c.dial_code} value={`+${c.dial_code}`}>
-                        +{c.dial_code} {c.name}
+                        +{c.dial_code} {c.code}
                       </option>
                     ))
                   )}

@@ -13,6 +13,7 @@ interface CountryCode {
   dial_code: string;
   name: string;
   phone_length: number;
+  code: string;
 }
 
 // Injecting the user's specific CSS styles
@@ -281,11 +282,11 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
             onChange={handleDialCodeChange}
           >
             {countryCodes.length === 0 ? (
-              <option value="+91">+91 India</option>
+              <option value="+91">+91 IN</option>
             ) : (
               countryCodes.map((c) => (
                 <option key={c.dial_code} value={`+${c.dial_code}`}>
-                  +{c.dial_code} {c.name}
+                  +{c.dial_code} {c.code}
                 </option>
               ))
             )}
@@ -377,7 +378,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     if (showPhoneDialog && countryCodes.length === 0) {
       supabase
         .from('country_codes')
-        .select('dial_code, name, phone_length')
+        .select('dial_code, name, phone_length, code')
         .order('name')
         .then(({ data, error }) => {
           if (!error && data) {
