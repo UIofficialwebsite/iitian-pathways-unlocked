@@ -77,7 +77,7 @@ export const setPageTitle = (title: string, appendSiteName: boolean = true) => {
  */
 export const SEO_TITLES = {
   // Homepage
-  HOME: 'Free Study Materials for JEE, NEET & IITM BS',
+  HOME: 'Live Courses for IITM BS Qualifier, Foundation, Diploma & Free Study Materials for JEE, NEET & IITM BS',
   
   // Static pages
   ABOUT: 'About Us - Our Story & Mission',
