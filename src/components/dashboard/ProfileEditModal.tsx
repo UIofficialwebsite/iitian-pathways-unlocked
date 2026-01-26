@@ -12,6 +12,12 @@ interface ProfileEditModalProps {
   onProfileUpdate: () => void;
 }
 
+interface CountryCode {
+  dial_code: string;
+  name: string;
+  phone_length: number;
+}
+
 const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -25,9 +31,26 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
   const [countryCode, setCountryCode] = useState("+91");
   const [localPhone, setLocalPhone] = useState("");
   const [isPhoneEditable, setIsPhoneEditable] = useState(false);
+  const [countryCodes, setCountryCodes] = useState<CountryCode[]>([]);
+  const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
   
   const [email, setEmail] = useState("");
   const phoneInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch country codes when modal opens
+  useEffect(() => {
+    if (isOpen && countryCodes.length === 0) {
+      supabase
+        .from('country_codes')
+        .select('dial_code, name, phone_length')
+        .order('name')
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setCountryCodes(data);
+          }
+        });
+    }
+  }, [isOpen, countryCodes.length]);
 
   useEffect(() => {
     if (isOpen && profile) {
@@ -38,26 +61,36 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
       
       setGender(profile.gender || "Male");
       
-      const rawPhone = profile.phone || "";
-      if(rawPhone.startsWith("+91")) {
-         setCountryCode("+91");
-         setLocalPhone(rawPhone.replace("+91", "").trim());
-      } else if (rawPhone.length > 0 && rawPhone.includes(" ")) {
-         const parts = rawPhone.split(" ");
-         setCountryCode(parts[0]);
-         setLocalPhone(parts.slice(1).join(""));
-      } else if (rawPhone.length > 0) {
-         setCountryCode("+91"); 
-         setLocalPhone(rawPhone);
+      // Use dial_code if available, otherwise try to parse from phone
+      if (profile.dial_code) {
+        setCountryCode(profile.dial_code);
+        setLocalPhone(profile.phone || "");
+        // Set expected length based on dial code
+        const dialDigits = profile.dial_code.replace('+', '');
+        supabase.from('country_codes')
+          .select('phone_length')
+          .eq('dial_code', dialDigits)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data) setExpectedPhoneLength(data.phone_length);
+          });
       } else {
-         setCountryCode("+91");
-         setLocalPhone("");
+        // Fallback for old data format
+        const rawPhone = profile.phone || "";
+        if (rawPhone.includes(" ")) {
+          const parts = rawPhone.split(" ");
+          setCountryCode(parts[0] || "+91");
+          setLocalPhone(parts.slice(1).join(""));
+        } else {
+          setCountryCode("+91");
+          setLocalPhone(rawPhone);
+        }
       }
       
       setEmail(profile.email || "");
       setIsPhoneEditable(false);
     }
-  }, [isOpen]);
+  }, [isOpen, profile]);
 
   const handlePhoneBtnClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -73,20 +106,33 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
     }
   };
 
+  const handleCountryCodeChange = (value: string) => {
+    setCountryCode(value);
+    const dialDigits = value.replace('+', '');
+    const country = countryCodes.find(c => c.dial_code === dialDigits);
+    if (country) {
+      setExpectedPhoneLength(country.phone_length);
+      // Clear phone if it exceeds new length
+      if (localPhone.length > country.phone_length) {
+        setLocalPhone(localPhone.slice(0, country.phone_length));
+      }
+    }
+  };
+
   const handleMainSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       const fullName = `${firstName} ${lastName}`.trim();
-      const fullPhone = `${countryCode} ${localPhone}`.trim();
       
       const { error } = await supabase
         .from('profiles')
         .update({
           student_name: fullName,
           gender: gender,
-          phone: fullPhone,
+          dial_code: countryCode,
+          phone: localPhone,
         })
         .eq('id', profile.id);
 
@@ -104,19 +150,15 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* w-[94vw]: Uses nearly full screen width on mobile with minimal margins
-         max-w-[420px]: Caps width on larger screens
-      */}
       <DialogContent className="w-[94vw] max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-xl gap-0 font-['Inter',sans-serif]">
         
         <DialogHeader className="px-4 py-3.5 border-b border-[#f0f0f0] bg-white">
           <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
         </DialogHeader>
 
-        {/* Reduced padding for more input space */}
         <form onSubmit={handleMainSave} className="px-4 py-4 space-y-3.5">
           
-          {/* Row 1: Name - Stacked Vertical */}
+          {/* Row 1: Name */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">First Name</label>
@@ -162,27 +204,36 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           {/* Row 3: Mobile Number */}
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
-            <div className={`flex items-center border rounded-md bg-[#f9fafb] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#d1d5db]'}`}>
-              <div className="flex items-center gap-0.5 pr-2 border-r border-[#e5e7eb] h-full -ml-2.5 pl-2.5 mr-2 bg-gray-50">
-                <input 
-                  type="text"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className={`w-10 bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
-                  maxLength={5}
-                  disabled={!isPhoneEditable}
-                />
-                <span className="text-[9px] text-[#999]">▼</span>
-              </div>
-
+            <div className="flex items-center gap-2">
+              <select
+                value={countryCode}
+                onChange={(e) => handleCountryCodeChange(e.target.value)}
+                disabled={!isPhoneEditable}
+                className={`h-9 px-2 border border-[#d1d5db] rounded-md text-[13px] bg-white min-w-[120px] ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed bg-[#f9fafb]' : 'text-[#333]'}`}
+              >
+                {countryCodes.length === 0 ? (
+                  <option value={countryCode}>{countryCode}</option>
+                ) : (
+                  countryCodes.map((c) => (
+                    <option key={c.dial_code} value={`+${c.dial_code}`}>
+                      +{c.dial_code} {c.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              
               <input 
                 ref={phoneInputRef}
-                type="text"
+                type="tel"
                 value={localPhone}
-                onChange={(e) => setLocalPhone(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none px-0 text-[13px] h-full min-w-0 ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
-                placeholder="1234567890"
+                onChange={(e) => {
+                  const digitsOnly = e.target.value.replace(/[^0-9]/g, '').slice(0, expectedPhoneLength);
+                  setLocalPhone(digitsOnly);
+                }}
+                className={`flex-1 h-9 px-3 border border-[#d1d5db] rounded-md text-[13px] min-w-0 ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed bg-[#f9fafb]' : 'text-[#333]'}`}
+                placeholder={`${'9'.repeat(expectedPhoneLength)}`}
                 disabled={!isPhoneEditable}
+                maxLength={expectedPhoneLength}
               />
               
               <button 
@@ -190,9 +241,12 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
                 onClick={handlePhoneBtnClick}
                 className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer flex-shrink-0"
               >
-                {isPhoneEditable ? "Update" : "Edit"}
+                {isPhoneEditable ? "Done" : "Edit"}
               </button>
             </div>
+            {isPhoneEditable && (
+              <p className="text-[11px] text-gray-500">Enter {expectedPhoneLength} digits for selected country</p>
+            )}
           </div>
 
           {/* Row 4: Email */}
@@ -206,7 +260,7 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
             />
           </div>
 
-          {/* Footer: Stacked Vertical buttons on mobile */}
+          {/* Footer */}
           <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 mt-1 border-t border-[#f5f5f5]">
             <Button 
               type="button"
