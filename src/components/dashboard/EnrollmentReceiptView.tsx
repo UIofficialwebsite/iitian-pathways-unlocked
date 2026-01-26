@@ -2,24 +2,16 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Check, Download, Share2, ArrowLeft, Mail, Plus } from 'lucide-react';
+import { Loader2, Check, Download, Share2, ArrowLeft, Mail, Plus, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 // --- Types ---
-interface CourseDetails {
-  id: string;
-  title: string;
-  image_url: string | null;
-  end_date: string | null;
-  valid_till: string | null; // Added field
-}
-
 interface OrderItem {
   title: string;
-  amount: number;
+  amount: number; // This is the individual item price (likely list price)
   validTill: string | null;
   image_url: string | null;
   id: string; // course_id
@@ -29,7 +21,10 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalAmount: number;
+  totalAmount: number; // Final amount paid
+  subtotal: number;    // Gross amount before discount
+  discount: number;    // Total discount value
+  couponCode: string | null;
   status: string;
   utr: string;
   paymentTime: string;
@@ -75,6 +70,9 @@ const EnrollmentReceiptView = () => {
         
         let finalItems: OrderItem[] = [];
         let finalTotal = 0;
+        let finalSubtotal = 0;
+        let finalDiscount = 0;
+        let finalCoupon: string | null = null;
         let finalDate = initialEnrollment.created_at;
         let finalStatus = initialEnrollment.status || 'Success';
         let finalUtr = '-';
@@ -111,8 +109,6 @@ const EnrollmentReceiptView = () => {
             finalItems = sortedEnrollments.map((item: any) => {
               const isAddon = !!item.subject_name;
               const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
-              
-              // Use end_date for validity
               const validityDate = item.courses?.end_date; 
 
               return {
@@ -126,25 +122,56 @@ const EnrollmentReceiptView = () => {
             });
           }
 
-          // 3. Fetch Payment Record for the REAL total
+          // 3. Fetch Payment Record for accurate Pricing, Discounts & Coupons
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
-            .select('amount, created_at, order_id, status, utr, payment_time')
+            .select(`
+              amount, 
+              net_amount, 
+              discount_value, 
+              coupon_code, 
+              created_at, 
+              order_id, 
+              status, 
+              utr, 
+              payment_time
+            `)
             .eq('order_id', orderId)
             .maybeSingle();
 
           if (!paymentError && paymentData) {
-            finalTotal = Number(paymentData.amount) || 0;
+            // Logic: 
+            // net_amount is usually the actual paid amount. 
+            // amount might be the gross amount or paid amount depending on gateway logic.
+            // Safe bet: Final Paid = net_amount (if exists) ELSE amount.
+            // Subtotal = Final Paid + Discount.
+            
+            const netAmount = Number(paymentData.net_amount);
+            const rawAmount = Number(paymentData.amount);
+            const discountVal = Number(paymentData.discount_value) || 0;
+
+            // If net_amount is present, use it as 'Paid', otherwise use 'amount'
+            finalTotal = !isNaN(netAmount) && netAmount !== 0 ? netAmount : (rawAmount || 0);
+            
+            finalDiscount = discountVal;
+            
+            // Subtotal is what it would have cost without discount
+            finalSubtotal = finalTotal + finalDiscount;
+            
+            finalCoupon = paymentData.coupon_code || null;
             finalDate = paymentData.created_at;
             finalStatus = paymentData.status || finalStatus;
             finalUtr = paymentData.utr || '-';
             finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
           } else {
+            // Fallback if no payment record found (e.g. manual entry or legacy)
             finalTotal = finalItems.reduce((sum, item) => sum + item.amount, 0);
+            finalSubtotal = finalTotal;
+            finalDiscount = 0;
           }
 
         } else {
-          // Fallback: Single item
+          // Fallback: Single item, no order ID
           const singleCourse = initialEnrollment.courses as any;
           finalItems = [{
             title: singleCourse?.title || 'Unknown Course',
@@ -155,12 +182,17 @@ const EnrollmentReceiptView = () => {
             type: 'Batch'
           }];
           finalTotal = 0;
+          finalSubtotal = 0;
+          finalDiscount = 0;
         }
 
         setReceipt({
           orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
           date: finalDate,
           totalAmount: finalTotal,
+          subtotal: finalSubtotal,
+          discount: finalDiscount,
+          couponCode: finalCoupon,
           status: finalStatus,
           utr: finalUtr,
           paymentTime: finalPaymentTime,
@@ -195,7 +227,6 @@ const EnrollmentReceiptView = () => {
     }
   };
 
-  // Logic: If valid_till is NULL => Lifetime Access
   const formatValidTill = (dateString: string | null) => {
     if (!dateString) return "Lifetime Access";
     return new Date(dateString).toLocaleDateString('en-GB', {
@@ -203,6 +234,15 @@ const EnrollmentReceiptView = () => {
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   // --- Actions ---
@@ -262,10 +302,7 @@ const EnrollmentReceiptView = () => {
   const addOns = receipt.items.filter(i => i !== mainBatch);
 
   // Filter Items for display in Payment Summary & PDF
-  const paymentLineItems = isFree 
-    ? receipt.items 
-    : receipt.items.filter(i => i.amount > 0);
-  const displayItems = paymentLineItems.length > 0 ? paymentLineItems : receipt.items;
+  const displayItems = receipt.items; // Show all items in list to explain subtotal
 
   return (
     <div className="font-['Inter',sans-serif] w-full max-w-[1000px] mx-auto pb-10">
@@ -309,7 +346,9 @@ const EnrollmentReceiptView = () => {
                 <img src={mainBatch.image_url || "https://via.placeholder.com/90x60/4f46e5/ffffff?text=Course"} alt={mainBatch.title} className="w-[90px] h-[60px] bg-[#e2e8f0] rounded-md object-cover flex-shrink-0" />
                 <div className="flex-grow">
                   <h3 className="text-base font-medium text-[#334155] mb-1 leading-tight">{mainBatch.title}</h3>
-                  <p className="text-sm text-[#64748b] mb-1">Price: <span className="text-[#10b981] font-medium">{mainBatch.amount === 0 ? 'Free' : `₹${mainBatch.amount}`}</span></p>
+                  <p className="text-sm text-[#64748b] mb-1">
+                    Value: <span className="text-[#334155] font-medium">{mainBatch.amount === 0 ? 'Free' : `₹${mainBatch.amount}`}</span>
+                  </p>
                   <span className="inline-block bg-[#dcfce7] text-[#166534] text-[11px] px-2 py-0.5 rounded">Active</span>
                 </div>
               </div>
@@ -349,12 +388,12 @@ const EnrollmentReceiptView = () => {
           </div>
         </div>
 
-        {/* Right Column */}
+        {/* Right Column - Pricing */}
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Everything in Payment Breakdown with distinct names */}
+            {/* List Everything in Payment Breakdown */}
             {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
@@ -363,12 +402,33 @@ const EnrollmentReceiptView = () => {
             ))}
             
             <div className="border-t border-[#e2e8f0] my-3"></div>
-            <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Discount</span><span>₹ 0</span></div>
+            
+            {/* Subtotal */}
+            <div className="flex justify-between text-sm text-[#64748b] mb-2">
+              <span>Subtotal</span>
+              <span>{formatCurrency(receipt.subtotal)}</span>
+            </div>
+
+            {/* Discount Section */}
+            {receipt.discount > 0 && (
+              <div className="flex justify-between text-sm text-[#10b981] mb-2 font-medium">
+                <span className="flex items-center gap-1">
+                  Discount
+                  {receipt.couponCode && (
+                     <span className="text-[10px] bg-[#dcfce7] text-[#166534] px-1.5 py-0.5 rounded border border-[#86efac] flex items-center gap-0.5">
+                       <Tag className="w-2.5 h-2.5" /> {receipt.couponCode}
+                     </span>
+                  )}
+                </span>
+                <span>-{formatCurrency(receipt.discount)}</span>
+              </div>
+            )}
+
             <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Delivery Charges</span><span>₹ 0</span></div>
-            <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Coupon Disc.</span><span>₹ 0</span></div>
+            
             <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
-              <span>Total Amount</span>
-              <span>{isFree ? '₹ 0' : `₹ ${receipt.totalAmount}`}</span>
+              <span>Total Paid</span>
+              <span>{isFree ? '₹ 0' : formatCurrency(receipt.totalAmount)}</span>
             </div>
           </div>
 
@@ -434,7 +494,7 @@ const EnrollmentReceiptView = () => {
             <tr style={{ backgroundColor: '#111827', color: '#ffffff' }}>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px 0 0 6px' }}>Item Description</th>
               <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Amount</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Price</th>
             </tr>
           </thead>
           <tbody>
@@ -455,10 +515,21 @@ const EnrollmentReceiptView = () => {
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
           <div style={{ width: '280px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}><span>Subtotal:</span><span>{isFree ? '₹ 0.00' : `₹ ${receipt.totalAmount.toLocaleString('en-IN')}.00`}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}>
+                <span>Subtotal:</span>
+                <span>{formatCurrency(receipt.subtotal)}</span>
+            </div>
+            
+            {receipt.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#10b981' }}>
+                    <span>Discount {receipt.couponCode ? `(${receipt.couponCode})` : ''}:</span>
+                    <span>-{formatCurrency(receipt.discount)}</span>
+                </div>
+            )}
+            
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}><span>Tax (0%):</span><span>₹ 0.00</span></div>
             <div style={{ borderTop: '2px solid #e5e7eb', margin: '8px 0' }}></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}><span>Total:</span><span>{isFree ? '₹ 0.00' : `₹ ${receipt.totalAmount.toLocaleString('en-IN')}.00`}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', color: '#111827' }}><span>Total Paid:</span><span>{formatCurrency(receipt.totalAmount)}</span></div>
           </div>
         </div>
 
