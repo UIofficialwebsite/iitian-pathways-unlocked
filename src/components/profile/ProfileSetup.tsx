@@ -1,179 +1,254 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
-interface CountryCode {
-  id: string;
-  name: string;
-  code: string;
-  dial_code: string;
-  length: number;
+interface ProfileSetupProps {
+  onComplete: () => void;
 }
 
-export const ProfileSetup = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete }) => {
+  const [programType, setProgramType] = useState<'IITM_BS' | 'COMPETITIVE_EXAM' | ''>('');
+  const [studentName, setStudentName] = useState('');
   
-  const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedCountryDialCode, setSelectedCountryDialCode] = useState("");
-  const [countries, setCountries] = useState<CountryCode[]>([]);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchCountries = async () => {
-      const { data, error } = await supabase
-        .from('country_codes')
-        .select('*')
-        .order('name');
-      
-      if (data) setCountries(data);
-      // Set default if exists (e.g., India +91)
-      const defaultCountry = data?.find(c => c.code === 'IN');
-      if (defaultCountry && !selectedCountryDialCode) {
-        setSelectedCountryDialCode(defaultCountry.dial_code);
-      }
-    };
-    
-    fetchCountries();
-  }, []);
-
-  const getSelectedCountryInfo = () => {
-    return countries.find(c => c.dial_code === selectedCountryDialCode);
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, '');
-    const countryInfo = getSelectedCountryInfo();
-    
-    if (countryInfo && value.length > countryInfo.length) {
-      return; // Prevent typing more than allowed length
-    }
-    setPhoneNumber(value);
-  };
+  // IITM BS fields
+  const [branch, setBranch] = useState('');
+  const [level, setLevel] = useState('');
+  
+  // Competitive exam fields
+  const [examType, setExamType] = useState('');
+  const [studentStatus, setStudentStatus] = useState('');
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
-    setLoading(true);
-    const countryInfo = getSelectedCountryInfo();
-
     // Validation
-    if (!fullName.trim()) {
-      toast({ title: "Error", description: "Full Name is required", variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-    if (countryInfo && phoneNumber.length !== countryInfo.length) {
-      toast({ 
-        title: "Invalid Phone Number", 
-        description: `Phone number must be exactly ${countryInfo.length} digits`, 
-        variant: "destructive" 
+    if (!studentName.trim()) {
+      toast({
+        title: "Student name required",
+        description: "Please enter your full name",
+        variant: "destructive",
       });
-      setLoading(false);
       return;
     }
+
+    if (!programType) {
+      toast({
+        title: "Program type required",
+        description: "Please select your program type",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (programType === 'IITM_BS') {
+      if (!branch || !level) {
+        toast({
+          title: "Branch and level required",
+          description: "Please select your branch and level",
+          variant: "destructive",
+        });
+        return;
+      }
+    } else if (programType === 'COMPETITIVE_EXAM') {
+      if (!examType || !studentStatus) {
+        toast({
+          title: "Exam type and status required",
+          description: "Please select your exam type and student status",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setIsLoading(true);
 
     try {
+      // First, save to updated_profiles for history
+      const historyData = {
+        user_id: user.id,
+        student_name: studentName,
+        program_type: programType,
+        branch: programType === 'IITM_BS' ? branch : null,
+        level: programType === 'IITM_BS' ? level : null,
+        exam_type: programType === 'COMPETITIVE_EXAM' ? examType : null,
+        student_status: programType === 'COMPETITIVE_EXAM' ? studentStatus : null,
+        full_name: studentName,
+        email: user.email,
+        role: 'student'
+      };
+
+      await supabase.from('updated_profiles').insert(historyData);
+
+      // Then update the main profiles table
+      const profileData: any = {
+        id: user.id,
+        student_name: studentName,
+        full_name: studentName,
+        email: user.email,
+        program_type: programType,
+        profile_completed: true,
+        role: 'student'
+      };
+
+      if (programType === 'IITM_BS') {
+        profileData.branch = branch;
+        profileData.level = level;
+      } else if (programType === 'COMPETITIVE_EXAM') {
+        profileData.exam_type = examType;
+        profileData.student_status = studentStatus;
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({
-          full_name: fullName,
-          phone_number: phoneNumber,
-          country_code: selectedCountryDialCode,
-          is_profile_completed: true,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user.id);
+        .upsert(profileData);
 
       if (error) throw error;
 
       toast({
-        title: "Profile Completed",
-        description: "Welcome to the platform!",
+        title: "Profile completed!",
+        description: "Your profile has been successfully set up.",
       });
-      navigate("/dashboard");
-    } catch (error) {
-      console.error('Error updating profile:', error);
+
+      onComplete();
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save profile. Please try again.",
+        description: error.message || "Failed to complete profile setup",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="max-w-md w-full mx-auto space-y-8 p-8 bg-card rounded-xl shadow-lg border">
-      <div className="text-center">
-        <h2 className="text-3xl font-bold">Complete Your Profile</h2>
-        <p className="text-muted-foreground mt-2">Please provide your details to continue</p>
-      </div>
+    <Card className="w-full max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle>Complete Your Profile</CardTitle>
+        <CardDescription>
+          Please provide your details to access personalized content
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Student Name - Always Required */}
+          <div className="space-y-2">
+            <Label htmlFor="studentName">Student Name *</Label>
+            <Input
+              id="studentName"
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="fullName">Full Name</Label>
-          <Input
-            id="fullName"
-            placeholder="John Doe"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Phone Number</Label>
-          <div className="flex gap-2">
-            <div className="w-[140px]">
-              <Select
-                value={selectedCountryDialCode}
-                onValueChange={setSelectedCountryDialCode}
-              >
+          {/* Program Type Selection */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium">Educational Background</h3>
+            
+            <div className="space-y-2">
+              <Label>Program Type *</Label>
+              <Select value={programType} onValueChange={(value: 'IITM_BS' | 'COMPETITIVE_EXAM') => setProgramType(value)} required>
                 <SelectTrigger>
-                  <SelectValue placeholder="Code" />
+                  <SelectValue placeholder="Select your program" />
                 </SelectTrigger>
                 <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.id} value={country.dial_code}>
-                      <span className="flex items-center gap-2">
-                        <span>{country.code}</span>
-                        <span className="text-muted-foreground">{country.dial_code}</span>
-                      </span>
-                    </SelectItem>
-                  ))}
+                  <SelectItem value="IITM_BS">IITM BS Program</SelectItem>
+                  <SelectItem value="COMPETITIVE_EXAM">Competitive Exam Preparation</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <Input
-              type="tel"
-              placeholder={getSelectedCountryInfo() ? `${'0'.repeat(getSelectedCountryInfo()!.length)}` : "Mobile Number"}
-              value={phoneNumber}
-              onChange={handlePhoneChange}
-              className="flex-1"
-            />
-          </div>
-          {getSelectedCountryInfo() && (
-            <p className="text-xs text-muted-foreground text-right">
-              {phoneNumber.length}/{getSelectedCountryInfo()?.length} digits
-            </p>
-          )}
-        </div>
 
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Saving..." : "Complete Setup"}
-        </Button>
-      </form>
-    </div>
+            {/* IITM BS Fields */}
+            {programType === 'IITM_BS' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Branch *</Label>
+                  <Select value={branch} onValueChange={setBranch} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Electronic Systems">Electronic Systems</SelectItem>
+                      <SelectItem value="Data Science">Data Science</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Level *</Label>
+                  <Select value={level} onValueChange={setLevel} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Qualifier">Qualifier</SelectItem>
+                      <SelectItem value="Foundation">Foundation</SelectItem>
+                      <SelectItem value="Diploma">Diploma</SelectItem>
+                      <SelectItem value="Degree">Degree</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Competitive Exam Fields */}
+            {programType === 'COMPETITIVE_EXAM' && (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Exam Type *</Label>
+                  <Select value={examType} onValueChange={setExamType} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select exam" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="JEE">JEE</SelectItem>
+                      <SelectItem value="NEET">NEET</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Student Status *</Label>
+                  <Select value={studentStatus} onValueChange={setStudentStatus} required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Class 11">Class 11</SelectItem>
+                      <SelectItem value="Class 12">Class 12</SelectItem>
+                      <SelectItem value="Dropper">Dropper</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full bg-royal hover:bg-royal-dark" 
+            disabled={isLoading}
+          >
+            {isLoading ? "Setting up..." : "Complete Profile"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 };
+
+export default ProfileSetup;
