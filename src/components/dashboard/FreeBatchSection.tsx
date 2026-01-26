@@ -79,18 +79,34 @@ const StandardCourseCard: React.FC<{
       <div className={`bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col shrink-0 snap-start transition-all
         ${isMobile ? 'min-w-[280px] max-w-[300px]' : 'min-w-[320px] max-w-[360px]'}
       `}>
-        {/* Thumbnail Section */}
-        <div className="relative group cursor-pointer" onClick={() => setIsPreviewOpen(true)}>
+        {/* --- UPDATED THUMBNAIL LOGIC --- */}
+        <div 
+          className="relative group cursor-pointer" 
+          onClick={() => {
+            if (course.image_url) setIsPreviewOpen(true);
+          }}
+        >
           <div className={`${isMobile ? 'h-[160px]' : 'h-[200px]'} w-full bg-gray-50 flex items-center justify-center overflow-hidden`}>
-            <img 
-              src={course.image_url || "/lovable-uploads/logo_ui_new.png"} 
-              alt={course.title} 
-              className="w-full h-full object-cover" 
-            />
+            {course.image_url ? (
+              <img 
+                src={course.image_url} 
+                alt={course.title} 
+                className="w-full h-full object-cover" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-b from-[#fce07c] to-[#f9c83d] flex flex-col justify-center items-center p-4">
+                <div className="text-white/90 text-[18px] md:text-[22px] font-[800] text-center uppercase leading-tight drop-shadow-sm">
+                  {course.title}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Maximize2 className="text-white w-6 h-6" />
-          </div>
+          
+          {course.image_url && (
+            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Maximize2 className="text-white w-6 h-6" />
+            </div>
+          )}
         </div>
 
         {/* Info Section */}
