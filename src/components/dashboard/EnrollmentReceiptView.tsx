@@ -11,7 +11,7 @@ import { jsPDF } from 'jspdf';
 // --- Types ---
 interface OrderItem {
   title: string;
-  amount: number; // This is the individual item price
+  amount: number; // Item price (can be list or paid depending on DB, but used for item display)
   validTill: string | null;
   image_url: string | null;
   id: string; // course_id
@@ -21,9 +21,9 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalAmount: number; // Final amount paid (Exact)
-  subtotal: number;    // Gross amount before discount
-  discount: number;    // Total discount value
+  totalAmount: number; // Final Net Amount Paid
+  subtotal: number;    // Gross Amount (Total + Discount)
+  discount: number;    // Discount Value
   couponCode: string | null;
   status: string;
   utr: string;
@@ -49,13 +49,14 @@ const EnrollmentReceiptView = () => {
       if (!user || !courseId) return;
 
       try {
-        // 1. Get the initial enrollment to find the Order ID
+        // 1. Get the LATEST enrollment for this course to identify the most recent relevant Order ID.
+        // This handles "future purchases" by always grabbing the newest transaction involving this course.
         const { data: initialEnrollment, error: initialError } = await supabase
           .from('enrollments')
           .select('order_id, created_at, status, courses(id, title, image_url, end_date)')
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .order('created_at', { ascending: false })
+          .order('created_at', { ascending: false }) // Critical: Gets the latest action
           .limit(1)
           .maybeSingle();
 
@@ -78,7 +79,7 @@ const EnrollmentReceiptView = () => {
         let finalUtr = '-';
         let finalPaymentTime = new Date(finalDate).toLocaleTimeString();
 
-        // 2. If Order ID exists, fetch ALL items in this order
+        // 2. Fetch ALL items associated with this specific Order ID (Whole Purchase)
         if (orderId) {
           const { data: allEnrollments, error: allError } = await supabase
             .from('enrollments')
@@ -97,7 +98,7 @@ const EnrollmentReceiptView = () => {
           if (allError) throw allError;
 
           if (allEnrollments) {
-            // Sort: Clicked course first, then by price descending
+            // Sort items: Main requested course first, then others (add-ons)
             const sortedEnrollments = allEnrollments.sort((a, b) => {
                const aId = (a.courses as any)?.id;
                const bId = (b.courses as any)?.id;
@@ -122,7 +123,7 @@ const EnrollmentReceiptView = () => {
             });
           }
 
-          // 3. Fetch Payment Record for accurate Pricing, Discounts & Coupons
+          // 3. Fetch Precise Payment Details from 'payments' table
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select(`
@@ -140,19 +141,19 @@ const EnrollmentReceiptView = () => {
             .maybeSingle();
 
           if (!paymentError && paymentData) {
-            // Use precise numbers
+            // Precise Calculation Logic
             const netAmount = Number(paymentData.net_amount);
             const rawAmount = Number(paymentData.amount);
             const discountVal = Number(paymentData.discount_value) || 0;
 
-            // Logic: net_amount is the final PAID amount after discounts.
-            // If net_amount is available and valid, use it. Otherwise fallback to raw amount.
-            // We do NOT round these values here to ensure exactness.
+            // Determines the actual money leaving the user's pocket
+            // If net_amount is recorded, that is the truth. Otherwise fallback to raw amount.
             finalTotal = (!isNaN(netAmount) && netAmount !== 0) ? netAmount : (rawAmount || 0);
             
             finalDiscount = discountVal;
             
-            // Subtotal is reconstructed: Final Paid + Discount = Original Price
+            // Reconstruct the 'Whole Purchase' Subtotal
+            // Subtotal = What they paid + What they saved
             finalSubtotal = finalTotal + finalDiscount;
             
             finalCoupon = paymentData.coupon_code || null;
@@ -161,14 +162,14 @@ const EnrollmentReceiptView = () => {
             finalUtr = paymentData.utr || '-';
             finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
           } else {
-            // Fallback if no payment record found
+            // Fallback: Calculate from items if payment record missing
             finalTotal = finalItems.reduce((sum, item) => sum + item.amount, 0);
             finalSubtotal = finalTotal;
             finalDiscount = 0;
           }
 
         } else {
-          // Fallback: Single item, no order ID
+          // Fallback: No Order ID (Legacy or Manual)
           const singleCourse = initialEnrollment.courses as any;
           finalItems = [{
             title: singleCourse?.title || 'Unknown Course',
@@ -211,7 +212,7 @@ const EnrollmentReceiptView = () => {
     fetchReceiptData();
   }, [user, courseId, toast]);
 
-  // --- Helpers ---
+  // --- Formatters ---
   const formatDate = (dateString: string) => {
     try {
       return new Date(dateString).toLocaleDateString('en-GB', {
@@ -233,7 +234,7 @@ const EnrollmentReceiptView = () => {
     });
   };
 
-  // UPDATED: Using 2 decimal places to be exact
+  // STRICT Exact Amount Formatting (2 decimal places)
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -355,7 +356,7 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* Add-ons List */}
+            {/* Add-ons List (Show if present) */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
