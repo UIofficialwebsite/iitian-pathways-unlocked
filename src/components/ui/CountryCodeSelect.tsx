@@ -49,14 +49,52 @@ const CountryCodeSelect = ({
     }
   }, [isOpen]);
 
-  const filteredCountries = countryCodes.filter((country) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      country.name.toLowerCase().includes(query) ||
-      country.code.toLowerCase().includes(query) ||
-      country.dial_code.includes(query)
-    );
-  });
+  const filteredCountries = React.useMemo(() => {
+    if (!searchQuery.trim()) return countryCodes;
+    
+    const query = searchQuery.toLowerCase().trim();
+    
+    // Filter and score matches
+    const scored = countryCodes
+      .map((country) => {
+        const nameLower = country.name.toLowerCase();
+        const codeLower = country.code.toLowerCase();
+        const dialCode = country.dial_code;
+        
+        let score = 0;
+        
+        // Exact match - highest priority
+        if (nameLower === query || codeLower === query) {
+          score = 100;
+        }
+        // Starts with query - high priority
+        else if (nameLower.startsWith(query) || codeLower.startsWith(query)) {
+          score = 80;
+        }
+        // Dial code exact match
+        else if (dialCode === query || dialCode === query.replace('+', '')) {
+          score = 90;
+        }
+        // Dial code starts with
+        else if (dialCode.startsWith(query.replace('+', ''))) {
+          score = 70;
+        }
+        // Word boundary match (e.g., "United" in "United States")
+        else if (nameLower.split(' ').some(word => word.startsWith(query))) {
+          score = 60;
+        }
+        // Contains query - lowest priority
+        else if (nameLower.includes(query) || codeLower.includes(query)) {
+          score = 40;
+        }
+        
+        return { country, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+    
+    return scored.map(item => item.country);
+  }, [countryCodes, searchQuery]);
 
   const selectedCountry = countryCodes.find(
     (c) => `+${c.dial_code}` === value || c.dial_code === value.replace("+", "")
