@@ -395,6 +395,13 @@ const EnrolledView = ({
 
   const handleContinue = () => {
     if (tempSelectedBatchId && tempSelectedBatchId !== selectedBatchId) {
+      // Force clear all stale data immediately to show loading state
+      setFullCourseData(null);
+      setScheduleData([]);
+      setFaqs(undefined);
+      setActiveTab('features');
+      
+      // Update the selected batch ID - this will trigger the useEffect to fetch new data
       setSelectedBatchId(tempSelectedBatchId);
       
       const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
