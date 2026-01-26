@@ -442,45 +442,66 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* --- RESTORED: MOBILE DETAILS DRAWER --- */}
+      {/* --- RESTORED: MOBILE DETAILS DRAWER (With adjusted position) --- */}
       <div 
-        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] rounded-b-[24px] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
-            showDetails ? 'translate-y-0' : '-translate-y-[120%]'
+        className={`fixed bottom-0 left-0 w-full bg-white z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[24px] transition-transform duration-300 ease-out flex flex-col px-6 pt-8 pb-32 md:hidden ${
+            showDetails ? 'translate-y-0' : 'translate-y-[120%]'
         }`}
       >
         <div 
-            className="absolute top-6 right-6 text-[#697386] cursor-pointer"
+            className="absolute top-4 right-6 text-[#697386] cursor-pointer bg-gray-100 p-1 rounded-full"
             onClick={() => setShowDetails(false)}
         >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
         </div>
 
-        <div className="flex flex-col gap-7 mt-4">
+        <h3 className="text-[18px] font-bold text-[#1a1f36] mb-6">Enrollment Details</h3>
+
+        <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-1">
                 <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch Name</span>
-                <span className="text-[22px] font-bold text-[#1a1f36] tracking-tight">{course.title}</span>
+                <span className="text-[18px] font-bold text-[#1a1f36] leading-tight">{course.title}</span>
             </div>
-            <div className="flex flex-col gap-6">
+            
+            <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Start Date</span>
-                    <span className="text-[16px] font-normal text-[#1a1f36]">{formatDate(course.start_date)}</span>
+                    <span className="text-[15px] font-medium text-[#1a1f36]">{formatDate(course.start_date)}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">End Date</span>
-                    <span className="text-[16px] font-normal text-[#1a1f36]">
+                    <span className="text-[15px] font-medium text-[#1a1f36]">
                         {course.end_date ? formatDate(course.end_date) : 'TBA'}
                     </span>
                 </div>
             </div>
-            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md text-[15px] font-normal text-[#1a1f36] text-center mt-2">
-                {user?.email || 'N/A'}
+
+            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md mt-2">
+                 <div className="text-[11px] font-bold text-[#697386] uppercase tracking-wider mb-2">Selected Items</div>
+                 <div className="flex flex-col gap-2">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-[#1a1f36]">Base Plan</span>
+                        <span className="font-medium text-[#1a1f36]">{effectiveBasePrice === 0 ? "Free" : `₹${effectiveBasePrice}`}</span>
+                    </div>
+                    {selectedAddonsList.map(addon => (
+                        <div key={`m-summary-${addon.id}`} className="flex justify-between text-sm">
+                            <span className="text-[#4f566b] truncate max-w-[200px]">{addon.subject_name}</span>
+                            <span className="font-medium text-[#1a1f36]">₹{addon.price}</span>
+                        </div>
+                    ))}
+                 </div>
+                 <div className="h-px bg-[#e3e8ee] my-3"></div>
+                 <div className="flex justify-between items-center">
+                    <span className="font-bold text-[#1a1f36]">Total</span>
+                    <span className="font-bold text-[#1a1f36] text-lg">₹{finalTotal}</span>
+                 </div>
             </div>
         </div>
       </div>
       
       {showDetails && (
         <div 
-            className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
+            className="fixed inset-0 bg-black/40 z-[55] md:hidden backdrop-blur-[2px]"
             onClick={() => setShowDetails(false)}
         />
       )}
@@ -501,7 +522,7 @@ const BatchConfiguration = () => {
           </div>
       </div>
 
-      <div className="relative z-10 w-full max-w-[1000px] px-5 mt-4 md:mt-12 pb-20">
+      <div className="relative z-10 w-full max-w-[1000px] px-5 mt-4 md:mt-12 pb-32 md:pb-20">
         
         {/* --- PC HEADER (UNCHANGED) --- */}
         <div 
@@ -518,17 +539,6 @@ const BatchConfiguration = () => {
                     <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
                 </div>
             </div>
-        </div>
-
-        {/* --- RESTORED: MOBILE DETAILS TOGGLE --- */}
-        <div className="flex justify-center mt-2 mb-6 md:hidden">
-            <button 
-                onClick={() => setShowDetails(!showDetails)}
-                className="flex items-center justify-center gap-2 px-8 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50 shadow-sm"
-            >
-                <span className="font-normal text-sm">View Detail</span>
-                {showDetails ? <ChevronUp className="w-4 h-4 text-black" /> : <ChevronDown className="w-4 h-4 text-black" />}
-            </button>
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 md:gap-[60px]">
@@ -624,7 +634,7 @@ const BatchConfiguration = () => {
             </div>
           </div>
 
-          <div className="md:flex-[0.8] w-full flex flex-col justify-start pt-2">
+          <div className="md:flex-[0.8] w-full flex flex-col justify-start pt-2 hidden md:flex">
             <div className="bg-white border border-[#e3e8ee] p-8 rounded-lg w-full shadow-sm md:sticky md:top-24">
               <h2 className="text-[18px] font-bold text-[#1a1f36] mb-6 tracking-tight">Enrollment Summary</h2>
 
@@ -670,6 +680,33 @@ const BatchConfiguration = () => {
               </p>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* --- MOBILE FIXED FOOTER --- */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-[#e3e8ee] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-5 py-4 flex items-center justify-between animate-in fade-in slide-in-from-bottom-5">
+        <div className="flex flex-col">
+            <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Total Due</span>
+            <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-bold text-[#1a1f36]">₹{finalTotal}</span>
+            </div>
+        </div>
+
+        <div className="flex gap-2">
+            <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center justify-center w-12 h-12 bg-gray-100 text-gray-800 rounded-md border border-gray-200 active:scale-95 transition-all"
+            >
+                {showDetails ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+            </button>
+
+            <button 
+                onClick={handlePayment}
+                disabled={processing || finalTotal === 0}
+                className="bg-[#1a1f36] text-white px-8 h-12 rounded-md text-[15px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[140px]"
+            >
+                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "PAY NOW"}
+            </button>
         </div>
       </div>
 
