@@ -93,8 +93,8 @@ serve(async (req: Request) => {
           customer_details: {
             customer_id: userId,
             customer_name: customerName,
-            customer_phone: customerPhone || "9999999999",
-            customer_email: customerEmail || "test@example.com",
+            customer_phone: customerPhone?.replace(/[^0-9]/g, '').slice(-15) || "",
+            customer_email: customerEmail || "",
           },
           order_meta: {
             return_url: verifyUrl,
