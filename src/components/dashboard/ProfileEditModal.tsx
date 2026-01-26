@@ -43,7 +43,10 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
         .select('*')
         .order('name');
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching countries:', error);
+        return;
+      }
       if (data) setCountries(data);
     } catch (error) {
       console.error('Error fetching countries:', error);
@@ -191,7 +194,7 @@ export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
                   id="phoneNumber"
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  placeholder={getSelectedCountryInfo() ? `${'0'.repeat(getSelectedCountryInfo()!.length)}` : "1234567890"}
+                  placeholder={getSelectedCountryInfo() ? "0".repeat(getSelectedCountryInfo()!.length) : "1234567890"}
                   type="tel"
                 />
               </div>
