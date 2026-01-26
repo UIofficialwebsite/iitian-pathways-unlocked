@@ -53,6 +53,7 @@ const CountryCodeSelect = ({
     if (!searchQuery.trim()) return countryCodes;
     
     const query = searchQuery.toLowerCase().trim();
+    const queryWords = query.split(/\s+/);
     
     // Filter and score matches
     const scored = countryCodes
@@ -63,35 +64,52 @@ const CountryCodeSelect = ({
         
         let score = 0;
         
-        // Exact match - highest priority
+        // Exact full match - highest priority
         if (nameLower === query || codeLower === query) {
           score = 100;
         }
-        // Starts with query - high priority
-        else if (nameLower.startsWith(query) || codeLower.startsWith(query)) {
+        // Multi-word search: all words must match (e.g., "united states")
+        else if (queryWords.length > 1 && queryWords.every(word => nameLower.includes(word))) {
+          // Bonus if name starts with first query word
+          score = nameLower.startsWith(queryWords[0]) ? 95 : 85;
+        }
+        // Single word: Name starts with query
+        else if (nameLower.startsWith(query)) {
           score = 80;
+        }
+        // Country code exact match
+        else if (codeLower === query) {
+          score = 90;
+        }
+        // Country code starts with
+        else if (codeLower.startsWith(query)) {
+          score = 75;
         }
         // Dial code exact match
         else if (dialCode === query || dialCode === query.replace('+', '')) {
-          score = 90;
+          score = 85;
         }
         // Dial code starts with
         else if (dialCode.startsWith(query.replace('+', ''))) {
           score = 70;
         }
-        // Word boundary match (e.g., "United" in "United States")
+        // Any word in name starts with query
         else if (nameLower.split(' ').some(word => word.startsWith(query))) {
           score = 60;
         }
-        // Contains query - lowest priority
-        else if (nameLower.includes(query) || codeLower.includes(query)) {
+        // Name contains query
+        else if (nameLower.includes(query)) {
           score = 40;
         }
         
         return { country, score };
       })
       .filter(item => item.score > 0)
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => {
+        // Sort by score first, then alphabetically by name
+        if (b.score !== a.score) return b.score - a.score;
+        return a.country.name.localeCompare(b.country.name);
+      });
     
     return scored.map(item => item.country);
   }, [countryCodes, searchQuery]);
@@ -164,12 +182,12 @@ const CountryCodeSelect = ({
             ) : (
               filteredCountries.map((country) => (
                 <button
-                  key={country.dial_code}
+                  key={`${country.code}-${country.dial_code}`}
                   type="button"
                   onClick={() => handleSelect(country)}
                   className={cn(
                     "w-full px-3 py-2 text-left text-[13px] hover:bg-[#f5f5f5] transition-colors flex items-center gap-2",
-                    selectedCountry?.dial_code === country.dial_code && "bg-[#f0f7ff]"
+                    selectedCountry?.code === country.code && "bg-[#f0f7ff]"
                   )}
                 >
                   <span className="font-medium text-[#333] min-w-[45px]">+{country.dial_code}</span>
