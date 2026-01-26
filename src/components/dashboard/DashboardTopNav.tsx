@@ -106,7 +106,7 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
             <Link to="/" className="flex-shrink-0 flex items-center gap-2">
               <img
                 className="h-8 w-auto"
-                src="/lovable-uploads/logo_ui_new.png"
+                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png"
                 alt="UI Logo"
               />
               <span className="font-sans text-lg font-semibold text-black hidden sm:block">
