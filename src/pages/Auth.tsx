@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import NavBar from "@/components/NavBar";
-import ProfileSetup from "@/components/profile/ProfileSetup";
+import { ProfileSetup } from "@/components/profile/ProfileSetup";
 import LoginCard from "@/components/auth/LoginCard"; 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
