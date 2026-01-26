@@ -4,19 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import CountryCodeSelect, { CountryCode } from "@/components/ui/CountryCodeSelect";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   profile: any;
   onProfileUpdate: () => void;
-}
-
-interface CountryCode {
-  dial_code: string;
-  name: string;
-  phone_length: number;
-  code: string;
 }
 
 const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) => {
@@ -206,22 +200,14 @@ const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: Profile
           <div className="space-y-1">
             <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
             <div className="flex items-center gap-2">
-              <select
+              <CountryCodeSelect
                 value={countryCode}
-                onChange={(e) => handleCountryCodeChange(e.target.value)}
+                onChange={(value, country) => {
+                  handleCountryCodeChange(value);
+                }}
+                countryCodes={countryCodes}
                 disabled={!isPhoneEditable}
-                className={`h-9 px-2 border border-[#d1d5db] rounded-md text-[13px] bg-white min-w-[120px] ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed bg-[#f9fafb]' : 'text-[#333]'}`}
-              >
-                {countryCodes.length === 0 ? (
-                  <option value={countryCode}>{countryCode}</option>
-                ) : (
-                  countryCodes.map((c) => (
-                    <option key={c.dial_code} value={`+${c.dial_code}`}>
-                      +{c.dial_code} {c.code}
-                    </option>
-                  ))
-                )}
-              </select>
+              />
               
               <input 
                 ref={phoneInputRef}

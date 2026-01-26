@@ -7,14 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-
-// Country code type
-interface CountryCode {
-  dial_code: string;
-  name: string;
-  phone_length: number;
-  code: string;
-}
+import CountryCodeSelect, { CountryCode } from "@/components/ui/CountryCodeSelect";
 
 // Injecting the user's specific CSS styles
 const customStyles = `
@@ -276,21 +269,17 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
       <div className="form-group">
         <label className="form-label">Phone Number</label>
         <div className="phone-input-wrapper">
-          <select 
-            className="dial-code-select"
+          <CountryCodeSelect
             value={selectedDialCode}
-            onChange={handleDialCodeChange}
-          >
-            {countryCodes.length === 0 ? (
-              <option value="+91">+91 IN</option>
-            ) : (
-              countryCodes.map((c) => (
-                <option key={c.dial_code} value={`+${c.dial_code}`}>
-                  +{c.dial_code} {c.code}
-                </option>
-              ))
-            )}
-          </select>
+            onChange={(value, country) => {
+              setSelectedDialCode(value);
+              if (country) {
+                setExpectedPhoneLength(country.phone_length);
+              }
+            }}
+            countryCodes={countryCodes}
+            className="dial-code-select-wrapper"
+          />
           <input 
             type="tel" 
             className="form-input phone-number-input"
