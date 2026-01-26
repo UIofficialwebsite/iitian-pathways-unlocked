@@ -114,10 +114,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
         
+        // Calculate if the user has everything:
+        // 1. They own the main course.
+        // 2. Either there are no add-ons, OR they own as many add-ons as exist for this course.
         const allAddonsOwned = totalAddonsCount > 0 ? ownedAddons.length >= totalAddonsCount : true;
         const completeEnrollment = isMainCourseOwned && allAddonsOwned;
 
-        // "Let's Study" button with the icon removed
+        // 1. COMPLETELY ENROLLED -> Show "Let's Study" (No Icon, No Popup)
         if ((isFullyEnrolled || completeEnrollment) && !isExpired) {
             return (
                 <Button 
@@ -130,6 +133,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
+        // 2. Main course owned, but add-ons pending -> Show "Continue Enrollment" (Navigate to config)
         if (isMainCourseOwned && !allAddonsOwned && !isExpired) {
             return (
                 <Button 
@@ -142,6 +146,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
+        // 3. Not owned, but has add-ons -> Show "Configure Plan"
         if (hasAddons && !isMainCourseOwned && !customEnrollHandler) {
              return (
                 <Button
@@ -154,6 +159,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              );
         }
 
+        // 4. Custom Handler (e.g., specific enrollment flow)
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -168,6 +174,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         } 
         
+        // 5. Default -> Standard Enroll Button
         return (
             <EnrollButton
                 courseId={course.id}
