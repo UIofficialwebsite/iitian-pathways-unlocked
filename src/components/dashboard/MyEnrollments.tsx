@@ -140,10 +140,9 @@ const NoEnrollmentsPlaceholder = () => {
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      minHeight: '60vh',
+      minHeight: '60vh', // Adjusted height to look good within the dashboard
       color: '#1a1a1a',
-      borderRadius: '8px',
-      border: '1px solid #eee'
+      borderRadius: '12px',
     }}>
       <div style={{
         textAlign: 'center',
@@ -170,7 +169,8 @@ const NoEnrollmentsPlaceholder = () => {
             fontSize: '28px',
             fontWeight: '700',
             marginBottom: '12px',
-            letterSpacing: '-0.5px'
+            letterSpacing: '-0.5px',
+            color: '#1a1a1a'
         }}>No Purchases Yet</h1>
         <p style={{
             fontSize: '18px',
@@ -357,10 +357,13 @@ const MyEnrollments = ({ onSelectCourse }: MyEnrollmentsProps) => {
       </div>
 
       {/* Desktop-Only Header (Hidden on Mobile) */}
-      <div className="hidden sm:block px-2 sm:px-0">
-        <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
-        <p className="text-base text-gray-600">All the courses you are currently enrolled in.</p>
-      </div>
+      {/* ONLY SHOW THIS IF THERE ARE ENROLLMENTS */}
+      {groupedEnrollments.length > 0 && (
+        <div className="hidden sm:block px-2 sm:px-0">
+          <h1 className="text-3xl font-bold text-gray-900">My Enrollments</h1>
+          <p className="text-base text-gray-600">All the courses you are currently enrolled in.</p>
+        </div>
+      )}
 
       {groupedEnrollments.length === 0 ? (
         <NoEnrollmentsPlaceholder />
