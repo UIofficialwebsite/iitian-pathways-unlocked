@@ -7,8 +7,7 @@ import {
   Check, 
   X, 
   Printer, 
-  Loader2,
-  FileCheck
+  Loader2
 } from "lucide-react";
 import { 
   Accordion, 
@@ -16,7 +15,6 @@ import {
   AccordionItem, 
   AccordionTrigger 
 } from "@/components/ui/accordion";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
@@ -214,75 +212,86 @@ const InternVerification = () => {
         {verificationResult && (
           <div className="mb-24 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {verificationResult.verified ? (
-              <div className="border border-slate-200 bg-white shadow-sm max-w-4xl mx-auto">
-                {/* Formal Header */}
-                <div className="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-emerald-600 rounded-full"></div>
-                    <span className="font-bold text-slate-800 uppercase tracking-wide text-sm">Record Found</span>
+              <>
+                <div className="border border-slate-200 bg-white shadow-sm max-w-4xl mx-auto">
+                  {/* Formal Header */}
+                  <div className="bg-slate-50 px-8 py-4 border-b border-slate-200 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="h-2 w-2 bg-emerald-600 rounded-full"></div>
+                      <span className="font-bold text-slate-800 uppercase tracking-wide text-sm">Record Found</span>
+                    </div>
+                    <span className="text-xs font-mono text-slate-500 hidden sm:inline">
+                      REF: {verificationResult.details.employeeId}
+                    </span>
                   </div>
-                  <span className="text-xs font-mono text-slate-500">
-                    REF: {verificationResult.details.employeeId}
-                  </span>
-                </div>
 
-                <div className="p-0">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                      <thead className="text-xs text-slate-500 uppercase bg-white border-b border-slate-200">
-                        <tr>
-                          <th className="px-8 py-5 font-bold tracking-wider w-1/4">Field</th>
-                          <th className="px-8 py-5 font-bold tracking-wider w-3/4">Validated Detail</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        <tr>
-                          <td className="px-8 py-4 text-slate-500 font-medium">Full Name</td>
-                          <td className="px-8 py-4 font-bold text-slate-900">{verificationResult.details.name}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-8 py-4 text-slate-500 font-medium">Department</td>
-                          <td className="px-8 py-4 text-slate-900">{verificationResult.details.department}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-8 py-4 text-slate-500 font-medium">Role / Position</td>
-                          <td className="px-8 py-4 text-slate-900">{verificationResult.details.position}</td>
-                        </tr>
-                        <tr>
-                          <td className="px-8 py-4 text-slate-500 font-medium">Tenure</td>
-                          <td className="px-8 py-4 text-slate-900 font-mono">
-                            {verificationResult.details.startDate} — {verificationResult.details.endDate}
-                          </td>
-                        </tr>
-                        <tr className="bg-slate-50/50">
-                          <td className="px-8 py-4 text-slate-500 font-medium">Current Status</td>
-                          <td className="px-8 py-4 font-bold text-slate-900 tracking-wide">
-                            {verificationResult.details.status}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
+                  <div className="p-0">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm text-left">
+                        <thead className="text-xs text-slate-500 uppercase bg-white border-b border-slate-200">
+                          <tr>
+                            <th className="px-8 py-5 font-bold tracking-wider w-1/4">Field</th>
+                            <th className="px-8 py-5 font-bold tracking-wider w-3/4">Validated Detail</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          <tr>
+                            <td className="px-8 py-4 text-slate-500 font-medium">Full Name</td>
+                            <td className="px-8 py-4 font-bold text-slate-900">{verificationResult.details.name}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-8 py-4 text-slate-500 font-medium">Department</td>
+                            <td className="px-8 py-4 text-slate-900">{verificationResult.details.department}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-8 py-4 text-slate-500 font-medium">Role / Position</td>
+                            <td className="px-8 py-4 text-slate-900">{verificationResult.details.position}</td>
+                          </tr>
+                          <tr>
+                            <td className="px-8 py-4 text-slate-500 font-medium">Tenure</td>
+                            <td className="px-8 py-4 text-slate-900 font-mono">
+                              {verificationResult.details.startDate} — {verificationResult.details.endDate}
+                            </td>
+                          </tr>
+                          <tr className="bg-slate-50/50">
+                            <td className="px-8 py-4 text-slate-500 font-medium">Current Status</td>
+                            <td className="px-8 py-4 font-bold text-slate-900 tracking-wide">
+                              {verificationResult.details.status}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div className="px-8 py-6 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    {/* Desktop Date Display */}
+                    <span className="text-xs text-slate-400 hidden sm:inline">
+                      Verified at: {verificationResult.details.verifiedAt}
+                    </span>
+                    
+                    <Button 
+                      onClick={handleDownloadOfficialRecord}
+                      disabled={isGeneratingPdf}
+                      className="bg-slate-900 text-white hover:bg-slate-800 rounded-none h-10 px-6 text-xs uppercase tracking-widest font-medium w-full sm:w-auto"
+                    >
+                      {isGeneratingPdf ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : (
+                        <Printer className="w-4 h-4 mr-2" />
+                      )}
+                      Print Official Record
+                    </Button>
                   </div>
                 </div>
-
-                <div className="px-8 py-6 bg-slate-50 border-t border-slate-200 flex justify-between items-center">
-                  <span className="text-xs text-slate-400">
+                
+                {/* Mobile Date Display (Outside Box) */}
+                <div className="text-center mt-4 sm:hidden">
+                  <span className="text-xs text-slate-400 italic">
                     Verified at: {verificationResult.details.verifiedAt}
                   </span>
-                  <Button 
-                    onClick={handleDownloadOfficialRecord}
-                    disabled={isGeneratingPdf}
-                    className="bg-slate-900 text-white hover:bg-slate-800 rounded-none h-10 px-6 text-xs uppercase tracking-widest font-medium"
-                  >
-                    {isGeneratingPdf ? (
-                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    ) : (
-                      <Printer className="w-4 h-4 mr-2" />
-                    )}
-                    Print Official Record
-                  </Button>
                 </div>
-              </div>
+              </>
             ) : (
               <div className="max-w-2xl mx-auto border border-red-200 bg-red-50 p-6 flex items-start gap-4">
                 <X className="w-5 h-5 text-red-700 mt-0.5" />
@@ -344,10 +353,18 @@ const InternVerification = () => {
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             
             {/* Header */}
-            <div style={{ borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <h1 style={{ fontSize: '24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 5px 0' }}>Unknown IITians</h1>
-                <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px' }}>Human Resources Department</div>
+            <div style={{ borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                {/* Provided Logo */}
+                <img 
+                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" 
+                  alt="Official Logo" 
+                  style={{ height: '50px', objectFit: 'contain' }} 
+                />
+                <div>
+                  <h1 style={{ fontSize: '24px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '0' }}>Unknown IITians</h1>
+                  <div style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '2px' }}>Human Resources Department</div>
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>Official Verification</div>
@@ -416,11 +433,21 @@ const InternVerification = () => {
                   borderRadius: '4px',
                   transform: 'rotate(-5deg)',
                   display: 'inline-block',
-                  marginBottom: '15px'
+                  marginBottom: '5px'
                 }}>
                   <div style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>VERIFIED</div>
                   <div style={{ fontSize: '9px', textTransform: 'uppercase' }}>Unknown IITians Official</div>
                 </div>
+                
+                {/* Signatory Image */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '-10px' }}>
+                  <img 
+                    src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769433351/image_4_1_g6qsah.png" 
+                    alt="Signature" 
+                    style={{ height: '40px', objectFit: 'contain' }}
+                  />
+                </div>
+
                 <div style={{ borderTop: '1px solid #000', width: '200px', margin: '0 auto', paddingTop: '5px' }}>
                   <div style={{ fontSize: '12px', fontWeight: 'bold' }}>Recruitment In-Charge</div>
                   <div style={{ fontSize: '10px', textTransform: 'uppercase' }}>Authorized Signatory</div>
@@ -431,8 +458,7 @@ const InternVerification = () => {
 
             {/* Disclaimer Footer */}
             <div style={{ borderTop: '1px solid #ccc', paddingTop: '10px', marginTop: '30px', fontSize: '9px', color: '#666', textAlign: 'center' }}>
-              This is a computer-generated document and serves as proof of verification from the Unknown IITians database. <br/>
-              For any discrepancies, contact hr@unknowniitians.com.
+              Note: This is a manual verification and we advise the recruiters to two-step verify using this email <a href="mailto:hr@unknowniitians.com" style={{ color: '#000', textDecoration: 'none', fontWeight: 'bold' }}>hr@unknowniitians.com</a> or the page link: {window.location.origin}/intern-verification.
             </div>
 
           </div>
