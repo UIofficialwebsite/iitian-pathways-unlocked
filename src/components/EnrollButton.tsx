@@ -8,6 +8,13 @@ import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { useLoginModal } from "@/context/LoginModalContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Country code type
+interface CountryCode {
+  dial_code: string;
+  name: string;
+  phone_length: number;
+}
+
 // Injecting the user's specific CSS styles
 const customStyles = `
   /* Modal Container Overrides */
@@ -90,6 +97,29 @@ const customStyles = `
     margin-bottom: 8px;
   }
 
+  /* Phone Input Wrapper - Split Layout */
+  .phone-input-wrapper {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  .dial-code-select {
+    width: 160px;
+    padding: 14px 10px;
+    font-size: 14px;
+    border: 1px solid #000000;
+    background: white;
+    cursor: pointer;
+    outline: none;
+    color: #000000;
+  }
+
+  .phone-number-input {
+    flex: 1;
+    min-width: 0;
+  }
+
   .form-input {
     width: 100%;
     padding: 14px;
@@ -102,6 +132,12 @@ const customStyles = `
 
   .form-input::placeholder {
     color: #aaaaaa;
+  }
+
+  .phone-hint {
+    font-size: 12px;
+    color: #888888;
+    margin-top: 6px;
   }
 
   /* Error Message Styling */
@@ -149,6 +185,11 @@ const customStyles = `
     background: #222222;
   }
 
+  .btn-primary:disabled {
+    background: #888888;
+    cursor: not-allowed;
+  }
+
   .close-icon {
     position: absolute;
     top: 20px;
@@ -163,7 +204,7 @@ const customStyles = `
   }
 `;
 
-// --- SEPARATE COMPONENT TO FIX CURSOR GLITCH ---
+// --- SEPARATE COMPONENT FOR PHONE VERIFICATION ---
 interface VerificationContentProps {
   isDrawer?: boolean;
   manualPhone: string;
@@ -173,6 +214,11 @@ interface VerificationContentProps {
   handlePhoneSubmit: () => void;
   isProcessing: boolean;
   onClose: () => void;
+  countryCodes: CountryCode[];
+  selectedDialCode: string;
+  setSelectedDialCode: (val: string) => void;
+  expectedPhoneLength: number;
+  setExpectedPhoneLength: (val: number) => void;
 }
 
 const VerificationContent: React.FC<VerificationContentProps> = ({
@@ -183,50 +229,98 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
   setInlineError,
   handlePhoneSubmit,
   isProcessing,
-  onClose
-}) => (
-  <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
-    {!isDrawer && (
-      <button className="close-icon" onClick={onClose}>&times;</button>
-    )}
+  onClose,
+  countryCodes,
+  selectedDialCode,
+  setSelectedDialCode,
+  expectedPhoneLength,
+  setExpectedPhoneLength
+}) => {
+  const handleDialCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newDialCode = e.target.value;
+    setSelectedDialCode(newDialCode);
+    // Find the country and update expected phone length
+    const dialCodeDigits = newDialCode.replace('+', '');
+    const country = countryCodes.find(c => c.dial_code === dialCodeDigits);
+    if (country) {
+      setExpectedPhoneLength(country.phone_length);
+    }
+    if (inlineError) setInlineError(null);
+  };
 
-    <div className="loading-container">
-      <div className="dot"></div><div className="dot"></div><div className="dot"></div>
-    </div>
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only allow digits
+    const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+    setManualPhone(digitsOnly);
+    if (inlineError) setInlineError(null);
+  };
 
-    <h2 className="modal-title">Contact Details Required</h2>
-    <p className="modal-description">
-      Please provide your phone number to generate your payment receipt and finalize your enrollment process.
-    </p>
+  const selectedCountry = countryCodes.find(c => `+${c.dial_code}` === selectedDialCode);
 
-    <div className="form-group">
-      <label className="form-label">Phone Number (with Country Code)</label>
-      <input 
-        type="tel" 
-        className="form-input" 
-        placeholder="e.g., +91 9876543210"
-        value={manualPhone}
-        onChange={(e) => {
-          setManualPhone(e.target.value);
-          if (inlineError) setInlineError(null); 
-        }}
-      />
-      
-      {inlineError && (
-        <div className="error-message">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{inlineError}</span>
-        </div>
+  return (
+    <div className={isDrawer ? "mobile-drawer-wrapper" : "custom-modal-wrapper"}>
+      {!isDrawer && (
+        <button className="close-icon" onClick={onClose}>&times;</button>
       )}
-    </div>
 
-    <div className="modal-actions">
-      <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
-        {isProcessing ? "Verifying..." : "Verify"}
-      </button>
+      <div className="loading-container">
+        <div className="dot"></div><div className="dot"></div><div className="dot"></div>
+      </div>
+
+      <h2 className="modal-title">Contact Details Required</h2>
+      <p className="modal-description">
+        Please provide your phone number to generate your payment receipt and finalize your enrollment process.
+      </p>
+
+      <div className="form-group">
+        <label className="form-label">Phone Number</label>
+        <div className="phone-input-wrapper">
+          <select 
+            className="dial-code-select"
+            value={selectedDialCode}
+            onChange={handleDialCodeChange}
+          >
+            {countryCodes.length === 0 ? (
+              <option value="+91">+91 India</option>
+            ) : (
+              countryCodes.map((c) => (
+                <option key={c.dial_code} value={`+${c.dial_code}`}>
+                  +{c.dial_code} {c.name}
+                </option>
+              ))
+            )}
+          </select>
+          <input 
+            type="tel" 
+            className="form-input phone-number-input"
+            placeholder={`${'9'.repeat(expectedPhoneLength)}`}
+            value={manualPhone}
+            onChange={handlePhoneChange}
+            maxLength={expectedPhoneLength + 2}
+          />
+        </div>
+        {selectedCountry && (
+          <p className="phone-hint">
+            Enter {expectedPhoneLength} digits for {selectedCountry.name}
+          </p>
+        )}
+        
+        {inlineError && (
+          <div className="error-message">
+            <AlertCircle className="w-4 h-4 shrink-0" />
+            <span>{inlineError}</span>
+          </div>
+        )}
+      </div>
+
+      <div className="modal-actions">
+        <button className="btn btn-primary" onClick={handlePhoneSubmit} disabled={isProcessing}>
+          {isProcessing ? "Verifying..." : "Continue to Enroll"}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 interface EnrollButtonProps {
   courseId?: string;
@@ -253,6 +347,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const [manualPhone, setManualPhone] = useState("");
   const [inlineError, setInlineError] = useState<string | null>(null);
   
+  // New state for country codes
+  const [countryCodes, setCountryCodes] = useState<CountryCode[]>([]);
+  const [selectedDialCode, setSelectedDialCode] = useState("+91");
+  const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
+  
   const { toast } = useToast();
   const { openLogin } = useLoginModal();
   const isMobile = useIsMobile();
@@ -272,6 +371,26 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch country codes when dialog opens
+  useEffect(() => {
+    if (showPhoneDialog && countryCodes.length === 0) {
+      supabase
+        .from('country_codes')
+        .select('dial_code, name, phone_length')
+        .order('name')
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setCountryCodes(data);
+            // Default to India
+            const india = data.find(c => c.dial_code === '91');
+            if (india) {
+              setExpectedPhoneLength(india.phone_length);
+            }
+          }
+        });
+    }
+  }, [showPhoneDialog, countryCodes.length]);
 
   const handleEnrollClick = async () => {
     setInlineError(null);
@@ -295,13 +414,13 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('phone')
+        .select('phone, dial_code')
         .eq('id', user.id)
         .single();
 
-      // Check if phone exists and has at least 7 digits (International standard minimum)
-      if (profile?.phone && profile.phone.length >= 7) {
-        processPayment(profile.phone);
+      // Check if both dial_code and phone exist with sufficient length
+      if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
+        processPayment(`${profile.dial_code}${profile.phone}`);
       } else {
         setIsProcessing(false);
         setShowPhoneDialog(true);
@@ -316,12 +435,19 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
   const handlePhoneSubmit = async () => {
     setInlineError(null);
 
-    // Validation for International Numbers: 
-    // Allow +, -, spaces, and digits. Min length 7, Max length 15.
-    const cleanPhone = manualPhone.replace(/[^0-9+]/g, '');
+    // Dynamic validation based on selected country
+    const digitsOnly = manualPhone.replace(/[^0-9]/g, '');
+    const dialCodeDigits = selectedDialCode.replace('+', '');
+    const country = countryCodes.find(c => c.dial_code === dialCodeDigits);
     
-    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
-      setInlineError("Please enter a valid phone number (7-15 digits).");
+    if (country && digitsOnly.length !== country.phone_length) {
+      setInlineError(`Phone number should be ${country.phone_length} digits for ${country.name}`);
+      return;
+    }
+    
+    // Fallback validation if country not found
+    if (!country && (digitsOnly.length < 5 || digitsOnly.length > 15)) {
+      setInlineError("Please enter a valid phone number (5-15 digits).");
       return;
     }
 
@@ -330,9 +456,13 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
+        // Save dial_code and phone separately
         const { error: updateError } = await supabase
           .from('profiles')
-          .update({ phone: manualPhone })
+          .update({ 
+            dial_code: selectedDialCode,
+            phone: manualPhone 
+          })
           .eq('id', user.id);
 
         if (updateError) {
@@ -340,7 +470,9 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         }
       }
       
-      await processPayment(manualPhone);
+      // Send combined format for payment
+      const fullPhoneNumber = `${selectedDialCode}${manualPhone}`;
+      await processPayment(fullPhoneNumber);
       setShowPhoneDialog(false); 
     } catch (error: any) {
       setIsProcessing(false);
@@ -450,6 +582,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
               handlePhoneSubmit={handlePhoneSubmit}
               isProcessing={isProcessing}
               onClose={() => setShowPhoneDialog(false)}
+              countryCodes={countryCodes}
+              selectedDialCode={selectedDialCode}
+              setSelectedDialCode={setSelectedDialCode}
+              expectedPhoneLength={expectedPhoneLength}
+              setExpectedPhoneLength={setExpectedPhoneLength}
             />
           </DrawerContent>
         </Drawer>
@@ -465,6 +602,11 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
               handlePhoneSubmit={handlePhoneSubmit}
               isProcessing={isProcessing}
               onClose={() => setShowPhoneDialog(false)}
+              countryCodes={countryCodes}
+              selectedDialCode={selectedDialCode}
+              setSelectedDialCode={setSelectedDialCode}
+              expectedPhoneLength={expectedPhoneLength}
+              setExpectedPhoneLength={setExpectedPhoneLength}
             />
           </DialogContent>
         </Dialog>
