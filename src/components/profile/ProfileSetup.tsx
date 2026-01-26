@@ -13,17 +13,21 @@ interface CountryCode {
   name: string;
   code: string;
   dial_code: string;
-  length: number;
+  phone_length: number;
 }
 
-export const ProfileSetup = () => {
+interface ProfileSetupProps {
+  onComplete?: () => void;
+}
+
+export const ProfileSetup = ({ onComplete }: ProfileSetupProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedCountryDialCode, setSelectedCountryDialCode] = useState("");
+  const [selectedDialCode, setSelectedDialCode] = useState("+91");
   const [countries, setCountries] = useState<CountryCode[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -31,14 +35,15 @@ export const ProfileSetup = () => {
     const fetchCountries = async () => {
       const { data, error } = await supabase
         .from('country_codes')
-        .select('*')
+        .select('id, name, code, dial_code, phone_length')
         .order('name');
       
-      if (data) setCountries(data);
-      // Set default if exists (e.g., India +91)
-      const defaultCountry = data?.find(c => c.code === 'IN');
-      if (defaultCountry && !selectedCountryDialCode) {
-        setSelectedCountryDialCode(defaultCountry.dial_code);
+      if (data) setCountries(data as CountryCode[]);
+      
+      // Set default (India +91)
+      const defaultCountry = data?.find((c: any) => c.code === 'IN');
+      if (defaultCountry && !selectedDialCode) {
+        setSelectedDialCode(defaultCountry.dial_code);
       }
     };
     
@@ -46,17 +51,22 @@ export const ProfileSetup = () => {
   }, []);
 
   const getSelectedCountryInfo = () => {
-    return countries.find(c => c.dial_code === selectedCountryDialCode);
+    return countries.find(c => c.dial_code === selectedDialCode);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, '');
     const countryInfo = getSelectedCountryInfo();
     
-    if (countryInfo && value.length > countryInfo.length) {
+    if (countryInfo && value.length > countryInfo.phone_length) {
       return; // Prevent typing more than allowed length
     }
     setPhoneNumber(value);
+  };
+
+  // Format display for dial code dropdown
+  const formatDropdownLabel = (country: CountryCode) => {
+    return `${country.code} ${country.dial_code}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,10 +82,10 @@ export const ProfileSetup = () => {
       setLoading(false);
       return;
     }
-    if (countryInfo && phoneNumber.length !== countryInfo.length) {
+    if (phoneNumber && countryInfo && phoneNumber.length !== countryInfo.phone_length) {
       toast({ 
         title: "Invalid Phone Number", 
-        description: `Phone number must be exactly ${countryInfo.length} digits`, 
+        description: `Phone number must be exactly ${countryInfo.phone_length} digits`, 
         variant: "destructive" 
       });
       setLoading(false);
@@ -87,9 +97,10 @@ export const ProfileSetup = () => {
         .from('profiles')
         .update({
           full_name: fullName,
-          phone_number: phoneNumber,
-          country_code: selectedCountryDialCode,
-          is_profile_completed: true,
+          student_name: fullName,
+          phone: phoneNumber,
+          dial_code: selectedDialCode,
+          profile_completed: true,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -100,7 +111,12 @@ export const ProfileSetup = () => {
         title: "Profile Completed",
         description: "Welcome to the platform!",
       });
-      navigate("/dashboard");
+      
+      if (onComplete) {
+        onComplete();
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -135,21 +151,18 @@ export const ProfileSetup = () => {
         <div className="space-y-2">
           <Label>Phone Number</Label>
           <div className="flex gap-2">
-            <div className="w-[140px]">
+            <div className="w-[120px] shrink-0">
               <Select
-                value={selectedCountryDialCode}
-                onValueChange={setSelectedCountryDialCode}
+                value={selectedDialCode}
+                onValueChange={setSelectedDialCode}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Code" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-popover">
                   {countries.map((country) => (
                     <SelectItem key={country.id} value={country.dial_code}>
-                      <span className="flex items-center gap-2">
-                        <span>{country.code}</span>
-                        <span className="text-muted-foreground">{country.dial_code}</span>
-                      </span>
+                      {formatDropdownLabel(country)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -157,7 +170,7 @@ export const ProfileSetup = () => {
             </div>
             <Input
               type="tel"
-              placeholder={getSelectedCountryInfo() ? `${'0'.repeat(getSelectedCountryInfo()!.length)}` : "Mobile Number"}
+              placeholder={getSelectedCountryInfo() ? "0".repeat(getSelectedCountryInfo()!.phone_length) : "Mobile Number"}
               value={phoneNumber}
               onChange={handlePhoneChange}
               className="flex-1"
@@ -165,7 +178,7 @@ export const ProfileSetup = () => {
           </div>
           {getSelectedCountryInfo() && (
             <p className="text-xs text-muted-foreground text-right">
-              {phoneNumber.length}/{getSelectedCountryInfo()?.length} digits
+              {phoneNumber.length}/{getSelectedCountryInfo()?.phone_length} digits
             </p>
           )}
         </div>
@@ -177,3 +190,5 @@ export const ProfileSetup = () => {
     </div>
   );
 };
+
+export default ProfileSetup;

@@ -154,7 +154,7 @@ const EnrollmentReceiptView = () => {
             validTill: item.courses?.end_date,
             image_url: item.courses?.image_url,
             id: item.courses?.id,
-            type: isAddon ? 'Add-on' : 'Batch'
+            type: (isAddon ? 'Add-on' : 'Batch') as 'Add-on' | 'Batch'
           };
         }).sort((a, b) => {
            if (a.type === 'Batch' && b.type !== 'Batch') return -1;
@@ -200,8 +200,7 @@ const EnrollmentReceiptView = () => {
           status: finalStatus,
           utr: finalUtr,
           paymentTime: finalPaymentTime,
-          items: finalItems,
-          couponCode: null // We don't need this for display anymore
+          items: finalItems
         });
 
       } catch (error) {

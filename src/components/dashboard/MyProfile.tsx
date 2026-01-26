@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
 import { Loader2, Camera, Edit3 } from 'lucide-react';
 import { Tables } from '@/integrations/supabase/types';
-import ProfileEditModal from './ProfileEditModal';
+import { ProfileEditModal } from './ProfileEditModal';
 
 // Define profile type
 type UserProfile = Tables<'profiles'> & {
@@ -165,7 +165,7 @@ const MyProfile = () => {
 
             <div className="w-full">
               <ProfileInfoRow label="Full name" value={profile.student_name || profile.full_name} />
-              <ProfileInfoRow label="Mobile number" value={profile.phone} />
+              <ProfileInfoRow label="Mobile number" value={profile.dial_code && profile.phone ? `${profile.dial_code} ${profile.phone}` : profile.phone} />
               <ProfileInfoRow label="Email address" value={profile.email} />
               <ProfileInfoRow label="Gender" value={profile.gender} />
             </div>
