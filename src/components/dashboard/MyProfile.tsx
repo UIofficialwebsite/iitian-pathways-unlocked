@@ -31,10 +31,12 @@ const MyProfile = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [enrollmentCount, setEnrollmentCount] = useState(0);
 
   const fetchProfile = async () => {
     if (!user) return;
     try {
+      // 1. Fetch Profile Data
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -43,6 +45,21 @@ const MyProfile = () => {
 
       if (error && error.code !== 'PGRST116') throw error;
       setProfile(data as UserProfile);
+
+      // 2. Fetch Enrollment Count (Active/Paid/Completed)
+      const { count, error: countError } = await supabase
+        .from('enrollments')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .in('status', [
+          'success', 'active', 'paid', 'completed', 'expired', 'inactive',
+          'SUCCESS', 'ACTIVE', 'PAID', 'COMPLETED', 'EXPIRED', 'INACTIVE'
+        ]);
+
+      if (!countError && count !== null) {
+        setEnrollmentCount(count);
+      }
+
     } catch (error: any) {
       toast({ title: "Error", description: "Could not fetch profile.", variant: "destructive" });
     } finally {
@@ -119,13 +136,13 @@ const MyProfile = () => {
             {/* Grid for Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               
-              {/* Card: Total Enrollments (Clean, No Info Icon) */}
+              {/* Card: Total Enrollments */}
               <div className="bg-white p-3 sm:p-4 rounded-lg border border-slate-100 shadow-sm relative min-h-[80px] flex flex-col justify-center">
                 <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wide leading-tight mb-1.5">
                   Total Enrollments
                 </div>
                 <div className="text-[13px] sm:text-[14px] font-medium text-gray-900">
-                  0 Courses
+                  {enrollmentCount} Courses
                 </div>
               </div>
 
@@ -178,7 +195,7 @@ const MyProfile = () => {
                 </>
               )}
               
-              <ProfileInfoRow label="Education board" value="CBSE" />
+              {/* Removed Education board row as requested */}
             </div>
           </section>
 
