@@ -1,3 +1,7 @@
+{
+type: uploaded file
+fileName: uiofficialwebsite/ui-main-website/UI-Main-Website-dba9b15b91a968cd2011f0abab4c5938878c7c64/src/components/dashboard/EnrollmentReceiptView.tsx
+fullContent:
 import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -238,15 +242,43 @@ const EnrollmentReceiptView = () => {
     setIsDownloading(true);
     try {
       const element = receiptRef.current;
-      const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+      
+      // Improved PDF generation with multi-page support
+      const canvas = await html2canvas(element, { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false, 
+        backgroundColor: '#ffffff' 
+      });
+
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();   // 210 mm
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // 297 mm
+      
+      const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, imgHeight);
+      
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // Add first page
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pdfHeight;
+
+      // Add new pages if the content is longer than one page
+      while (heightLeft > 0) {
+        position -= pdfHeight; // Move the image up to show the next slice
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pdfHeight;
+      }
+
       pdf.save(`Invoice_${receipt.orderId}.pdf`);
       toast({ title: "Success", description: "Official invoice downloaded." });
     } catch (error) {
+      console.error(error);
       toast({ title: "Error", description: "Failed to generate receipt.", variant: "destructive" });
     } finally {
       setIsDownloading(false);
