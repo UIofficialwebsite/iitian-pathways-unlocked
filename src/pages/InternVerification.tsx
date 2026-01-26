@@ -1,232 +1,351 @@
-import React, { useState } from 'react';
-import { Input } from "@/components/ui/input";
+import React, { useState } from "react";
+import NavBar from "@/components/NavBar";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { 
+  CheckCircle, 
+  XCircle, 
+  Download
+} from "lucide-react";
+import { 
+  Accordion, 
+  AccordionContent, 
+  AccordionItem, 
+  AccordionTrigger 
+} from "@/components/ui/accordion";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { toast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2 } from "lucide-react";
+import { usePageSEO, SEO_TITLES } from "@/utils/seoManager";
 
 const InternVerification = () => {
-  const [searchQuery, setSearchQuery] = useState(""); // Employee Code
-  const [nameQuery, setNameQuery] = useState("");     // Full Name
-  const [result, setResult] = useState<any | null>(null);
+  usePageSEO(SEO_TITLES.INTERN_VERIFICATION, "/intern-verification");
+  const [employeeId, setEmployeeId] = useState("");
+  const [name, setName] = useState("");
+  const [verificationResult, setVerificationResult] = useState<null | { verified: boolean, message: string, details?: any }>(null);
   const [loading, setLoading] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!searchQuery.trim() || !nameQuery.trim()) {
+    setLoading(true);
+
+    if (!employeeId || !name) {
+      setVerificationResult({
+        verified: false,
+        message: "Please enter both employee ID and name."
+      });
       toast({
-        title: "Missing Information",
-        description: "Please enter both Employee ID and Full Name.",
+        title: "Incomplete Information",
+        description: "Please enter both employee ID and name.",
         variant: "destructive",
       });
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setResult(null);
-    setHasSearched(false);
-
     try {
-      // Clean inputs
-      const cleanCode = searchQuery.trim().toUpperCase();
-      const cleanName = nameQuery.trim().toLowerCase();
-
-      // 1. Exact Match Search
       const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('employee_code', cleanCode)
+        .from("employees")
+        .select("*")
+        .eq("employee_code", employeeId)
+        .eq("full_name", name)
         .maybeSingle();
 
-      if (error) throw error;
-
-      if (data) {
-        // 2. Name Verification (Case-insensitive check)
-        const dbName = data.full_name.trim().toLowerCase();
-        
-        if (dbName === cleanName) {
-          setResult(data);
-          toast({
-            title: "Verification Successful",
-            description: "Employee record found.",
-          });
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: "Employee ID found, but the name does not match our records.",
-            variant: "destructive",
-          });
-        }
-      } else {
+      if (error) {
+        setVerificationResult({
+          verified: false,
+          message: "Error occurred. Please try again later."
+        });
+        toast({ title: "Verification Error", description: error.message, variant: "destructive" });
+      } else if (!data) {
+        setVerificationResult({
+          verified: false,
+          message: "No records found for the provided ID and name combination."
+        });
         toast({
-          title: "No Record Found",
-          description: "No employee found with this ID.",
+          title: "Verification Failed",
+          description: "We couldn't find a match for your credentials.",
           variant: "destructive",
         });
+      } else {
+        let statusText = "";
+        if (data.status === 'active') {
+          statusText = "Active";
+        } else if (data.status === 'completed') {
+          statusText = "Completed";
+        } else {
+          statusText = "Terminated";
+        }
+
+        setVerificationResult({
+          verified: true,
+          message: "Record matched successfully.",
+          details: {
+            name: data.full_name,
+            employeeId: data.employee_code,
+            position: data.position,
+            department: data.department,
+            employeeType: data.employee_type,
+            startDate: data.start_date ? new Date(data.start_date).toLocaleDateString() : "N/A",
+            endDate: data.end_date ? new Date(data.end_date).toLocaleDateString() : "N/A",
+            status: statusText,
+            verificationCertificateUrl: data.verification_certificate_url
+          }
+        });
+        toast({
+          title: "Verification Successful",
+          description: "Record matched in employee database.",
+          variant: "default",
+        });
       }
-    } catch (error: any) {
-      console.error('Verification error:', error);
+    } catch (error) {
+      console.error("Verification error:", error);
+      setVerificationResult({
+        verified: false,
+        message: "An unexpected error occurred. Please try again."
+      });
       toast({
-        title: "System Error",
-        description: "An error occurred during verification. Please try again.",
+        title: "Error",
+        description: "An unexpected error occurred.",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
-      setHasSearched(true);
+    }
+    
+    setLoading(false);
+  };
+
+  const handleDownloadCertificate = () => {
+    if (verificationResult?.details?.verificationCertificateUrl) {
+      window.open(verificationResult.details.verificationCertificateUrl, '_blank');
+    } else {
+      toast({
+        title: "Certificate Not Available",
+        description: "Verification certificate not yet generated.",
+        variant: "destructive",
+      });
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col items-center justify-center p-4 font-sans">
+    <div className="bg-[#f8fafc] min-h-screen flex flex-col font-['Inter',sans-serif]">
+      <NavBar />
       
-      {/* Main Verification Container */}
-      <div className="w-full max-w-lg space-y-6">
+      {/* Main Content Wrapper */}
+      <main className="flex-grow pt-28 pb-20 px-6 sm:px-10 lg:px-16 w-full max-w-[1600px] mx-auto">
         
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Intern Verification</h1>
-          <p className="text-sm text-gray-500">
-            Verify internship completion and employee status.
-          </p>
-        </div>
-
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-md overflow-hidden">
-          <CardHeader className="bg-gray-50/50 border-b border-gray-100 px-6 py-4">
-            <CardTitle className="text-base font-semibold text-gray-800">
-              Enter Details
-            </CardTitle>
-          </CardHeader>
+        {/* Top Hero Section: Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center mb-16">
           
-          <CardContent className="p-6">
-            <form onSubmit={handleVerify} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="empId" className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  Employee ID
-                </label>
-                <Input
-                  id="empId"
-                  placeholder="e.g. UI/INT/2024/001"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="rounded-sm border-gray-300 focus:border-gray-400 focus:ring-gray-200 h-10"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="fullName" className="text-xs font-medium text-gray-700 uppercase tracking-wide">
-                  Full Name
-                </label>
-                <Input
-                  id="fullName"
-                  placeholder="Enter full name as per records"
-                  value={nameQuery}
-                  onChange={(e) => setNameQuery(e.target.value)}
-                  className="rounded-sm border-gray-300 focus:border-gray-400 focus:ring-gray-200 h-10"
-                />
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-sm h-10 mt-2 font-medium transition-colors"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...
-                  </>
-                ) : (
-                  "Verify Status"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        {/* Verification Result Display */}
-        {hasSearched && result && (
-          <div className="bg-white border border-gray-200 rounded-md shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="bg-green-50/50 border-b border-green-100 px-6 py-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-green-800">Verified Record</span>
-              <span className="px-2 py-0.5 rounded-sm bg-green-100 text-green-700 text-[10px] font-bold uppercase tracking-wider">
-                {result.status || 'Active'}
-              </span>
-            </div>
+          {/* Left Column: Heading & Intro - Reduced Elements */}
+          <div className="space-y-6 max-w-2xl">
+            {/* Removed top badge "Official Verification Portal" */}
             
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Name</p>
-                <p className="text-sm font-medium text-gray-900">{result.full_name}</p>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold text-slate-900 leading-tight tracking-tight">
+              Internship & <br/>
+              <span className="text-blue-900">Employment Check</span>
+            </h1>
+            
+            <p className="text-slate-600 text-lg leading-relaxed">
+              Welcome to the official Unknown IITians verification system. 
+              Securely validate the employment history and internship completion status of our alumni and current team members.
+            </p>
+
+            {/* Removed bottom "Real-time Database" block */}
+          </div>
+
+          {/* Right Column: Verification Form Block */}
+          <div className="w-full max-w-md ml-auto lg:mr-auto">
+            <div className="bg-white border border-slate-200 shadow-xl shadow-slate-200/50 p-8 rounded-md">
+              <div className="mb-6 pb-4 border-b border-slate-100">
+                <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                  {/* Removed Search Icon */}
+                  Validate Credentials
+                </h2>
+                <p className="text-slate-500 text-sm mt-1">Enter details exactly as per certificate.</p>
               </div>
               
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Employee ID</p>
-                <p className="text-sm font-medium text-gray-900">{result.employee_code}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Position</p>
-                <p className="text-sm font-medium text-gray-900">{result.position}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Department</p>
-                <p className="text-sm font-medium text-gray-900">{result.department}</p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Start Date</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {result.start_date ? new Date(result.start_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">End Date</p>
-                <p className="text-sm font-medium text-gray-900">
-                  {result.end_date ? new Date(result.end_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Present'}
-                </p>
-              </div>
-            </div>
-
-            {result.verification_certificate_url && (
-              <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 text-right">
-                <a 
-                  href={result.verification_certificate_url} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium hover:underline"
+              <form onSubmit={handleVerify} className="space-y-5">
+                <div className="space-y-2">
+                  <label htmlFor="employee-id" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Intern ID / Employee Code
+                  </label>
+                  <Input
+                    id="employee-id"
+                    placeholder="e.g., INT12345"
+                    value={employeeId}
+                    onChange={(e) => setEmployeeId(e.target.value)}
+                    required
+                    className="w-full p-3 h-12 bg-slate-50 border-slate-200 focus:border-blue-900 focus:bg-white rounded-md focus:ring-0 text-base transition-all"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="employee-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Full Legal Name
+                  </label>
+                  <Input
+                    id="employee-name"
+                    placeholder="Enter full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="w-full p-3 h-12 bg-slate-50 border-slate-200 focus:border-blue-900 focus:bg-white rounded-md focus:ring-0 text-base transition-all"
+                  />
+                </div>
+                
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-slate-900 hover:bg-blue-900 text-white font-bold py-6 text-sm uppercase tracking-widest rounded-md transition-all shadow-lg shadow-slate-900/20 mt-2"
                 >
-                  View Certificate &rarr;
-                </a>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* FAQ Section - Clean List */}
-        <div className="pt-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-4 px-1">Frequently Asked Questions</h3>
-          <div className="space-y-3">
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">Why can't I find my details?</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                Ensure you have entered your Employee ID exactly as issued (e.g., UI/INT/...) and your full name as registered. If the issue persists, contact HR.
-              </p>
-            </div>
-            <div className="bg-white border border-gray-200 rounded-md p-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">How do I download my certificate?</h4>
-              <p className="text-xs text-gray-600 leading-relaxed">
-                If your internship is completed and verified, a "View Certificate" link will appear at the bottom of your verification card.
-              </p>
+                  {loading ? "Verifying..." : "Search Records"}
+                </Button>
+              </form>
             </div>
           </div>
         </div>
 
-      </div>
+        {/* Results Section */}
+        <div className="mb-20">
+          {verificationResult && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 ease-out">
+              <div className="bg-white border border-slate-200 shadow-sm rounded-md overflow-hidden">
+                <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between flex-wrap gap-4">
+                  <h2 className="text-xl font-bold text-slate-900">Search Results</h2>
+                  {verificationResult.verified ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider">
+                      <CheckCircle className="w-4 h-4" /> Record Found
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-sm bg-red-100 text-red-800 text-xs font-bold uppercase tracking-wider">
+                      <XCircle className="w-4 h-4" /> No Match
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-8">
+                  {verificationResult.verified ? (
+                    <>
+                      <div className="overflow-x-auto border border-slate-200 rounded-md">
+                        <table className="w-full text-sm text-left">
+                          <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                              <th className="px-6 py-4 font-bold tracking-wider">Candidate Name</th>
+                              <th className="px-6 py-4 font-bold tracking-wider">ID Number</th>
+                              <th className="px-6 py-4 font-bold tracking-wider">Department</th>
+                              <th className="px-6 py-4 font-bold tracking-wider">Duration</th>
+                              <th className="px-6 py-4 font-bold tracking-wider">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            <tr className="bg-white">
+                              <td className="px-6 py-4 font-semibold text-slate-900">{verificationResult.details.name}</td>
+                              <td className="px-6 py-4 font-mono text-slate-600">{verificationResult.details.employeeId}</td>
+                              <td className="px-6 py-4 text-slate-600">{verificationResult.details.department}</td>
+                              <td className="px-6 py-4 text-slate-600">
+                                {verificationResult.details.startDate} — {verificationResult.details.endDate}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-sm text-xs font-bold uppercase tracking-wide ${
+                                  verificationResult.details.status === 'Active' 
+                                    ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                                    : verificationResult.details.status === 'Completed'
+                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                                    : 'bg-red-50 text-red-700 border border-red-200'
+                                }`}>
+                                  {verificationResult.details.status}
+                                </span>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="mt-8 flex justify-end gap-4">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => window.print()}
+                          className="border-slate-300 text-slate-700 hover:bg-slate-50 font-medium rounded-md"
+                        >
+                          Print Details
+                        </Button>
+                        <Button 
+                          onClick={handleDownloadCertificate}
+                          className="bg-slate-900 text-white hover:bg-slate-800 font-medium rounded-md"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download Official Certificate
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="bg-red-50 border border-red-100 rounded-md p-6 flex items-start gap-4 max-w-3xl mx-auto">
+                      <XCircle className="w-6 h-6 text-red-600 mt-0.5 shrink-0" />
+                      <div>
+                        <h3 className="text-red-900 font-bold mb-1">We couldn't find a record</h3>
+                        <p className="text-red-700 text-sm leading-relaxed">
+                          {verificationResult.message} This implies the Employee ID or Name provided does not match our active database. Please verify the spelling or contact HR for assistance.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* FAQs Section */}
+        <section className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">Frequently Asked Questions</h2>
+            <p className="text-slate-500">Common queries regarding the verification process</p>
+          </div>
+          
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="item-1" className="bg-blue-50 border border-blue-100 rounded-md shadow-sm">
+              <AccordionTrigger className="text-sm md:text-base font-semibold text-blue-900 px-6 py-4 hover:no-underline hover:text-blue-800 text-left">
+                How fast is the verification process?
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-5 text-slate-700 leading-relaxed">
+                The database is queried in real-time. Results are displayed instantly upon form submission. You do not need to wait for manual approval.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-2" className="bg-blue-50 border border-blue-100 rounded-md shadow-sm">
+              <AccordionTrigger className="text-sm md:text-base font-semibold text-blue-900 px-6 py-4 hover:no-underline hover:text-blue-800 text-left">
+                My ID is not working, what should I do?
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-5 text-slate-700 leading-relaxed">
+                Ensure the ID matches the format on your offer letter or certificate (e.g., UI12345 or INT001). If the issue persists, the record might be archived or incorrect.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="item-3" className="bg-blue-50 border border-blue-100 rounded-md shadow-sm">
+              <AccordionTrigger className="text-sm md:text-base font-semibold text-blue-900 px-6 py-4 hover:no-underline hover:text-blue-800 text-left">
+                Who do I contact for discrepancies?
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-5 text-slate-700 leading-relaxed">
+                If you believe a record is missing or incorrect, please contact our Human Resources department immediately at <a href="mailto:hr@unknowniitians.com" className="text-blue-700 underline font-medium">hr@unknowniitians.com</a>.
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="item-4" className="bg-blue-50 border border-blue-100 rounded-md shadow-sm">
+              <AccordionTrigger className="text-sm md:text-base font-semibold text-blue-900 px-6 py-4 hover:no-underline hover:text-blue-800 text-left">
+                Can I verify former employees here?
+              </AccordionTrigger>
+              <AccordionContent className="px-6 pb-5 text-slate-700 leading-relaxed">
+                Yes, this portal maintains records for both active and past employees/interns. Status will be shown as 'Completed' or 'Terminated' for former members.
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </section>
+
+      </main>
+
+      <Footer />
     </div>
   );
 };
