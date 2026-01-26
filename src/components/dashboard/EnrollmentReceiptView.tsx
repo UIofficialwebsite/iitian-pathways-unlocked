@@ -11,7 +11,7 @@ import { jsPDF } from 'jspdf';
 // --- Types ---
 interface OrderItem {
   title: string;
-  amount: number; // Item price (can be list or paid depending on DB, but used for item display)
+  amount: number; // This is the Net (Paid) amount per item
   validTill: string | null;
   image_url: string | null;
   id: string; // course_id
@@ -22,7 +22,7 @@ interface ReceiptDetails {
   orderId: string;
   date: string;
   totalAmount: number; // Final Net Amount Paid
-  subtotal: number;    // Gross Amount (Total + Discount)
+  grossAmount: number; // Gross Amount (List Price)
   discount: number;    // Discount Value
   couponCode: string | null;
   status: string;
@@ -49,14 +49,13 @@ const EnrollmentReceiptView = () => {
       if (!user || !courseId) return;
 
       try {
-        // 1. Get the LATEST enrollment for this course to identify the most recent relevant Order ID.
-        // This handles "future purchases" by always grabbing the newest transaction involving this course.
+        // 1. Get the LATEST enrollment
         const { data: initialEnrollment, error: initialError } = await supabase
           .from('enrollments')
           .select('order_id, created_at, status, courses(id, title, image_url, end_date)')
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .order('created_at', { ascending: false }) // Critical: Gets the latest action
+          .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
@@ -71,7 +70,7 @@ const EnrollmentReceiptView = () => {
         
         let finalItems: OrderItem[] = [];
         let finalTotal = 0;
-        let finalSubtotal = 0;
+        let finalGross = 0;
         let finalDiscount = 0;
         let finalCoupon: string | null = null;
         let finalDate = initialEnrollment.created_at;
@@ -79,7 +78,7 @@ const EnrollmentReceiptView = () => {
         let finalUtr = '-';
         let finalPaymentTime = new Date(finalDate).toLocaleTimeString();
 
-        // 2. Fetch ALL items associated with this specific Order ID (Whole Purchase)
+        // 2. Fetch ALL items associated with this specific Order ID
         if (orderId) {
           const { data: allEnrollments, error: allError } = await supabase
             .from('enrollments')
@@ -98,7 +97,6 @@ const EnrollmentReceiptView = () => {
           if (allError) throw allError;
 
           if (allEnrollments) {
-            // Sort items: Main requested course first, then others (add-ons)
             const sortedEnrollments = allEnrollments.sort((a, b) => {
                const aId = (a.courses as any)?.id;
                const bId = (b.courses as any)?.id;
@@ -123,7 +121,7 @@ const EnrollmentReceiptView = () => {
             });
           }
 
-          // 3. Fetch Precise Payment Details from 'payments' table
+          // 3. Fetch Precise Payment Details
           const { data: paymentData, error: paymentError } = await supabase
             .from('payments')
             .select(`
@@ -141,20 +139,25 @@ const EnrollmentReceiptView = () => {
             .maybeSingle();
 
           if (!paymentError && paymentData) {
-            // Precise Calculation Logic
             const netAmount = Number(paymentData.net_amount);
             const rawAmount = Number(paymentData.amount);
-            const discountVal = Number(paymentData.discount_value) || 0;
+            const discountVal = Math.abs(Number(paymentData.discount_value) || 0); // Ensure positive discount
 
-            // Determines the actual money leaving the user's pocket
-            // If net_amount is recorded, that is the truth. Otherwise fallback to raw amount.
-            finalTotal = (!isNaN(netAmount) && netAmount !== 0) ? netAmount : (rawAmount || 0);
+            // Logic: net_amount is the actual PAID.
+            // If net_amount exists, that is the Total Paid.
+            // If net_amount is null, rawAmount is the Total Paid.
+            finalTotal = (!isNaN(netAmount) && netAmount > 0) ? netAmount : (rawAmount || 0);
             
             finalDiscount = discountVal;
             
-            // Reconstruct the 'Whole Purchase' Subtotal
-            // Subtotal = What they paid + What they saved
-            finalSubtotal = finalTotal + finalDiscount;
+            // Logic for Gross Amount (Subtotal):
+            // Case A: rawAmount is larger than finalTotal -> rawAmount is Gross.
+            // Case B: rawAmount == finalTotal -> No Gross recorded, reconstruct it (Paid + Discount).
+            if (rawAmount > finalTotal) {
+                finalGross = rawAmount;
+            } else {
+                finalGross = finalTotal + finalDiscount;
+            }
             
             finalCoupon = paymentData.coupon_code || null;
             finalDate = paymentData.created_at;
@@ -162,14 +165,14 @@ const EnrollmentReceiptView = () => {
             finalUtr = paymentData.utr || '-';
             finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
           } else {
-            // Fallback: Calculate from items if payment record missing
+            // Fallback
             finalTotal = finalItems.reduce((sum, item) => sum + item.amount, 0);
-            finalSubtotal = finalTotal;
+            finalGross = finalTotal;
             finalDiscount = 0;
           }
 
         } else {
-          // Fallback: No Order ID (Legacy or Manual)
+          // Fallback: Single item
           const singleCourse = initialEnrollment.courses as any;
           finalItems = [{
             title: singleCourse?.title || 'Unknown Course',
@@ -180,7 +183,7 @@ const EnrollmentReceiptView = () => {
             type: 'Batch'
           }];
           finalTotal = 0;
-          finalSubtotal = 0;
+          finalGross = 0;
           finalDiscount = 0;
         }
 
@@ -188,7 +191,7 @@ const EnrollmentReceiptView = () => {
           orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
           date: finalDate,
           totalAmount: finalTotal,
-          subtotal: finalSubtotal,
+          grossAmount: finalGross,
           discount: finalDiscount,
           couponCode: finalCoupon,
           status: finalStatus,
@@ -234,7 +237,6 @@ const EnrollmentReceiptView = () => {
     });
   };
 
-  // STRICT Exact Amount Formatting (2 decimal places)
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
@@ -299,8 +301,6 @@ const EnrollmentReceiptView = () => {
   
   const mainBatch = receipt.items.find(i => i.type === 'Batch') || receipt.items[0]; 
   const addOns = receipt.items.filter(i => i !== mainBatch);
-
-  // Filter Items for display in Payment Summary & PDF
   const displayItems = receipt.items; 
 
   return (
@@ -356,7 +356,7 @@ const EnrollmentReceiptView = () => {
               </Link>
             </div>
 
-            {/* Add-ons List (Show if present) */}
+            {/* Add-ons List */}
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
                 <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
@@ -392,7 +392,7 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
             
-            {/* List Everything in Payment Breakdown */}
+            {/* List Breakdown */}
             {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
@@ -402,13 +402,13 @@ const EnrollmentReceiptView = () => {
             
             <div className="border-t border-[#e2e8f0] my-3"></div>
             
-            {/* Subtotal */}
+            {/* Gross Amount / Subtotal */}
             <div className="flex justify-between text-sm text-[#64748b] mb-2">
-              <span>Subtotal</span>
-              <span>{formatCurrency(receipt.subtotal)}</span>
+              <span>Gross Amount</span>
+              <span>{formatCurrency(receipt.grossAmount)}</span>
             </div>
 
-            {/* Discount Section */}
+            {/* Discount Section (Show if > 0) */}
             {receipt.discount > 0 && (
               <div className="flex justify-between text-sm text-[#10b981] mb-2 font-medium">
                 <span className="flex items-center gap-1">
@@ -493,7 +493,7 @@ const EnrollmentReceiptView = () => {
             <tr style={{ backgroundColor: '#111827', color: '#ffffff' }}>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px 0 0 6px' }}>Item Description</th>
               <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Price</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -515,8 +515,8 @@ const EnrollmentReceiptView = () => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '40px' }}>
           <div style={{ width: '280px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px', color: '#4b5563' }}>
-                <span>Subtotal:</span>
-                <span>{formatCurrency(receipt.subtotal)}</span>
+                <span>Gross Amount:</span>
+                <span>{formatCurrency(receipt.grossAmount)}</span>
             </div>
             
             {receipt.discount > 0 && (
