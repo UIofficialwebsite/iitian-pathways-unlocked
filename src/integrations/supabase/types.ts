@@ -196,33 +196,6 @@ export type Database = {
         }
         Relationships: []
       }
-      country_codes: {
-        Row: {
-          code: string
-          created_at: string | null
-          dial_code: string
-          id: string
-          name: string
-          phone_length: number
-        }
-        Insert: {
-          code: string
-          created_at?: string | null
-          dial_code: string
-          id?: string
-          name: string
-          phone_length: number
-        }
-        Update: {
-          code?: string
-          created_at?: string | null
-          dial_code?: string
-          id?: string
-          name?: string
-          phone_length?: number
-        }
-        Relationships: []
-      }
       course_addons: {
         Row: {
           course_id: string
@@ -952,7 +925,6 @@ export type Database = {
           branch: string | null
           class: string | null
           created_at: string | null
-          dial_code: string | null
           email: string | null
           exam: string | null
           exam_type: string | null
@@ -975,7 +947,6 @@ export type Database = {
           branch?: string | null
           class?: string | null
           created_at?: string | null
-          dial_code?: string | null
           email?: string | null
           exam?: string | null
           exam_type?: string | null
@@ -998,7 +969,6 @@ export type Database = {
           branch?: string | null
           class?: string | null
           created_at?: string | null
-          dial_code?: string | null
           email?: string | null
           exam?: string | null
           exam_type?: string | null

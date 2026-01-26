@@ -6,13 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { Tables } from "@/integrations/supabase/types";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profile?: Tables<'profiles'> | null;
-  onProfileUpdate?: () => void;
 }
 
 interface CountryCode {
@@ -20,13 +17,13 @@ interface CountryCode {
   name: string;
   code: string;
   dial_code: string;
-  phone_length: number;
+  length: number;
 }
 
-export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) {
+export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
   const [fullName, setFullName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [selectedDialCode, setSelectedDialCode] = useState("");
+  const [selectedCountryDialCode, setSelectedCountryDialCode] = useState("");
   const [countries, setCountries] = useState<CountryCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchingProfile, setFetchingProfile] = useState(true);
@@ -35,51 +32,42 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
   useEffect(() => {
     if (isOpen) {
       fetchCountries();
-      loadProfileData();
+      getProfile();
     }
-  }, [isOpen, profile]);
+  }, [isOpen]);
 
   const fetchCountries = async () => {
     try {
       const { data, error } = await supabase
         .from('country_codes')
-        .select('id, name, code, dial_code, phone_length')
+        .select('*')
         .order('name');
       
-      if (error) {
-        console.error('Error fetching countries:', error);
-        return;
-      }
-      if (data) setCountries(data as CountryCode[]);
+      if (error) throw error;
+      if (data) setCountries(data);
     } catch (error) {
       console.error('Error fetching countries:', error);
     }
   };
 
-  const loadProfileData = async () => {
+  const getProfile = async () => {
     setFetchingProfile(true);
     try {
-      if (profile) {
-        setFullName(profile.full_name || profile.student_name || "");
-        setPhoneNumber(profile.phone || "");
-        setSelectedDialCode(profile.dial_code || "+91");
-      } else {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('full_name, student_name, phone, dial_code')
-          .eq('id', user.id)
-          .single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name, phone_number, country_code')
+        .eq('id', user.id)
+        .single();
 
-        if (error) throw error;
+      if (error) throw error;
 
-        if (data) {
-          setFullName(data.full_name || data.student_name || "");
-          setPhoneNumber(data.phone || "");
-          setSelectedDialCode(data.dial_code || "+91");
-        }
+      if (data) {
+        setFullName(data.full_name || "");
+        setPhoneNumber(data.phone_number || "");
+        setSelectedCountryDialCode(data.country_code || "");
       }
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -89,7 +77,7 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
   };
 
   const getSelectedCountryInfo = () => {
-    return countries.find(c => c.dial_code === selectedDialCode);
+    return countries.find(c => c.dial_code === selectedCountryDialCode);
   };
 
   const updateProfile = async (e: React.FormEvent) => {
@@ -99,10 +87,10 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
     const countryInfo = getSelectedCountryInfo();
     
     // Validation: Check phone number length
-    if (phoneNumber && countryInfo && phoneNumber.length !== countryInfo.phone_length) {
+    if (countryInfo && phoneNumber.length !== countryInfo.length) {
       toast({
         title: "Invalid Phone Number",
-        description: `Phone number for ${countryInfo.name} must be ${countryInfo.phone_length} digits.`,
+        description: `Phone number for ${countryInfo.name} must be ${countryInfo.length} digits.`,
         variant: "destructive",
       });
       setLoading(false);
@@ -117,9 +105,8 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
         .from('profiles')
         .update({
           full_name: fullName,
-          student_name: fullName,
-          phone: phoneNumber,
-          dial_code: selectedDialCode,
+          phone_number: phoneNumber,
+          country_code: selectedCountryDialCode,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
@@ -130,7 +117,6 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
-      onProfileUpdate?.();
       onClose();
     } catch (error) {
       toast({
@@ -148,20 +134,15 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
     const countryInfo = getSelectedCountryInfo();
     
     // If country is selected, limit input to that country's allowed length
-    if (countryInfo && value.length > countryInfo.phone_length) {
+    if (countryInfo && value.length > countryInfo.length) {
       return;
     }
     setPhoneNumber(value);
   };
 
-  // Format display for dial code dropdown
-  const formatDropdownLabel = (country: CountryCode) => {
-    return `${country.code} ${country.dial_code}`;
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[94vw] max-w-[420px] px-4 sm:px-6">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
@@ -171,57 +152,52 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
         {fetchingProfile ? (
           <div className="py-4 text-center">Loading profile...</div>
         ) : (
-          <form onSubmit={updateProfile} className="grid gap-3.5 py-4">
+          <form onSubmit={updateProfile} className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="fullName" className="text-[11px]">Full Name</Label>
+              <Label htmlFor="fullName">Full Name</Label>
               <Input
                 id="fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="John Doe"
-                className="text-[13px]"
               />
             </div>
             
-            <div className="grid gap-2">
-              <Label className="text-[11px]">
-                Phone Number
-                {getSelectedCountryInfo() && (
-                  <span className="text-muted-foreground ml-2">
-                    ({phoneNumber.length}/{getSelectedCountryInfo()?.phone_length} digits)
-                  </span>
-                )}
-              </Label>
-              <div className="flex gap-2">
-                <div className="w-[110px] shrink-0">
-                  <Select
-                    value={selectedDialCode}
-                    onValueChange={setSelectedDialCode}
-                  >
-                    <SelectTrigger className="text-[13px]">
-                      <SelectValue placeholder="Code" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover">
-                      {countries.map((country) => (
-                        <SelectItem key={country.id} value={country.dial_code}>
-                          {formatDropdownLabel(country)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid grid-cols-4 gap-2">
+              <div className="col-span-1">
+                <Label htmlFor="countryCode">Code</Label>
+                <Select
+                  value={selectedCountryDialCode}
+                  onValueChange={setSelectedCountryDialCode}
+                >
+                  <SelectTrigger id="countryCode">
+                    <SelectValue placeholder="Code" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.dial_code}>
+                        {country.code} ({country.dial_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-3">
+                <Label htmlFor="phoneNumber">
+                  Phone Number 
+                  {getSelectedCountryInfo() && <span className="text-xs text-muted-foreground ml-2">(Req: {getSelectedCountryInfo()?.length} digits)</span>}
+                </Label>
                 <Input
                   id="phoneNumber"
                   value={phoneNumber}
                   onChange={handlePhoneChange}
-                  placeholder={getSelectedCountryInfo() ? "0".repeat(getSelectedCountryInfo()!.phone_length) : "1234567890"}
+                  placeholder={getSelectedCountryInfo() ? `${'0'.repeat(getSelectedCountryInfo()!.length)}` : "1234567890"}
                   type="tel"
-                  className="flex-1 text-[13px]"
                 />
               </div>
             </div>
 
-            <Button type="submit" disabled={loading} className="mt-2">
+            <Button type="submit" disabled={loading}>
               {loading ? "Saving..." : "Save changes"}
             </Button>
           </form>
@@ -230,5 +206,3 @@ export function ProfileEditModal({ isOpen, onClose, profile, onProfileUpdate }: 
     </Dialog>
   );
 }
-
-export default ProfileEditModal;
