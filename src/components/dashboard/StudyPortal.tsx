@@ -273,24 +273,35 @@ const EnrolledView = ({
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // FIX: Sync selectedBatchId when enrollments list changes or when current selection becomes invalid
+  // FIX: Sync selectedBatchId ONLY when enrollments list changes
+  // This effect should NOT depend on selectedBatchId to avoid resetting user's selection
   useEffect(() => {
+    console.log('[BatchSwitch] Enrollments validation effect running, enrollments count:', enrollments.length);
+    
     if (enrollments.length === 0) {
       // No enrollments, clear selection
+      console.log('[BatchSwitch] No enrollments, clearing selection');
       setSelectedBatchId('');
       return;
     }
     
-    // Check if current selectedBatchId is still valid in the new enrollments list
-    const isCurrentSelectionValid = enrollments.some(e => e.course_id === selectedBatchId);
-    
-    if (!isCurrentSelectionValid) {
-      // Current selection is no longer valid, reset to first enrollment
-      const newBatchId = enrollments[0].course_id;
-      setSelectedBatchId(newBatchId);
-      setTempSelectedBatchId(newBatchId);
-    }
-  }, [enrollments, selectedBatchId]);
+    // Only reset if current selection is invalid - use a ref to get current value without adding dependency
+    setSelectedBatchId(currentId => {
+      const isCurrentSelectionValid = enrollments.some(e => e.course_id === currentId);
+      console.log('[BatchSwitch] Checking if current selection valid:', currentId, 'Valid:', isCurrentSelectionValid);
+      
+      if (!isCurrentSelectionValid || !currentId) {
+        // Current selection is no longer valid, reset to first enrollment
+        const newBatchId = enrollments[0].course_id;
+        console.log('[BatchSwitch] Resetting to first enrollment:', newBatchId);
+        setTempSelectedBatchId(newBatchId);
+        return newBatchId;
+      }
+      
+      // Keep current selection
+      return currentId;
+    });
+  }, [enrollments]); // Only depend on enrollments, NOT selectedBatchId
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
