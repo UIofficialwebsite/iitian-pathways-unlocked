@@ -161,7 +161,11 @@ const BatchConfiguration = () => {
   
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [showDetails, setShowDetails] = useState(false);
+  
+  // UI States
+  const [showDetails, setShowDetails] = useState(false); // Controls Top Drawer (Batch Info)
+  const [showBill, setShowBill] = useState(false);       // Controls Bottom Bill (Enrollment Summary)
+  
   const [showPhoneDialog, setShowPhoneDialog] = useState(false);
   const [manualPhone, setManualPhone] = useState("");
   const [countryCodes, setCountryCodes] = useState<Array<{
@@ -442,69 +446,97 @@ const BatchConfiguration = () => {
         }}
       />
 
-      {/* --- RESTORED: MOBILE DETAILS DRAWER (With adjusted position) --- */}
+      {/* --- MOBILE DETAILS DRAWER (Top) --- */}
       <div 
-        className={`fixed bottom-0 left-0 w-full bg-white z-[60] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] rounded-t-[24px] transition-transform duration-300 ease-out flex flex-col px-6 pt-8 pb-32 md:hidden ${
-            showDetails ? 'translate-y-0' : 'translate-y-[120%]'
+        className={`fixed top-0 left-0 w-full bg-white z-[60] shadow-none border-b border-[#e3e8ee] rounded-b-[24px] transition-transform duration-300 ease-out flex flex-col pt-8 pb-8 px-6 md:hidden ${
+            showDetails ? 'translate-y-0' : '-translate-y-[120%]'
         }`}
       >
         <div 
-            className="absolute top-4 right-6 text-[#697386] cursor-pointer bg-gray-100 p-1 rounded-full"
+            className="absolute top-6 right-6 text-[#697386] cursor-pointer"
             onClick={() => setShowDetails(false)}
         >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
         </div>
 
-        <h3 className="text-[18px] font-bold text-[#1a1f36] mb-6">Enrollment Details</h3>
-
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-7 mt-4">
             <div className="flex flex-col gap-1">
                 <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Batch Name</span>
-                <span className="text-[18px] font-bold text-[#1a1f36] leading-tight">{course.title}</span>
+                <span className="text-[22px] font-bold text-[#1a1f36] tracking-tight">{course.title}</span>
             </div>
-            
-            <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-6">
                 <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Start Date</span>
-                    <span className="text-[15px] font-medium text-[#1a1f36]">{formatDate(course.start_date)}</span>
+                    <span className="text-[16px] font-normal text-[#1a1f36]">{formatDate(course.start_date)}</span>
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">End Date</span>
-                    <span className="text-[15px] font-medium text-[#1a1f36]">
+                    <span className="text-[16px] font-normal text-[#1a1f36]">
                         {course.end_date ? formatDate(course.end_date) : 'TBA'}
                     </span>
                 </div>
             </div>
-
-            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md mt-2">
-                 <div className="text-[11px] font-bold text-[#697386] uppercase tracking-wider mb-2">Selected Items</div>
-                 <div className="flex flex-col gap-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-[#1a1f36]">Base Plan</span>
-                        <span className="font-medium text-[#1a1f36]">{effectiveBasePrice === 0 ? "Free" : `₹${effectiveBasePrice}`}</span>
-                    </div>
-                    {selectedAddonsList.map(addon => (
-                        <div key={`m-summary-${addon.id}`} className="flex justify-between text-sm">
-                            <span className="text-[#4f566b] truncate max-w-[200px]">{addon.subject_name}</span>
-                            <span className="font-medium text-[#1a1f36]">₹{addon.price}</span>
-                        </div>
-                    ))}
-                 </div>
-                 <div className="h-px bg-[#e3e8ee] my-3"></div>
-                 <div className="flex justify-between items-center">
-                    <span className="font-bold text-[#1a1f36]">Total</span>
-                    <span className="font-bold text-[#1a1f36] text-lg">₹{finalTotal}</span>
-                 </div>
+            <div className="bg-[#f6f8fa] border border-[#e3e8ee] p-4 rounded-md text-[15px] font-normal text-[#1a1f36] text-center mt-2">
+                {user?.email || 'N/A'}
             </div>
         </div>
       </div>
       
       {showDetails && (
         <div 
-            className="fixed inset-0 bg-black/40 z-[55] md:hidden backdrop-blur-[2px]"
+            className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
             onClick={() => setShowDetails(false)}
         />
       )}
+
+      {/* --- MOBILE BILL DRAWER (Bottom) --- */}
+      {showBill && (
+        <div 
+            className="fixed inset-0 bg-black/20 z-[55] md:hidden backdrop-blur-[1px]"
+            onClick={() => setShowBill(false)}
+        />
+      )}
+      <div 
+        className={`fixed bottom-[72px] left-0 w-full bg-white z-[56] rounded-t-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out flex flex-col px-6 py-6 border-t border-gray-100 md:hidden ${
+            showBill ? 'translate-y-0' : 'translate-y-[150%]'
+        }`}
+      >
+        <div className="flex items-center justify-between mb-5">
+            <h3 className="text-sm font-bold text-[#697386] uppercase tracking-wider">Enrollment Summary</h3>
+            <div 
+                className="bg-gray-100 p-1.5 rounded-full cursor-pointer"
+                onClick={() => setShowBill(false)}
+            >
+                <X className="w-4 h-4 text-[#1a1f36]" />
+            </div>
+        </div>
+
+        <div className="flex flex-col gap-3 font-['Inter',sans-serif]">
+            <div className="flex justify-between items-baseline py-1">
+                <span className="text-[15px] text-[#1a1f36] font-medium">Base Plan</span>
+                <span className="text-[15px] font-medium text-[#1a1f36]">
+                    {effectiveBasePrice === 0 ? "Free" : `₹${effectiveBasePrice}`}
+                </span>
+            </div>
+            
+            {selectedAddonsList.length > 0 && <div className="h-px bg-gray-100 my-1"></div>}
+            
+            {selectedAddonsList.map(addon => (
+                <div key={`bill-${addon.id}`} className="flex justify-between items-baseline py-1">
+                    <span className="text-[14px] text-[#4f566b] truncate max-w-[200px]">{addon.subject_name}</span>
+                    <span className="text-[14px] font-medium text-[#1a1f36]">₹{addon.price}</span>
+                </div>
+            ))}
+            
+            <div className="border-t border-dashed border-gray-300 my-2"></div>
+            
+            <div className="flex justify-between items-center">
+                <span className="text-[16px] font-bold text-[#1a1f36]">Total Due</span>
+                <span className="text-[18px] font-bold text-[#1a1f36]">₹{finalTotal}</span>
+            </div>
+        </div>
+      </div>
+
 
       {/* --- RESTORED: MOBILE HEADER (WITH LOGO) --- */}
       <div className="w-full bg-white/50 backdrop-blur-md border-b border-gray-100 z-50 sticky top-0 md:hidden">
@@ -539,6 +571,17 @@ const BatchConfiguration = () => {
                     <span className="font-['Inter',sans-serif] font-bold text-[#1a1f36] text-lg tracking-tight pl-1">Back</span>
                 </div>
             </div>
+        </div>
+
+        {/* --- RESTORED: MOBILE DETAILS TOGGLE --- */}
+        <div className="flex justify-center mt-2 mb-6 md:hidden">
+            <button 
+                onClick={() => setShowDetails(!showDetails)}
+                className="flex items-center justify-center gap-2 px-8 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md transition-all duration-200 active:scale-95 border border-gray-200/50 shadow-sm"
+            >
+                <span className="font-normal text-sm">View Detail</span>
+                {showDetails ? <ChevronUp className="w-4 h-4 text-black" /> : <ChevronDown className="w-4 h-4 text-black" />}
+            </button>
         </div>
 
         <div className="flex flex-col md:flex-row gap-8 md:gap-[60px]">
@@ -684,26 +727,26 @@ const BatchConfiguration = () => {
       </div>
 
       {/* --- MOBILE FIXED FOOTER --- */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[50] bg-white border-t border-[#e3e8ee] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-5 py-4 flex items-center justify-between animate-in fade-in slide-in-from-bottom-5">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-[57] bg-white border-t border-[#e3e8ee] shadow-[0_-4px_20px_rgba(0,0,0,0.08)] px-5 py-3 h-[72px] flex items-center justify-between animate-in fade-in slide-in-from-bottom-5">
         <div className="flex flex-col">
-            <span className="text-[11px] font-bold text-[#697386] uppercase tracking-wider">Total Due</span>
+            <span className="text-[10px] font-bold text-[#697386] uppercase tracking-wider">Total Due</span>
             <div className="flex items-baseline gap-1">
-                <span className="text-2xl font-bold text-[#1a1f36]">₹{finalTotal}</span>
+                <span className="text-xl font-bold text-[#1a1f36]">₹{finalTotal}</span>
             </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 h-11">
             <button 
-                onClick={() => setShowDetails(!showDetails)}
-                className="flex items-center justify-center w-12 h-12 bg-gray-100 text-gray-800 rounded-md border border-gray-200 active:scale-95 transition-all"
+                onClick={() => setShowBill(!showBill)}
+                className="flex items-center justify-center w-11 h-11 bg-white hover:bg-gray-50 text-[#1a1f36] rounded-md border border-[#e3e8ee] active:scale-95 transition-all shadow-sm"
             >
-                {showDetails ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                {showBill ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
             </button>
 
             <button 
                 onClick={handlePayment}
                 disabled={processing || finalTotal === 0}
-                className="bg-[#1a1f36] text-white px-8 h-12 rounded-md text-[15px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[140px]"
+                className="bg-[#1a1f36] text-white px-6 h-11 rounded-md text-[14px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[120px]"
             >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "PAY NOW"}
             </button>
