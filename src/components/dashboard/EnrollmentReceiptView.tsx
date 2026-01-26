@@ -11,8 +11,8 @@ import { jsPDF } from 'jspdf';
 // --- Types ---
 interface OrderItem {
   title: string;
-  basePrice: number; // The List Price (before discount)
-  paidPrice: number; // The Actual Paid Price (after discount)
+  basePrice: number; // Price from courses/course_addons table
+  paidPrice: number; // Effective share of what was paid (calculated)
   validTill: string | null;
   image_url: string | null;
   id: string; 
@@ -22,9 +22,9 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalPaid: number;    // Final Amount from payments.net_amount
-  subtotal: number;     // Calculated as Total Paid + Discount
-  discount: number;     // Directly from payments.discount_value
+  totalPaid: number;    // From payments.net_amount
+  subtotal: number;     // Sum of basePrices
+  discount: number;     // Calculated: subtotal - totalPaid
   couponCode: string | null;
   status: string;
   utr: string;
@@ -68,18 +68,7 @@ const EnrollmentReceiptView = () => {
 
         const orderId = initialEnrollment.order_id;
         
-        // Initialize Defaults
-        let finalItems: OrderItem[] = [];
-        let finalTotalPaid = 0;
-        let finalSubtotal = 0;
-        let finalDiscount = 0;
-        let finalCoupon: string | null = null;
-        let finalDate = initialEnrollment.created_at;
-        let finalStatus = initialEnrollment.status || 'Success';
-        let finalUtr = '-';
-        let finalPaymentTime = new Date(finalDate).toLocaleTimeString();
-
-        // 2. Fetch Payment Record (Source of Truth for Pricing)
+        // 2. Fetch Payment Record (Source of Truth for Final Paid Amount)
         let paymentData = null;
         if (orderId) {
           const { data, error } = await supabase
@@ -91,32 +80,10 @@ const EnrollmentReceiptView = () => {
           if (!error) paymentData = data;
         }
 
-        // 3. Determine Global Totals from Payments Table
-        if (paymentData) {
-          // DIRECT MAPPING: Read the DB columns directly.
-          const dbNet = Number(paymentData.net_amount);
-          const dbAmount = Number(paymentData.amount);
-          const dbDiscount = Number(paymentData.discount_value);
-
-          // Discount is exactly what is in DB (handle nulls as 0)
-          finalDiscount = dbDiscount || 0;
-
-          // Total Paid is Net Amount. If Net is missing/0 (legacy data), fallback to Amount.
-          finalTotalPaid = (dbNet && dbNet > 0) ? dbNet : (dbAmount || 0);
-
-          // Subtotal Logic: Total Paid + Discount = Original Price (Subtotal)
-          finalSubtotal = finalTotalPaid + finalDiscount;
-
-          finalCoupon = paymentData.coupon_code || null;
-          finalDate = paymentData.created_at;
-          finalStatus = paymentData.status || finalStatus;
-          finalUtr = paymentData.utr || '-';
-          finalPaymentTime = paymentData.payment_time || new Date(paymentData.created_at).toLocaleTimeString();
-        }
-
-        // 4. Fetch Items (Enrollments) to populate the list
+        // 3. Fetch All Enrollments for this Order
+        let allEnrollments: any[] = [];
         if (orderId) {
-          const { data: allEnrollments, error: allError } = await supabase
+          const { data, error } = await supabase
             .from('enrollments')
             .select(`
               amount,
@@ -125,79 +92,101 @@ const EnrollmentReceiptView = () => {
                 id,
                 title,
                 image_url,
-                end_date
+                end_date,
+                price
               )
             `)
             .eq('order_id', orderId);
+            
+          if (!error && data) allEnrollments = data;
+        } else {
+          // Fallback if no order_id (legacy data)
+          allEnrollments = [initialEnrollment];
+        }
 
-          if (allError) throw allError;
-
-          if (allEnrollments) {
-            // Sort: Clicked course first
-            const sortedEnrollments = allEnrollments.sort((a, b) => {
-               const aId = (a.courses as any)?.id;
-               const bId = (b.courses as any)?.id;
-               if (aId === courseId) return -1;
-               if (bId === courseId) return 1;
-               return (b.amount || 0) - (a.amount || 0);
-            });
-
-            // Calculate Sum of Enrollments (This is usually the Total Paid amount distributed in enrollments table)
-            const sumEnrollmentPaid = sortedEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-
-            // Fallback: If no payment record exists, assume Sum of Enrollments = Total Paid
-            if (!paymentData) {
-              finalTotalPaid = sumEnrollmentPaid;
-              finalDiscount = 0; // No payment record = No discount proof
-              finalSubtotal = finalTotalPaid;
-            }
-
-            // Map Items
-            finalItems = sortedEnrollments.map((item: any) => {
-              const itemPaid = Number(item.amount) || 0;
-              const isAddon = !!item.subject_name;
-              const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
-              
-              // Calculate Item Base Price
-              // Logic: Distribute the global discount proportionally based on the item's paid share.
-              // Formula: Base = Paid + (Paid / TotalPaid) * Discount
-              // This ensures Sum(Base) ≈ Subtotal
-              let itemBase = itemPaid;
-              if (sumEnrollmentPaid > 0 && finalDiscount > 0) {
-                 const share = itemPaid / sumEnrollmentPaid;
-                 itemBase = itemPaid + (share * finalDiscount);
-              }
-
-              return {
-                title: displayTitle,
-                basePrice: itemBase,
-                paidPrice: itemPaid,
-                validTill: item.courses?.end_date,
-                image_url: item.courses?.image_url,
-                id: item.courses?.id,
-                type: isAddon ? 'Add-on' : 'Batch'
-              };
+        // 4. Fetch Master Prices for Add-ons (since enrollments only store snapshot amount)
+        // We need to query the course_addons table to get the REAL base price for addons.
+        let addonPricesMap = new Map<string, number>();
+        if (allEnrollments.some((e: any) => e.subject_name)) {
+          const { data: addonsData } = await supabase
+            .from('course_addons')
+            .select('subject_name, price')
+            .eq('course_id', courseId); // Assuming all addons are for this course context
+            
+          if (addonsData) {
+            addonsData.forEach((addon: any) => {
+              addonPricesMap.set(addon.subject_name, Number(addon.price));
             });
           }
-        } else {
-          // Legacy Fallback (No Order ID)
-          const singleCourse = initialEnrollment.courses as any;
-          finalItems = [{
-            title: singleCourse?.title || 'Unknown Course',
-            basePrice: 0,
-            paidPrice: 0,
-            validTill: singleCourse?.end_date, 
-            image_url: singleCourse?.image_url,
-            id: singleCourse?.id,
-            type: 'Batch'
-          }];
         }
+
+        // 5. Build Item List & Calculate Totals
+        let calculatedSubtotal = 0;
+        
+        const finalItems: OrderItem[] = allEnrollments.map((item: any) => {
+          const isAddon = !!item.subject_name;
+          const displayTitle = item.subject_name || item.courses?.title || 'Unknown Item';
+          
+          // --- Base Price Logic (Source of Truth) ---
+          let basePrice = 0;
+          if (isAddon) {
+            // For add-ons, look up in the fetched master addon prices
+            basePrice = addonPricesMap.get(item.subject_name) || 0;
+            // Fallback: if not found in master table, use the enrolled amount as proxy
+            if (basePrice === 0) basePrice = Number(item.amount) || 0;
+          } else {
+            // For main batch, use the course master price
+            basePrice = Number(item.courses?.price) || 0;
+          }
+
+          calculatedSubtotal += basePrice;
+
+          return {
+            title: displayTitle,
+            basePrice: basePrice,
+            // We'll calculate proportional paid price later if needed, 
+            // but usually only basePrice is shown in line items for "Invoice" style
+            paidPrice: 0, 
+            validTill: item.courses?.end_date,
+            image_url: item.courses?.image_url,
+            id: item.courses?.id,
+            type: isAddon ? 'Add-on' : 'Batch'
+          };
+        }).sort((a, b) => {
+           // Sort: Main Batch first
+           if (a.type === 'Batch' && b.type !== 'Batch') return -1;
+           if (b.type === 'Batch' && a.type !== 'Batch') return 1;
+           return 0;
+        });
+
+        // 6. Final Global Calculations
+        let finalTotalPaid = 0;
+        let finalDiscount = 0;
+        let finalStatus = paymentData?.status || initialEnrollment.status || 'Success';
+        let finalCoupon = paymentData?.coupon_code || null;
+        let finalDate = paymentData?.created_at || initialEnrollment.created_at;
+        let finalUtr = paymentData?.utr || '-';
+        let finalPaymentTime = paymentData?.payment_time || new Date(finalDate).toLocaleTimeString();
+
+        if (paymentData) {
+          const dbNet = Number(paymentData.net_amount);
+          const dbAmount = Number(paymentData.amount);
+          
+          // Use net_amount (Paid) if available, otherwise amount
+          finalTotalPaid = (dbNet && dbNet > 0) ? dbNet : (dbAmount || 0);
+        } else {
+          // Fallback for legacy: Use sum of enrolled amounts
+          finalTotalPaid = allEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+        }
+
+        // Logic: Total Discount = The difference between what it's worth (Subtotal) and what was paid.
+        finalDiscount = Math.max(0, calculatedSubtotal - finalTotalPaid);
 
         setReceipt({
           orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
           date: finalDate,
           totalPaid: finalTotalPaid,
-          subtotal: finalSubtotal,
+          subtotal: calculatedSubtotal,
           discount: finalDiscount,
           couponCode: finalCoupon,
           status: finalStatus,
@@ -317,7 +306,7 @@ const EnrollmentReceiptView = () => {
                 <div className="flex-grow">
                   <h3 className="text-base font-medium text-[#334155] mb-1 leading-tight">{mainBatch.title}</h3>
                   <p className="text-sm text-[#64748b] mb-1">
-                    <span className="text-[#334155] font-medium">{mainBatch.basePrice === 0 ? 'Free' : formatCurrency(mainBatch.basePrice)}</span>
+                    Base Price: <span className="text-[#334155] font-medium">{mainBatch.basePrice === 0 ? 'Free' : formatCurrency(mainBatch.basePrice)}</span>
                   </p>
                   <span className="inline-block bg-[#dcfce7] text-[#166534] text-[11px] px-2 py-0.5 rounded">Active</span>
                 </div>
@@ -362,7 +351,6 @@ const EnrollmentReceiptView = () => {
             {displayItems.map((item, idx) => (
                 <div key={idx} className="flex justify-between text-sm text-[#64748b] mb-2">
                     <span className="truncate max-w-[180px]">{item.title} {item.type === 'Add-on' && '(Add-on)'}</span>
-                    {/* Shows the calculated list price */}
                     <span>{item.basePrice === 0 ? 'Free' : formatCurrency(item.basePrice)}</span>
                 </div>
             ))}
@@ -375,7 +363,7 @@ const EnrollmentReceiptView = () => {
               <span>{formatCurrency(receipt.subtotal)}</span>
             </div>
 
-            {/* Discount - Only Show if Database has a value > 0 */}
+            {/* Discount Section */}
             {receipt.discount > 0 && (
               <div className="flex justify-between text-sm text-[#10b981] mb-2 font-medium">
                 <span className="flex items-center gap-1">
@@ -449,7 +437,7 @@ const EnrollmentReceiptView = () => {
             <tr style={{ backgroundColor: '#111827', color: '#ffffff' }}>
               <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '6px 0 0 6px' }}>Item Description</th>
               <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Type</th>
-              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Amount</th>
+              <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.5px', borderRadius: '0 6px 6px 0' }}>Price</th>
             </tr>
           </thead>
           <tbody>
