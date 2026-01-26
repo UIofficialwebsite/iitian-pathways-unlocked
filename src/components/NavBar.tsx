@@ -171,7 +171,7 @@ const NavBar = () => {
         <div className="hidden md:flex justify-between items-center h-full">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <img src="/lovable-uploads/UI_logo.png" alt="Logo" className="h-10 w-auto" />
+              <img src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" alt="Logo" className="h-10 w-auto" />
             </Link>
           </div>
 
