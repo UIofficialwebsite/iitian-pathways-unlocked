@@ -1,235 +1,208 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 interface ProfileEditModalProps {
   isOpen: boolean;
   onClose: () => void;
-  profile: any;
-  onProfileUpdate: () => void;
 }
 
-const ProfileEditModal = ({ isOpen, onClose, profile, onProfileUpdate }: ProfileEditModalProps) => {
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+interface CountryCode {
+  id: string;
+  name: string;
+  code: string;
+  dial_code: string;
+  length: number;
+}
 
-  // Form State
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [gender, setGender] = useState("Male");
-  
-  // Phone State
-  const [countryCode, setCountryCode] = useState("+91");
-  const [localPhone, setLocalPhone] = useState("");
-  const [isPhoneEditable, setIsPhoneEditable] = useState(false);
-  
-  const [email, setEmail] = useState("");
-  const phoneInputRef = useRef<HTMLInputElement>(null);
+export function ProfileEditModal({ isOpen, onClose }: ProfileEditModalProps) {
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [selectedCountryDialCode, setSelectedCountryDialCode] = useState("");
+  const [countries, setCountries] = useState<CountryCode[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchingProfile, setFetchingProfile] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (isOpen && profile) {
-      const fullName = profile.student_name || profile.full_name || "";
-      const nameParts = fullName.split(" ");
-      setFirstName(nameParts[0] || "");
-      setLastName(nameParts.slice(1).join(" ") || "");
-      
-      setGender(profile.gender || "Male");
-      
-      const rawPhone = profile.phone || "";
-      if(rawPhone.startsWith("+91")) {
-         setCountryCode("+91");
-         setLocalPhone(rawPhone.replace("+91", "").trim());
-      } else if (rawPhone.length > 0 && rawPhone.includes(" ")) {
-         const parts = rawPhone.split(" ");
-         setCountryCode(parts[0]);
-         setLocalPhone(parts.slice(1).join(""));
-      } else if (rawPhone.length > 0) {
-         setCountryCode("+91"); 
-         setLocalPhone(rawPhone);
-      } else {
-         setCountryCode("+91");
-         setLocalPhone("");
-      }
-      
-      setEmail(profile.email || "");
-      setIsPhoneEditable(false);
+    if (isOpen) {
+      fetchCountries();
+      getProfile();
     }
   }, [isOpen]);
 
-  const handlePhoneBtnClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!isPhoneEditable) {
-      setIsPhoneEditable(true);
-      setTimeout(() => {
-        if (phoneInputRef.current) phoneInputRef.current.focus();
-      }, 50);
-    } else {
-      setIsPhoneEditable(false);
+  const fetchCountries = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('country_codes')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
+      if (data) setCountries(data);
+    } catch (error) {
+      console.error('Error fetching countries:', error);
     }
   };
 
-  const handleMainSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-
+  const getProfile = async () => {
+    setFetchingProfile(true);
     try {
-      const fullName = `${firstName} ${lastName}`.trim();
-      const fullPhone = `${countryCode} ${localPhone}`.trim();
-      
-      const { error } = await supabase
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
         .from('profiles')
-        .update({
-          student_name: fullName,
-          gender: gender,
-          phone: fullPhone,
-        })
-        .eq('id', profile.id);
+        .select('full_name, phone_number, country_code')
+        .eq('id', user.id)
+        .single();
 
       if (error) throw error;
 
-      toast({ title: "Profile Updated", description: "Your details have been saved successfully." });
-      onProfileUpdate();
-      onClose();
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      if (data) {
+        setFullName(data.full_name || "");
+        setPhoneNumber(data.phone_number || "");
+        setSelectedCountryDialCode(data.country_code || "");
+      }
+    } catch (error) {
+      console.error('Error loading profile:', error);
     } finally {
-      setIsLoading(false);
+      setFetchingProfile(false);
     }
   };
 
+  const getSelectedCountryInfo = () => {
+    return countries.find(c => c.dial_code === selectedCountryDialCode);
+  };
+
+  const updateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const countryInfo = getSelectedCountryInfo();
+    
+    // Validation: Check phone number length
+    if (countryInfo && phoneNumber.length !== countryInfo.length) {
+      toast({
+        title: "Invalid Phone Number",
+        description: `Phone number for ${countryInfo.name} must be ${countryInfo.length} digits.`,
+        variant: "destructive",
+      });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: fullName,
+          phone_number: phoneNumber,
+          country_code: selectedCountryDialCode,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
+    const countryInfo = getSelectedCountryInfo();
+    
+    // If country is selected, limit input to that country's allowed length
+    if (countryInfo && value.length > countryInfo.length) {
+      return;
+    }
+    setPhoneNumber(value);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      {/* w-[94vw]: Uses nearly full screen width on mobile with minimal margins
-         max-w-[420px]: Caps width on larger screens
-      */}
-      <DialogContent className="w-[94vw] max-w-[420px] p-0 overflow-hidden bg-white border border-[#e5e7eb] shadow-xl rounded-xl gap-0 font-['Inter',sans-serif]">
-        
-        <DialogHeader className="px-4 py-3.5 border-b border-[#f0f0f0] bg-white">
-          <DialogTitle className="text-[15px] font-semibold text-[#1a1a1a]">Edit Details</DialogTitle>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+          <DialogDescription>
+            Make changes to your profile here. Click save when you're done.
+          </DialogDescription>
         </DialogHeader>
-
-        {/* Reduced padding for more input space */}
-        <form onSubmit={handleMainSave} className="px-4 py-4 space-y-3.5">
-          
-          {/* Row 1: Name - Stacked Vertical */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">First Name</label>
-              <input 
-                type="text" 
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="w-full px-3 py-2 h-9 border border-[#d1d5db] rounded-md text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
-                placeholder="First Name"
+        {fetchingProfile ? (
+          <div className="py-4 text-center">Loading profile...</div>
+        ) : (
+          <form onSubmit={updateProfile} className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="John Doe"
               />
             </div>
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Last Name</label>
-              <input 
-                type="text" 
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="w-full px-3 py-2 h-9 border border-[#d1d5db] rounded-md text-[14px] text-[#333] outline-none focus:border-[#2563eb] transition-all placeholder:text-gray-400"
-                placeholder="Last Name"
-              />
-            </div>
-          </div>
-
-          {/* Row 2: Gender */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide block">Gender</label>
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Male')}>
-                <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${gender === 'Male' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Male' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
-                </div>
-                <span className="text-[13px] text-[#444]">Male</span>
+            
+            <div className="grid grid-cols-4 gap-2">
+              <div className="col-span-1">
+                <Label htmlFor="countryCode">Code</Label>
+                <Select
+                  value={selectedCountryDialCode}
+                  onValueChange={setSelectedCountryDialCode}
+                >
+                  <SelectTrigger id="countryCode">
+                    <SelectValue placeholder="Code" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.id} value={country.dial_code}>
+                        {country.code} ({country.dial_code})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setGender('Female')}>
-                <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${gender === 'Female' ? 'border-[#2563eb]' : 'border-[#ccc] group-hover:border-[#999]'}`}>
-                  {gender === 'Female' && <div className="w-2 h-2 bg-[#2563eb] rounded-full" />}
-                </div>
-                <span className="text-[13px] text-[#444]">Female</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Row 3: Mobile Number */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
-            <div className={`flex items-center border rounded-md bg-[#f9fafb] px-2.5 h-9 overflow-hidden transition-all ${isPhoneEditable ? 'border-[#2563eb] ring-1 ring-[#2563eb]/20' : 'border-[#d1d5db]'}`}>
-              <div className="flex items-center gap-0.5 pr-2 border-r border-[#e5e7eb] h-full -ml-2.5 pl-2.5 mr-2 bg-gray-50">
-                <input 
-                  type="text"
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  className={`w-10 bg-transparent border-none outline-none text-[13px] font-medium text-center p-0 ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed' : 'text-[#555]'}`}
-                  maxLength={5}
-                  disabled={!isPhoneEditable}
+              <div className="col-span-3">
+                <Label htmlFor="phoneNumber">
+                  Phone Number 
+                  {getSelectedCountryInfo() && <span className="text-xs text-muted-foreground ml-2">(Req: {getSelectedCountryInfo()?.length} digits)</span>}
+                </Label>
+                <Input
+                  id="phoneNumber"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  placeholder={getSelectedCountryInfo() ? `${'0'.repeat(getSelectedCountryInfo()!.length)}` : "1234567890"}
+                  type="tel"
                 />
-                <span className="text-[9px] text-[#999]">▼</span>
               </div>
-
-              <input 
-                ref={phoneInputRef}
-                type="text"
-                value={localPhone}
-                onChange={(e) => setLocalPhone(e.target.value)}
-                className={`flex-1 bg-transparent border-none outline-none px-0 text-[13px] h-full min-w-0 ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed' : 'text-[#333]'}`}
-                placeholder="1234567890"
-                disabled={!isPhoneEditable}
-              />
-              
-              <button 
-                type="button" 
-                onClick={handlePhoneBtnClick}
-                className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer flex-shrink-0"
-              >
-                {isPhoneEditable ? "Update" : "Edit"}
-              </button>
             </div>
-          </div>
 
-          {/* Row 4: Email */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Email</label>
-            <input 
-              type="email" 
-              value={email}
-              readOnly 
-              className="w-full px-3 py-2 h-9 border border-[#e5e7eb] rounded-md text-[13px] text-[#666] outline-none bg-[#f9fafb] cursor-not-allowed"
-            />
-          </div>
-
-          {/* Footer: Stacked Vertical buttons on mobile */}
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2.5 pt-3 mt-1 border-t border-[#f5f5f5]">
-            <Button 
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="w-full sm:w-auto px-4 h-9 text-[12px] font-semibold text-[#2563eb] border border-[#2563eb] hover:bg-blue-50 rounded-md transition-colors"
-            >
-              Cancel
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save changes"}
             </Button>
-            <Button 
-              type="submit"
-              disabled={isLoading || isPhoneEditable}
-              className="w-full sm:w-auto px-4 h-9 text-[12px] font-semibold text-white bg-[#2563eb] hover:bg-[#1d4ed8] rounded-md border-none shadow-sm transition-all disabled:opacity-50"
-            >
-              {isLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : null}
-              Save Changes
-            </Button>
-          </div>
-
-        </form>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   );
-};
-
-export default ProfileEditModal;
+}
