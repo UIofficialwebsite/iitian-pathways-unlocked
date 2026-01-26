@@ -49,11 +49,11 @@ const InternVerification = () => {
     }
 
     try {
+      // 1. Fetch by Employee ID specifically (more reliable index)
       const { data, error } = await supabase
         .from("employees")
         .select("*")
-        .eq("employee_code", employeeId)
-        .eq("full_name", name)
+        .eq("employee_code", employeeId.trim())
         .maybeSingle();
 
       if (error) {
@@ -67,26 +67,38 @@ const InternVerification = () => {
           message: "No personnel record found matching these credentials."
         });
       } else {
-        let statusText = "Active";
-        if (data.status === 'completed') statusText = "Completed";
-        if (data.status === 'terminated') statusText = "Terminated";
+        // 2. Case-Insensitive Name Matching Logic
+        const dbName = data.full_name.toLowerCase().trim();
+        const inputName = name.toLowerCase().trim();
 
-        setVerificationResult({
-          verified: true,
-          message: "Record verified in official database.",
-          details: {
-            name: data.full_name,
-            employeeId: data.employee_code,
-            position: data.position,
-            department: data.department,
-            employeeType: data.employee_type,
-            startDate: data.start_date ? new Date(data.start_date).toLocaleDateString('en-GB') : "N/A",
-            endDate: data.end_date ? new Date(data.end_date).toLocaleDateString('en-GB') : "Present",
-            status: statusText.toUpperCase(),
-            verifiedAt: new Date().toLocaleString('en-GB'),
-            verificationCertificateUrl: data.verification_certificate_url
-          }
-        });
+        if (dbName !== inputName) {
+           setVerificationResult({
+            verified: false,
+            message: "Employee ID found, but the provided name does not match our records."
+          });
+        } else {
+          // Success: Verification Passed
+          let statusText = "Active";
+          if (data.status === 'completed') statusText = "Completed";
+          if (data.status === 'terminated') statusText = "Terminated";
+
+          setVerificationResult({
+            verified: true,
+            message: "Record verified in official database.",
+            details: {
+              name: data.full_name, // Always show the Official DB Name casing
+              employeeId: data.employee_code,
+              position: data.position,
+              department: data.department,
+              employeeType: data.employee_type,
+              startDate: data.start_date ? new Date(data.start_date).toLocaleDateString('en-GB') : "N/A",
+              endDate: data.end_date ? new Date(data.end_date).toLocaleDateString('en-GB') : "Present",
+              status: statusText.toUpperCase(),
+              verifiedAt: new Date().toLocaleString('en-GB'),
+              verificationCertificateUrl: data.verification_certificate_url
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Verification error:", error);
@@ -343,7 +355,7 @@ const InternVerification = () => {
           width: '210mm',
           minHeight: '297mm',
           backgroundColor: '#ffffff',
-          padding: '20mm', // Standard A4 margins
+          padding: '20mm',
           fontFamily: "'Inter', sans-serif",
           color: '#000000',
           boxSizing: 'border-box'
@@ -355,7 +367,6 @@ const InternVerification = () => {
             {/* Header */}
             <div style={{ borderBottom: '2px solid #000', paddingBottom: '20px', marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                {/* Provided Logo */}
                 <img 
                   src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" 
                   alt="Official Logo" 
@@ -389,6 +400,7 @@ const InternVerification = () => {
 
             {/* Formal Details Grid */}
             <div style={{ border: '1px solid #000', marginBottom: '40px' }}>
+              {/* Table Rows (Same as before) */}
               <div style={{ display: 'flex', borderBottom: '1px solid #000' }}>
                 <div style={{ width: '40%', padding: '10px', borderRight: '1px solid #000', fontWeight: 'bold', fontSize: '12px', textTransform: 'uppercase', backgroundColor: '#f0f0f0' }}>Employee Name</div>
                 <div style={{ width: '60%', padding: '10px', fontSize: '12px' }}>{verificationResult.details.name}</div>
@@ -424,27 +436,50 @@ const InternVerification = () => {
                 <div style={{ fontSize: '10px', color: '#666', marginTop: '5px', fontStyle: 'italic' }}>Computer Generated Document</div>
               </div>
 
+              {/* NEW STAMP DESIGN */}
               <div style={{ textAlign: 'center' }}>
-                {/* CSS Stamp */}
-                <div style={{ 
-                  border: '3px double #1e3a8a', 
-                  color: '#1e3a8a', 
-                  padding: '10px 20px', 
-                  borderRadius: '4px',
-                  transform: 'rotate(-5deg)',
-                  display: 'inline-block',
-                  marginBottom: '5px'
-                }}>
-                  <div style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>VERIFIED</div>
-                  <div style={{ fontSize: '9px', textTransform: 'uppercase' }}>Unknown IITians Official</div>
-                </div>
-                
-                {/* Signatory Image */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '-10px' }}>
+                {/* Signature Layer - Absolute positioning context */}
+                <div style={{ position: 'relative', width: '140px', height: '140px', margin: '0 auto 10px auto' }}>
+                  
+                  {/* Circular Stamp */}
+                  <div style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    borderRadius: '50%', 
+                    border: '3px double #1e3a8a', 
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    color: '#1e3a8a',
+                    boxSizing: 'border-box',
+                    padding: '10px'
+                  }}>
+                    {/* Top Curved Text Simulation */}
+                    <div style={{ position: 'absolute', top: '15px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Unknown IITians</div>
+                    
+                    {/* Faint Logo Background */}
+                    <img 
+                      src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" 
+                      style={{ position: 'absolute', width: '60px', opacity: 0.15, filter: 'grayscale(100%)' }}
+                      alt=""
+                    />
+
+                    {/* Verified Status */}
+                    <div style={{ zIndex: 10, marginTop: '5px', fontSize: '16px', fontWeight: '900', color: '#16a34a', border: '2px solid #16a34a', padding: '2px 8px', borderRadius: '4px', transform: 'rotate(-5deg)' }}>
+                      VERIFIED
+                    </div>
+
+                    {/* Bottom Location Text */}
+                    <div style={{ position: 'absolute', bottom: '15px', fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase' }}>New Delhi</div>
+                  </div>
+
+                  {/* Overlaid Signature */}
                   <img 
                     src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769433351/image_4_1_g6qsah.png" 
                     alt="Signature" 
-                    style={{ height: '40px', objectFit: 'contain' }}
+                    style={{ position: 'absolute', bottom: '30px', left: '10px', width: '120px', zIndex: 20 }}
                   />
                 </div>
 
