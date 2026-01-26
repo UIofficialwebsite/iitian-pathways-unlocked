@@ -174,14 +174,21 @@ const EnrollmentReceiptView = () => {
           const dbAmount = Number(paymentData.amount);
           
           // Total Paid is strictly what hit the gateway
-          finalTotalPaid = (dbNet && dbNet > 0) ? dbNet : (dbAmount || 0);
+          // If net_amount is 0 (free course), it stays 0.
+          if (dbNet > 0) {
+             finalTotalPaid = dbNet;
+          } else if (dbNet === 0 && paymentData.net_amount !== null) {
+             finalTotalPaid = 0; // Explicitly free
+          } else {
+             // Fallback for older records where net_amount might be missing
+             finalTotalPaid = dbAmount || 0;
+          }
         } else {
-          // Fallback
+          // Fallback logic
           finalTotalPaid = allEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
         }
 
-        // Logic: Discount = (What it was supposed to cost) - (What they actually paid)
-        // This implicitly captures coupons, special offers, etc.
+        // Logic: Discount = (Subtotal Base) - (Total Paid)
         const finalDiscount = Math.max(0, calculatedSubtotal - finalTotalPaid);
 
         setReceipt({
@@ -193,7 +200,8 @@ const EnrollmentReceiptView = () => {
           status: finalStatus,
           utr: finalUtr,
           paymentTime: finalPaymentTime,
-          items: finalItems
+          items: finalItems,
+          couponCode: null // We don't need this for display anymore
         });
 
       } catch (error) {
@@ -364,7 +372,7 @@ const EnrollmentReceiptView = () => {
               <span>{formatCurrency(receipt.subtotal)}</span>
             </div>
 
-            {/* Discount - Calculated automatically */}
+            {/* Discount - Calculated automatically, NO COUPON NAME */}
             {receipt.discount > 0 && (
               <div className="flex justify-between text-sm text-[#10b981] mb-2 font-medium">
                 <span>Discount</span>
