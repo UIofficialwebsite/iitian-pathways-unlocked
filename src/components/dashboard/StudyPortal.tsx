@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -308,10 +307,17 @@ const EnrolledView = ({
 
   // Derive current batch summary directly
   const currentBatchSummary = useMemo(() => {
-    return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+    const found = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
+    console.log('[BatchSwitch] currentBatchSummary computed:', found?.title, 'for selectedBatchId:', selectedBatchId);
+    return found;
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
+  
+  // Debug: Log whenever selectedBatchId changes
+  useEffect(() => {
+    console.log('[BatchSwitch] selectedBatchId state changed to:', selectedBatchId);
+  }, [selectedBatchId]);
 
   useEffect(() => {
     if (isSheetOpen) {
@@ -409,28 +415,32 @@ const EnrolledView = ({
     
     console.log('[BatchSwitch] Switching to new batch:', newBatchId);
     
-    // Use flushSync to force synchronous state updates
-    flushSync(() => {
+    // Close sheet first
+    setIsSheetOpen(false);
+    
+    // Use requestAnimationFrame to ensure the sheet is fully closed before updating state
+    // This prevents React batching from interfering with the state updates
+    requestAnimationFrame(() => {
       // 1. Force clear all stale data to show loading state
       setFullCourseData(null);
       setScheduleData([]);
       setFaqs(undefined);
       setActiveTab('features');
+      setViewMode('main');
       
       // 2. Update the batch ID - this triggers the useEffect to fetch new data
+      // Using functional update to ensure we always get the latest state
       setSelectedBatchId(newBatchId);
       
-      // 3. Close sheet and ALWAYS reset view mode to main
-      setIsSheetOpen(false);
-      setViewMode('main');
-    });
-    
-    // 4. Show confirmation toast (outside flushSync)
-    const newBatch = enrollments.find(e => e.course_id === newBatchId);
-    console.log('[BatchSwitch] New batch data:', newBatch?.title);
-    toast({
-      title: "Batch Switched",
-      description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
+      console.log('[BatchSwitch] State updates dispatched for:', newBatchId);
+      
+      // 3. Show confirmation toast
+      const newBatch = enrollments.find(e => e.course_id === newBatchId);
+      console.log('[BatchSwitch] New batch data:', newBatch?.title);
+      toast({
+        title: "Batch Switched",
+        description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
+      });
     });
   }, [tempSelectedBatchId, selectedBatchId, enrollments, toast]);
 
