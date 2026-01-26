@@ -709,10 +709,10 @@ const BatchConfiguration = () => {
                   placeholder={`${'9'.repeat(expectedPhoneLength)}`}
                   value={manualPhone}
                   onChange={(e) => {
-                    const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+                    const digitsOnly = e.target.value.replace(/[^0-9]/g, '').slice(0, expectedPhoneLength);
                     setManualPhone(digitsOnly);
                   }}
-                  maxLength={expectedPhoneLength + 2}
+                  maxLength={expectedPhoneLength}
                 />
               </div>
               <p className="phone-hint">

@@ -249,8 +249,8 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Only allow digits
-    const digitsOnly = e.target.value.replace(/[^0-9]/g, '');
+    // Only allow digits and enforce max length
+    const digitsOnly = e.target.value.replace(/[^0-9]/g, '').slice(0, expectedPhoneLength);
     setManualPhone(digitsOnly);
     if (inlineError) setInlineError(null);
   };
@@ -296,7 +296,7 @@ const VerificationContent: React.FC<VerificationContentProps> = ({
             placeholder={`${'9'.repeat(expectedPhoneLength)}`}
             value={manualPhone}
             onChange={handlePhoneChange}
-            maxLength={expectedPhoneLength + 2}
+            maxLength={expectedPhoneLength}
           />
         </div>
         {selectedCountry && (
