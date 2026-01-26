@@ -10,7 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { ShareButton } from '@/components/ShareButton';
 import { cn } from "@/lib/utils";
 
-// Exported interface so MobileEnrollmentBar can use it
 export interface EnrollmentCardProps {
     course: Course;
     isDashboardView?: boolean;
@@ -20,7 +19,6 @@ export interface EnrollmentCardProps {
     ownedAddons?: string[];
     isFreeCourse?: boolean;
     enrolling?: boolean;
-    // New props for customization
     className?: string;
     forceExpanded?: boolean;
 }
@@ -38,10 +36,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     forceExpanded = false
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
-    
-    // Logic for "Starts at" price
     const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
     const [hasAddons, setHasAddons] = useState(false);
+    const [totalAddonsCount, setTotalAddonsCount] = useState(0);
 
     const cardRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
@@ -54,18 +51,18 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const endDate = course.end_date ? new Date(course.end_date) : null;
     const isExpired = endDate && today > endDate;
 
-    // --- 1. FETCH ADD-ONS TO DETERMINE LOWEST PRICE ---
     useEffect(() => {
         const checkAddonsAndPrice = async () => {
-            const { data, error } = await supabase
+            const { data, error, count } = await supabase
                 .from('course_addons')
-                .select('price')
+                .select('price', { count: 'exact' })
                 .eq('course_id', course.id);
 
-            if (!error && data && data.length > 0) {
-                setHasAddons(true);
+            if (!error && data) {
+                const addonsExist = data.length > 0;
+                setHasAddons(addonsExist);
+                setTotalAddonsCount(count || 0);
 
-                // Only calculate "Starts at" price if the Main Batch is FREE (0 or null)
                 if (course.price === 0 || course.price === null) {
                     const paidAddons = data.filter(addon => addon.price > 0);
                     if (paidAddons.length > 0) {
@@ -77,6 +74,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 }
             } else {
                 setHasAddons(false);
+                setTotalAddonsCount(0);
                 setMinAddonPrice(null);
             }
         };
@@ -84,7 +82,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     }, [course.id, course.price]);
 
     useEffect(() => {
-        // If forceExpanded is true (e.g. mobile drawer), we don't need scroll listeners
         if (forceExpanded) {
             setDetailsVisible(true);
             return;
@@ -116,8 +113,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
+        
+        // Determine if everything is purchased
+        const allAddonsOwned = totalAddonsCount > 0 ? ownedAddons.length >= totalAddonsCount : true;
+        const completeEnrollment = isMainCourseOwned && allAddonsOwned;
 
-        if (isFullyEnrolled && !isExpired) {
+        // 1. Fully enrolled in everything -> Let's Study
+        if ((isFullyEnrolled || completeEnrollment) && !isExpired) {
             return (
                 <Button 
                     size="lg" 
@@ -129,19 +131,21 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        if (isMainCourseOwned && !isExpired) {
+        // 2. Main course owned but add-ons pending -> Continue Enrollment
+        if (isMainCourseOwned && !allAddonsOwned && !isExpired) {
             return (
                 <Button 
                     size="lg" 
                     className={btnClasses}
-                    onClick={customEnrollHandler} 
+                    onClick={() => navigate(`/courses/${course.id}/configure`)} 
                 >
-                    <span className="truncate">Upgrade Enrollment</span>
+                    <span className="truncate">Continue Enrollment</span>
                 </Button>
             );
         }
 
-        if (hasAddons && !customEnrollHandler) {
+        // 3. Has add-ons but haven't started purchase yet -> Configure Plan
+        if (hasAddons && !isMainCourseOwned && !customEnrollHandler) {
              return (
                 <Button
                     size="lg"
@@ -153,6 +157,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              );
         }
 
+        // 4. In progress or custom handler provided
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -167,6 +172,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         } 
         
+        // 5. Default state
         return (
             <EnrollButton
                 courseId={course.id}
@@ -223,7 +229,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                         <div
                             className="transition-all ease-in-out duration-500 overflow-hidden"
                             style={{
-                                maxHeight: detailsVisible ? '500px' : '0', // Increased max-height for safety
+                                maxHeight: detailsVisible ? '500px' : '0',
                                 opacity: detailsVisible ? 1 : 0,
                             }}
                         >
