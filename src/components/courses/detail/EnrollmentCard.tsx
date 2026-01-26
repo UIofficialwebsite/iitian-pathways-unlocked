@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Course } from '@/components/admin/courses/types';
 import { Separator } from '@/components/ui/separator';
-import { MapPin, Calendar, BookOpen, Loader2, Book } from 'lucide-react';
+import { MapPin, Calendar, BookOpen, Loader2 } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
@@ -114,11 +114,10 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
         
-        // Determine if everything is purchased
         const allAddonsOwned = totalAddonsCount > 0 ? ownedAddons.length >= totalAddonsCount : true;
         const completeEnrollment = isMainCourseOwned && allAddonsOwned;
 
-        // 1. Fully enrolled in everything -> Let's Study
+        // "Let's Study" button with the icon removed
         if ((isFullyEnrolled || completeEnrollment) && !isExpired) {
             return (
                 <Button 
@@ -126,12 +125,11 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                     className={btnClasses}
                     onClick={() => navigate('/dashboard')}
                 >
-                    <Book className="w-4 h-4 mr-2 shrink-0" /> <span className="truncate">Let's Study</span>
+                    <span className="truncate">Let's Study</span>
                 </Button>
             );
         }
 
-        // 2. Main course owned but add-ons pending -> Continue Enrollment
         if (isMainCourseOwned && !allAddonsOwned && !isExpired) {
             return (
                 <Button 
@@ -144,7 +142,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 3. Has add-ons but haven't started purchase yet -> Configure Plan
         if (hasAddons && !isMainCourseOwned && !customEnrollHandler) {
              return (
                 <Button
@@ -157,7 +154,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              );
         }
 
-        // 4. In progress or custom handler provided
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -172,7 +168,6 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         } 
         
-        // 5. Default state
         return (
             <EnrollButton
                 courseId={course.id}
