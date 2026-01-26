@@ -18,7 +18,8 @@ const AboutSection: React.FC<AboutSectionProps> = ({ course }) => {
         
         {/* Description - Non-bold Inter font */}
         <div className="prose max-w-none">
-          <p className="text-[15px] md:text-[16px] leading-relaxed text-[#1a1f36] font-normal font-sans">
+          {/* Added whitespace-pre-line to respect line breaks from backend data */}
+          <p className="text-[15px] md:text-[16px] leading-relaxed text-[#1a1f36] font-normal font-sans whitespace-pre-line">
             {course.description}
           </p>
         </div>
