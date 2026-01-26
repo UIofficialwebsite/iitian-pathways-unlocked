@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Loader2, Inbox, ChevronRight, ArrowLeft } from 'lucide-react';
+import { Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Card, 
@@ -134,17 +134,75 @@ const EnrollmentListItem = ({ enrollment }: { enrollment: GroupedEnrollment }) =
 
 const NoEnrollmentsPlaceholder = () => {
   return (
-    <div className="flex flex-col items-center justify-center text-center p-6 sm:p-8 rounded-lg bg-gray-50 min-h-[300px] sm:min-h-[400px] border border-gray-200">
-      <Inbox className="h-20 w-20 sm:h-32 sm:w-32 text-gray-400 mb-4 sm:mb-6" strokeWidth={1.5} />
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">No Enrollments Yet!</h2>
-      <p className="text-sm sm:text-base text-gray-600 max-w-md mx-auto mb-6 px-4">
-        It looks like you haven't enrolled in any courses. Explore our courses and start your learning journey!
-      </p>
-      <Link to="/courses">
-        <Button size="lg" className="flex items-center w-full sm:w-auto text-sm sm:text-base">
-          Explore Courses <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-        </Button>
-      </Link>
+    <div style={{
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      backgroundColor: '#f9f9f9',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      minHeight: '60vh',
+      color: '#1a1a1a',
+      borderRadius: '8px',
+      border: '1px solid #eee'
+    }}>
+      <div style={{
+        textAlign: 'center',
+        maxWidth: '400px',
+        padding: '20px'
+      }}>
+        {/* SVG Illustration of the Box */}
+        <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'center' }}>
+            <svg style={{ width: '120px', height: 'auto' }} viewBox="0 0 162 142" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Front Face */}
+                <path d="M76.5 137.5L20 110V54L76.5 81.5V137.5Z" fill="#F3BA86" stroke="black" strokeWidth="3" strokeLinejoin="round"/>
+                <path d="M76.5 137.5L133 110V54L76.5 81.5V137.5Z" fill="#E6A66E" stroke="black" strokeWidth="3" strokeLinejoin="round"/>
+                {/* Interior */}
+                <path d="M76.5 81.5L20 54L76.5 26.5L133 54L76.5 81.5Z" fill="#D4935B" stroke="black" strokeWidth="3" strokeLinejoin="round"/>
+                {/* Flaps */}
+                <path d="M20 54L10 32L66.5 4.5L76.5 26.5L20 54Z" fill="#F3BA86" stroke="black" strokeWidth="3" strokeLinejoin="round"/>
+                <path d="M133 54L143 32L86.5 4.5L76.5 26.5L133 54Z" fill="#F3BA86" stroke="black" strokeWidth="3" strokeLinejoin="round"/>
+                {/* Highlight line on left */}
+                <path d="M26 60V105" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
+            </svg>
+        </div>
+
+        <h1 style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            marginBottom: '12px',
+            letterSpacing: '-0.5px'
+        }}>No Purchases Yet</h1>
+        <p style={{
+            fontSize: '18px',
+            color: '#4a4a4a',
+            lineHeight: '1.4',
+            marginBottom: '35px',
+            padding: '0 20px'
+        }}>Once you make a purchase, your transaction details will appear here.</p>
+        
+        <Link to="/courses" style={{ textDecoration: 'none' }}>
+           <button 
+             style={{
+                backgroundColor: '#1a202c',
+                color: 'white',
+                border: 'none',
+                padding: '14px 32px',
+                fontSize: '18px',
+                fontWeight: '600',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-block'
+             }}
+             onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2d3748'}
+             onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#1a202c'}
+             onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
+             onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+           >
+             Explore Batches
+           </button>
+        </Link>
+      </div>
     </div>
   );
 };
