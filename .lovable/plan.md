@@ -1,189 +1,172 @@
 
-# Fix `is_live` Course Visibility and Enrollment Control
+# Free Course Enrollment Enhancement
 
-## Problem Summary
-
-The build errors indicate that the `Course` type in `src/components/admin/courses/types.ts` is missing the `is_live` property, which is already present in the Supabase `courses` table. This causes TypeScript errors when filtering by `is_live` in multiple files.
-
-Additionally, we need to:
-1. Hide non-live courses from all public course listings
-2. Prevent enrollment in non-live courses via the EnrollmentCard
-3. Keep enrollment history visible regardless of course live status
-
-## Build Errors to Fix
-
-```
-src/components/BackendIntegratedWrapper.tsx(269,20): error TS2339: Property 'is_live' does not exist on type 'Course'.
-src/components/EnrollButton.tsx(444,11): error TS2769: No overload matches this call.
-src/pages/CourseListing.tsx(83,57): error TS2339: Property 'is_live' does not exist on type 'Course'.
-src/pages/Courses.tsx(60,47): error TS2339: Property 'is_live' does not exist on type 'Course'.
-```
+## Overview
+Modify the free enrollment flow (courses with price = 0) to:
+1. Collect mobile number using the existing phone dialog (same as paid courses)
+2. Insert enrollment data into the `payments` table for tracking
 
 ## Files to Modify
 
-### 1. `src/components/admin/courses/types.ts`
-Add the missing `is_live` property to the Course interface.
+### 1. `src/components/EnrollButton.tsx`
 
-**Change:**
+**Current behavior (lines 397-401):**
 ```typescript
-export interface Course {
-  // ... existing fields ...
-  parent_course_id?: string | null;
-  is_live?: boolean | null;  // ADD THIS LINE
+// Direct Bypass for Free Courses (Price 0)
+if (coursePrice === 0) {
+  await handleFreeEnroll();
+  return;
 }
 ```
 
-### 2. `src/components/EnrollButton.tsx` (Line ~444)
-Fix the TypeScript error on the `insert` call. The error suggests the object structure is incorrect. Looking at line 444, the `subject_name` field should be a string or null, not an array.
+**Changes needed:**
 
-**Change (around line 449):**
-```typescript
-// Before:
-subject_name: selectedSubjects.length > 0 ? selectedSubjects : null
+a) **Remove the bypass** at lines 397-401 - free courses should follow the same phone check flow as paid courses
 
-// After:
-subject_name: selectedSubjects.length > 0 ? selectedSubjects[0] : null
+b) **Update `handleFreeEnroll` function** (lines 432-480) to:
+   - Accept phone number as parameter
+   - Insert data into both `enrollments` AND `payments` tables
+   - Collect course details (batch name, subjects) for the payments record
+
+**Updated logic flow:**
+```
+handleEnrollClick() 
+  → Check if phone exists in profile
+  → If no phone → show phone dialog
+  → handlePhoneSubmit() or processPayment()
+     → If coursePrice === 0 → handleFreeEnroll(phone)
+     → Else → processPayment(phone) [existing Cashfree flow]
 ```
 
-### 3. `src/components/iitm/PaidCoursesTab.tsx`
-Filter out non-live courses before any other filtering.
+### 2. `src/components/courses/CourseCard.tsx`
 
-**Change (around line 28):**
+**Current behavior (lines 192-203):**
 ```typescript
-// Before:
-const iitmCourses = courses.filter(course => 
-  course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS'
-);
-
-// After:
-const iitmCourses = courses.filter(course => 
-  course.is_live === true && 
-  (course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS')
-);
-```
-
-### 4. `src/pages/IITMBSPrep.tsx`
-Filter out non-live courses.
-
-**Change (around line 155-157):**
-```typescript
-// Before:
-const iitmCourses = useMemo(() => 
-  courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
-, [courses]);
-
-// After:
-const iitmCourses = useMemo(() => 
-  courses.filter(c => 
-    c.is_live === true && 
-    (c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
-  )
-, [courses]);
-```
-
-### 5. `src/hooks/useRealtimeContentManagement.tsx`
-Add `is_live` filter to the `filterCoursesByProfile` function.
-
-**Change (around line 361):**
-```typescript
-// Before:
-const filterCoursesByProfile = (courses: Course[]) => {
-  return courses.filter(course => {
-    if (profile.program_type === 'IITM_BS') {
-      // ...
-    }
-  });
-};
-
-// After:
-const filterCoursesByProfile = (courses: Course[]) => {
-  return courses.filter(course => {
-    // First check if course is live
-    if (course.is_live !== true) return false;
-    
-    if (profile.program_type === 'IITM_BS') {
-      // ... rest of logic
-    }
-  });
-};
-```
-
-### 6. `src/components/courses/detail/EnrollmentCard.tsx`
-Add logic to prevent enrollment for non-live courses. Display a message when course is not live.
-
-**Changes:**
-
-a) Add `isLive` prop to the component interface (line ~22):
-```typescript
-export interface EnrollmentCardProps {
-  course: Course;
-  // ... existing props ...
-  isLive?: boolean;  // ADD THIS
-}
-```
-
-b) Update the component to accept the prop (line ~28):
-```typescript
-const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
-  course, 
-  // ... existing props ...
-  isLive = true  // Default to true for backward compatibility
-}) => {
-```
-
-c) Update `renderMainButton` function (around line 118) to check live status:
-```typescript
-const renderMainButton = () => {
-  const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
-  
-  // If course is not live, show disabled state
-  if (!isLive) {
+// Logic 2: Free Batch (No Add-ons) -> Direct Enroll
+if (isBaseFree) {
     return (
-      <Button 
-        size="lg" 
-        className="flex-1 text-lg bg-gray-400 text-white h-11 min-w-0 px-4 cursor-not-allowed"
-        disabled
-      >
-        <span className="truncate">Enrollment Closed</span>
-      </Button>
+        <button onClick={handleFreeEnroll} ...>
+            ENROLL NOW
+        </button>
     );
-  }
-  
-  // ... rest of existing logic ...
+}
+```
+
+**Change needed:**
+- Replace the direct `handleFreeEnroll` button with `EnrollButton` component
+- Pass `coursePrice={0}` so EnrollButton handles the free enrollment flow
+
+```typescript
+if (isBaseFree) {
+    return (
+        <EnrollButton
+            courseId={course.id}
+            coursePrice={0}
+            className={btnClass}
+        >
+            ENROLL NOW
+        </EnrollButton>
+    );
+}
+```
+
+This removes the duplicate `handleFreeEnroll` function from CourseCard entirely.
+
+### 3. `src/pages/BatchConfiguration.tsx`
+
+**Current behavior (lines 352-356):**
+```typescript
+// BYPASS FOR FREE ENROLLMENT
+if (finalTotal === 0) {
+    await handleFreeEnroll();
+    return;
+}
+```
+
+**Changes needed:**
+
+a) **Remove the bypass** - free enrollment should go through phone check
+
+b) **Update `handleFreeEnroll` function** (lines 277-334) to:
+   - Accept phone number as parameter
+   - Insert data into `payments` table along with `enrollments`
+   - Collect proper course/addon details for tracking
+
+c) **Modify `handlePayment` function** to:
+   - Always check for phone first (remove the free bypass)
+   - Call `handleFreeEnroll(phone)` when `finalTotal === 0`
+   - Call `processPayment(phone)` when `finalTotal > 0`
+
+### 4. `supabase/functions/create-cashfree-order/index.ts`
+No changes needed - this function is only called for paid courses.
+
+## Technical Details
+
+### Payments Table Insert for Free Enrollments
+
+When inserting into `payments` for free enrollments:
+
+```typescript
+const paymentData = {
+  order_id: `free_${Date.now()}_${userId}`,
+  payment_id: 'free_enrollment',
+  user_id: userId,
+  amount: 0,
+  net_amount: 0,
+  status: 'success',
+  payment_mode: 'free',
+  customer_email: userEmail,
+  customer_phone: phoneNumber,
+  batch: courseName,
+  courses: subjectsString, // comma-separated subject names
+  discount_applied: false,
+  payment_time: new Date().toISOString()
 };
 ```
 
-### 7. `src/pages/CourseDetail.tsx`
-Pass the `isLive` status to the EnrollmentCard component. No need to block viewing the course page (for enrollment history), but disable enrollment.
+### Flow Summary
 
-**Change (where EnrollmentCard is rendered):**
-```typescript
-<EnrollmentCard 
-  course={course}
-  // ... existing props ...
-  isLive={course.is_live === true}
-/>
+```text
+┌─────────────────────────────────────────────────────────┐
+│                  Free Course Enrollment                  │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  1. User clicks "Enroll Now" on free course             │
+│                      ↓                                  │
+│  2. Check if phone exists in user profile               │
+│                      ↓                                  │
+│  ┌──────────┬────────────────────┐                      │
+│  │ No Phone │  Phone Exists      │                      │
+│  └────┬─────┴────────┬───────────┘                      │
+│       ↓              ↓                                  │
+│  Show phone     Continue with                           │
+│  dialog         existing phone                          │
+│       ↓              ↓                                  │
+│  User submits   ──────┘                                 │
+│  phone number                                           │
+│       ↓                                                 │
+│  3. Save phone to profile                               │
+│                      ↓                                  │
+│  4. Insert into `enrollments` table                     │
+│                      ↓                                  │
+│  5. Insert into `payments` table                        │
+│                      ↓                                  │
+│  6. Show success toast & redirect                       │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
 ```
 
-Also pass to MobileEnrollmentBar if it has enrollment action.
+## What Stays Unchanged
 
-### 8. `src/components/dashboard/MyEnrollments.tsx` (NO CHANGE NEEDED)
-This component fetches enrollments directly from the `enrollments` table joined with `courses`. It does NOT filter by `is_live` because we want users to still see their enrollment history for courses they previously enrolled in, even if those courses are now marked as not live.
+- **Paid course flow** - continues to use Cashfree payment gateway
+- **Phone dialog UI** - same dialog/drawer component is reused
+- **Phone validation logic** - country-specific length validation remains
+- **Profile phone storage** - dial_code and phone saved separately
 
 ## Summary Table
 
 | File | Change | Purpose |
 |------|--------|---------|
-| `types.ts` | Add `is_live?: boolean \| null` | Fix TypeScript errors |
-| `EnrollButton.tsx` | Fix `subject_name` type | Fix insert error |
-| `PaidCoursesTab.tsx` | Add `is_live === true` filter | Hide non-live courses |
-| `IITMBSPrep.tsx` | Add `is_live === true` filter | Hide non-live courses |
-| `useRealtimeContentManagement.tsx` | Add `is_live` check | Hide non-live courses |
-| `EnrollmentCard.tsx` | Add disabled state for non-live | Prevent enrollment |
-| `CourseDetail.tsx` | Pass `isLive` prop | Control enrollment UI |
-
-## What Stays Unchanged
-
-- **MyEnrollments.tsx**: Shows all past enrollments regardless of course `is_live` status
-- **BackendIntegratedWrapper.tsx**: Already has `is_live` filter (line 269) - just needs type fix
-- **Courses.tsx & CourseListing.tsx**: Already have `is_live` filter - just needs type fix
+| `EnrollButton.tsx` | Remove free bypass, update `handleFreeEnroll` | Collect phone + insert payments |
+| `CourseCard.tsx` | Use EnrollButton for free courses | Delegate to centralized logic |
+| `BatchConfiguration.tsx` | Remove free bypass, update `handleFreeEnroll` | Collect phone + insert payments |
