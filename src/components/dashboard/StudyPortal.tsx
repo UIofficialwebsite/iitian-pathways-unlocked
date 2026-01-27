@@ -176,7 +176,7 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // UPDATED: Yellow gradient ONLY, no icon
+              // Plain Yellow Fade - No Icon
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -273,8 +273,6 @@ const EnrolledView = ({
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // NOTE: Validation logic moved to StudyPortalContent to prevent race conditions
-
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
 
@@ -301,6 +299,13 @@ const EnrolledView = ({
     }
   }, [isSheetOpen, selectedBatchId]);
 
+  // Scroll reset when batch changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [selectedBatchId]);
+
   useEffect(() => {
     if (!selectedBatchId) return;
 
@@ -309,7 +314,6 @@ const EnrolledView = ({
 
     const fetchDetails = async () => {
       setLoadingDetails(true);
-      // Clear data to prevent stale state
       setFullCourseData(null);
       setScheduleData([]);
       setFaqs(undefined);
@@ -378,26 +382,19 @@ const EnrolledView = ({
   const handleContinue = useCallback(() => {
     const newBatchId = tempSelectedBatchId;
     
-    // Only proceed if we have a valid new selection that differs from current
     if (!newBatchId || newBatchId === selectedBatchId) {
       setIsSheetOpen(false);
       return;
     }
     
-    // Close sheet
     setIsSheetOpen(false);
     
-    // Force clear all stale data to show loading state
+    // Force reset for UI feedback
     setFullCourseData(null);
-    setScheduleData([]);
-    setFaqs(undefined);
-    setActiveTab('features');
-    setViewMode('main');
+    setLoadingDetails(true); 
     
-    // Update the batch ID in parent
     setSelectedBatchId(newBatchId);
     
-    // Show confirmation toast
     const newBatch = enrollments.find(e => e.course_id === newBatchId);
     toast({
       title: "Batch Switched",
@@ -552,7 +549,6 @@ const EnrolledView = ({
 
         <div 
           ref={contentRef}
-          key={selectedBatchId}
           className="flex-1 overflow-y-auto scrollbar-hide bg-background"
         >
             {loadingDetails ? (
@@ -966,25 +962,40 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   
-  // LIFTED STATE: Selected batch ID now lives in parent to survive EnrolledView remounts
-  const [selectedBatchId, setSelectedBatchId] = useState<string>('');
+  // LIFTED STATE: Initialize from localStorage to survive remounts
+  const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
+    return localStorage.getItem('dashboard_selected_batch') || '';
+  });
 
   const filteredContent = getFilteredContent(profile);
   const { notes, pyqs } = filteredContent;
 
   const hasEnrollments = groupedEnrollments.length > 0;
 
-  // New Validation Effect: Ensures selectedBatchId is always valid based on current enrollments
-  // This replaces the child-side validation to avoid race conditions.
+  // Sync to localStorage
+  useEffect(() => {
+    if (selectedBatchId) {
+      localStorage.setItem('dashboard_selected_batch', selectedBatchId);
+    }
+  }, [selectedBatchId]);
+
+  // Validation (modified)
   useEffect(() => {
     if (groupedEnrollments.length > 0) {
       setSelectedBatchId(currentId => {
-        // If we already have a valid ID that exists in the new list, keep it
+        // If currentId matches an enrollment, keep it
         if (currentId && groupedEnrollments.some(e => e.course_id === currentId)) {
           return currentId;
         }
-        // Otherwise, default to the first one
-        return groupedEnrollments[0].course_id;
+        // If we have a saved ID in local storage that matches, use that
+        const saved = localStorage.getItem('dashboard_selected_batch');
+        if (saved && groupedEnrollments.some(e => e.course_id === saved)) {
+          return saved;
+        }
+        // Fallback to first
+        const first = groupedEnrollments[0].course_id;
+        localStorage.setItem('dashboard_selected_batch', first); // Update storage
+        return first;
       });
     }
   }, [groupedEnrollments]);
