@@ -391,7 +391,7 @@ const Footer = () => {
         <div className="border-t border-gray-700 mt-8 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-400 text-sm">
-              © 2025 Unknown IITians. All rights reserved.
+              © 2026 Unknown IITians. All rights reserved.
             </p>
             <div className="flex space-x-6">
               <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm transition-colors">
