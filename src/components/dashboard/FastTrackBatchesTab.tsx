@@ -180,7 +180,8 @@ const FastTrackBatchesTab: React.FC<FastTrackBatchesTabProps> = ({ focusArea, on
       const { data } = await supabase.from('courses')
         .select('*')
         .ilike('exam_category', focusArea)
-        .eq('batch_type', 'fastrack');
+        .eq('batch_type', 'fastrack')
+        .eq('is_live', true);
       if (data) setBatches(data);
       setLoading(false);
     };
