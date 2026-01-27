@@ -176,7 +176,7 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // UPDATED: Yellow gradient ONLY, no icon
+              // Fallback: Yellow gradient ONLY, no icon
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -268,9 +268,6 @@ const EnrolledView = ({
   const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
-  // Ref to track if we're in the middle of a batch switch - prevents validation effect from overriding
-  const isSwitchingBatchRef = useRef(false);
-  
   // Debug: Log component mount/unmount
   useEffect(() => {
     console.log('[BatchSwitch] EnrolledView MOUNTED with selectedBatchId:', selectedBatchId);
@@ -286,38 +283,7 @@ const EnrolledView = ({
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // FIX: Sync selectedBatchId ONLY when enrollments list changes
-  // This effect should NOT depend on selectedBatchId to avoid resetting user's selection
-  useEffect(() => {
-    // Skip if we're in the middle of a batch switch
-    if (isSwitchingBatchRef.current) {
-      console.log('[BatchSwitch] Skipping validation - batch switch in progress');
-      return;
-    }
-    
-    console.log('[BatchSwitch] Enrollments validation effect running, enrollments count:', enrollments.length);
-    
-    if (enrollments.length === 0) {
-      console.log('[BatchSwitch] No enrollments, clearing selection');
-      setSelectedBatchId('');
-      return;
-    }
-    
-    // Only reset if current selection is invalid (use functional update to avoid stale closure)
-    setSelectedBatchId(currentId => {
-      const isCurrentSelectionValid = enrollments.some(e => e.course_id === currentId);
-      console.log('[BatchSwitch] Checking if current selection valid:', currentId, 'Valid:', isCurrentSelectionValid);
-      
-      if (!isCurrentSelectionValid || !currentId) {
-        const newBatchId = enrollments[0].course_id;
-        console.log('[BatchSwitch] Resetting to first enrollment:', newBatchId);
-        setTempSelectedBatchId(newBatchId);
-        return newBatchId;
-      }
-      
-      return currentId;
-    });
-  }, [enrollments, setSelectedBatchId]);
+  // NOTE: Validation logic moved to StudyPortalContent to prevent race conditions
 
   // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
@@ -335,17 +301,11 @@ const EnrolledView = ({
   // Derive current batch summary directly
   const currentBatchSummary = useMemo(() => {
     const found = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
-    console.log('[BatchSwitch] currentBatchSummary computed:', found?.title, 'for selectedBatchId:', selectedBatchId);
     return found;
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
   
-  // Debug: Log whenever selectedBatchId changes
-  useEffect(() => {
-    console.log('[BatchSwitch] selectedBatchId state changed to:', selectedBatchId);
-  }, [selectedBatchId]);
-
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
@@ -430,20 +390,11 @@ const EnrolledView = ({
   const handleContinue = useCallback(() => {
     const newBatchId = tempSelectedBatchId;
     
-    console.log('[BatchSwitch] Current selectedBatchId:', selectedBatchId);
-    console.log('[BatchSwitch] Temp selectedBatchId (new):', newBatchId);
-    
     // Only proceed if we have a valid new selection that differs from current
     if (!newBatchId || newBatchId === selectedBatchId) {
-      console.log('[BatchSwitch] Same batch or invalid, closing sheet');
       setIsSheetOpen(false);
       return;
     }
-    
-    console.log('[BatchSwitch] Switching to new batch:', newBatchId);
-    
-    // Set the switching flag to prevent validation effect from overriding
-    isSwitchingBatchRef.current = true;
     
     // Close sheet
     setIsSheetOpen(false);
@@ -455,25 +406,16 @@ const EnrolledView = ({
     setActiveTab('features');
     setViewMode('main');
     
-    // Update the batch ID - this triggers the useEffect to fetch new data
+    // Update the batch ID in parent
     setSelectedBatchId(newBatchId);
-    
-    console.log('[BatchSwitch] State updates dispatched for:', newBatchId);
     
     // Show confirmation toast
     const newBatch = enrollments.find(e => e.course_id === newBatchId);
-    console.log('[BatchSwitch] New batch data:', newBatch?.title);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
     });
-    
-    // Reset the switching flag after a short delay to allow React to process the state update
-    setTimeout(() => {
-      isSwitchingBatchRef.current = false;
-      console.log('[BatchSwitch] Switching flag reset');
-    }, 100);
-  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast]);
+  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast, setSelectedBatchId]);
 
   const handleDescription = () => {
     setViewMode('description');
@@ -563,7 +505,6 @@ const EnrolledView = ({
   );
 
   // --- SAFE DISPLAY LOGIC ---
-  // Ensure we only show full details if they belong to the current selection.
   const isDataLoadedForCurrentSelection = fullCourseData && fullCourseData.id === selectedBatchId;
   const displayTitle = isDataLoadedForCurrentSelection ? fullCourseData.title : currentBatchSummary?.title;
   const displayDescription = isDataLoadedForCurrentSelection ? fullCourseData.description : currentBatchSummary?.description;
@@ -667,7 +608,7 @@ const EnrolledView = ({
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8" key={`main-view-${selectedBatchId}`}>
+    <div className="space-y-6 sm:space-y-8">
       <div className="premium-course-header rounded-xl p-5 sm:p-6 md:p-8 text-white relative overflow-hidden shadow-lg">
         <div className="relative z-10 flex justify-between items-start gap-4">
           <div className="space-y-1 sm:space-y-2 flex-1">
@@ -1044,6 +985,21 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const { notes, pyqs } = filteredContent;
 
   const hasEnrollments = groupedEnrollments.length > 0;
+
+  // New Validation Effect: Ensures selectedBatchId is always valid based on current enrollments
+  // This replaces the child-side validation to avoid race conditions.
+  useEffect(() => {
+    if (groupedEnrollments.length > 0) {
+      setSelectedBatchId(currentId => {
+        // If we already have a valid ID that exists in the new list, keep it
+        if (currentId && groupedEnrollments.some(e => e.course_id === currentId)) {
+          return currentId;
+        }
+        // Otherwise, default to the first one
+        return groupedEnrollments[0].course_id;
+      });
+    }
+  }, [groupedEnrollments]);
 
   useEffect(() => {
     if (!user) {
