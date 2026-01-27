@@ -76,13 +76,6 @@ const NEETPrep = () => {
     return Array.from(new Set(neetPyqs.map(p => p.year).filter(Boolean))).sort((a, b) => (b || 0) - (a || 0)).map(String);
   }, [pyqs]);
 
-  useEffect(() => {
-    if (!contentLoading && availableSubjects.length > 0 && selectedSubjects.length === 0) {
-      setSelectedSubjects([availableSubjects[0]]);
-      setTempSubjects([availableSubjects[0]]);
-    }
-  }, [contentLoading, availableSubjects]);
-
   // Click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
