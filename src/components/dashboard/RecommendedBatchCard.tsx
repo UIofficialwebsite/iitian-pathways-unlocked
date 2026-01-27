@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GraduationCap, Clock, Tag } from 'lucide-react';
+import { GraduationCap, Clock, Tag, Check } from 'lucide-react';
 import EnrollButton from '@/components/EnrollButton';
 import { supabase } from "@/integrations/supabase/client";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 // --- HELPER FUNCTIONS ---
 const formatDate = (dateStr: string | null | undefined): string => {
@@ -62,6 +63,9 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
     exam_category,
     enroll_now_link,
   } = course;
+
+  // Enrollment status check
+  const { isFullyEnrolled, isMainCourseOwned, hasRemainingAddons } = useEnrollmentStatus(id);
 
   // Logic for "NEW" tag based on updated_at (last 30 days)
   const isNewlyLaunched = useMemo(() => {
@@ -144,11 +148,37 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
   };
 
   const renderBuyButton = () => {
+    const btnClass = "flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors";
+
+    // Fully enrolled - show "Let's Study"
+    if (isFullyEnrolled) {
+      return (
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex-1 bg-green-600 text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+        >
+          LET'S STUDY
+        </button>
+      );
+    }
+
+    // Main owned but addons available - show "Upgrade"
+    if (isMainCourseOwned && hasRemainingAddons) {
+      return (
+        <button
+          onClick={() => navigate(`/courses/${id}/configure`)}
+          className={btnClass}
+        >
+          UPGRADE
+        </button>
+      );
+    }
+
     if (hasAddons) {
       return (
         <button
           onClick={() => navigate(`/courses/${id}/configure`)}
-          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
+          className={btnClass}
         >
           BUY NOW
         </button>
@@ -172,6 +202,13 @@ export const RecommendedBatchCard: React.FC<{ course: any }> = ({ course }) => {
       className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full"
       style={{ borderRadius: '6px' }}
     >
+      {/* ENROLLED Badge */}
+      {isFullyEnrolled && (
+        <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+          <Check className="w-3 h-3" /> ENROLLED
+        </div>
+      )}
+
       {/* Banner */}
       <div
         className="w-full aspect-video bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"

@@ -1,25 +1,77 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Star, CalendarDays, Languages } from "lucide-react";
+import { Star, CalendarDays, Languages, Check } from "lucide-react";
 import { ShareButton } from "../ShareButton";
 import EnrollButton from "@/components/EnrollButton";
 import { Button } from "@/components/ui/button";
 import { Course } from "@/components/admin/courses/types";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 interface IITMCourseCardProps {
   course: Course;
 }
 
 const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
+  const navigate = useNavigate();
   const isPremium = course.course_type === 'Gold';
   const hasDiscount = course.discounted_price && course.discounted_price < course.price;
+
+  // Enrollment status check
+  const { isFullyEnrolled, isMainCourseOwned, hasRemainingAddons } = useEnrollmentStatus(course.id);
+
+  const renderActionButton = () => {
+    // Fully enrolled - show "Let's Study"
+    if (isFullyEnrolled) {
+      return (
+        <Button
+          onClick={() => navigate('/dashboard')}
+          className="bg-green-600 hover:bg-green-700 text-white"
+        >
+          LET'S STUDY
+        </Button>
+      );
+    }
+
+    // Main owned but addons available - show "Upgrade"
+    if (isMainCourseOwned && hasRemainingAddons) {
+      return (
+        <Button
+          onClick={() => navigate(`/courses/${course.id}/configure`)}
+          className={isPremium ?
+            "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
+            "bg-royal hover:bg-royal-dark text-white"}
+        >
+          UPGRADE
+        </Button>
+      );
+    }
+
+    // Normal enrollment flow
+    return (
+      <EnrollButton
+        courseId={course.id}
+        enrollmentLink={course.enroll_now_link || undefined}
+        coursePrice={course.discounted_price || course.price}
+        className={isPremium ?
+          "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
+          "bg-royal hover:bg-royal-dark text-white"}
+      />
+    );
+  };
 
   return (
     <Card
       className={`border-none shadow-md hover:shadow-xl transition-all relative overflow-hidden flex flex-col ${isPremium ? 'bg-gradient-to-r from-amber-50 to-yellow-50 border-2 border-amber-300' : 'bg-white'}`}
     >
+      {/* ENROLLED Badge */}
+      {isFullyEnrolled && (
+        <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+          <Check className="w-3 h-3" /> ENROLLED
+        </div>
+      )}
+
       <CardHeader className="pt-8">
         <div className="flex justify-between items-start mb-2">
           <CardTitle className="text-xl flex items-center flex-wrap">
@@ -78,14 +130,7 @@ const IITMCourseCard: React.FC<IITMCourseCardProps> = ({ course }) => {
               <Link to={`/courses/${course.id}`}>
                   <Button variant="outline">Know More</Button>
               </Link>
-              <EnrollButton
-                courseId={course.id}
-                enrollmentLink={course.enroll_now_link || undefined}
-                coursePrice={course.discounted_price || course.price}
-                className={isPremium ?
-                  "bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-white" :
-                  "bg-royal hover:bg-royal-dark text-white"}
-              />
+              {renderActionButton()}
           </div>
         </div>
         <ShareButton
