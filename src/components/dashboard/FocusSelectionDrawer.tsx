@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle, ArrowLeft, Check } from 'lucide-react';
+import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle, ArrowLeft, Briefcase, Calculator, BookOpen, School, Trophy, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 // Define the shape of the options
-interface FocusOption {
+export interface FocusOption {
   id: string;
   parent_id: string | null;
   label: string;
@@ -24,22 +23,20 @@ interface FocusOption {
 interface FocusSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  rootOption: FocusOption | null; // The option selected on the main page
-  allOptions: FocusOption[]; // Pass all options to avoid re-fetching
+  initialPath: FocusOption[]; // CHANGED: Now accepts a full path
+  allOptions: FocusOption[];
 }
 
 const iconMap: { [key: string]: React.ElementType } = {
-  GraduationCap: GraduationCap,
-  UserCheck: UserCheck,
-  Laptop: Laptop,
-  Microscope: Microscope,
+  GraduationCap, UserCheck, Laptop, Microscope, 
+  Briefcase, Calculator, School, Trophy, User, BookOpen,
   default: Circle,
 };
 
 const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({ 
   isOpen, 
   onClose, 
-  rootOption, 
+  initialPath, 
   allOptions 
 }) => {
   const { user } = useAuth();
@@ -54,16 +51,16 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
   // Current parent ID determines which options to show
   const [currentStepParentId, setCurrentStepParentId] = useState<string | null>(null);
 
-  // Initialize when rootOption changes or modal opens
+  // Initialize when initialPath changes or modal opens
   useEffect(() => {
-    if (isOpen && rootOption) {
-      setSelectionPath([rootOption]);
-      setCurrentStepParentId(rootOption.id);
+    if (isOpen && initialPath.length > 0) {
+      setSelectionPath(initialPath);
+      // The current parent is the ID of the last item in the path
+      setCurrentStepParentId(initialPath[initialPath.length - 1].id);
     }
-  }, [isOpen, rootOption]);
+  }, [isOpen, initialPath]);
 
   const handleOptionClick = (option: FocusOption) => {
-    // Add to path
     const newPath = [...selectionPath, option];
     setSelectionPath(newPath);
 
@@ -74,24 +71,32 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
       // Move to next level
       setCurrentStepParentId(option.id);
     } else {
-      // No children? This is the final selection. Save it.
+      // Final selection
       handleSave(newPath);
     }
   };
 
   const handleBack = () => {
     if (selectionPath.length <= 1) {
-      // If at root level, close drawer
+      // If at root level (or effectively empty), close drawer
       onClose();
       return;
     }
     
-    // Go back one step
+    // Check if we are at the "start" of our initial path to prevent going up too far?
+    // Actually, allowing users to go "up" to the root might be confusing if they clicked a deep link.
+    // For now, let's just pop the last item.
+    
     const newPath = selectionPath.slice(0, -1);
     setSelectionPath(newPath);
-    // Set parent ID to the ID of the NEW last item
-    const lastItem = newPath[newPath.length - 1];
-    setCurrentStepParentId(lastItem.id);
+    
+    // If the new path is empty (shouldn't happen with logic above), set parent to null
+    if (newPath.length === 0) {
+      onClose();
+    } else {
+      const lastItem = newPath[newPath.length - 1];
+      setCurrentStepParentId(lastItem.id);
+    }
   };
 
   const handleSave = async (path: FocusOption[]) => {
@@ -102,7 +107,6 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
 
     setIsLoading(true);
     
-    // Construct updates object
     const updates: { [key: string]: string | null } = {
       program_type: null,
       branch: null,
@@ -125,7 +129,6 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
 
       toast({ title: "Success", description: "Focus area updated successfully!" });
       onClose();
-      // Redirect to dashboard immediately
       navigate('/dashboard'); 
       
     } catch (error: any) {
@@ -149,14 +152,11 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
       ? currentParent.profile_column_to_update.replace('_', ' ')
       : 'Next Step';
       
-    // User-friendly labels
     if (stepTitle === 'program type') stepTitle = 'Program';
     if (stepTitle === 'exam type') stepTitle = 'Exam';
     if (stepTitle === 'student status') stepTitle = 'Current Status';
     
-    // Capitalize first letter
     stepTitle = stepTitle.charAt(0).toUpperCase() + stepTitle.slice(1);
-
     title = `Select ${stepTitle}`;
     description = `For: ${currentParent.label}`;
   }
@@ -228,12 +228,9 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
     );
   }
 
-  // Desktop Dialog matching Login Style
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent 
-        className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-white duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]"
-      >
+      <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-white duration-300">
          <div className="px-6 py-6 border-b border-gray-100 bg-white">
             <DialogTitle className="text-xl font-bold text-gray-900">{title}</DialogTitle>
             <DialogDescription className="text-gray-500 mt-1">{description}</DialogDescription>
