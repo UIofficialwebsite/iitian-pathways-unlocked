@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Input } from "@/components/ui/input";
-import { Search, ChevronRight, BookOpen, ArrowLeft } from "lucide-react";
+import { Search, ChevronRight, BookOpen, ArrowLeft, Loader2 } from "lucide-react";
 import { Tables } from "@/integrations/supabase/types";
 import { FreeBatchSection } from './FreeBatchSection';
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -9,6 +9,9 @@ import SlidersIcon from "@/components/ui/SliderIcon";
 import RefineBatchesModal from "./RefineBatchesModal"; 
 import EnrollButton from "@/components/EnrollButton"; 
 import { useNavigate } from "react-router-dom"; 
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface RegularBatchesTabProps {
   focusArea: string;
@@ -20,8 +23,12 @@ const CourseCard: React.FC<{
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { openLogin } = useLoginModal();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   const discount = course.discounted_price 
     ? Math.round(((course.price - course.discounted_price) / course.price) * 100) 
@@ -50,6 +57,58 @@ const CourseCard: React.FC<{
     checkAddons();
   }, [course.id, course.price]);
 
+  const handleFreeEnroll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+      
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: course.id,
+          amount: 0,
+          status: 'active',
+          payment_id: 'free_enrollment',
+          subject_name: null 
+        });
+
+      if (enrollError) {
+        if (enrollError.code === '23505') { // Unique violation code
+           toast({
+            title: "Already Enrolled",
+            description: "You are already enrolled in this batch.",
+           });
+           navigate(`/courses/${course.id}`);
+           return;
+        }
+        throw enrollError;
+      }
+
+      toast({
+          title: "Success",
+          description: "Successfully enrolled in the batch!",
+      });
+      navigate(`/courses/${course.id}`);
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast({
+          title: "Enrollment Failed",
+          description: "Could not enroll. Please try again.",
+          variant: "destructive",
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   const renderEnrollAction = () => {
     if (hasAddons) {
       return (
@@ -63,6 +122,18 @@ const CourseCard: React.FC<{
           Enroll
         </button>
       );
+    }
+
+    if (course.price === 0 || course.price === null) {
+       return (
+        <button 
+          onClick={handleFreeEnroll}
+          disabled={enrolling}
+          className="bg-black text-white py-2 px-5 rounded-lg font-bold text-[13px] hover:bg-black/90 transition-colors flex items-center justify-center gap-2"
+        >
+          {enrolling ? <Loader2 className="w-4 h-4 animate-spin" /> : "Enroll"}
+        </button>
+       );
     }
 
     return (
