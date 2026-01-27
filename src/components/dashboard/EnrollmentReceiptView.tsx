@@ -21,8 +21,8 @@ interface OrderItem {
 interface ReceiptDetails {
   orderId: string;
   date: string;
-  totalPaid: number;    // From payments.net_amount
-  subtotal: number;     // Sum of basePrices
+  totalPaid: number;    // Sum of all payments for this course
+  subtotal: number;     // Sum of basePrices of all items
   discount: number;     // Calculated: subtotal - totalPaid
   status: string;
   utr: string;
@@ -47,63 +47,51 @@ const EnrollmentReceiptView = () => {
       if (!user || !courseId) return;
 
       try {
-        // 1. Get the LATEST enrollment to find the Order ID
-        const { data: initialEnrollment, error: initialError } = await supabase
+        // 1. Fetch ALL enrollments for this user & course (History + Recent)
+        const { data: allEnrollments, error: enrollError } = await supabase
           .from('enrollments')
-          .select('order_id, created_at, status, courses(id, title, image_url, end_date)')
+          .select(`
+            order_id,
+            created_at,
+            status,
+            amount,
+            subject_name,
+            courses (
+              id,
+              title,
+              image_url,
+              end_date,
+              price,
+              discounted_price
+            )
+          `)
           .eq('user_id', user.id)
           .eq('course_id', courseId)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
+          .order('created_at', { ascending: false }); // Latest first
 
-        if (initialError) throw initialError;
+        if (enrollError) throw enrollError;
 
-        if (!initialEnrollment) {
+        if (!allEnrollments || allEnrollments.length === 0) {
           setLoading(false);
           return;
         }
 
-        const orderId = initialEnrollment.order_id;
-        
-        // 2. Fetch Payment Record (Source of Truth for Final Paid Amount)
-        let paymentData = null;
-        if (orderId) {
+        // 2. Identify all unique Orders involved (Initial + Upgrades)
+        const uniqueOrderIds = [...new Set(allEnrollments.map((e: any) => e.order_id).filter(Boolean))];
+
+        // 3. Fetch Payments for ALL these orders
+        let payments: any[] = [];
+        if (uniqueOrderIds.length > 0) {
           const { data, error } = await supabase
             .from('payments')
             .select('*')
-            .eq('order_id', orderId)
-            .maybeSingle();
+            .in('order_id', uniqueOrderIds)
+            .order('created_at', { ascending: false }); // Latest payment first
             
-          if (!error) paymentData = data;
+          if (!error && data) payments = data;
         }
 
-        // 3. Fetch All Enrollments for this Order (Items)
-        let allEnrollments: any[] = [];
-        if (orderId) {
-          const { data, error } = await supabase
-            .from('enrollments')
-            .select(`
-              amount,
-              subject_name,
-              courses (
-                id,
-                title,
-                image_url,
-                end_date,
-                price,
-                discounted_price
-              )
-            `)
-            .eq('order_id', orderId);
-            
-          if (!error && data) allEnrollments = data;
-        } else {
-          // Fallback if no order_id
-          allEnrollments = [initialEnrollment];
-        }
-
-        // 4. Fetch Master Prices for Add-ons
+        // 4. Fetch Master Prices for Add-ons (for accurate base price display)
         let addonPricesMap = new Map<string, number>();
         if (allEnrollments.some((e: any) => e.subject_name)) {
           const { data: addonsData } = await supabase
@@ -118,7 +106,7 @@ const EnrollmentReceiptView = () => {
           }
         }
 
-        // 5. Build Item List & Calculate Subtotal (Based on Master Pricing)
+        // 5. Build Comprehensive Item List & Calculate Subtotal
         let calculatedSubtotal = 0;
         
         const finalItems: OrderItem[] = allEnrollments.map((item: any) => {
@@ -128,17 +116,14 @@ const EnrollmentReceiptView = () => {
           let basePrice = 0;
           
           if (isAddon) {
-            // Add-on Logic: Use Master Price from course_addons
+            // Add-on Logic
             basePrice = addonPricesMap.get(item.subject_name) || 0;
-            // Fallback: If not in master table, use enrollment snapshot
             if (basePrice === 0) basePrice = Number(item.amount) || 0;
           } else {
-            // Batch Logic: Use discounted_price if available, else price
+            // Batch Logic
             const masterPrice = Number(item.courses?.price) || 0;
             const masterDiscounted = Number(item.courses?.discounted_price);
             
-            // If discounted_price exists and is valid (e.g. > 0), use it as base.
-            // This treats the "Offer Price" as the Base Price for the receipt.
             if (!isNaN(masterDiscounted) && masterDiscounted > 0) {
                 basePrice = masterDiscounted;
             } else {
@@ -157,42 +142,47 @@ const EnrollmentReceiptView = () => {
             type: (isAddon ? 'Add-on' : 'Batch') as 'Add-on' | 'Batch'
           };
         }).sort((a, b) => {
+           // Batch always on top
            if (a.type === 'Batch' && b.type !== 'Batch') return -1;
            if (b.type === 'Batch' && a.type !== 'Batch') return 1;
            return 0;
         });
 
-        // 6. Final Global Calculations
+        // 6. Calculate Total Paid (Sum of all successful payments)
         let finalTotalPaid = 0;
-        let finalStatus = paymentData?.status || initialEnrollment.status || 'Success';
-        let finalDate = paymentData?.created_at || initialEnrollment.created_at;
-        let finalUtr = paymentData?.utr || '-';
-        let finalPaymentTime = paymentData?.payment_time || new Date(finalDate).toLocaleTimeString();
+        
+        if (payments.length > 0) {
+            // Filter for successful/captured payments to avoid failed retries counting
+            const validPayments = payments.filter(p => p.status === 'Success' || p.status === 'captured' || p.status === 'PAID');
+            const paymentsToSum = validPayments.length > 0 ? validPayments : payments;
 
-        if (paymentData) {
-          const dbNet = Number(paymentData.net_amount);
-          const dbAmount = Number(paymentData.amount);
-          
-          // Total Paid is strictly what hit the gateway
-          // If net_amount is 0 (free course), it stays 0.
-          if (dbNet > 0) {
-             finalTotalPaid = dbNet;
-          } else if (dbNet === 0 && paymentData.net_amount !== null) {
-             finalTotalPaid = 0; // Explicitly free
-          } else {
-             // Fallback for older records where net_amount might be missing
-             finalTotalPaid = dbAmount || 0;
-          }
+            finalTotalPaid = paymentsToSum.reduce((sum, p) => {
+                const net = Number(p.net_amount);
+                const amt = Number(p.amount);
+                // If net_amount exists (>0), prefer it. Else use amount.
+                return sum + (net > 0 ? net : (amt || 0));
+            }, 0);
         } else {
-          // Fallback logic
-          finalTotalPaid = allEnrollments.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            // Fallback: Sum of enrollment amounts if no payment records found
+            finalTotalPaid = allEnrollments.reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);
         }
+
+        // 7. Determine Metadata (Use Latest Transaction Info)
+        // Since we ordered allEnrollments and payments by desc, index 0 is latest.
+        const latestEnrollment = allEnrollments[0];
+        const latestPayment = payments[0]; 
+
+        const finalStatus = latestPayment?.status || latestEnrollment.status || 'Success';
+        const finalDate = latestPayment?.created_at || latestEnrollment.created_at;
+        const finalUtr = latestPayment?.utr || (payments.length > 1 ? 'Multiple' : '-'); // Indicate multiple transactions if applicable
+        const finalPaymentTime = latestPayment?.payment_time || new Date(finalDate).toLocaleTimeString();
+        const displayOrderId = latestEnrollment.order_id || (latestEnrollment.courses as any)?.id || 'N/A';
 
         // Logic: Discount = (Subtotal Base) - (Total Paid)
         const finalDiscount = Math.max(0, calculatedSubtotal - finalTotalPaid);
 
         setReceipt({
-          orderId: orderId || (initialEnrollment.courses as any)?.id || 'N/A',
+          orderId: displayOrderId,
           date: finalDate,
           totalPaid: finalTotalPaid,
           subtotal: calculatedSubtotal,
@@ -334,7 +324,7 @@ const EnrollmentReceiptView = () => {
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
             <div className="flex justify-between text-[13px] text-[#64748b] mb-5">
               <span>Order Id: {receipt.orderId}</span>
-              <span>Order Date: {formatDate(receipt.date)}</span>
+              <span>Latest Transaction: {formatDate(receipt.date)}</span>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-center bg-[#fcfdfe] border border-[#f1f5f9] rounded-[10px] p-4 gap-4">
@@ -355,7 +345,7 @@ const EnrollmentReceiptView = () => {
 
             {addOns.length > 0 && (
               <div className="mt-4 px-4 pt-4 border-t border-[#f1f5f9]">
-                <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons</h4>
+                <h4 className="text-xs font-semibold text-[#64748b] uppercase tracking-wider mb-3">Included Add-ons (All Purchased)</h4>
                 <div className="space-y-3">
                   {addOns.map((addon, idx) => (
                     <div key={idx} className="flex items-center justify-between group py-1">
@@ -382,7 +372,7 @@ const EnrollmentReceiptView = () => {
         {/* Right Column - Pricing */}
         <div className="flex flex-col gap-6">
           <div className="bg-white rounded-xl border border-[#e2e8f0] shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
-            <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Details</h2>
+            <h2 className="text-[17px] font-bold text-[#334155] mb-5">Payment Summary</h2>
             
             {/* List breakdown - Showing BASE PRICE for each item */}
             {displayItems.map((item, idx) => (
@@ -411,7 +401,7 @@ const EnrollmentReceiptView = () => {
             <div className="flex justify-between text-sm text-[#64748b] mb-3"><span>Delivery Charges</span><span>₹ 0.00</span></div>
             
             <div className="mt-4 pt-4 border-t border-[#e2e8f0] flex justify-between text-base text-[#334155] font-medium">
-              <span>Total Paid</span>
+              <span>Total Paid (Cumulative)</span>
               <span>{receipt.totalPaid === 0 ? '₹ 0.00' : formatCurrency(receipt.totalPaid)}</span>
             </div>
           </div>
@@ -444,10 +434,9 @@ const EnrollmentReceiptView = () => {
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#111827', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>INVOICE</h1>
+            <h1 style={{ fontSize: '32px', fontWeight: '800', color: '#111827', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>STATEMENT</h1>
             <div style={{ fontSize: '14px', color: '#6b7280' }}>
-              <p style={{ margin: '4px 0' }}><strong>Invoice #:</strong> INV-{receipt.orderId.slice(-8).toUpperCase()}</p>
-              <p style={{ margin: '4px 0' }}><strong>Order ID:</strong> {receipt.orderId}</p>
+              <p style={{ margin: '4px 0' }}><strong>Reference ID:</strong> {receipt.orderId}</p>
               <p style={{ margin: '4px 0' }}><strong>Date:</strong> {formatDate(receipt.date)}</p>
               <p style={{ margin: '4px 0' }}><strong>Time:</strong> {receipt.paymentTime}</p>
               <p style={{ margin: '4px 0' }}><strong>UTR:</strong> {receipt.utr}</p>
@@ -509,11 +498,11 @@ const EnrollmentReceiptView = () => {
         <div style={{ marginTop: 'auto', borderTop: '1px solid #e5e7eb', paddingTop: '24px' }}>
           <h4 style={{ fontSize: '12px', fontWeight: 'bold', color: '#111827', marginBottom: '8px', textTransform: 'uppercase' }}>Terms & Conditions / Legal Disclaimer</h4>
           <div style={{ fontSize: '10px', color: '#6b7280', lineHeight: '1.6', textAlign: 'justify' }}>
-            <p style={{ marginBottom: '6px' }}>1. <strong>Final Sale:</strong> This receipt serves as proof of payment for digital educational services provided by Unknown IITians. All sales are final.</p>
+            <p style={{ marginBottom: '6px' }}>1. <strong>Consolidated Statement:</strong> This document represents a consolidated record of all access purchased for this course.</p>
             <p style={{ marginBottom: '6px' }}>2. <strong>Unauthorized Distribution:</strong> The content provided is the intellectual property of Unknown IITians. Unauthorized copying or distribution is strictly prohibited.</p>
             <p style={{ marginBottom: '6px' }}>3. <strong>Jurisdiction:</strong> Any disputes shall be subject to the exclusive jurisdiction of the courts located in New Delhi, India.</p>
             <p style={{ marginBottom: '6px' }}>4. <strong>Service Claims:</strong> Unknown IITians makes no guarantees regarding specific exam results. The materials are provided "as is".</p>
-            <p style={{ marginBottom: '0' }}>This is a computer-generated invoice and does not require a physical signature.</p>
+            <p style={{ marginBottom: '0' }}>This is a computer-generated statement and does not require a physical signature.</p>
           </div>
           <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '12px', color: '#9ca3af' }}>© {new Date().getFullYear()} Unknown IITians. All rights reserved. | www.unknowniitians.live</div>
         </div>
