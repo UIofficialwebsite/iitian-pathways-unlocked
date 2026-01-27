@@ -4,6 +4,8 @@ import { Loader2, Tag } from "lucide-react";
 import { EnrollmentCardProps } from './EnrollmentCard';
 import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 export function MobileEnrollmentBar({
   course,
@@ -13,6 +15,8 @@ export function MobileEnrollmentBar({
   enrolling
 }: EnrollmentCardProps) {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
   const [isVisible, setIsVisible] = useState(true);
 
   // Logic to hide bar when footer is reached
@@ -44,6 +48,11 @@ export function MobileEnrollmentBar({
 
   // Button Action Logic
   const handleAction = () => {
+    if (!user) {
+      openLogin();
+      return;
+    }
+
     if (customEnrollHandler) {
       customEnrollHandler();
     } else {
@@ -68,17 +77,24 @@ export function MobileEnrollmentBar({
       {/* Pricing Info */}
       <div className="flex flex-col gap-0.5">
         <div className="flex items-baseline gap-2">
-          <span className="text-xl font-medium tracking-tight text-blue-800">
-            ₹{price.toLocaleString()}
-          </span>
-          {hasDiscount && (
+          {price === 0 ? (
+            <span className="text-xl font-bold tracking-tight text-[#1b8b5a]">
+              FREE
+            </span>
+          ) : (
+            <span className="text-xl font-medium tracking-tight text-blue-800">
+              ₹{price.toLocaleString()}
+            </span>
+          )}
+          
+          {hasDiscount && price !== 0 && (
             <span className="text-xs text-slate-500 line-through font-normal opacity-80">
               ₹{originalPrice.toLocaleString()}
             </span>
           )}
         </div>
         
-        {hasDiscount && (
+        {hasDiscount && price !== 0 && (
           <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 w-fit uppercase tracking-wide">
             <Tag className="w-2.5 h-2.5 fill-green-700" />
             {discountPercentage}% Off
