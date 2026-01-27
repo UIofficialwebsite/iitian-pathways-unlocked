@@ -1,181 +1,189 @@
 
-# Fix ProfileEditModal to Display Correct Dial Code
+# Fix `is_live` Course Visibility and Enrollment Control
 
-## Problem Identified
+## Problem Summary
 
-The database correctly shows:
-- **dial_code**: `+61` (Australia)
-- **phone**: (empty or just digits)
+The build errors indicate that the `Course` type in `src/components/admin/courses/types.ts` is missing the `is_live` property, which is already present in the Supabase `courses` table. This causes TypeScript errors when filtering by `is_live` in multiple files.
 
-But the `ProfileEditModal` ignores the `dial_code` column and defaults to `+91` because it tries to parse an old combined phone format.
+Additionally, we need to:
+1. Hide non-live courses from all public course listings
+2. Prevent enrollment in non-live courses via the EnrollmentCard
+3. Keep enrollment history visible regardless of course live status
 
-## Root Cause
+## Build Errors to Fix
 
-Lines 41-55 in `ProfileEditModal.tsx`:
-```typescript
-const rawPhone = profile.phone || "";
-if(rawPhone.startsWith("+91")) {
-   setCountryCode("+91");           // Always defaults here
-   setLocalPhone(rawPhone.replace("+91", "").trim());
-} else if (rawPhone.length > 0) {
-   setCountryCode("+91");           // Or here
-   setLocalPhone(rawPhone);
-}
 ```
-
-The code never checks `profile.dial_code` which now stores the dial code separately.
-
-## Solution
-
-Update `ProfileEditModal.tsx` to:
-
-1. **Read `dial_code` from profile directly** - use `profile.dial_code` instead of parsing
-2. **Fetch country codes** - add dropdown with all countries like other components
-3. **Save both fields separately** - update both `dial_code` and `phone` columns
-4. **Add validation** - enforce phone length based on selected country
+src/components/BackendIntegratedWrapper.tsx(269,20): error TS2339: Property 'is_live' does not exist on type 'Course'.
+src/components/EnrollButton.tsx(444,11): error TS2769: No overload matches this call.
+src/pages/CourseListing.tsx(83,57): error TS2339: Property 'is_live' does not exist on type 'Course'.
+src/pages/Courses.tsx(60,47): error TS2339: Property 'is_live' does not exist on type 'Course'.
+```
 
 ## Files to Modify
 
-### `src/components/dashboard/ProfileEditModal.tsx`
+### 1. `src/components/admin/courses/types.ts`
+Add the missing `is_live` property to the Course interface.
 
-**1. Add new state variables (after line 27):**
+**Change:**
 ```typescript
-const [countryCodes, setCountryCodes] = useState<Array<{
-  dial_code: string;
-  name: string;
-  phone_length: number;
-}>>([]);
-const [expectedPhoneLength, setExpectedPhoneLength] = useState(10);
-```
-
-**2. Add useEffect to fetch country codes (after line 60):**
-```typescript
-useEffect(() => {
-  if (isOpen && countryCodes.length === 0) {
-    supabase
-      .from('country_codes')
-      .select('dial_code, name, phone_length')
-      .order('name')
-      .then(({ data, error }) => {
-        if (!error && data) {
-          setCountryCodes(data);
-        }
-      });
-  }
-}, [isOpen, countryCodes.length]);
-```
-
-**3. Update the profile loading logic (lines 41-55) to:**
-```typescript
-// Use dial_code if available, otherwise try to parse from phone
-if (profile.dial_code) {
-  setCountryCode(profile.dial_code);
-  setLocalPhone(profile.phone || "");
-  // Set expected length based on dial code
-  const dialDigits = profile.dial_code.replace('+', '');
-  supabase.from('country_codes')
-    .select('phone_length')
-    .eq('dial_code', dialDigits)
-    .single()
-    .then(({ data }) => {
-      if (data) setExpectedPhoneLength(data.phone_length);
-    });
-} else {
-  // Fallback for old data
-  const rawPhone = profile.phone || "";
-  if (rawPhone.includes(" ")) {
-    const parts = rawPhone.split(" ");
-    setCountryCode(parts[0] || "+91");
-    setLocalPhone(parts.slice(1).join(""));
-  } else {
-    setCountryCode("+91");
-    setLocalPhone(rawPhone);
-  }
+export interface Course {
+  // ... existing fields ...
+  parent_course_id?: string | null;
+  is_live?: boolean | null;  // ADD THIS LINE
 }
 ```
 
-**4. Update handleMainSave (lines 80-102) to save dial_code separately:**
+### 2. `src/components/EnrollButton.tsx` (Line ~444)
+Fix the TypeScript error on the `insert` call. The error suggests the object structure is incorrect. Looking at line 444, the `subject_name` field should be a string or null, not an array.
+
+**Change (around line 449):**
 ```typescript
-const { error } = await supabase
-  .from('profiles')
-  .update({
-    student_name: fullName,
-    gender: gender,
-    dial_code: countryCode,  // Save dial_code separately
-    phone: localPhone,       // Save only the digits
-  })
-  .eq('id', profile.id);
+// Before:
+subject_name: selectedSubjects.length > 0 ? selectedSubjects : null
+
+// After:
+subject_name: selectedSubjects.length > 0 ? selectedSubjects[0] : null
 ```
 
-**5. Replace the phone input section (lines 162-196) with a proper dropdown:**
+### 3. `src/components/iitm/PaidCoursesTab.tsx`
+Filter out non-live courses before any other filtering.
+
+**Change (around line 28):**
 ```typescript
-<div className="space-y-1">
-  <label className="text-[11px] font-semibold text-[#555] uppercase tracking-wide">Mobile Number</label>
-  <div className={`flex items-center gap-2 ${isPhoneEditable ? '' : ''}`}>
-    <select
-      value={countryCode}
-      onChange={(e) => {
-        setCountryCode(e.target.value);
-        const dialDigits = e.target.value.replace('+', '');
-        const country = countryCodes.find(c => c.dial_code === dialDigits);
-        if (country) setExpectedPhoneLength(country.phone_length);
-      }}
-      disabled={!isPhoneEditable}
-      className={`h-9 px-2 border border-[#d1d5db] rounded-md text-[13px] bg-white ${!isPhoneEditable ? 'text-[#888] cursor-not-allowed bg-[#f9fafb]' : 'text-[#333]'}`}
-    >
-      {countryCodes.length === 0 ? (
-        <option value={countryCode}>{countryCode}</option>
-      ) : (
-        countryCodes.map((c) => (
-          <option key={c.dial_code} value={`+${c.dial_code}`}>
-            +{c.dial_code} {c.name}
-          </option>
-        ))
-      )}
-    </select>
-    
-    <input 
-      ref={phoneInputRef}
-      type="tel"
-      value={localPhone}
-      onChange={(e) => {
-        const digitsOnly = e.target.value.replace(/[^0-9]/g, '').slice(0, expectedPhoneLength);
-        setLocalPhone(digitsOnly);
-      }}
-      className={`flex-1 h-9 px-3 border border-[#d1d5db] rounded-md text-[13px] ${!isPhoneEditable ? 'text-[#666] cursor-not-allowed bg-[#f9fafb]' : 'text-[#333]'}`}
-      placeholder={`${'9'.repeat(expectedPhoneLength)}`}
-      disabled={!isPhoneEditable}
-      maxLength={expectedPhoneLength}
-    />
-    
-    <button 
-      type="button" 
-      onClick={handlePhoneBtnClick}
-      className="text-[11px] font-medium text-[#2563eb] hover:underline whitespace-nowrap px-1 cursor-pointer"
-    >
-      {isPhoneEditable ? "Done" : "Edit"}
-    </button>
-  </div>
-  {isPhoneEditable && (
-    <p className="text-[11px] text-gray-500">Enter {expectedPhoneLength} digits for selected country</p>
-  )}
-</div>
+// Before:
+const iitmCourses = courses.filter(course => 
+  course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS'
+);
+
+// After:
+const iitmCourses = courses.filter(course => 
+  course.is_live === true && 
+  (course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS')
+);
 ```
 
-## Summary
+### 4. `src/pages/IITMBSPrep.tsx`
+Filter out non-live courses.
 
-| Change | Location |
-|--------|----------|
-| Add countryCodes state | Line 27-30 |
-| Fetch country codes on open | After line 60 |
-| Read profile.dial_code first | Lines 41-55 |
-| Save dial_code separately | Lines 84-90 |
-| Dropdown for country selection | Lines 162-196 |
+**Change (around line 155-157):**
+```typescript
+// Before:
+const iitmCourses = useMemo(() => 
+  courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
+, [courses]);
 
-## Expected Result
+// After:
+const iitmCourses = useMemo(() => 
+  courses.filter(c => 
+    c.is_live === true && 
+    (c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
+  )
+, [courses]);
+```
 
-The Edit Details modal will:
-1. Show the correct dial code (+61 Australia) from the database
-2. Allow users to select from a dropdown of all countries
-3. Enforce the correct phone length for each country
-4. Save dial_code and phone as separate fields
+### 5. `src/hooks/useRealtimeContentManagement.tsx`
+Add `is_live` filter to the `filterCoursesByProfile` function.
+
+**Change (around line 361):**
+```typescript
+// Before:
+const filterCoursesByProfile = (courses: Course[]) => {
+  return courses.filter(course => {
+    if (profile.program_type === 'IITM_BS') {
+      // ...
+    }
+  });
+};
+
+// After:
+const filterCoursesByProfile = (courses: Course[]) => {
+  return courses.filter(course => {
+    // First check if course is live
+    if (course.is_live !== true) return false;
+    
+    if (profile.program_type === 'IITM_BS') {
+      // ... rest of logic
+    }
+  });
+};
+```
+
+### 6. `src/components/courses/detail/EnrollmentCard.tsx`
+Add logic to prevent enrollment for non-live courses. Display a message when course is not live.
+
+**Changes:**
+
+a) Add `isLive` prop to the component interface (line ~22):
+```typescript
+export interface EnrollmentCardProps {
+  course: Course;
+  // ... existing props ...
+  isLive?: boolean;  // ADD THIS
+}
+```
+
+b) Update the component to accept the prop (line ~28):
+```typescript
+const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
+  course, 
+  // ... existing props ...
+  isLive = true  // Default to true for backward compatibility
+}) => {
+```
+
+c) Update `renderMainButton` function (around line 118) to check live status:
+```typescript
+const renderMainButton = () => {
+  const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
+  
+  // If course is not live, show disabled state
+  if (!isLive) {
+    return (
+      <Button 
+        size="lg" 
+        className="flex-1 text-lg bg-gray-400 text-white h-11 min-w-0 px-4 cursor-not-allowed"
+        disabled
+      >
+        <span className="truncate">Enrollment Closed</span>
+      </Button>
+    );
+  }
+  
+  // ... rest of existing logic ...
+};
+```
+
+### 7. `src/pages/CourseDetail.tsx`
+Pass the `isLive` status to the EnrollmentCard component. No need to block viewing the course page (for enrollment history), but disable enrollment.
+
+**Change (where EnrollmentCard is rendered):**
+```typescript
+<EnrollmentCard 
+  course={course}
+  // ... existing props ...
+  isLive={course.is_live === true}
+/>
+```
+
+Also pass to MobileEnrollmentBar if it has enrollment action.
+
+### 8. `src/components/dashboard/MyEnrollments.tsx` (NO CHANGE NEEDED)
+This component fetches enrollments directly from the `enrollments` table joined with `courses`. It does NOT filter by `is_live` because we want users to still see their enrollment history for courses they previously enrolled in, even if those courses are now marked as not live.
+
+## Summary Table
+
+| File | Change | Purpose |
+|------|--------|---------|
+| `types.ts` | Add `is_live?: boolean \| null` | Fix TypeScript errors |
+| `EnrollButton.tsx` | Fix `subject_name` type | Fix insert error |
+| `PaidCoursesTab.tsx` | Add `is_live === true` filter | Hide non-live courses |
+| `IITMBSPrep.tsx` | Add `is_live === true` filter | Hide non-live courses |
+| `useRealtimeContentManagement.tsx` | Add `is_live` check | Hide non-live courses |
+| `EnrollmentCard.tsx` | Add disabled state for non-live | Prevent enrollment |
+| `CourseDetail.tsx` | Pass `isLive` prop | Control enrollment UI |
+
+## What Stays Unchanged
+
+- **MyEnrollments.tsx**: Shows all past enrollments regardless of course `is_live` status
+- **BackendIntegratedWrapper.tsx**: Already has `is_live` filter (line 269) - just needs type fix
+- **Courses.tsx & CourseListing.tsx**: Already have `is_live` filter - just needs type fix
