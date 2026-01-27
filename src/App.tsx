@@ -36,6 +36,7 @@ function lazyWithRetry<T extends ComponentType<any>>(
 // Lazy Load Pages with retry
 const Index = lazyWithRetry(() => import("./pages/Index"));
 const Auth = lazyWithRetry(() => import("./pages/Auth"));
+const FocusArea = lazyWithRetry(() => import("./pages/FocusArea"));
 const CourseListing = lazyWithRetry(() => import("./pages/CourseListing"));
 const Courses = lazyWithRetry(() => import("./pages/Courses"));
 const JEEPrep = lazyWithRetry(() => import("./pages/JEEPrep"));
@@ -92,6 +93,9 @@ const App = () => (
                   <Route path="/student/login" element={<StudentLogin />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
                   
+                  {/* Focus Area Selection Route */}
+                  <Route path="/focus-area" element={<FocusArea />} />
+                  
                   {/* Courses */}
                   <Route path="/courses" element={<Courses />} />
                   <Route path="/courses/category/:examCategory" element={<Courses />} />
@@ -100,7 +104,6 @@ const App = () => (
                   <Route path="/courses/:courseId/configure" element={<BatchConfiguration />} />
                   
                   {/* Exam Prep */}
-                  {/* Removed /exam-preparation route */}
                   <Route path="/exam-preparation/jee/*" element={<JEEPrep />} />
                   <Route path="/exam-preparation/neet/*" element={<NEETPrep />} />
                   
