@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react'; // Removed useState since modal state is no longer needed
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
 import { useAuth } from '@/hooks/useAuth';
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
-import FocusAreaModal from './FocusAreaModal';
+// Removed FocusAreaModal import
 
 // Define profile type locally or import if available globally
 interface UserProfile {
@@ -40,7 +40,7 @@ interface DashboardTopNavProps {
 const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }: DashboardTopNavProps) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
+  // Removed isFocusModalOpen state
 
   const handleLogout = async () => {
     await signOut();
@@ -118,9 +118,9 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           {/* Right: Focus Area & User Menu */}
           <div className="flex items-center gap-2 sm:gap-4">
             
-            {/* Focus Area Box (Low Opacity Black, Capitalized, Arrow) */}
+            {/* Focus Area Box - Redirects to /focus-area */}
             <div 
-              onClick={() => setIsFocusModalOpen(true)}
+              onClick={() => navigate('/focus-area')}
               className="flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 cursor-pointer bg-black/80 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-black/70 transition-all select-none max-w-[140px] sm:max-w-none"
             >
               {getProfileDisplay()}
@@ -189,13 +189,8 @@ const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }:
           </div>
         </div>
       </div>
-
-      <FocusAreaModal
-        isOpen={isFocusModalOpen}
-        onClose={() => setIsFocusModalOpen(false)}
-        profile={profile as any}
-        onProfileUpdate={onProfileUpdate}
-      />
+      
+      {/* Removed FocusAreaModal Component from render */}
     </>
   );
 };
