@@ -9,6 +9,8 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from "@/integrations/supabase/client";
 import { ShareButton } from '@/components/ShareButton';
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 export interface EnrollmentCardProps {
     course: Course;
@@ -42,6 +44,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
     const cardRef = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
+    const { user } = useAuth();
+    const { openLogin } = useLoginModal();
 
     const discountPercentage = course.price && course.discounted_price
         ? Math.round(((course.price - course.discounted_price) / course.price) * 100)
@@ -152,7 +156,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                 <Button
                     size="lg"
                     className={btnClasses}
-                    onClick={() => navigate(`/courses/${course.id}/configure`)}
+                    onClick={() => {
+                        if (!user) {
+                            openLogin();
+                            return;
+                        }
+                        navigate(`/courses/${course.id}/configure`);
+                    }}
                 >
                     <span className="truncate">Configure Plan</span>
                 </Button>
@@ -188,6 +198,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     };
 
     const renderPrice = () => {
+        // Case 1: Base is Free + Paid Add-ons exist => "Starts at ₹..."
         if ((course.price === 0 || course.price === null) && minAddonPrice !== null) {
             return (
                 <div className="flex flex-col">
@@ -197,6 +208,16 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
+        // Case 2: True Free (Base 0 + No Paid Add-ons)
+        if (course.price === 0 || course.price === null) {
+            return (
+                <div className="flex items-baseline">
+                    <span className="text-3xl font-bold text-[#1b8b5a]">FREE</span>
+                </div>
+            );
+        }
+
+        // Case 3: Paid Course
         return (
             <div className="flex items-baseline">
                 <span className="text-3xl font-bold text-gray-900">₹{course.discounted_price || course.price}</span>
@@ -218,7 +239,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
                         <div className="flex items-center justify-between mb-4">
                             {renderPrice()}
                             
-                            {course.discounted_price && (
+                            {course.discounted_price && (course.price !== 0 && course.price !== null) && (
                                 <div className="relative">
                                     <div className="bg-green-500 text-white font-bold text-sm px-3 py-1 rounded-md">
                                         {discountPercentage}% OFF
