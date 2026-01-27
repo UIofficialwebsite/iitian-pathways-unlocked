@@ -79,8 +79,11 @@ const CourseListing = () => {
   }, [location.pathname, location.search, examCategory]);
 
   const categoryFilteredCourses = useMemo(() => {
-    if (!examCategory || examCategory === 'all') return courses;
-    return courses.filter(course => 
+    // Check is_live to determine if the course should be displayed
+    const liveCourses = courses.filter(course => course.is_live === true);
+
+    if (!examCategory || examCategory === 'all') return liveCourses;
+    return liveCourses.filter(course => 
       course.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase()
     );
   }, [courses, examCategory]);
