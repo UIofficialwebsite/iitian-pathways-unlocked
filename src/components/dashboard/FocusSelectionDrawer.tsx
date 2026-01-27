@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle, ArrowLeft, Briefcase, Calculator, BookOpen, School, Trophy, User, Atom } from 'lucide-react';
+import { Loader2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 
 // Exporting interface for use in FocusArea page
 export interface FocusOption {
@@ -27,23 +26,6 @@ interface FocusSelectionDrawerProps {
   rootOption: FocusOption | null; 
   allOptions: FocusOption[];
 }
-
-// Extended Icon Map to match new design vibes
-const iconMap: { [key: string]: React.ElementType } = {
-  GraduationCap, UserCheck, Laptop, Microscope, 
-  Briefcase, Calculator, School, Trophy, User, BookOpen, Atom,
-  default: Circle,
-};
-
-// Colors for icons to cycle through (Premium look)
-const iconColors = [
-  "text-blue-500",   // Engineering Blue
-  "text-emerald-500", // Medical Green
-  "text-purple-500",  // Jobs Purple
-  "text-amber-500",   // Warning/Orange
-  "text-indigo-500",  // Indigo
-  "text-rose-500",    // Red
-];
 
 const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({ 
   isOpen, 
@@ -166,41 +148,30 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
     <div className="w-full h-full flex flex-col font-sans px-6 pb-8">
       {isLoading ? (
         <div className="flex flex-col items-center justify-center h-64 space-y-4 animate-in fade-in">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <Loader2 className="h-10 w-10 animate-spin text-gray-900" />
           <p className="text-sm text-gray-500 font-medium">Setting up your personalized dashboard...</p>
         </div>
       ) : (
         <div className="space-y-6 mt-2">
            {currentOptions.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {currentOptions.map((option, index) => {
-                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
-                // Assign color based on index or type logic
-                const iconColor = iconColors[index % iconColors.length];
-                
-                return (
-                  <div
-                    key={option.id}
-                    onClick={() => handleOptionClick(option)}
-                    className="group relative flex items-center justify-between p-5 rounded-xl border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:border-gray-800 hover:shadow-sm"
-                  >
-                    <div className="flex items-center gap-4">
-                      {/* Icon Container */}
-                      <div className="flex-shrink-0">
-                         <Icon className={cn("w-6 h-6", iconColor)} />
-                      </div>
-                      
-                      {/* Text Label */}
-                      <span className="font-semibold text-[15px] text-gray-900 group-hover:text-black">
-                        {option.label}
-                      </span>
-                    </div>
-
-                    {/* Arrow Right */}
-                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+              {currentOptions.map((option) => (
+                <div
+                  key={option.id}
+                  onClick={() => handleOptionClick(option)}
+                  className="group relative flex items-center justify-between p-5 rounded-xl border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:border-gray-800 hover:shadow-sm"
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Text Label - Simple & Clean */}
+                    <span className="font-semibold text-[15px] text-gray-900 group-hover:text-black">
+                      {option.label}
+                    </span>
                   </div>
-                );
-              })}
+
+                  {/* Arrow Right */}
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="text-center py-12">
@@ -248,7 +219,6 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
               <DialogTitle className="text-[1.4rem] font-semibold text-gray-900">{title}</DialogTitle>
               <DialogDescription className="text-gray-500 mt-1">{description}</DialogDescription>
             </div>
-            {/* Close button is handled by DialogPrimitive, but we can add a custom one if needed or rely on default X */}
          </div>
          <div className="bg-white min-h-[300px] max-h-[70vh] overflow-y-auto custom-scrollbar">
             {Content}
