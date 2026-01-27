@@ -49,9 +49,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null); setSession(null); setIsAdmin(false); setUserRole(null);
-    window.location.href = '/';
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      // Clear all auth state immediately
+      setUser(null); 
+      setSession(null); 
+      setIsAdmin(false); 
+      setUserRole(null);
+      
+      // REMOVED: window.location.href = '/'; 
+      // This line was causing a race condition where the page reloaded 
+      // before the local storage token was fully cleared, causing auto-relogin.
+      // Navigation is now handled by the component calling signOut (e.g., NavBar).
+    }
   };
 
   useEffect(() => {
