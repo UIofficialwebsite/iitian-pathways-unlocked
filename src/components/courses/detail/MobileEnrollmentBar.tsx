@@ -12,7 +12,8 @@ export function MobileEnrollmentBar({
   customEnrollHandler,
   isMainCourseOwned,
   isFullyEnrolled,
-  enrolling
+  enrolling,
+  isLive = true
 }: EnrollmentCardProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -103,20 +104,29 @@ export function MobileEnrollmentBar({
       </div>
 
       {/* Action Button */}
-      <Button
-        onClick={handleAction}
-        disabled={enrolling}
-        className="bg-blue-800 hover:bg-blue-900 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
-      >
-        {enrolling ? (
-          <>
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            Processing
-          </>
-        ) : (
-          getButtonText()
-        )}
-      </Button>
+      {!isLive ? (
+        <Button
+          disabled
+          className="bg-gray-400 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium cursor-not-allowed"
+        >
+          Enrollment Closed
+        </Button>
+      ) : (
+        <Button
+          onClick={handleAction}
+          disabled={enrolling}
+          className="bg-blue-800 hover:bg-blue-900 text-white border-none px-5 py-2 h-10 rounded-lg text-sm font-medium shadow-sm transition-all active:scale-[0.98]"
+        >
+          {enrolling ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Processing
+            </>
+          ) : (
+            getButtonText()
+          )}
+        </Button>
+      )}
     </div>
   );
 }

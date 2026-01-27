@@ -359,6 +359,9 @@ export const useRealtimeContentManagement = () => {
 
     const filterCoursesByProfile = (courses: Course[]) => {
       return courses.filter(course => {
+        // First check if course is live - hide non-live courses
+        if (course.is_live !== true) return false;
+        
         if (profile.program_type === 'IITM_BS') {
           return (
             course.exam_category === 'IITM BS' ||

@@ -23,6 +23,7 @@ export interface EnrollmentCardProps {
     enrolling?: boolean;
     className?: string;
     forceExpanded?: boolean;
+    isLive?: boolean;
 }
 
 const EnrollmentCard: React.FC<EnrollmentCardProps> = ({ 
@@ -35,7 +36,8 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     isFreeCourse = false,
     enrolling = false,
     className,
-    forceExpanded = false
+    forceExpanded = false,
+    isLive = true
 }) => {
     const [detailsVisible, setDetailsVisible] = useState(false);
     const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
@@ -117,6 +119,19 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
 
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
+        
+        // If course is not live, show disabled enrollment closed state
+        if (!isLive) {
+            return (
+                <Button 
+                    size="lg" 
+                    className="flex-1 text-lg bg-gray-400 text-white h-11 min-w-0 px-4 cursor-not-allowed"
+                    disabled
+                >
+                    <span className="truncate">Enrollment Closed</span>
+                </Button>
+            );
+        }
         
         // Calculate if the user has everything:
         // 1. They own the main course.

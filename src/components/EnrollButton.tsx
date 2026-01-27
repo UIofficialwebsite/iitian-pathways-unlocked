@@ -446,7 +446,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
           amount: 0,
           status: 'active',
           payment_id: 'free_enrollment',
-          subject_name: selectedSubjects.length > 0 ? selectedSubjects : null
+          subject_name: selectedSubjects.length > 0 ? selectedSubjects[0] : null
         });
 
       if (enrollError) {
