@@ -14,10 +14,15 @@ const SubjectBlock = ({ subjects, selectedClass, examType }: SubjectBlockProps) 
   
   // Filter notes that match any of the selected subjects
   const chapters = notes.filter(
-    note => 
-      note.exam_type === examType && 
-      subjects.includes(note.subject || '') && 
-      note.class_level === selectedClass
+    note => {
+      const matchesExam = note.exam_type === examType;
+      // If subjects array is empty, match ALL subjects. Otherwise check if subject is in the list.
+      const matchesSubject = subjects.length === 0 || subjects.includes(note.subject || '');
+      // If selectedClass is empty, match ALL classes. Otherwise check exact match.
+      const matchesClass = !selectedClass || note.class_level === selectedClass;
+      
+      return matchesExam && matchesSubject && matchesClass;
+    }
   ).sort((a, b) => (a.display_order_no || 0) - (b.display_order_no || 0));
 
   const handleDownloadClick = async (noteId: string, fileUrl?: string) => {
