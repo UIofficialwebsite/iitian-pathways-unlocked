@@ -146,7 +146,7 @@ export const BackendIntegratedWrapper: React.FC<{
 
       if (data) {
         const formattedData = data
-          .filter((rec) => rec.courses)
+          .filter((rec) => rec.courses && rec.courses.is_live === true) // Filter for Live courses
           .map((rec) => rec.courses);
         setRecommendedCourses(formattedData);
       }
@@ -264,7 +264,10 @@ export const BackendIntegratedWrapper: React.FC<{
       const branch = profile.branch;
       const level = profile.level;
 
+      // Filter courses to only show 'is_live'
       const filteredCourses = courses.filter((course) => {
+        if (course.is_live !== true) return false;
+
         if (programType === "IITM_BS") {
           return (
             course.exam_category === "IITM BS" &&
