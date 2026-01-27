@@ -12,10 +12,13 @@ import {
   Share2, 
   Info, 
   Check, 
-  ArrowLeft
+  ArrowLeft,
+  Layers,
+  LayoutDashboard,
+  Library
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardTitle, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../integrations/supabase/client';
@@ -176,7 +179,7 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // UPDATED: Yellow gradient ONLY, no icon
+              // UPDATED: Plain Yellow Gradient (No Icon)
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -191,7 +194,7 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {/* Description Removed as per request */}
+            {/* Description Removed */}
 
             <div className="flex items-center gap-1.5 pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
@@ -253,28 +256,19 @@ const EnrolledView = ({
   enrollments,
   onViewChange,
   selectedBatchId,
-  setSelectedBatchId
+  onBatchSwitch
 } : { 
   enrollments: GroupedEnrollment[];
   onViewChange: (view: 'dashboard' | 'profile' | 'enrollments' | 'studyPortal') => void;
   selectedBatchId: string;
-  setSelectedBatchId: React.Dispatch<React.SetStateAction<string>>;
+  onBatchSwitch: (newBatchId: string) => void;
 }) => {
   const { toast } = useToast();
 
-  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
-  // Debug: Log component mount/unmount
-  useEffect(() => {
-    console.log('[BatchSwitch] EnrolledView MOUNTED with selectedBatchId:', selectedBatchId);
-    return () => {
-      console.log('[BatchSwitch] EnrolledView UNMOUNTING');
-    };
-  }, []);
-
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
@@ -313,7 +307,7 @@ const EnrolledView = ({
   useEffect(() => {
     if (!selectedBatchId) return;
 
-    // 1. Increment Request ID to handle race conditions
+    // 1. Increment Request ID
     const currentId = ++lastRequestId.current;
 
     const fetchDetails = async () => {
@@ -379,8 +373,7 @@ const EnrolledView = ({
     }
   };
 
-  const handleOpenSheet = (source: 'main' | 'detail') => {
-    setSidebarSource(source);
+  const handleOpenSheet = () => {
     setIsSheetOpen(true);
   };
 
@@ -393,7 +386,6 @@ const EnrolledView = ({
       return;
     }
     
-    // Close sheet
     setIsSheetOpen(false);
     
     // Force clear all stale data to show loading state
@@ -401,14 +393,14 @@ const EnrolledView = ({
     setLoadingDetails(true); 
     
     // Update parent state (which is persisted)
-    setSelectedBatchId(newBatchId);
+    onBatchSwitch(newBatchId);
     
     const newBatch = enrollments.find(e => e.course_id === newBatchId);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
     });
-  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast, setSelectedBatchId]);
+  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast, onBatchSwitch]);
 
   const handleDescription = () => {
     setViewMode('description');
@@ -529,7 +521,7 @@ const EnrolledView = ({
                     
                     {canSwitchBatch && (
                       <Button 
-                        onClick={() => handleOpenSheet('detail')} 
+                        onClick={() => handleOpenSheet()} 
                         className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
                       >
                         Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
@@ -615,12 +607,12 @@ const EnrolledView = ({
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet('main');
+                if (canSwitchBatch) handleOpenSheet();
               }}
               onKeyDown={(e) => {
                 if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  handleOpenSheet('main');
+                  handleOpenSheet();
                 }
               }}
             >
@@ -686,11 +678,7 @@ const EnrolledView = ({
               <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <img 
-                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159265/3104538_uud5dy.png" 
-                alt="My Batches" 
-                className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
-              />
+              <Layers className="h-7 w-7 sm:h-8 sm:w-8 text-blue-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">My Batches</h3>
               <p className="text-gray-600 text-xs sm:text-sm mt-1">View currently enrolled & ongoing courses</p>
             </div>
@@ -702,11 +690,7 @@ const EnrolledView = ({
               <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                 <ArrowRight className="h-5 w-5 text-gray-500" />
               </div>
-              <img 
-                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159445/11068821_ckspzd.png" 
-                alt="Dashboard" 
-                className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
-              />
+              <LayoutDashboard className="h-7 w-7 sm:h-8 sm:w-8 text-purple-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
               <h3 className="text-base sm:text-lg font-semibold text-gray-900">Dashboard</h3>
               <p className="text-gray-600 text-xs sm:text-sm mt-1">Go to SSP Portal</p>
             </div>
@@ -716,11 +700,7 @@ const EnrolledView = ({
                 <div className="absolute top-4 sm:top-6 right-4 sm:right-6 opacity-0 group-hover:opacity-100 transition-all duration-300 transform -translate-x-2 group-hover:translate-x-0">
                   <ArrowRight className="h-5 w-5 text-gray-500" />
                 </div>
-                <img 
-                  src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769159565/5423885_wux9rc.png" 
-                  alt="Library" 
-                  className="h-10 w-10 mb-3 sm:mb-4 group-hover:scale-110 transition-transform object-contain"
-                />
+                <Library className="h-7 w-7 sm:h-8 sm:w-8 text-green-600 mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
                 <h3 className="text-base sm:text-lg font-semibold text-gray-900">Library</h3>
                 <p className="text-gray-600 text-xs sm:text-sm mt-1">Access the Digital Library</p>
               </div>
@@ -980,67 +960,46 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
 
   const hasEnrollments = groupedEnrollments.length > 0;
 
-  // Sync to localStorage whenever it changes
+  // Persist selection
   useEffect(() => {
-    if (selectedBatchId) {
-      localStorage.setItem('dashboard_selected_batch', selectedBatchId);
-    }
+    if (selectedBatchId) localStorage.setItem('dashboard_selected_batch', selectedBatchId);
   }, [selectedBatchId]);
 
-  // Robust Validation: Prioritize persisted selection, fall back to first enrollment
+  // Validate selection against loaded enrollments
   useEffect(() => {
     if (groupedEnrollments.length > 0) {
-      setSelectedBatchId(currentId => {
-        // 1. If current selection is valid, keep it
-        if (currentId && groupedEnrollments.some(e => e.course_id === currentId)) {
-          return currentId;
-        }
-        // 2. If valid selection exists in localStorage, restore it
+      const isValid = groupedEnrollments.some(e => e.course_id === selectedBatchId);
+      // Only reset if we don't have a selection OR the current one is invalid
+      if (!selectedBatchId || !isValid) {
+        // Double check local storage before defaulting to first
         const saved = localStorage.getItem('dashboard_selected_batch');
         if (saved && groupedEnrollments.some(e => e.course_id === saved)) {
-          return saved;
+           setSelectedBatchId(saved);
+        } else {
+           setSelectedBatchId(groupedEnrollments[0].course_id);
         }
-        // 3. Fallback: Select the first one
-        const first = groupedEnrollments[0].course_id;
-        localStorage.setItem('dashboard_selected_batch', first);
-        return first;
-      });
+      }
     }
-  }, [groupedEnrollments]);
+  }, [groupedEnrollments]); // Only run when enrollments list changes
 
   useEffect(() => {
     if (!user) {
       setDataLoading(false);
       return;
     }
-
     const fetchPortalData = async () => {
       setDataLoading(true);
       try {
         const [enrollmentsResult, recCoursesResult] = await Promise.all([
-          supabase
-            .from('enrollments')
-            .select(`
-              id, course_id, subject_name, status,
-              courses (
-                id, title, description, start_date, end_date, image_url, price,
-                exam_category, level, bestseller, rating, students_enrolled
-              )
-            `)
-            .eq('user_id', user.id)
-            .in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']),
+          supabase.from('enrollments').select(`id, course_id, subject_name, status, courses (id, title, description, start_date, end_date, image_url, price, exam_category, level, bestseller, rating, students_enrolled)`).eq('user_id', user.id).in('status', ['success', 'active', 'SUCCESS', 'ACTIVE']),
           fetchRecommendedCourses(profile)
         ]);
 
-        const { data: rawData, error: enrollError } = enrollmentsResult;
-        if (enrollError) throw enrollError;
-
-        setRecommendedCourses(recCoursesResult);
-
-        if (rawData && rawData.length > 0) {
-          const today = new Date();
+        if (enrollmentsResult.data && enrollmentsResult.data.length > 0) {
           const enrollmentsMap = new Map<string, GroupedEnrollment>();
-          for (const enrollment of rawData as unknown as RawEnrollment[]) {
+          const today = new Date();
+          
+          for (const enrollment of enrollmentsResult.data as unknown as RawEnrollment[]) {
             if (!enrollment.courses) continue; 
             const course_id = enrollment.course_id;
             const endDate = enrollment.courses.end_date ? new Date(enrollment.courses.end_date) : null;
@@ -1064,27 +1023,19 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
                 students_enrolled: enrollment.courses.students_enrolled,
               });
             }
-            const groupedEntry = enrollmentsMap.get(course_id)!;
-            if (enrollment.subject_name && !groupedEntry.subjects.includes(enrollment.subject_name)) {
-              groupedEntry.subjects.push(enrollment.subject_name);
-            }
+            if (enrollment.subject_name) enrollmentsMap.get(course_id)!.subjects.push(enrollment.subject_name);
           }
           setGroupedEnrollments(Array.from(enrollmentsMap.values()));
         } else {
           setGroupedEnrollments([]);
         }
-
+        setRecommendedCourses(recCoursesResult);
       } catch (error: any) {
-        toast({
-          title: "Error",
-          description: "Could not load your study portal. " + (error.message || "Unknown error"),
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Could not load data.", variant: "destructive" });
       } finally {
         setDataLoading(false);
       }
     };
-
     fetchPortalData();
   }, [user, profile, toast]); 
 
@@ -1101,7 +1052,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
           enrollments={groupedEnrollments} 
           onViewChange={onViewChange}
           selectedBatchId={selectedBatchId}
-          setSelectedBatchId={setSelectedBatchId}
+          onBatchSwitch={setSelectedBatchId} // Pass setter directly
         />
       ) : (
         <NotEnrolledView 
@@ -1123,16 +1074,10 @@ const StudyPortal: React.FC<StudyPortalProps> = ({ profile, onViewChange }) => {
       <div className="flex flex-col items-center justify-center min-h-[400px] p-6 bg-white rounded-lg shadow-sm border border-gray-200 text-center">
         <Target className="h-12 w-12 text-blue-600 mb-4" />
         <h2 className="text-xl font-semibold text-gray-800 mb-2">Welcome to your Dashboard!</h2>
-        <p className="text-gray-600">
-          Please set your "Focus Area" to unlock your personalized study portal.
-        </p>
-        <p className="text-sm text-gray-500 mt-2">
-          (A pop-up should have appeared. If not, please click your profile icon in the top right.)
-        </p>
+        <p className="text-gray-600">Please set your "Focus Area" to unlock your personalized study portal.</p>
       </div>
     );
   }
-
   return <StudyPortalContent profile={profile} onViewChange={onViewChange} />;
 };
 
