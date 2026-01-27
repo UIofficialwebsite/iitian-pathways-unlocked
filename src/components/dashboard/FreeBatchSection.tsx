@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
-import { ChevronRight, MoveRight, BookOpen, Maximize2, X } from "lucide-react";
+import { ChevronRight, MoveRight, BookOpen } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from '@/integrations/supabase/client';
 import EnrollButton from "@/components/EnrollButton"; 
@@ -21,7 +21,6 @@ const StandardCourseCard: React.FC<{
   onSelect: (id: string) => void 
 }> = ({ course, onSelect }) => {
   const navigate = useNavigate();
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
   const isMobile = useIsMobile();
@@ -79,13 +78,8 @@ const StandardCourseCard: React.FC<{
       <div className={`bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col shrink-0 snap-start transition-all
         ${isMobile ? 'min-w-[280px] max-w-[300px]' : 'min-w-[320px] max-w-[360px]'}
       `}>
-        {/* --- UPDATED THUMBNAIL LOGIC --- */}
-        <div 
-          className="relative group cursor-pointer" 
-          onClick={() => {
-            if (course.image_url) setIsPreviewOpen(true);
-          }}
-        >
+        {/* --- THUMBNAIL - NO CLICK ACTION --- */}
+        <div className="relative">
           <div className={`${isMobile ? 'h-[160px]' : 'h-[200px]'} w-full bg-gray-50 flex items-center justify-center overflow-hidden`}>
             {course.image_url ? (
               <img 
@@ -101,12 +95,6 @@ const StandardCourseCard: React.FC<{
               </div>
             )}
           </div>
-          
-          {course.image_url && (
-            <div className="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <Maximize2 className="text-white w-6 h-6" />
-            </div>
-          )}
         </div>
 
         {/* Info Section */}
@@ -169,13 +157,6 @@ const StandardCourseCard: React.FC<{
         </div>
       </div>
 
-      {/* Image Preview Modal */}
-      {isPreviewOpen && (
-        <div className="fixed inset-0 z-[120] bg-black/90 flex items-center justify-center p-4" onClick={() => setIsPreviewOpen(false)}>
-          <img src={course.image_url || ""} className="max-w-full max-h-[80vh] rounded-lg shadow-2xl" alt="Preview" />
-          <X className="absolute top-6 right-6 text-white w-8 h-8 cursor-pointer" />
-        </div>
-      )}
     </>
   );
 };

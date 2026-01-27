@@ -176,7 +176,8 @@ const RegularBatchesTab: React.FC<RegularBatchesTabProps> = ({ focusArea, onSele
       const { data } = await supabase.from('courses')
         .select('*')
         .ilike('exam_category', focusArea)
-        .eq('batch_type', 'regular');
+        .eq('batch_type', 'regular')
+        .eq('is_live', true);
       if (data) setBatches(data);
       setLoading(false);
     };

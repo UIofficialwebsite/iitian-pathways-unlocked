@@ -88,14 +88,14 @@ export function MobileEnrollmentBar({
             </span>
           )}
           
-          {hasDiscount && price !== 0 && (
+          {hasDiscount && price !== 0 && originalPrice > 0 && (
             <span className="text-xs text-slate-500 line-through font-normal opacity-80">
               ₹{originalPrice.toLocaleString()}
             </span>
           )}
         </div>
         
-        {hasDiscount && price !== 0 && (
+        {hasDiscount && price !== 0 && discountPercentage > 0 && (
           <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium flex items-center gap-1 w-fit uppercase tracking-wide">
             <Tag className="w-2.5 h-2.5 fill-green-700" />
             {discountPercentage}% Off
