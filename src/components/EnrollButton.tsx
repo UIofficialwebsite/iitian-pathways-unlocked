@@ -412,7 +412,12 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
 
       // Check if both dial_code and phone exist with sufficient length
       if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
-        processPayment(`${profile.dial_code}${profile.phone}`);
+        const fullPhoneNumber = `${profile.dial_code}${profile.phone}`;
+        if (coursePrice === 0) {
+          await handleFreeEnroll(fullPhoneNumber);
+        } else {
+          processPayment(fullPhoneNumber);
+        }
       } else {
         setIsProcessing(false);
         setShowPhoneDialog(true);
