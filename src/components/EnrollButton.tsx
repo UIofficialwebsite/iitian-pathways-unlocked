@@ -394,11 +394,7 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       return;
     }
 
-    // Direct Bypass for Free Courses (Price 0)
-    if (coursePrice === 0) {
-      await handleFreeEnroll();
-      return;
-    }
+    // Free courses also need phone number - removed bypass
 
     try {
       setIsProcessing(true);
@@ -428,8 +424,8 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
     }
   };
 
-  // --- NEW FUNCTION: Handle Free Enrollment Directly ---
-  const handleFreeEnroll = async () => {
+  // --- Handle Free Enrollment with Phone Number ---
+  const handleFreeEnroll = async (phoneNumber: string) => {
     try {
       setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -438,6 +434,29 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         return;
       }
 
+      // Fetch course details for payments table
+      let batchName = 'Free Course';
+      let subjectsString = 'No subjects';
+      
+      if (courseId) {
+        const { data: courseData } = await supabase
+          .from('courses')
+          .select('title, subject')
+          .eq('id', courseId)
+          .single();
+        
+        if (courseData) {
+          batchName = courseData.title;
+          const subjects = courseData.subject 
+            ? courseData.subject.split(',').map((s: string) => s.trim()).filter(Boolean)
+            : [];
+          // Combine with selectedSubjects if any
+          const allSubjects = [...new Set([...subjects, ...selectedSubjects])];
+          subjectsString = allSubjects.length > 0 ? allSubjects.join(', ') : 'No subjects';
+        }
+      }
+
+      // 1. Insert into enrollments table
       const { error: enrollError } = await supabase
         .from('enrollments')
         .insert({
@@ -455,17 +474,40 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
             title: "Already Enrolled",
             description: "You are already enrolled in this batch.",
           });
-          // Optional: redirect to course page or dashboard
           return;
         }
         throw enrollError;
+      }
+
+      // 2. Insert into payments table for tracking
+      const orderId = `free_${Date.now()}_${user.id.slice(0, 8)}`;
+      const { error: paymentError } = await supabase
+        .from('payments')
+        .insert({
+          order_id: orderId,
+          payment_id: 'free_enrollment',
+          user_id: user.id,
+          amount: 0,
+          net_amount: 0,
+          status: 'success',
+          payment_mode: 'free',
+          customer_email: user.email,
+          customer_phone: phoneNumber,
+          batch: batchName,
+          courses: subjectsString,
+          discount_applied: false,
+          payment_time: new Date().toISOString()
+        });
+
+      if (paymentError) {
+        console.error("Failed to insert payment record:", paymentError);
+        // Don't throw - enrollment succeeded, payment record is for tracking only
       }
 
       toast({
         title: "Success",
         description: "Successfully enrolled in the batch!",
       });
-      // You might want to redirect here if needed, or just let the user stay
       
     } catch (err: any) {
       console.error("Free Enrollment Error:", err);
@@ -517,9 +559,15 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
         }
       }
       
-      // Send combined format for payment
+      // Send combined format for payment or free enrollment
       const fullPhoneNumber = `${selectedDialCode}${manualPhone}`;
-      await processPayment(fullPhoneNumber);
+      
+      // Check if this is a free course
+      if (coursePrice === 0) {
+        await handleFreeEnroll(fullPhoneNumber);
+      } else {
+        await processPayment(fullPhoneNumber);
+      }
       setShowPhoneDialog(false); 
     } catch (error: any) {
       setIsProcessing(false);
