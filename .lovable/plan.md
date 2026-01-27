@@ -1,172 +1,55 @@
 
-# Free Course Enrollment Enhancement
 
-## Overview
-Modify the free enrollment flow (courses with price = 0) to:
-1. Collect mobile number using the existing phone dialog (same as paid courses)
-2. Insert enrollment data into the `payments` table for tracking
+# Fix: Free Course Re-Enrollment Error
 
-## Files to Modify
+## Problem
+When clicking "Enroll Now" on a free batch the **second time** (after already being enrolled), the system throws a Cashfree "order_amount_invalid" error instead of showing "Already Enrolled" message.
 
-### 1. `src/components/EnrollButton.tsx`
+## Root Cause
+In `handleEnrollClick()`, when a user's profile already has a phone number saved, it directly calls `processPayment()` without checking if the course is free:
 
-**Current behavior (lines 397-401):**
 ```typescript
-// Direct Bypass for Free Courses (Price 0)
-if (coursePrice === 0) {
-  await handleFreeEnroll();
-  return;
+// Lines 414-415 - Current buggy code:
+if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
+  processPayment(`${profile.dial_code}${profile.phone}`);  // Always calls processPayment!
 }
 ```
 
-**Changes needed:**
+The `handleFreeEnroll()` function already has proper duplicate handling (shows "Already Enrolled" toast for error code 23505), but it's never called when the user has an existing phone number.
 
-a) **Remove the bypass** at lines 397-401 - free courses should follow the same phone check flow as paid courses
+## Solution
+Add a check for `coursePrice === 0` before deciding which function to call.
 
-b) **Update `handleFreeEnroll` function** (lines 432-480) to:
-   - Accept phone number as parameter
-   - Insert data into both `enrollments` AND `payments` tables
-   - Collect course details (batch name, subjects) for the payments record
+## File to Modify
 
-**Updated logic flow:**
-```
-handleEnrollClick() 
-  → Check if phone exists in profile
-  → If no phone → show phone dialog
-  → handlePhoneSubmit() or processPayment()
-     → If coursePrice === 0 → handleFreeEnroll(phone)
-     → Else → processPayment(phone) [existing Cashfree flow]
-```
+### `src/components/EnrollButton.tsx` (lines 414-415)
 
-### 2. `src/components/courses/CourseCard.tsx`
-
-**Current behavior (lines 192-203):**
+**Before:**
 ```typescript
-// Logic 2: Free Batch (No Add-ons) -> Direct Enroll
-if (isBaseFree) {
-    return (
-        <button onClick={handleFreeEnroll} ...>
-            ENROLL NOW
-        </button>
-    );
+if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
+  processPayment(`${profile.dial_code}${profile.phone}`);
 }
 ```
 
-**Change needed:**
-- Replace the direct `handleFreeEnroll` button with `EnrollButton` component
-- Pass `coursePrice={0}` so EnrollButton handles the free enrollment flow
-
+**After:**
 ```typescript
-if (isBaseFree) {
-    return (
-        <EnrollButton
-            courseId={course.id}
-            coursePrice={0}
-            className={btnClass}
-        >
-            ENROLL NOW
-        </EnrollButton>
-    );
+if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
+  const fullPhoneNumber = `${profile.dial_code}${profile.phone}`;
+  if (coursePrice === 0) {
+    await handleFreeEnroll(fullPhoneNumber);
+  } else {
+    processPayment(fullPhoneNumber);
+  }
 }
 ```
 
-This removes the duplicate `handleFreeEnroll` function from CourseCard entirely.
-
-### 3. `src/pages/BatchConfiguration.tsx`
-
-**Current behavior (lines 352-356):**
-```typescript
-// BYPASS FOR FREE ENROLLMENT
-if (finalTotal === 0) {
-    await handleFreeEnroll();
-    return;
-}
-```
-
-**Changes needed:**
-
-a) **Remove the bypass** - free enrollment should go through phone check
-
-b) **Update `handleFreeEnroll` function** (lines 277-334) to:
-   - Accept phone number as parameter
-   - Insert data into `payments` table along with `enrollments`
-   - Collect proper course/addon details for tracking
-
-c) **Modify `handlePayment` function** to:
-   - Always check for phone first (remove the free bypass)
-   - Call `handleFreeEnroll(phone)` when `finalTotal === 0`
-   - Call `processPayment(phone)` when `finalTotal > 0`
-
-### 4. `supabase/functions/create-cashfree-order/index.ts`
-No changes needed - this function is only called for paid courses.
-
-## Technical Details
-
-### Payments Table Insert for Free Enrollments
-
-When inserting into `payments` for free enrollments:
-
-```typescript
-const paymentData = {
-  order_id: `free_${Date.now()}_${userId}`,
-  payment_id: 'free_enrollment',
-  user_id: userId,
-  amount: 0,
-  net_amount: 0,
-  status: 'success',
-  payment_mode: 'free',
-  customer_email: userEmail,
-  customer_phone: phoneNumber,
-  batch: courseName,
-  courses: subjectsString, // comma-separated subject names
-  discount_applied: false,
-  payment_time: new Date().toISOString()
-};
-```
-
-### Flow Summary
-
-```text
-┌─────────────────────────────────────────────────────────┐
-│                  Free Course Enrollment                  │
-├─────────────────────────────────────────────────────────┤
-│                                                         │
-│  1. User clicks "Enroll Now" on free course             │
-│                      ↓                                  │
-│  2. Check if phone exists in user profile               │
-│                      ↓                                  │
-│  ┌──────────┬────────────────────┐                      │
-│  │ No Phone │  Phone Exists      │                      │
-│  └────┬─────┴────────┬───────────┘                      │
-│       ↓              ↓                                  │
-│  Show phone     Continue with                           │
-│  dialog         existing phone                          │
-│       ↓              ↓                                  │
-│  User submits   ──────┘                                 │
-│  phone number                                           │
-│       ↓                                                 │
-│  3. Save phone to profile                               │
-│                      ↓                                  │
-│  4. Insert into `enrollments` table                     │
-│                      ↓                                  │
-│  5. Insert into `payments` table                        │
-│                      ↓                                  │
-│  6. Show success toast & redirect                       │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
-```
+## What This Fixes
+- Free course enrollments with existing phone → calls `handleFreeEnroll()` → shows "Already Enrolled" toast if duplicate
+- Paid course enrollments → unchanged, still calls `processPayment()` → goes to Cashfree
 
 ## What Stays Unchanged
+- Paid course flow (Cashfree payment gateway)
+- Phone dialog UI and validation
+- `handleFreeEnroll()` function logic (already has duplicate detection)
+- All other enrollment logic
 
-- **Paid course flow** - continues to use Cashfree payment gateway
-- **Phone dialog UI** - same dialog/drawer component is reused
-- **Phone validation logic** - country-specific length validation remains
-- **Profile phone storage** - dial_code and phone saved separately
-
-## Summary Table
-
-| File | Change | Purpose |
-|------|--------|---------|
-| `EnrollButton.tsx` | Remove free bypass, update `handleFreeEnroll` | Collect phone + insert payments |
-| `CourseCard.tsx` | Use EnrollButton for free courses | Delegate to centralized logic |
-| `BatchConfiguration.tsx` | Remove free bypass, update `handleFreeEnroll` | Collect phone + insert payments |
