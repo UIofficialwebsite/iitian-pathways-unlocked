@@ -273,8 +273,8 @@ const BatchConfiguration = () => {
     );
   };
 
-  // --- Helper: Free Enrollment Bypass ---
-  const handleFreeEnroll = async () => {
+  // --- Helper: Free Enrollment with Phone Number ---
+  const handleFreeEnroll = async (phoneNumber: string) => {
     if (!user || !courseId) return;
     setProcessing(true);
 
@@ -301,7 +301,7 @@ const BatchConfiguration = () => {
                 amount: 0,
                 status: 'active',
                 payment_id: 'free_enrollment',
-                subject_name: addon.subject_name // Storing name to match ownership logic
+                subject_name: addon.subject_name
             });
         });
 
@@ -314,12 +314,45 @@ const BatchConfiguration = () => {
         const { error } = await supabase.from('enrollments').insert(enrollmentsToInsert);
 
         if (error) {
-            if (error.code === '23505') { // Duplicate key error
+            if (error.code === '23505') {
                 toast.success("Enrollment updated!");
                 navigate(`/courses/${courseId}`);
                 return;
             }
             throw error;
+        }
+
+        // Insert into payments table for tracking
+        const batchName = course?.title || 'Free Course';
+        const coreSubjects = course?.subject 
+          ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
+          : [];
+        const addonSubjects = selectedAddonsList.map(a => a.subject_name);
+        const allSubjects = [...new Set([...coreSubjects, ...addonSubjects])];
+        const subjectsString = allSubjects.length > 0 ? allSubjects.join(', ') : 'No subjects';
+
+        const orderId = `free_${Date.now()}_${user.id.slice(0, 8)}`;
+        const { error: paymentError } = await supabase
+          .from('payments')
+          .insert({
+            order_id: orderId,
+            payment_id: 'free_enrollment',
+            user_id: user.id,
+            amount: 0,
+            net_amount: 0,
+            status: 'success',
+            payment_mode: 'free',
+            customer_email: user.email,
+            customer_phone: phoneNumber,
+            batch: batchName,
+            courses: subjectsString,
+            discount_applied: false,
+            payment_time: new Date().toISOString()
+          });
+
+        if (paymentError) {
+          console.error("Failed to insert payment record:", paymentError);
+          // Don't throw - enrollment succeeded
         }
 
         toast.success("Successfully enrolled!");
@@ -349,11 +382,8 @@ const BatchConfiguration = () => {
         return;
     }
 
-    // BYPASS FOR FREE ENROLLMENT
-    if (finalTotal === 0) {
-        await handleFreeEnroll();
-        return;
-    }
+    // Free enrollments also need phone number - removed bypass
+    // Phone check happens below, then we call handleFreeEnroll or processPayment
 
     setProcessing(true);
 
@@ -419,7 +449,13 @@ const BatchConfiguration = () => {
       
       const fullPhoneNumber = `${selectedDialCode}${manualPhone}`;
       setShowPhoneDialog(false);
-      await processPayment(fullPhoneNumber);
+      
+      // Check if this is a free enrollment
+      if (finalTotal === 0) {
+        await handleFreeEnroll(fullPhoneNumber);
+      } else {
+        await processPayment(fullPhoneNumber);
+      }
     } catch (error) {
       setProcessing(false);
       console.error(error);
