@@ -56,8 +56,11 @@ const Courses = () => {
   }, [courses, examCategory]);
 
   const categoryCourses = useMemo(() => {
-    if (!examCategory || examCategory === 'all') return courses;
-    return courses.filter(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
+    // Filter for live courses first
+    const liveCourses = courses.filter(c => c.is_live === true);
+
+    if (!examCategory || examCategory === 'all') return liveCourses;
+    return liveCourses.filter(c => c.exam_category?.toLowerCase().replace(/[\s_]/g, '-') === examCategory.toLowerCase());
   }, [courses, examCategory]);
 
   const availableBranches = useMemo(() => {
