@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { RecommendedBatchCard } from "./RecommendedBatchCard";
 import CourseCardSkeleton from "@/components/courses/CourseCardSkeleton";
 import {
@@ -24,7 +24,13 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
   recommendedCourses, 
   loading 
 }) => {
-  const hasRecommendations = !loading && recommendedCourses && recommendedCourses.length > 0;
+  // Filter to show only courses where is_live is true
+  const liveCourses = useMemo(() => {
+    if (!recommendedCourses) return [];
+    return recommendedCourses.filter(course => course.is_live === true);
+  }, [recommendedCourses]);
+
+  const hasRecommendations = !loading && liveCourses.length > 0;
 
   return (
     <Card className="overflow-hidden border-none shadow-none lg:border lg:shadow-sm">
@@ -65,7 +71,7 @@ const RecommendedBatchesSection: React.FC<RecommendedBatchesSectionProps> = ({
                 ))}
               </>
             ) : hasRecommendations ? (
-              recommendedCourses.map((course: any) => (
+              liveCourses.map((course: any) => (
                 <div key={course.id} className="w-[280px] sm:w-[320px] md:w-[380px] shrink-0">
                   <RecommendedBatchCard course={course} />
                 </div>
