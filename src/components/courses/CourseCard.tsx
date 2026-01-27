@@ -112,6 +112,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   };
 
   const renderBuyButton = () => {
+    // Determine button text based on whether the course is free
+    const buttonText = isBaseFree ? "ENROLL NOW" : "BUY NOW";
+
     // Logic: If Add-ons exist -> Go to Config Page
     if (hasAddons) {
       return (
@@ -119,7 +122,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           onClick={() => navigate(`/courses/${course.id}/configure`)}
           className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
         >
-          BUY NOW
+          {buttonText}
         </button>
       );
     }
@@ -132,7 +135,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         coursePrice={course.discounted_price || course.price}
         className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
       >
-        BUY NOW
+        {buttonText}
       </EnrollButton>
     );
   };
