@@ -169,11 +169,17 @@ const EnrollmentListItem = ({
       <Card className="w-full relative overflow-hidden flex flex-col rounded-lg border border-gray-200 group-hover:border-black transition-all duration-200 shadow-sm hover:shadow-md">
         <CardContent className="flex flex-col sm:flex-row items-start gap-4 sm:gap-5 p-4 sm:p-5">
           <div className="w-full sm:w-48 flex-shrink-0 aspect-video overflow-hidden rounded-lg bg-gray-50">
-            <img 
-              src={enrollment.image_url || "/lovable-uploads/logo_ui_new.png"}
-              alt={enrollment.title} 
-              className="w-full h-full object-cover object-center"
-            />
+            {enrollment.image_url ? (
+              <img 
+                src={enrollment.image_url}
+                alt={enrollment.title} 
+                className="w-full h-full object-cover object-center"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100/50 flex items-center justify-center">
+                <BookOpen className="h-8 w-8 text-yellow-600/30" />
+              </div>
+            )}
           </div>
           
           <div className="flex-grow space-y-2 w-full">
@@ -186,11 +192,7 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {enrollment.description && (
-              <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 leading-relaxed">
-                {enrollment.description}
-              </p>
-            )}
+            {/* Description hidden as requested */}
 
             <div className="flex items-center gap-1.5 pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
