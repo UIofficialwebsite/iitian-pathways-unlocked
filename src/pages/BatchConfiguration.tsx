@@ -273,6 +273,66 @@ const BatchConfiguration = () => {
     );
   };
 
+  // --- Helper: Free Enrollment Bypass ---
+  const handleFreeEnroll = async () => {
+    if (!user || !courseId) return;
+    setProcessing(true);
+
+    try {
+        const enrollmentsToInsert = [];
+
+        // 1. Insert Base Course if not owned
+        if (!isMainCourseOwned) {
+            enrollmentsToInsert.push({
+                user_id: user.id,
+                course_id: courseId,
+                amount: 0,
+                status: 'active',
+                payment_id: 'free_enrollment',
+                subject_name: null
+            });
+        }
+
+        // 2. Insert Selected Add-ons
+        selectedAddonsList.forEach(addon => {
+            enrollmentsToInsert.push({
+                user_id: user.id,
+                course_id: courseId,
+                amount: 0,
+                status: 'active',
+                payment_id: 'free_enrollment',
+                subject_name: addon.subject_name // Storing name to match ownership logic
+            });
+        });
+
+        if (enrollmentsToInsert.length === 0) {
+            toast.info("No new items selected to enroll.");
+            setProcessing(false);
+            return;
+        }
+
+        const { error } = await supabase.from('enrollments').insert(enrollmentsToInsert);
+
+        if (error) {
+            if (error.code === '23505') { // Duplicate key error
+                toast.success("Enrollment updated!");
+                navigate(`/courses/${courseId}`);
+                return;
+            }
+            throw error;
+        }
+
+        toast.success("Successfully enrolled!");
+        navigate(`/courses/${courseId}`);
+        
+    } catch (error: any) {
+        console.error("Free enrollment error:", error);
+        toast.error(error.message || "Failed to enroll. Please try again.");
+    } finally {
+        setProcessing(false);
+    }
+  };
+
   // --- Payment Logic ---
   const handlePayment = async () => {
     if (!user) {
@@ -280,8 +340,18 @@ const BatchConfiguration = () => {
       return;
     }
 
+    // Check if there is anything to purchase/enroll
+    const hasMainToEnroll = !isMainCourseOwned;
+    const hasAddonsToEnroll = selectedAddonsList.length > 0;
+
+    if (!hasMainToEnroll && !hasAddonsToEnroll) {
+        toast.info("You are already enrolled in the selected items.");
+        return;
+    }
+
+    // BYPASS FOR FREE ENROLLMENT
     if (finalTotal === 0) {
-        toast.error("Please select at least one new item to purchase.");
+        await handleFreeEnroll();
         return;
     }
 
@@ -709,7 +779,7 @@ const BatchConfiguration = () => {
 
               <button 
                 onClick={handlePayment}
-                disabled={processing || finalTotal === 0}
+                disabled={processing || (finalTotal === 0 && isMainCourseOwned && selectedAddonsList.length === 0)}
                 className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
@@ -745,7 +815,7 @@ const BatchConfiguration = () => {
 
             <button 
                 onClick={handlePayment}
-                disabled={processing || finalTotal === 0}
+                disabled={processing || (finalTotal === 0 && isMainCourseOwned && selectedAddonsList.length === 0)}
                 className="bg-[#1a1f36] text-white px-6 h-11 rounded-md text-[14px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[120px]"
             >
                 {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "PAY NOW"}
