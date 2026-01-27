@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Clock, Tag, Check } from "lucide-react";
+import { GraduationCap, Clock, Tag } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import EnrollButton from "@/components/EnrollButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,13 +188,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full"
       style={{ borderRadius: '6px' }}
     >
-      {/* ENROLLED Badge */}
-      {isFullyEnrolled && (
-        <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-          <Check className="w-3 h-3" /> ENROLLED
-        </div>
-      )}
-
       {/* Banner */}
       <div 
         className="w-full aspect-video bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"
