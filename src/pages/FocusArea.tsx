@@ -29,7 +29,7 @@ const FocusArea = () => {
   const [loading, setLoading] = useState(true);
   
   // Selection State
-  const [selectedPath, setSelectedPath] = useState<FocusOption[]>([]);
+  const [selectedRootOption, setSelectedRootOption] = useState<FocusOption | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
@@ -62,36 +62,14 @@ const FocusArea = () => {
   // Root Options (Level 1)
   const rootOptions = allOptions.filter(o => o.parent_id === null);
 
-  // Popular Options (Level 2) - Filter logic
-  const popularKeywords = ['JEE', 'NEET', 'UPSC', 'Data Science', 'Foundation', 'Govt'];
-  const popularOptions = allOptions.filter(option => 
-    option.parent_id !== null && // Must be child
-    popularKeywords.some(keyword => option.label.includes(keyword))
-  ).slice(0, 4); // Limit to top 4 for the grid
-
-  // Handlers
-  const handleOptionClick = (option: FocusOption, isRoot: boolean) => {
-    let path: FocusOption[] = [];
-
-    if (isRoot) {
-      path = [option];
-    } else {
-      // If it's a popular option (Level 2), we need to find its parent to build the path
-      const parent = allOptions.find(o => o.id === option.parent_id);
-      if (parent) {
-        path = [parent, option];
-      } else {
-        path = [option]; // Fallback
-      }
-    }
-
-    setSelectedPath(path);
+  const handleRootSelect = (option: FocusOption) => {
+    setSelectedRootOption(option);
     setIsDrawerOpen(true);
   };
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
-    setTimeout(() => setSelectedPath([]), 300);
+    setTimeout(() => setSelectedRootOption(null), 300);
   };
 
   // Color palette for All Categories
@@ -103,10 +81,6 @@ const FocusArea = () => {
     { bg: 'bg-[#e0f2f1]', text: 'text-teal-600' },    // Teal soft
     { bg: 'bg-[#e8f5e9]', text: 'text-green-600' },   // Green soft
   ];
-
-  // Specific Colors for Popular Grid (matching your HTML)
-  const popularColors = ['bg-[#e3f2fd]', 'bg-[#e8f5e9]', 'bg-[#fff9c4]', 'bg-[#ffe0b2]'];
-  const popularIcons = ['⚛️', '🔬', '🏛️', '🎖️']; // Fallback emojis matching your HTML
 
   if (loading || authLoading) {
     return (
@@ -137,35 +111,6 @@ const FocusArea = () => {
       {/* Main Container */}
       <div className="max-w-[1100px] mx-auto mt-8 sm:mt-10 px-5">
          
-        {/* Popular Exams Section */}
-        {popularOptions.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-[1.1rem] font-semibold mb-5 text-[#2d3436]">Popular Exams</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-[15px]">
-              {popularOptions.map((option, index) => {
-                const colorClass = popularColors[index % popularColors.length];
-                const emoji = popularIcons[index % popularIcons.length];
-                
-                return (
-                  <div 
-                    key={option.id}
-                    onClick={() => handleOptionClick(option, false)}
-                    className={cn(
-                      "flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start p-[15px_20px] rounded-lg cursor-pointer transition-all duration-200 hover:-translate-y-[2px] hover:shadow-md text-inherit no-underline text-center sm:text-left gap-2 sm:gap-0",
-                      colorClass
-                    )}
-                  >
-                    <div className="w-[32px] h-[32px] sm:mr-[12px] flex items-center justify-center text-xl">
-                      {emoji}
-                    </div>
-                    <span className="font-medium text-[0.95rem]">{option.label}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
          {/* All Categories Section */}
          <h2 className="text-[1.1rem] font-semibold mb-5 text-[#2d3436]">All Categories</h2>
          
@@ -179,7 +124,7 @@ const FocusArea = () => {
                return (
                  <div
                    key={option.id}
-                   onClick={() => handleOptionClick(option, true)}
+                   onClick={() => handleRootSelect(option)}
                    className="flex items-center p-5 border border-[#e0e0e0] rounded-xl bg-white cursor-pointer hover:border-[#aaa] hover:bg-[#fafafa] transition-all duration-200 active:scale-[0.98]"
                  >
                     <div className={cn(
@@ -202,7 +147,7 @@ const FocusArea = () => {
       <FocusSelectionDrawer
         isOpen={isDrawerOpen}
         onClose={handleDrawerClose}
-        initialPath={selectedPath}
+        rootOption={selectedRootOption}
         allOptions={allOptions}
       />
     </div>
