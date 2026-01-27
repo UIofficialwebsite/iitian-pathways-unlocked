@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Clock, Tag } from "lucide-react";
+import { GraduationCap, Clock, Tag, Check } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import EnrollButton from "@/components/EnrollButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 interface CourseCardProps {
   course: Course;
@@ -14,6 +15,9 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
+  
+  // Enrollment status check
+  const { isFullyEnrolled, isMainCourseOwned, hasRemainingAddons } = useEnrollmentStatus(course.id);
 
   // Logic for "NEW" tag based on updated_at (last 30 days)
   const isNewlyLaunched = useMemo(() => {
@@ -77,8 +81,6 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     checkAddonsAndPrice();
   }, [course.id, course.price]);
 
-  // Removed handleFreeEnroll - now delegated to EnrollButton component
-
   // --- RENDER HELPERS ---
   const isBaseFree = course.price === 0 || course.price === null;
   const hasPaidAddons = minAddonPrice !== null;
@@ -114,8 +116,32 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   };
 
   const renderBuyButton = () => {
-    // Common styles: Blue button
+    // Common styles
     const btnClass = "flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors flex items-center justify-center gap-2";
+
+    // Fully enrolled - show "Let's Study"
+    if (isFullyEnrolled) {
+      return (
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex-1 bg-green-600 text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2"
+        >
+          LET'S STUDY
+        </button>
+      );
+    }
+
+    // Main owned but addons available - show "Upgrade"
+    if (isMainCourseOwned && hasRemainingAddons) {
+      return (
+        <button
+          onClick={() => navigate(`/courses/${course.id}/configure`)}
+          className={btnClass}
+        >
+          UPGRADE
+        </button>
+      );
+    }
 
     // Logic 1: Has Add-ons (Free or Paid) -> Go to Config
     if (hasAddons) {
@@ -162,6 +188,13 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       className="bg-white w-full border-[1.5px] border-[#e2e8f0] relative p-[12px] shadow-sm font-['Public_Sans',sans-serif] flex flex-col h-full"
       style={{ borderRadius: '6px' }}
     >
+      {/* ENROLLED Badge */}
+      {isFullyEnrolled && (
+        <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+          <Check className="w-3 h-3" /> ENROLLED
+        </div>
+      )}
+
       {/* Banner */}
       <div 
         className="w-full aspect-video bg-gradient-to-b from-[#fce07c] to-[#f9c83d] relative overflow-hidden mb-[15px] flex flex-col justify-center items-center"

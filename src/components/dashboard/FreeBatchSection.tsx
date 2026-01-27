@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Tables } from "@/integrations/supabase/types";
-import { ChevronRight, MoveRight, BookOpen } from "lucide-react";
+import { ChevronRight, MoveRight, BookOpen, Check } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from '@/integrations/supabase/client';
 import EnrollButton from "@/components/EnrollButton"; 
 import { useNavigate } from "react-router-dom"; 
+import { useEnrollmentStatus } from "@/hooks/useEnrollmentStatus";
 
 interface FreeBatchSectionProps {
   batches: Tables<'courses'>[];
@@ -24,6 +25,9 @@ const StandardCourseCard: React.FC<{
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
   const isMobile = useIsMobile();
+
+  // Enrollment status check
+  const { isFullyEnrolled, isMainCourseOwned, hasRemainingAddons } = useEnrollmentStatus(course.id);
 
   // Check for Paid Add-ons if Base is Free
   useEffect(() => {
@@ -47,6 +51,36 @@ const StandardCourseCard: React.FC<{
   }, [course.id, course.price]);
 
   const renderEnrollAction = () => {
+    // Fully enrolled - show "Let's Study"
+    if (isFullyEnrolled) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate('/dashboard');
+          }} 
+          className="bg-green-600 text-white py-1.5 px-4 md:py-2 md:px-5 rounded-[10px] font-bold text-[12px] md:text-[14px] hover:bg-green-700 transition-colors flex items-center gap-1"
+        >
+          LET'S STUDY
+        </button>
+      );
+    }
+
+    // Main owned but addons available - show "Upgrade"
+    if (isMainCourseOwned && hasRemainingAddons) {
+      return (
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            navigate(`/courses/${course.id}/configure`);
+          }} 
+          className="bg-black text-white py-1.5 px-4 md:py-2 md:px-5 rounded-[10px] font-bold text-[12px] md:text-[14px] hover:bg-black/90 transition-colors"
+        >
+          Upgrade
+        </button>
+      );
+    }
+
     if (hasAddons) {
       return (
         <button 
@@ -75,9 +109,16 @@ const StandardCourseCard: React.FC<{
   
   return (
     <>
-      <div className={`bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col shrink-0 snap-start transition-all
+      <div className={`bg-white rounded-[20px] overflow-hidden shadow-sm border border-[#e0e0e0] flex flex-col shrink-0 snap-start transition-all relative
         ${isMobile ? 'min-w-[280px] max-w-[300px]' : 'min-w-[320px] max-w-[360px]'}
       `}>
+        {/* ENROLLED Badge */}
+        {isFullyEnrolled && (
+          <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+            <Check className="w-3 h-3" /> ENROLLED
+          </div>
+        )}
+
         {/* --- THUMBNAIL - NO CLICK ACTION --- */}
         <div className="relative">
           <div className={`${isMobile ? 'h-[160px]' : 'h-[200px]'} w-full bg-gray-50 flex items-center justify-center overflow-hidden`}>
