@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, GraduationCap, BookOpen, School, Trophy, User, ArrowLeft, Briefcase, Calculator, Microscope, Atom } from 'lucide-react';
+import { Loader2, ArrowLeft, ChevronRight } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import FocusSelectionDrawer, { FocusOption } from '@/components/dashboard/FocusSelectionDrawer';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-
-// Map icons from your database string to Lucide components
-const rootIconMap: { [key: string]: React.ElementType } = {
-  GraduationCap: GraduationCap,
-  School: School,
-  Trophy: Trophy,
-  User: User,
-  Briefcase: Briefcase,
-  Calculator: Calculator,
-  Microscope: Microscope,
-  Atom: Atom,
-  default: BookOpen,
-};
 
 const FocusArea = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -72,20 +59,10 @@ const FocusArea = () => {
     setTimeout(() => setSelectedRootOption(null), 300);
   };
 
-  // Color palette for All Categories
-  const colorPalette = [
-    { bg: 'bg-[#e3f2fd]', text: 'text-blue-600' },    // Blue soft
-    { bg: 'bg-[#f3e5f5]', text: 'text-purple-600' },  // Purple soft
-    { bg: 'bg-[#fff9c4]', text: 'text-yellow-700' },  // Yellow soft
-    { bg: 'bg-[#ffebee]', text: 'text-red-600' },     // Red soft
-    { bg: 'bg-[#e0f2f1]', text: 'text-teal-600' },    // Teal soft
-    { bg: 'bg-[#e8f5e9]', text: 'text-green-600' },   // Green soft
-  ];
-
   if (loading || authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-4 font-['Inter',sans-serif]">
-        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <Loader2 className="h-10 w-10 animate-spin text-gray-900" />
         <p className="text-gray-500 font-medium">Loading your goals...</p>
       </div>
     );
@@ -114,31 +91,20 @@ const FocusArea = () => {
          {/* All Categories Section */}
          <h2 className="text-[1.1rem] font-semibold mb-5 text-[#2d3436]">All Categories</h2>
          
-         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {rootOptions.map((option, index) => {
-               // Cycle through colors
-               const theme = colorPalette[index % colorPalette.length];
-               // Resolve icon
-               const IconComponent = rootIconMap[option.icon || 'default'] || rootIconMap.default;
-
-               return (
-                 <div
-                   key={option.id}
-                   onClick={() => handleRootSelect(option)}
-                   className="flex items-center p-5 border border-[#e0e0e0] rounded-xl bg-white cursor-pointer hover:border-[#aaa] hover:bg-[#fafafa] transition-all duration-200 active:scale-[0.98]"
-                 >
-                    <div className={cn(
-                      "w-[45px] h-[45px] rounded-lg mr-[15px] flex-shrink-0 flex items-center justify-center",
-                      theme.bg
-                    )}>
-                       <IconComponent className={cn("w-6 h-6", theme.text)} />
-                    </div>
-                    <span className="text-[0.95rem] font-medium text-[#2d3436] line-clamp-2">
-                      {option.label}
-                    </span>
-                 </div>
-               );
-            })}
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {rootOptions.map((option) => (
+               <div
+                 key={option.id}
+                 onClick={() => handleRootSelect(option)}
+                 className="group relative flex items-center justify-between p-6 rounded-xl border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:border-gray-800 hover:shadow-sm active:scale-[0.99]"
+               >
+                  <span className="font-semibold text-[16px] text-gray-900 group-hover:text-black">
+                    {option.label}
+                  </span>
+                  
+                  <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
+               </div>
+            ))}
          </div>
 
       </div>
