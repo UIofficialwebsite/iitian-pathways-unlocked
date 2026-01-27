@@ -112,10 +112,10 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   };
 
   const renderBuyButton = () => {
-    // Determine button text based on whether the course is free
+    // Label Logic: "ENROLL NOW" if free, "BUY NOW" if paid
     const buttonText = isBaseFree ? "ENROLL NOW" : "BUY NOW";
 
-    // Logic: If Add-ons exist -> Go to Config Page
+    // Action Logic: If Add-ons exist -> Go to Config Page
     if (hasAddons) {
       return (
         <button
@@ -127,7 +127,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
       );
     }
 
-    // Logic: If No Add-ons -> Direct Enroll (Payment Popup)
+    // Action Logic: If No Add-ons -> Direct Enroll (handled by EnrollButton)
+    // If price is 0/null, EnrollButton typically handles direct access granting.
     return (
       <EnrollButton
         courseId={course.id}
