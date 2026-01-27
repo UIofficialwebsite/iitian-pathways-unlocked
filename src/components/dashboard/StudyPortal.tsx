@@ -176,7 +176,7 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // Plain Yellow Fade - No Icon
+              // UPDATED: Yellow gradient ONLY, no icon
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -191,7 +191,7 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {/* Description Removed */}
+            {/* Description Removed as per request */}
 
             <div className="flex items-center gap-1.5 pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
@@ -264,8 +264,17 @@ const EnrolledView = ({
 
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
+  // Debug: Log component mount/unmount
+  useEffect(() => {
+    console.log('[BatchSwitch] EnrolledView MOUNTED with selectedBatchId:', selectedBatchId);
+    return () => {
+      console.log('[BatchSwitch] EnrolledView UNMOUNTING');
+    };
+  }, []);
+
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
@@ -293,23 +302,18 @@ const EnrolledView = ({
 
   const canSwitchBatch = enrollments.length > 1;
   
+  // Sync sheet state
   useEffect(() => {
     if (isSheetOpen) {
       setTempSelectedBatchId(selectedBatchId);
     }
   }, [isSheetOpen, selectedBatchId]);
 
-  // Scroll reset when batch changes
-  useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.scrollTop = 0;
-    }
-  }, [selectedBatchId]);
-
+  // Fetch Full Details when selectedBatchId changes
   useEffect(() => {
     if (!selectedBatchId) return;
 
-    // 1. Increment Request ID
+    // 1. Increment Request ID to handle race conditions
     const currentId = ++lastRequestId.current;
 
     const fetchDetails = async () => {
@@ -375,24 +379,28 @@ const EnrolledView = ({
     }
   };
 
-  const handleOpenSheet = () => {
+  const handleOpenSheet = (source: 'main' | 'detail') => {
+    setSidebarSource(source);
     setIsSheetOpen(true);
   };
 
   const handleContinue = useCallback(() => {
     const newBatchId = tempSelectedBatchId;
     
+    // Only proceed if we have a valid new selection that differs from current
     if (!newBatchId || newBatchId === selectedBatchId) {
       setIsSheetOpen(false);
       return;
     }
     
+    // Close sheet
     setIsSheetOpen(false);
     
-    // Force reset for UI feedback
+    // Force clear all stale data to show loading state
     setFullCourseData(null);
     setLoadingDetails(true); 
     
+    // Update parent state (which is persisted)
     setSelectedBatchId(newBatchId);
     
     const newBatch = enrollments.find(e => e.course_id === newBatchId);
@@ -521,7 +529,7 @@ const EnrolledView = ({
                     
                     {canSwitchBatch && (
                       <Button 
-                        onClick={() => handleOpenSheet()} 
+                        onClick={() => handleOpenSheet('detail')} 
                         className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
                       >
                         Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
@@ -607,12 +615,12 @@ const EnrolledView = ({
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet();
+                if (canSwitchBatch) handleOpenSheet('main');
               }}
               onKeyDown={(e) => {
                 if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  handleOpenSheet();
+                  handleOpenSheet('main');
                 }
               }}
             >
@@ -972,29 +980,29 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
 
   const hasEnrollments = groupedEnrollments.length > 0;
 
-  // Sync to localStorage
+  // Sync to localStorage whenever it changes
   useEffect(() => {
     if (selectedBatchId) {
       localStorage.setItem('dashboard_selected_batch', selectedBatchId);
     }
   }, [selectedBatchId]);
 
-  // Validation (modified)
+  // Robust Validation: Prioritize persisted selection, fall back to first enrollment
   useEffect(() => {
     if (groupedEnrollments.length > 0) {
       setSelectedBatchId(currentId => {
-        // If currentId matches an enrollment, keep it
+        // 1. If current selection is valid, keep it
         if (currentId && groupedEnrollments.some(e => e.course_id === currentId)) {
           return currentId;
         }
-        // If we have a saved ID in local storage that matches, use that
+        // 2. If valid selection exists in localStorage, restore it
         const saved = localStorage.getItem('dashboard_selected_batch');
         if (saved && groupedEnrollments.some(e => e.course_id === saved)) {
           return saved;
         }
-        // Fallback to first
+        // 3. Fallback: Select the first one
         const first = groupedEnrollments[0].course_id;
-        localStorage.setItem('dashboard_selected_batch', first); // Update storage
+        localStorage.setItem('dashboard_selected_batch', first);
         return first;
       });
     }
