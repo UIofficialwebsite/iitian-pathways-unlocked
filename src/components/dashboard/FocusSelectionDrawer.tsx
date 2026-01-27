@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle, ArrowLeft, Briefcase, Calculator, BookOpen, School, Trophy, User } from 'lucide-react';
+import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Circle, ArrowLeft, Briefcase, Calculator, BookOpen, School, Trophy, User, Atom } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 // Exporting interface for use in FocusArea page
 export interface FocusOption {
@@ -27,11 +28,22 @@ interface FocusSelectionDrawerProps {
   allOptions: FocusOption[];
 }
 
+// Extended Icon Map to match new design vibes
 const iconMap: { [key: string]: React.ElementType } = {
   GraduationCap, UserCheck, Laptop, Microscope, 
-  Briefcase, Calculator, School, Trophy, User, BookOpen,
+  Briefcase, Calculator, School, Trophy, User, BookOpen, Atom,
   default: Circle,
 };
+
+// Colors for icons to cycle through (Premium look)
+const iconColors = [
+  "text-blue-500",   // Engineering Blue
+  "text-emerald-500", // Medical Green
+  "text-purple-500",  // Jobs Purple
+  "text-amber-500",   // Warning/Orange
+  "text-indigo-500",  // Indigo
+  "text-rose-500",    // Red
+];
 
 const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({ 
   isOpen, 
@@ -151,51 +163,60 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
   }
 
   const Content = (
-    <div className="w-full h-full flex flex-col font-sans px-4 pb-6">
+    <div className="w-full h-full flex flex-col font-sans px-6 pb-8">
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center h-48 space-y-4 animate-in fade-in">
+        <div className="flex flex-col items-center justify-center h-64 space-y-4 animate-in fade-in">
           <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
           <p className="text-sm text-gray-500 font-medium">Setting up your personalized dashboard...</p>
         </div>
       ) : (
-        <div className="space-y-3 mt-4">
+        <div className="space-y-6 mt-2">
            {currentOptions.length > 0 ? (
-            currentOptions.map((option) => {
-              const Icon = iconMap[option.icon || 'default'] || iconMap.default;
-              return (
-                <Button
-                  key={option.id}
-                  variant="outline"
-                  className="w-full justify-between h-16 text-left text-sm rounded-xl border-gray-200 hover:border-blue-500 hover:bg-blue-50/50 transition-all group px-4 shadow-sm"
-                  onClick={() => handleOptionClick(option)}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="h-9 w-9 rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors text-blue-600">
-                      <Icon className="h-5 w-5" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {currentOptions.map((option, index) => {
+                const Icon = iconMap[option.icon || 'default'] || iconMap.default;
+                // Assign color based on index or type logic
+                const iconColor = iconColors[index % iconColors.length];
+                
+                return (
+                  <div
+                    key={option.id}
+                    onClick={() => handleOptionClick(option)}
+                    className="group relative flex items-center justify-between p-5 rounded-xl border border-gray-200 bg-white cursor-pointer transition-all duration-200 hover:border-gray-800 hover:shadow-sm"
+                  >
+                    <div className="flex items-center gap-4">
+                      {/* Icon Container */}
+                      <div className="flex-shrink-0">
+                         <Icon className={cn("w-6 h-6", iconColor)} />
+                      </div>
+                      
+                      {/* Text Label */}
+                      <span className="font-semibold text-[15px] text-gray-900 group-hover:text-black">
+                        {option.label}
+                      </span>
                     </div>
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 text-[15px]">{option.label}</span>
-                    </div>
+
+                    {/* Arrow Right */}
+                    <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-900 transition-colors" />
                   </div>
-                  <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-blue-500 transition-colors" />
-                </Button>
-              );
-            })
+                );
+              })}
+            </div>
           ) : (
-            <div className="text-center py-10">
-               <p className="text-gray-500">No options found for this selection.</p>
+            <div className="text-center py-12">
+               <p className="text-gray-500 mb-4">No options found for this selection.</p>
                <Button variant="link" onClick={handleBack}>Go Back</Button>
             </div>
           )}
 
-          <div className="pt-4 flex justify-center">
+          <div className="flex justify-center pt-2">
             <Button
               variant="ghost"
               size="sm"
               onClick={handleBack}
               className="text-gray-500 hover:text-gray-900"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to previous step
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to previous
             </Button>
           </div>
         </div>
@@ -206,12 +227,14 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DrawerContent className="rounded-t-[24px] max-h-[85vh] outline-none">
+        <DrawerContent className="rounded-t-[24px] max-h-[90vh] outline-none bg-gray-50">
           <DrawerHeader className="text-left px-6 pt-6 pb-2">
             <DrawerTitle className="text-xl font-bold text-gray-900">{title}</DrawerTitle>
             <DrawerDescription className="text-gray-500">{description}</DrawerDescription>
           </DrawerHeader>
-          {Content}
+          <div className="overflow-y-auto">
+             {Content}
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -219,12 +242,17 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl border-none shadow-2xl bg-white duration-300">
-         <div className="px-6 py-6 border-b border-gray-100 bg-white">
-            <DialogTitle className="text-xl font-bold text-gray-900">{title}</DialogTitle>
-            <DialogDescription className="text-gray-500 mt-1">{description}</DialogDescription>
+      <DialogContent className="sm:max-w-[850px] p-0 gap-0 overflow-hidden rounded-[24px] border-none shadow-2xl bg-[#f8f9fa]">
+         <div className="flex items-center justify-between px-8 py-6 bg-white border-b border-gray-100">
+            <div>
+              <DialogTitle className="text-[1.4rem] font-semibold text-gray-900">{title}</DialogTitle>
+              <DialogDescription className="text-gray-500 mt-1">{description}</DialogDescription>
+            </div>
+            {/* Close button is handled by DialogPrimitive, but we can add a custom one if needed or rely on default X */}
          </div>
-         {Content}
+         <div className="bg-white min-h-[300px] max-h-[70vh] overflow-y-auto custom-scrollbar">
+            {Content}
+         </div>
       </DialogContent>
     </Dialog>
   );
