@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Loader2, GraduationCap, Layout, BookOpen, ChevronRight, School, Trophy, User } from 'lucide-react';
+import { Loader2, GraduationCap, BookOpen, School, Trophy, User, ArrowLeft, Briefcase, Calculator } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import FocusSelectionDrawer from '@/components/dashboard/FocusSelectionDrawer';
-import { Card } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
 interface FocusOption {
@@ -18,12 +16,14 @@ interface FocusOption {
   display_order: number;
 }
 
-// Icon mapping for root level cards
+// Map icons from your database string to Lucide components
 const rootIconMap: { [key: string]: React.ElementType } = {
   GraduationCap: GraduationCap,
   School: School,
   Trophy: Trophy,
   User: User,
+  Briefcase: Briefcase,
+  Calculator: Calculator,
   default: BookOpen,
 };
 
@@ -75,90 +75,78 @@ const FocusArea = () => {
 
   const handleDrawerClose = () => {
     setIsDrawerOpen(false);
-    // Delay clearing the selection slightly to avoid UI flicker during close animation
     setTimeout(() => setSelectedRootOption(null), 300);
   };
 
+  // Color palette cycling for icons to match your design's "soft" colors
+  const colorPalette = [
+    { bg: 'bg-[#e3f2fd]', text: 'text-blue-600' },    // Blue soft
+    { bg: 'bg-[#f3e5f5]', text: 'text-purple-600' },  // Purple soft
+    { bg: 'bg-[#fff9c4]', text: 'text-yellow-700' },  // Yellow soft
+    { bg: 'bg-[#ffebee]', text: 'text-red-600' },     // Red soft
+    { bg: 'bg-[#e0f2f1]', text: 'text-teal-600' },    // Teal soft
+    { bg: 'bg-[#e8f5e9]', text: 'text-green-600' },   // Green soft
+  ];
+
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50/50 space-y-4">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-4 font-['Inter',sans-serif]">
         <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-gray-500 font-medium">Loading academic programs...</p>
+        <p className="text-gray-500 font-medium">Loading your goals...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white font-sans flex flex-col items-center">
-      {/* Navbar Minimal */}
-      <div className="w-full px-6 py-4 border-b border-gray-100 flex justify-center md:justify-start">
-         <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-8 w-auto" />
+    <div className="min-h-screen bg-white text-[#2d3436] font-['Inter',sans-serif] pb-12">
+      
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-[#eee] px-[5%] py-4 flex items-center h-16 shadow-sm">
+         <button 
+           onClick={() => navigate(-1)} 
+           className="mr-auto text-xl p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors outline-none focus:bg-gray-100"
+           aria-label="Go back"
+         >
+           <ArrowLeft className="w-6 h-6 text-gray-600" />
+         </button>
+         <h1 className="absolute left-1/2 -translate-x-1/2 text-[1.15rem] sm:text-[1.25rem] font-semibold text-[#2d3436]">
+           Select your Goal
+         </h1>
+      </header>
+
+      {/* Main Container */}
+      <div className="max-w-[1100px] mx-auto mt-8 sm:mt-10 px-5">
+         
+         {/* Categories Section (Mapped to your "All Exams" grid style) */}
+         <h2 className="text-[1.1rem] font-semibold mb-5 text-[#2d3436]">All Categories</h2>
+         
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {rootOptions.map((option, index) => {
+               // Cycle through colors
+               const theme = colorPalette[index % colorPalette.length];
+               // Resolve icon
+               const IconComponent = rootIconMap[option.icon || 'default'] || rootIconMap.default;
+
+               return (
+                 <div
+                   key={option.id}
+                   onClick={() => handleRootSelect(option)}
+                   className="flex items-center p-5 border border-[#e0e0e0] rounded-xl bg-white cursor-pointer hover:border-[#aaa] hover:bg-[#fafafa] transition-all duration-200 active:scale-[0.98]"
+                 >
+                    <div className={`w-[45px] h-[45px] rounded-lg mr-[15px] flex-shrink-0 flex items-center justify-center ${theme.bg}`}>
+                       <IconComponent className={`w-6 h-6 ${theme.text}`} />
+                    </div>
+                    <span className="text-[0.95rem] font-medium text-[#2d3436] line-clamp-2">
+                      {option.label}
+                    </span>
+                 </div>
+               );
+            })}
+         </div>
+
       </div>
 
-      <div className="flex-1 w-full max-w-6xl mx-auto px-4 py-12 md:py-16 flex flex-col items-center animate-in fade-in slide-in-from-bottom-4 duration-700">
-        
-        {/* Header Section */}
-        <div className="text-center space-y-4 mb-12 max-w-2xl">
-          <div className="inline-flex items-center justify-center p-3 bg-blue-50 rounded-2xl mb-2 shadow-sm">
-             <Layout className="h-6 w-6 text-blue-600" />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 tracking-tight">
-            Choose your Academic Path
-          </h1>
-          <p className="text-lg text-gray-500 leading-relaxed">
-            Select your current program to help us personalize your learning experience with the most relevant content and resources.
-          </p>
-        </div>
-
-        {/* Main Selection Grid */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rootOptions.map((option) => {
-            const Icon = rootIconMap[option.icon || 'default'] || rootIconMap.default;
-            
-            return (
-              <Card 
-                key={option.id}
-                onClick={() => handleRootSelect(option)}
-                className={cn(
-                  "relative overflow-hidden cursor-pointer group hover:shadow-xl transition-all duration-300 border border-gray-200",
-                  "flex flex-col items-center justify-center p-8 text-center h-[280px] rounded-2xl bg-white hover:border-blue-500/30"
-                )}
-              >
-                {/* Background Gradient on Hover */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50/0 to-blue-50/0 group-hover:from-blue-50/50 group-hover:to-purple-50/50 transition-all duration-500" />
-                
-                {/* Icon Circle */}
-                <div className="relative z-10 bg-gray-50 group-hover:bg-white group-hover:scale-110 group-hover:shadow-md transition-all duration-300 p-5 rounded-full mb-6">
-                  <Icon className="h-10 w-10 text-gray-600 group-hover:text-blue-600 transition-colors" />
-                </div>
-                
-                {/* Text Content */}
-                <h3 className="relative z-10 text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-700 transition-colors">
-                  {option.label}
-                </h3>
-                
-                <p className="relative z-10 text-sm text-gray-500 px-2 line-clamp-2 group-hover:text-gray-600">
-                   Tap to explore branches, subjects, and specialized content.
-                </p>
-
-                {/* Call to Action - Slides Up on Hover */}
-                <div className="absolute bottom-6 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                   <span className="text-blue-600 font-semibold text-sm flex items-center bg-blue-50 px-4 py-2 rounded-full">
-                      Select Program <ChevronRight className="h-4 w-4 ml-1" />
-                   </span>
-                </div>
-              </Card>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Footer Minimal */}
-      <div className="w-full py-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} UnknownIITians. All rights reserved.
-      </div>
-
-      {/* The Drawer/Popup Logic */}
+      {/* Drawer Component for Level 2 selection */}
       <FocusSelectionDrawer
         isOpen={isDrawerOpen}
         onClose={handleDrawerClose}
