@@ -176,7 +176,7 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // Fallback: Yellow gradient ONLY, no icon
+              // UPDATED: Yellow gradient ONLY, no icon
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -262,20 +262,10 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  // Temp selection for the sheet (before confirming)
   const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sidebarSource, setSidebarSource] = useState<'main' | 'detail'>('main');
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
-  // Debug: Log component mount/unmount
-  useEffect(() => {
-    console.log('[BatchSwitch] EnrolledView MOUNTED with selectedBatchId:', selectedBatchId);
-    return () => {
-      console.log('[BatchSwitch] EnrolledView UNMOUNTING');
-    };
-  }, []);
-
   const [fullCourseData, setFullCourseData] = useState<Course | null>(null);
   const [scheduleData, setScheduleData] = useState<BatchScheduleItem[]>([]);
   const [faqs, setFaqs] = useState<CourseFaq[] | undefined>(undefined);
@@ -300,8 +290,7 @@ const EnrolledView = ({
 
   // Derive current batch summary directly
   const currentBatchSummary = useMemo(() => {
-    const found = enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
-    return found;
+    return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
@@ -382,8 +371,7 @@ const EnrolledView = ({
     }
   };
 
-  const handleOpenSheet = (source: 'main' | 'detail') => {
-    setSidebarSource(source);
+  const handleOpenSheet = () => {
     setIsSheetOpen(true);
   };
 
@@ -536,7 +524,7 @@ const EnrolledView = ({
                     
                     {canSwitchBatch && (
                       <Button 
-                        onClick={() => handleOpenSheet('detail')} 
+                        onClick={() => handleOpenSheet()} 
                         className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
                       >
                         Switch Batch <ChevronDown className="ml-2 h-3 w-3" />
@@ -623,12 +611,12 @@ const EnrolledView = ({
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                if (canSwitchBatch) handleOpenSheet('main');
+                if (canSwitchBatch) handleOpenSheet();
               }}
               onKeyDown={(e) => {
                 if (canSwitchBatch && (e.key === 'Enter' || e.key === ' ')) {
                   e.preventDefault();
-                  handleOpenSheet('main');
+                  handleOpenSheet();
                 }
               }}
             >
