@@ -394,6 +394,12 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       return;
     }
 
+    // Direct Bypass for Free Courses (Price 0)
+    if (coursePrice === 0) {
+      await handleFreeEnroll();
+      return;
+    }
+
     try {
       setIsProcessing(true);
       const { data: { user } } = await supabase.auth.getUser();
@@ -419,6 +425,57 @@ const EnrollButton: React.FC<EnrollButtonProps> = ({
       console.error("Error checking profile:", error);
       setIsProcessing(false);
       setShowPhoneDialog(true);
+    }
+  };
+
+  // --- NEW FUNCTION: Handle Free Enrollment Directly ---
+  const handleFreeEnroll = async () => {
+    try {
+      setIsProcessing(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        openLogin();
+        return;
+      }
+
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: courseId,
+          amount: 0,
+          status: 'active',
+          payment_id: 'free_enrollment',
+          subject_name: selectedSubjects.length > 0 ? selectedSubjects : null
+        });
+
+      if (enrollError) {
+        if (enrollError.code === '23505') { // Unique violation code
+          toast({
+            title: "Already Enrolled",
+            description: "You are already enrolled in this batch.",
+          });
+          // Optional: redirect to course page or dashboard
+          return;
+        }
+        throw enrollError;
+      }
+
+      toast({
+        title: "Success",
+        description: "Successfully enrolled in the batch!",
+      });
+      // You might want to redirect here if needed, or just let the user stay
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast({
+        title: "Enrollment Failed",
+        description: "Could not enroll. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
     }
   };
 
