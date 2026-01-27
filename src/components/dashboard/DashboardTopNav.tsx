@@ -1,198 +1,160 @@
-import React from 'react'; // Removed useState since modal state is no longer needed
-import { Link, useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, User, LogOut, LayoutGrid, Menu } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import DashboardSidebar, { ActiveView } from "./DashboardSidebar";
-// Removed FocusAreaModal import
+import { Loader2, GraduationCap, BookOpen, School, Trophy, User, ArrowLeft, Briefcase, Calculator } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import FocusSelectionDrawer from '@/components/dashboard/FocusSelectionDrawer';
+import { useNavigate } from 'react-router-dom';
 
-// Define profile type locally or import if available globally
-interface UserProfile {
-  program_type: string | null;
-  branch?: string | null;
-  level?: string | null;
-  exam_type?: string | null;
-  student_status?: string | null;
-  subjects?: string[] | null;
-  student_name?: string | null;
-  full_name?: string | null;
-  email?: string | null;
-  id: string; 
+interface FocusOption {
+  id: string;
+  parent_id: string | null;
+  label: string;
+  value_to_save: string;
+  profile_column_to_update: string;
+  icon: string | null;
+  display_order: number;
 }
 
-interface DashboardTopNavProps {
-  profile: UserProfile | null;
-  onViewChange: (view: ActiveView) => void;
-  activeView: ActiveView;
-  onProfileUpdate: (updatedProfile: any) => void;
-}
+// Map icons from your database string to Lucide components
+const rootIconMap: { [key: string]: React.ElementType } = {
+  GraduationCap: GraduationCap,
+  School: School,
+  Trophy: Trophy,
+  User: User,
+  Briefcase: Briefcase,
+  Calculator: Calculator,
+  default: BookOpen,
+};
 
-const DashboardTopNav = ({ profile, onViewChange, activeView, onProfileUpdate }: DashboardTopNavProps) => {
-  const { user, signOut } = useAuth();
+const FocusArea = () => {
+  const { user, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
   const navigate = useNavigate();
-  // Removed isFocusModalOpen state
+  
+  const [allOptions, setAllOptions] = useState<FocusOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Selection State
+  const [selectedRootOption, setSelectedRootOption] = useState<FocusOption | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate('/');
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    const fetchOptions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('focus_options' as any)
+          .select('*')
+          .order('display_order', { ascending: true });
+          
+        if (error) throw error;
+        setAllOptions(data as any);
+      } catch (error: any) {
+        toast({ title: "Error", description: "Failed to load options.", variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchOptions();
+  }, [user, authLoading, navigate, toast]);
+
+  const rootOptions = allOptions.filter(o => o.parent_id === null);
+
+  const handleRootSelect = (option: FocusOption) => {
+    setSelectedRootOption(option);
+    setIsDrawerOpen(true);
   };
 
-  const userName = profile?.student_name || user?.email?.split('@')[0] || "User";
-  const userEmail = user?.email || "";
-  const userInitial = userName.charAt(0).toUpperCase();
-
-  const getProfileDisplay = () => {
-    if (!profile || !profile.program_type) {
-      return <span className="text-[10px] sm:text-sm font-medium text-white capitalize whitespace-nowrap">Set Focus</span>;
-    }
-    if (profile.program_type === 'IITM_BS') {
-      const branch = profile.branch === 'data-science' ? 'DS' : profile.branch === 'electronic-systems' ? 'ES' : 'Branch';
-      const level = profile.level || 'Level';
-      return (
-        <div className="text-left">
-          <p className="text-[10px] sm:text-sm font-medium text-white leading-none capitalize whitespace-nowrap">{branch} • {level}</p>
-        </div>
-      );
-    }
-    if (profile.program_type === 'COMPETITIVE_EXAM') {
-      const exam = profile.exam_type || 'Exam';
-      const status = profile.student_status || 'Class';
-      return (
-        <div className="text-left">
-          <p className="text-[10px] sm:text-sm font-medium text-white leading-none capitalize whitespace-nowrap">{status} • {exam}</p>
-        </div>
-      );
-    }
-    return <span className="text-[10px] sm:text-sm font-medium text-white capitalize whitespace-nowrap">Set Focus</span>;
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false);
+    setTimeout(() => setSelectedRootOption(null), 300);
   };
+
+  // Color palette cycling for icons to match your design's "soft" colors
+  const colorPalette = [
+    { bg: 'bg-[#e3f2fd]', text: 'text-blue-600' },    // Blue soft
+    { bg: 'bg-[#f3e5f5]', text: 'text-purple-600' },  // Purple soft
+    { bg: 'bg-[#fff9c4]', text: 'text-yellow-700' },  // Yellow soft
+    { bg: 'bg-[#ffebee]', text: 'text-red-600' },     // Red soft
+    { bg: 'bg-[#e0f2f1]', text: 'text-teal-600' },    // Teal soft
+    { bg: 'bg-[#e8f5e9]', text: 'text-green-600' },   // Green soft
+  ];
+
+  if (loading || authLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white space-y-4 font-['Inter',sans-serif]">
+        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+        <p className="text-gray-500 font-medium">Loading your goals...</p>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div className="sticky top-0 z-30 w-full h-16 bg-white border-b border-gray-200 font-['Inter',sans-serif]">
-        <div className="flex items-center justify-between h-full px-4 sm:px-6 lg:px-8">
-          
-          {/* Left: Mobile Menu & Logo */}
-          <div className="flex items-center gap-2">
-            {/* Mobile Hamburger Menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden shrink-0">
-                  <Menu className="h-6 w-6" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-72 p-0 z-[10060]">
-                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white h-full">
-                  <DashboardSidebar 
-                    profile={profile} 
-                    onProfileUpdate={onProfileUpdate} 
-                    onViewChange={onViewChange}
-                    activeView={activeView} 
-                  />
-                </div>
-              </SheetContent>
-            </Sheet>
-
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-              <img
-                className="h-8 w-auto"
-                src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png"
-                alt="UI Logo"
-              />
-              <span className="font-sans text-lg font-semibold text-black hidden sm:block">
-                Unknown IITians
-              </span>
-            </Link>
-          </div>
-
-          {/* Right: Focus Area & User Menu */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            
-            {/* Focus Area Box - Redirects to /focus-area */}
-            <div 
-              onClick={() => navigate('/focus-area')}
-              className="flex items-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2 cursor-pointer bg-black/80 backdrop-blur-sm text-white rounded-md shadow-sm hover:bg-black/70 transition-all select-none max-w-[140px] sm:max-w-none"
-            >
-              {getProfileDisplay()}
-              <span className="text-white text-[10px] sm:text-sm font-medium ml-0.5 sm:ml-1">&gt;</span>
-            </div>
-
-            <div className="h-6 w-px bg-gray-200 hidden sm:block" />
-
-            {/* User Greeting */}
-            <span className="text-sm font-medium text-gray-700 hidden sm:block">
-              Hi, {userName}
-            </span>
-            
-            {/* User Dropdown */}
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full p-1 h-auto hover:bg-gray-100 transition-colors outline-none focus:outline-none group">
-                  <Avatar className="h-8 w-8 border border-gray-200 group-hover:ring-2 group-hover:ring-[#1d4ed8] transition-all">
-                    <AvatarImage src={user?.user_metadata?.avatar_url} alt={userName} />
-                    <AvatarFallback className="font-bold bg-[#1d4ed8] text-white">{userInitial}</AvatarFallback>
-                  </Avatar>
-                  <ChevronDown className="h-4 w-4 text-gray-500 group-hover:text-[#1d4ed8] transition-colors hidden sm:block" />
-                </button>
-              </DropdownMenuTrigger>
-              
-              <DropdownMenuContent 
-                align="end" 
-                className="w-[250px] p-[10px_0] rounded-[12px] bg-white border-none shadow-[0_4px_20px_rgba(0,0,0,0.08)] z-[10005] mt-2 font-['Inter',sans-serif]"
-              >
-                <DropdownMenuLabel className="font-normal px-5 pb-2">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none text-[#344054] truncate">{userName}</p>
-                    <p className="text-xs leading-none text-muted-foreground truncate">{userEmail}</p>
-                  </div>
-                </DropdownMenuLabel>
-                
-                <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
-                
-                <DropdownMenuItem 
-                  onClick={() => onViewChange('profile')} 
-                  className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-                >
-                  <User className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                  <span className="text-[16px] font-medium tracking-tight">My Profile</span>
-                </DropdownMenuItem>
-
-                <DropdownMenuItem 
-                  onClick={() => onViewChange('enrollments')} 
-                  className="flex items-center px-5 py-3.5 cursor-pointer text-[#344054] hover:!bg-[#f9fafb] hover:!text-[#344054] focus:bg-[#f9fafb] focus:text-[#344054] transition-colors duration-200"
-                >
-                  <LayoutGrid className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                  <span className="text-[16px] font-medium tracking-tight">My Enrollments</span>
-                </DropdownMenuItem>
-                
-                <DropdownMenuSeparator className="bg-[#f2f4f7] my-2 mx-0" />
-                
-                <DropdownMenuItem 
-                  onClick={handleLogout} 
-                  className="flex items-center px-5 py-3.5 cursor-pointer text-[#dc2626] hover:!bg-[#f9fafb] hover:!text-[#dc2626] focus:bg-[#f9fafb] focus:text-[#dc2626] transition-colors duration-200"
-                >
-                  <LogOut className="mr-4 h-[22px] w-[22px] stroke-[1.8]" />
-                  <span className="text-[16px] font-medium tracking-tight">Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-white text-[#2d3436] font-['Inter',sans-serif] pb-12">
       
-      {/* Removed FocusAreaModal Component from render */}
-    </>
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white border-b border-[#eee] px-[5%] py-4 flex items-center h-16 shadow-sm">
+         <button 
+           onClick={() => navigate(-1)} 
+           className="mr-auto text-xl p-2 -ml-2 hover:bg-gray-50 rounded-full transition-colors outline-none focus:bg-gray-100"
+           aria-label="Go back"
+         >
+           <ArrowLeft className="w-6 h-6 text-gray-600" />
+         </button>
+         <h1 className="absolute left-1/2 -translate-x-1/2 text-[1.15rem] sm:text-[1.25rem] font-semibold text-[#2d3436]">
+           Select your Goal
+         </h1>
+      </header>
+
+      {/* Main Container */}
+      <div className="max-w-[1100px] mx-auto mt-8 sm:mt-10 px-5">
+         
+         {/* Categories Section (Mapped to your "All Exams" grid style) */}
+         <h2 className="text-[1.1rem] font-semibold mb-5 text-[#2d3436]">All Categories</h2>
+         
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {rootOptions.map((option, index) => {
+               // Cycle through colors
+               const theme = colorPalette[index % colorPalette.length];
+               // Resolve icon
+               const IconComponent = rootIconMap[option.icon || 'default'] || rootIconMap.default;
+
+               return (
+                 <div
+                   key={option.id}
+                   onClick={() => handleRootSelect(option)}
+                   className="flex items-center p-5 border border-[#e0e0e0] rounded-xl bg-white cursor-pointer hover:border-[#aaa] hover:bg-[#fafafa] transition-all duration-200 active:scale-[0.98]"
+                 >
+                    <div className={`w-[45px] h-[45px] rounded-lg mr-[15px] flex-shrink-0 flex items-center justify-center ${theme.bg}`}>
+                       <IconComponent className={`w-6 h-6 ${theme.text}`} />
+                    </div>
+                    <span className="text-[0.95rem] font-medium text-[#2d3436] line-clamp-2">
+                      {option.label}
+                    </span>
+                 </div>
+               );
+            })}
+         </div>
+
+      </div>
+
+      {/* Drawer Component for Level 2 selection */}
+      <FocusSelectionDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleDrawerClose}
+        rootOption={selectedRootOption}
+        allOptions={allOptions}
+      />
+    </div>
   );
 };
 
-export default DashboardTopNav;
+export default FocusArea;
