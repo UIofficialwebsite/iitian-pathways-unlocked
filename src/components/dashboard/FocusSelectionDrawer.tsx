@@ -9,7 +9,7 @@ import { Loader2, ChevronRight, GraduationCap, Laptop, UserCheck, Microscope, Ci
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigate } from 'react-router-dom';
 
-// Define the shape of the options
+// Exporting interface for use in FocusArea page
 export interface FocusOption {
   id: string;
   parent_id: string | null;
@@ -23,7 +23,7 @@ export interface FocusOption {
 interface FocusSelectionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  initialPath: FocusOption[]; // CHANGED: Now accepts a full path
+  rootOption: FocusOption | null; 
   allOptions: FocusOption[];
 }
 
@@ -36,7 +36,7 @@ const iconMap: { [key: string]: React.ElementType } = {
 const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({ 
   isOpen, 
   onClose, 
-  initialPath, 
+  rootOption, 
   allOptions 
 }) => {
   const { user } = useAuth();
@@ -51,14 +51,13 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
   // Current parent ID determines which options to show
   const [currentStepParentId, setCurrentStepParentId] = useState<string | null>(null);
 
-  // Initialize when initialPath changes or modal opens
+  // Initialize when rootOption changes or modal opens
   useEffect(() => {
-    if (isOpen && initialPath.length > 0) {
-      setSelectionPath(initialPath);
-      // The current parent is the ID of the last item in the path
-      setCurrentStepParentId(initialPath[initialPath.length - 1].id);
+    if (isOpen && rootOption) {
+      setSelectionPath([rootOption]);
+      setCurrentStepParentId(rootOption.id);
     }
-  }, [isOpen, initialPath]);
+  }, [isOpen, rootOption]);
 
   const handleOptionClick = (option: FocusOption) => {
     const newPath = [...selectionPath, option];
@@ -78,25 +77,15 @@ const FocusSelectionDrawer: React.FC<FocusSelectionDrawerProps> = ({
 
   const handleBack = () => {
     if (selectionPath.length <= 1) {
-      // If at root level (or effectively empty), close drawer
+      // If at root level, close drawer
       onClose();
       return;
     }
     
-    // Check if we are at the "start" of our initial path to prevent going up too far?
-    // Actually, allowing users to go "up" to the root might be confusing if they clicked a deep link.
-    // For now, let's just pop the last item.
-    
     const newPath = selectionPath.slice(0, -1);
     setSelectionPath(newPath);
-    
-    // If the new path is empty (shouldn't happen with logic above), set parent to null
-    if (newPath.length === 0) {
-      onClose();
-    } else {
-      const lastItem = newPath[newPath.length - 1];
-      setCurrentStepParentId(lastItem.id);
-    }
+    const lastItem = newPath[newPath.length - 1];
+    setCurrentStepParentId(lastItem.id);
   };
 
   const handleSave = async (path: FocusOption[]) => {
