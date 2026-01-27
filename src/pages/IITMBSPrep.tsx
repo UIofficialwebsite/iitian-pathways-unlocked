@@ -151,9 +151,12 @@ const IITMBSPrep = () => {
 
   const syllabusSubjectOptions = useMemo(() => availableSyllabusCourses.map(c => ({ id: c.id, name: c.name })), [availableSyllabusCourses]);
 
-  // Derive Course options
+  // Derive Course options - only show live courses
   const iitmCourses = useMemo(() => 
-    courses.filter(c => c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
+    courses.filter(c => 
+      c.is_live === true &&
+      (c.exam_category === 'IITM BS' || c.exam_category === 'IITM_BS')
+    )
   , [courses]);
 
   const branches = useMemo(() => Array.from(new Set(iitmCourses.map(c => c.branch))).filter(Boolean).sort() as string[], [iitmCourses]);

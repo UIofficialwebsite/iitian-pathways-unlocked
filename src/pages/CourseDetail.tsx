@@ -260,7 +260,8 @@ const CourseDetail = ({ customCourseId, isDashboardView, onTitleLoad }: CourseDe
     ownedAddons,
     customEnrollHandler,
     isFreeCourse: course.price === 0 || course.price === null,
-    enrolling
+    enrolling,
+    isLive: course.is_live === true
   };
 
   // --- UPDATED: Removed the "major section" wrapper in Dashboard View ---

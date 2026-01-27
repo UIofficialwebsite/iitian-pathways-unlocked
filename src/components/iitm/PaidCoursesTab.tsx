@@ -24,9 +24,10 @@ const PaidCoursesTab: React.FC<PaidCoursesTabProps> = ({
 }) => {
   const { courses, contentLoading } = useBackend();
 
-  // Primary filtering for IITM BS category
+  // Primary filtering for IITM BS category - only show live courses
   const iitmCourses = courses.filter(course => 
-    course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS'
+    course.is_live === true &&
+    (course.exam_category === 'IITM BS' || course.exam_category === 'IITM_BS')
   );
   
   const filteredCourses = iitmCourses.filter(course => {

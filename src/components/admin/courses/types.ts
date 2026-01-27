@@ -25,4 +25,5 @@ export interface Course {
   student_status?: string | null;
   // Add this field to match your SQL table
   parent_course_id?: string | null;
+  is_live?: boolean | null;
 }
