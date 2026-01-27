@@ -1,9 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Clock, Tag } from "lucide-react";
+import { GraduationCap, Clock, Tag, Loader2 } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import EnrollButton from "@/components/EnrollButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface CourseCardProps {
   course: Course;
@@ -12,8 +15,12 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { openLogin } = useLoginModal();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   // Logic for "NEW" tag based on updated_at (last 30 days)
   const isNewlyLaunched = useMemo(() => {
@@ -77,6 +84,59 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     checkAddonsAndPrice();
   }, [course.id, course.price]);
 
+  // Handle Free Enrollment
+  const handleFreeEnroll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+      
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: course.id,
+          amount: 0,
+          status: 'active',
+          payment_id: 'free_enrollment',
+          subject_name: null 
+        });
+
+      if (enrollError) {
+        if (enrollError.code === '23505') { // Unique violation code
+           toast({
+            title: "Already Enrolled",
+            description: "You are already enrolled in this batch.",
+           });
+           navigate(`/courses/${course.id}`);
+           return;
+        }
+        throw enrollError;
+      }
+
+      toast({
+          title: "Success",
+          description: "Successfully enrolled in the batch!",
+      });
+      navigate(`/courses/${course.id}`);
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast({
+          title: "Enrollment Failed",
+          description: "Could not enroll. Please try again.",
+          variant: "destructive",
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   // --- RENDER HELPERS ---
   const isBaseFree = course.price === 0 || course.price === null;
   const hasPaidAddons = minAddonPrice !== null;
@@ -86,12 +146,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     if (isBaseFree && hasPaidAddons) {
       return (
         <div className="flex flex-col leading-tight">
-          <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">
-            Starts at
-          </span>
-          <span className="text-[20px] font-bold text-[#1E3A8A]">
-            ₹{minAddonPrice?.toLocaleString()}
-          </span>
+          <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide">Starts at</span>
+          <span className="text-[20px] font-bold text-[#1E3A8A]">₹{minAddonPrice?.toLocaleString()}</span>
         </div>
       );
     }
@@ -100,12 +156,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     if (course.discounted_price && course.price && course.discounted_price < course.price) {
       return (
         <div className="flex items-center gap-2">
-          <span className="text-[22px] font-bold text-[#1E3A8A]">
-            ₹{course.discounted_price.toLocaleString()}
-          </span>
-          <span className="text-[14px] text-[#94a3b8] line-through font-normal">
-            ₹{course.price?.toLocaleString()}
-          </span>
+          <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.discounted_price.toLocaleString()}</span>
+          <span className="text-[14px] text-[#94a3b8] line-through font-normal">₹{course.price?.toLocaleString()}</span>
         </div>
       );
     }
@@ -116,28 +168,41 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     }
 
     // Case 4: Standard Price
-    return <span className="text-[22px] font-bold text-[#1E3A8A]">
-      ₹{course.price?.toLocaleString()}
-    </span>;
+    return <span className="text-[22px] font-bold text-[#1E3A8A]">₹{course.price?.toLocaleString()}</span>;
   };
 
   const renderBuyButton = () => {
-    // Determine button text: "ENROLL NOW" for free batches, "BUY NOW" for paid
-    const buttonText = isBaseFree ? "ENROLL NOW" : "BUY NOW";
+    // Common styles: Blue button
+    const btnClass = "flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors flex items-center justify-center gap-2";
 
-    // Logic: If Add-ons exist -> Go to Config Page
+    // Logic 1: Has Add-ons (Free or Paid) -> Go to Config
     if (hasAddons) {
+      // If base is free, label it "ENROLL NOW", otherwise "BUY NOW"
+      const label = isBaseFree ? "ENROLL NOW" : "BUY NOW";
       return (
         <button
           onClick={() => navigate(`/courses/${course.id}/configure`)}
-          className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90 transition-colors"
+          className={btnClass}
         >
-          {buttonText}
+          {label}
         </button>
       );
     }
 
-    // Logic: If No Add-ons -> Direct Enroll (Payment Popup or Direct Join)
+    // Logic 2: Free Batch (No Add-ons) -> Direct Enroll
+    if (isBaseFree) {
+        return (
+            <button
+                onClick={handleFreeEnroll}
+                disabled={enrolling}
+                className={btnClass}
+            >
+                {enrolling ? <Loader2 className="w-4 h-4 animate-spin" /> : "ENROLL NOW"}
+            </button>
+        );
+    }
+
+    // Logic 3: Paid Batch (No Add-ons) -> Payment Popup
     return (
       <EnrollButton
         courseId={course.id}
@@ -145,7 +210,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         coursePrice={course.discounted_price || course.price}
         className="flex-1 bg-[#1E3A8A] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1E3A8A]/90"
       >
-        {buttonText}
+        BUY NOW
       </EnrollButton>
     );
   };
@@ -161,11 +226,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         style={{ borderRadius: '6px' }}
       >
         {course.image_url ? (
-          <img 
-            src={course.image_url} 
-            alt={course.title} 
-            className="w-full h-full object-cover" 
-          />
+          <img src={course.image_url} alt={course.title} className="w-full h-full object-cover" />
         ) : (
           <div className="text-white/90 text-[24px] font-[800] text-center uppercase leading-tight px-4">
             {course.title}
@@ -181,27 +242,14 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         
         <div className="flex flex-row items-center gap-1.5 shrink-0 mt-1 whitespace-nowrap font-sans">
           {isNewlyLaunched && (
-            <span 
-              className="bg-[#f59e0b] text-white text-[10px] font-normal px-[10px] py-[3px] text-center uppercase" 
-              style={{ borderRadius: '6px' }}
-            >
-              NEW
-            </span>
+            <span className="bg-[#f59e0b] text-white text-[10px] font-normal px-[10px] py-[3px] text-center uppercase" style={{ borderRadius: '6px' }}>NEW</span>
           )}
           {course.language && (
-            <span 
-              className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-normal px-[10px] py-[3px] text-center" 
-              style={{ borderRadius: '6px' }}
-            >
-              {course.language}
-            </span>
+            <span className="bg-[#f3f4f6] text-[#4b5563] text-[10px] font-normal px-[10px] py-[3px] text-center" style={{ borderRadius: '6px' }}>{course.language}</span>
           )}
         </div>
 
-        <div 
-          className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity" 
-          onClick={handleWhatsappShare}
-        >
+        <div className="shrink-0 cursor-pointer hover:opacity-80 transition-opacity" onClick={handleWhatsappShare}>
           <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] fill-black">
             <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .018 5.396.015 12.03c0 2.12.554 4.189 1.602 6.039L0 24l6.135-1.61a11.748 11.748 0 005.911 1.586h.005c6.634 0 12.032-5.396 12.033-12.03a11.811 11.811 0 00-3.417-8.481z"/>
           </svg>
@@ -216,9 +264,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
         </div>
         <div className="flex items-center gap-[10px] text-[#6b7280] text-[13.5px] font-normal">
           <Clock className="w-4 h-4" />
-          <span>
-            Starts on <b className="text-[#1a1a1a] font-normal">{formatDate(course.start_date)}</b> Ends on <b className="text-[#1a1a1a] font-normal">{formatDate(course.end_date)}</b>
-          </span>
+          <span>Starts on <b className="text-[#1a1a1a] font-normal">{formatDate(course.start_date)}</b> Ends on <b className="text-[#1a1a1a] font-normal">{formatDate(course.end_date)}</b></span>
         </div>
       </div>
 
@@ -231,10 +277,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           </span>
         </div>
         {discountPercent > 0 && (
-          <div 
-            className="bg-[#e6f7ef] text-[#1b8b5a] px-[10px] py-[6px] text-[10px] font-normal flex items-center gap-[5px]" 
-            style={{ borderRadius: '6px' }}
-          >
+          <div className="bg-[#e6f7ef] text-[#1b8b5a] px-[10px] py-[6px] text-[10px] font-normal flex items-center gap-[5px]" style={{ borderRadius: '6px' }}>
             <Tag className="w-[12px] h-[12px]" /> {discountPercent}% OFF
           </div>
         )}
