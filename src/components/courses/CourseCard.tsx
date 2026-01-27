@@ -1,9 +1,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { GraduationCap, Clock, Tag } from "lucide-react";
+import { GraduationCap, Clock, Tag, Loader2 } from "lucide-react";
 import { Course } from '@/components/admin/courses/types';
 import EnrollButton from "@/components/EnrollButton";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface CourseCardProps {
   course: Course;
@@ -12,8 +15,12 @@ interface CourseCardProps {
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { openLogin } = useLoginModal();
   const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
   const [hasAddons, setHasAddons] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   // Logic for "NEW" tag based on updated_at (last 30 days)
   const isNewlyLaunched = useMemo(() => {
@@ -77,6 +84,59 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
     checkAddonsAndPrice();
   }, [course.id, course.price]);
 
+  // Handle Free Enrollment
+  const handleFreeEnroll = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      openLogin();
+      return;
+    }
+
+    try {
+      setEnrolling(true);
+      
+      const { error: enrollError } = await supabase
+        .from('enrollments')
+        .insert({
+          user_id: user.id,
+          course_id: course.id,
+          amount: 0,
+          status: 'active',
+          payment_id: 'free_enrollment',
+          subject_name: null 
+        });
+
+      if (enrollError) {
+        if (enrollError.code === '23505') { // Unique violation code
+           toast({
+            title: "Already Enrolled",
+            description: "You are already enrolled in this batch.",
+           });
+           navigate(`/courses/${course.id}`);
+           return;
+        }
+        throw enrollError;
+      }
+
+      toast({
+          title: "Success",
+          description: "Successfully enrolled in the batch!",
+      });
+      navigate(`/courses/${course.id}`);
+      
+    } catch (err: any) {
+      console.error("Free Enrollment Error:", err);
+      toast({
+          title: "Enrollment Failed",
+          description: "Could not enroll. Please try again.",
+          variant: "destructive",
+      });
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
   // --- RENDER HELPERS ---
   const isBaseFree = course.price === 0 || course.price === null;
   const hasPaidAddons = minAddonPrice !== null;
@@ -122,6 +182,19 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, index }) => {
           BUY NOW
         </button>
       );
+    }
+
+    // Logic: Free Batch -> Direct Enroll
+    if (isBaseFree) {
+        return (
+            <button
+                onClick={handleFreeEnroll}
+                disabled={enrolling}
+                className="flex-1 bg-[#1b8b5a] text-white h-[42px] text-[13px] font-normal uppercase rounded-lg hover:bg-[#1b8b5a]/90 transition-colors flex items-center justify-center gap-2"
+            >
+                {enrolling ? <Loader2 className="w-4 h-4 animate-spin" /> : "ENROLL NOW"}
+            </button>
+        );
     }
 
     // Logic: If No Add-ons -> Direct Enroll (Payment Popup)
