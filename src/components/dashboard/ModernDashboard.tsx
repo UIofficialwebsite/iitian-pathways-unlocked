@@ -6,7 +6,6 @@ import { Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
-import FocusAreaModal from "./FocusAreaModal";
 import DashboardTopNav from "./DashboardTopNav";
 import DashboardSidebar, { ActiveView } from "./DashboardSidebar"; 
 import { BouncingDots } from "@/components/ui/bouncing-dots";
@@ -47,7 +46,6 @@ const ModernDashboard: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
-  const [isFocusModalOpen, setIsFocusModalOpen] = useState(false);
   
   const { tab } = useParams<{ tab?: string }>();
   
@@ -108,9 +106,13 @@ const ModernDashboard: React.FC = () => {
 
         if (data) {
           setProfile(data);
-          if (!data.program_type) setIsFocusModalOpen(true);
+          // NEW REDIRECT LOGIC
+          if (!data.program_type) {
+             navigate('/focus-area');
+          }
         } else {
-          setIsFocusModalOpen(true);
+          // If no profile exists, also send to focus area to init profile
+          navigate('/focus-area');
         }
       } catch (error: any) {
         console.error("Error fetching profile:", error);
@@ -122,11 +124,6 @@ const ModernDashboard: React.FC = () => {
 
     fetchProfile();
   }, [user, authLoading, navigate, location, toast]);
-
-  const handleFocusSave = (updatedProfile: Profile) => {
-    setProfile(updatedProfile);
-    setIsFocusModalOpen(false);
-  };
 
   const handleProfileUpdate = (updatedProfile: any) => setProfile(updatedProfile as Profile);
 
@@ -286,13 +283,6 @@ const ModernDashboard: React.FC = () => {
             )}
         </main>
       </div>
-
-      <FocusAreaModal
-        isOpen={isFocusModalOpen}
-        onClose={() => setIsFocusModalOpen(false)}
-        profile={profile}
-        onProfileUpdate={handleFocusSave}
-      />
     </div>
   );
 };
