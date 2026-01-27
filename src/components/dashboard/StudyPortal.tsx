@@ -176,9 +176,8 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100/50 flex items-center justify-center">
-                <BookOpen className="h-8 w-8 text-yellow-600/30" />
-              </div>
+              // UPDATED: Yellow gradient ONLY, no icon
+              <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
           
@@ -192,7 +191,7 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {/* Description hidden as requested */}
+            {/* Description Removed */}
 
             <div className="flex items-center gap-1.5 pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
