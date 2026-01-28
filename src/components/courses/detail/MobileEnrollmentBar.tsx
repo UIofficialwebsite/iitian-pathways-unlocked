@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginModal } from "@/context/LoginModalContext";
+import { supabase } from "@/integrations/supabase/client";
 
 export function MobileEnrollmentBar({
   course,
@@ -19,6 +20,10 @@ export function MobileEnrollmentBar({
   const { user } = useAuth();
   const { openLogin } = useLoginModal();
   const [isVisible, setIsVisible] = useState(true);
+  
+  // Add-on State
+  const [minAddonPrice, setMinAddonPrice] = useState<number | null>(null);
+  const [hasAddons, setHasAddons] = useState(false);
 
   // Logic to hide bar when footer is reached
   useEffect(() => {
@@ -39,13 +44,51 @@ export function MobileEnrollmentBar({
     };
   }, []);
 
-  // Price Calculation Logic
+  // --- CHECK ADD-ONS & LOWEST PRICE LOGIC (Same as CourseCard) ---
+  useEffect(() => {
+    const checkAddonsAndPrice = async () => {
+      // Fetch all add-ons for this course
+      const { data, error } = await supabase
+        .from('course_addons')
+        .select('price')
+        .eq('course_id', course.id);
+
+      if (!error && data && data.length > 0) {
+        setHasAddons(true);
+
+        // Only calculate "Starts at" price if the Main Batch is FREE (0 or null)
+        if (course.price === 0 || course.price === null) {
+          // Filter for paid add-ons only
+          const paidAddons = data.filter(addon => addon.price > 0);
+          
+          if (paidAddons.length > 0) {
+            // Find the lowest price among add-ons
+            const lowest = Math.min(...paidAddons.map(p => p.price));
+            setMinAddonPrice(lowest);
+          } else {
+             setMinAddonPrice(null);
+          }
+        }
+      } else {
+        setHasAddons(false);
+        setMinAddonPrice(null);
+      }
+    };
+    
+    checkAddonsAndPrice();
+  }, [course.id, course.price]);
+
+  // Standard Price Calculation Logic
   const price = course.discounted_price ?? course.price ?? 0;
   const originalPrice = course.price ?? 0;
   const hasDiscount = course.discounted_price && course.price && course.discounted_price < course.price;
   const discountPercentage = hasDiscount
     ? Math.round(((originalPrice - price) / originalPrice) * 100)
     : 0;
+
+  // Determine rendering conditions
+  const isBaseFree = course.price === 0 || course.price === null;
+  const hasPaidAddons = minAddonPrice !== null;
 
   // Button Action Logic
   const handleAction = () => {
@@ -65,18 +108,29 @@ export function MobileEnrollmentBar({
     if (enrolling) return "Processing...";
     if (isFullyEnrolled) return "Go to Dashboard";
     if (isMainCourseOwned) return "Upgrade";
+    // If it's a "Starts at" situation (Base free + addons), prompt to Configure/Enroll
+    if (isBaseFree && hasAddons) return "Enroll Now";
     return "Continue with Batch";
   };
 
-  return (
-    <div 
-      className={cn(
-        "fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out px-5 py-3 md:hidden flex items-center justify-between min-w-[320px]",
-        isVisible ? "translate-y-0" : "translate-y-[110%]"
-      )}
-    >
-      {/* Pricing Info */}
-      <div className="flex flex-col gap-0.5">
+  const renderPrice = () => {
+    // Case 1: Base is Free + Paid Add-ons exist => "Starts at ₹..."
+    if (isBaseFree && hasPaidAddons) {
+      return (
+        <div className="flex flex-col">
+          <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wide leading-none mb-0.5">
+            Starts at
+          </span>
+          <span className="text-xl font-bold tracking-tight text-blue-800 leading-none">
+            ₹{minAddonPrice?.toLocaleString()}
+          </span>
+        </div>
+      );
+    }
+
+    // Standard rendering for other cases
+    return (
+      <>
         <div className="flex items-baseline gap-2">
           {price === 0 ? (
             <span className="text-xl font-bold tracking-tight text-[#1b8b5a]">
@@ -101,6 +155,20 @@ export function MobileEnrollmentBar({
             {discountPercentage}% Off
           </div>
         )}
+      </>
+    );
+  };
+
+  return (
+    <div 
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)] transition-transform duration-300 ease-in-out px-5 py-3 md:hidden flex items-center justify-between min-w-[320px]",
+        isVisible ? "translate-y-0" : "translate-y-[110%]"
+      )}
+    >
+      {/* Pricing Info */}
+      <div className="flex flex-col gap-0.5 justify-center min-h-[44px]">
+        {renderPrice()}
       </div>
 
       {/* Action Button */}
