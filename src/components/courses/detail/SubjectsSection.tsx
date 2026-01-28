@@ -82,6 +82,13 @@ const SubjectsSection: React.FC<SubjectsSectionProps> = ({ course, addons }) => 
              );
            })}
          </div>
+
+         {/* Note for Add-ons */}
+         {addons && addons.length > 0 && (
+           <p className="mt-4 text-[12px] font-normal text-gray-500 leading-tight">
+             You can select subjects from these available ones in the payment page.
+           </p>
+         )}
        </div>
     </div>
   );
