@@ -97,7 +97,7 @@ const TermsOfService = () => {
                   <p className="text-xs text-gray-500 mb-4 leading-relaxed">
                     Please review these terms carefully before using our platform.
                   </p>
-                  <a href="mailto:support@unknowniitians.live" className="text-xs font-bold text-gray-900 hover:underline flex items-center gap-1">
+                  <a href="mailto:legal@hq.unknowniitians.com" className="text-xs font-bold text-gray-900 hover:underline flex items-center gap-1">
                     Contact Legal <ChevronRight className="w-3 h-3" />
                   </a>
                 </div>
@@ -287,7 +287,7 @@ const TermsOfService = () => {
                   <div className="grid md:grid-cols-2 gap-4 text-sm">
                     <div className="bg-gray-50 p-4 rounded border border-gray-100">
                       <span className="text-gray-400 block mb-1">Email</span>
-                      <a href="mailto:support@unknowniitians.live" className="text-gray-900 hover:underline">support@unknowniitians.live</a>
+                      <a href="mailto:legal@hq.unknowniitians.live" className="text-gray-900 hover:underline">legal@hq.unknowniitians.live</a>
                     </div>
                     {/* Phone Number Section Removed */}
                     <div className="bg-gray-50 p-4 rounded border border-gray-100">
