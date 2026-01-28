@@ -92,7 +92,7 @@ const PrivacyPolicy = () => {
                   <p className="text-xs text-gray-500 mb-4 leading-relaxed">
                     We process data in compliance with global privacy standards.
                   </p>
-                  <a href="mailto:support@unknowniitians.live" className="text-xs font-bold text-gray-900 hover:underline flex items-center gap-1">
+                  <a href="mailto:legal@hq.unknowniitians.com" className="text-xs font-bold text-gray-900 hover:underline flex items-center gap-1">
                     Contact Support <ChevronRight className="w-3 h-3" />
                   </a>
                 </div>
@@ -106,7 +106,7 @@ const PrivacyPolicy = () => {
                 {/* Introduction */}
                 <section id="introduction" className="scroll-mt-32">
                   <p className="text-lg text-gray-600 leading-relaxed">
-                    Please read the following Privacy Policy regarding the services made available on <strong className="text-gray-900">www.unknowniitians.live</strong> and its associated platforms (collectively referred to as the "Platform").
+                    Please read the following Privacy Policy regarding the services made available on <strong className="text-gray-900">www.unknowniitians.com</strong> and its associated platforms (collectively referred to as the "Platform").
                   </p>
                   <p>
                     By accessing or using the Platform, you agree to be bound by the terms of this Privacy Policy. If you do not agree with these terms, please do not use the Platform. By providing your information, you consent to the collection and use of the information you disclose on our Platform in accordance with this Privacy Policy.
@@ -222,7 +222,7 @@ const PrivacyPolicy = () => {
                     <p className="text-gray-500 mb-2">If you wish to remove your contact information from all lists and newsletters, please contact us at:</p>
                     <div className="flex items-center gap-4">
                       <span className="text-gray-400 w-16">Email:</span>
-                      <a href="mailto:support@unknowniitians.live" className="text-gray-900 hover:underline">support@unknowniitians.live</a>
+                      <a href="mailto:legal@hq.unknowniitians.com" className="text-gray-900 hover:underline">legal@hq.unknowniitians.com</a>
                     </div>
                   </div>
                 </section>
