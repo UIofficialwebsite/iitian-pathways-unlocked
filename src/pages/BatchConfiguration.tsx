@@ -253,6 +253,13 @@ const BatchConfiguration = () => {
   const basePrice = course?.discounted_price ?? course?.price ?? 0;
   const effectiveBasePrice = isMainCourseOwned ? 0 : basePrice;
   
+  // Parse core subjects early for use in logic
+  const coreSubjects = useMemo(() => {
+    return course?.subject 
+        ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+  }, [course?.subject]);
+
   const selectedAddonsList = useMemo(() => {
     return addons.filter(addon => 
         selectedAddonIds.includes(addon.id) && !ownedAddonIds.includes(addon.id)
@@ -261,6 +268,13 @@ const BatchConfiguration = () => {
 
   const addonsTotal = selectedAddonsList.reduce((sum, addon) => sum + addon.price, 0);
   const finalTotal = effectiveBasePrice + addonsTotal;
+
+  // --- Determine if Base Plan should be enrolled ---
+  // Correction: If base plan has no subject and pricing also comes 0 then dont enroll
+  const shouldEnrollBase = !isMainCourseOwned && (basePrice > 0 || coreSubjects.length > 0);
+  
+  // Calculate if there are valid items to enroll
+  const hasItemsToEnroll = shouldEnrollBase || selectedAddonsList.length > 0;
 
   // --- 3. Handlers ---
   const toggleAddon = (addonId: string) => {
@@ -281,8 +295,8 @@ const BatchConfiguration = () => {
     try {
         const enrollmentsToInsert = [];
 
-        // 1. Insert Base Course if not owned
-        if (!isMainCourseOwned) {
+        // 1. Insert Base Course ONLY if valid (Paid OR Has Content)
+        if (shouldEnrollBase) {
             enrollmentsToInsert.push({
                 user_id: user.id,
                 course_id: courseId,
@@ -306,7 +320,7 @@ const BatchConfiguration = () => {
         });
 
         if (enrollmentsToInsert.length === 0) {
-            toast.info("No new items selected to enroll.");
+            toast.info("No valid items selected to enroll.");
             setProcessing(false);
             return;
         }
@@ -324,9 +338,7 @@ const BatchConfiguration = () => {
 
         // Insert into payments table for tracking
         const batchName = course?.title || 'Free Course';
-        const coreSubjects = course?.subject 
-          ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
-          : [];
+        // Note: coreSubjects is already calculated
         const addonSubjects = selectedAddonsList.map(a => a.subject_name);
         const allSubjects = [...new Set([...coreSubjects, ...addonSubjects])];
         const subjectsString = allSubjects.length > 0 ? allSubjects.join(', ') : 'No subjects';
@@ -352,7 +364,6 @@ const BatchConfiguration = () => {
 
         if (paymentError) {
           console.error("Failed to insert payment record:", paymentError);
-          // Don't throw - enrollment succeeded
         }
 
         toast.success("Successfully enrolled!");
@@ -373,17 +384,21 @@ const BatchConfiguration = () => {
       return;
     }
 
-    // Check if there is anything to purchase/enroll
-    const hasMainToEnroll = !isMainCourseOwned;
-    const hasAddonsToEnroll = selectedAddonsList.length > 0;
-
-    if (!hasMainToEnroll && !hasAddonsToEnroll) {
-        toast.info("You are already enrolled in the selected items.");
+    if (!hasItemsToEnroll) {
+        toast.info("Nothing valid to enroll in.");
         return;
     }
 
-    // Free enrollments also need phone number - removed bypass
-    // Phone check happens below, then we call handleFreeEnroll or processPayment
+    // Strict Free vs Paid Logic
+    if (finalTotal === 0) {
+      // Logic for Free Enrollment (Must be explicitly free)
+      // Check if the user is trying to bypass payment for a paid course
+      // Note: basePrice check is sufficient here because if basePrice > 0, finalTotal would be > 0 unless logic failed elsewhere
+      if (!isMainCourseOwned && basePrice > 0) {
+         toast.error("Error: Cannot free enroll in a paid course.");
+         return;
+      }
+    } 
 
     setProcessing(true);
 
@@ -395,7 +410,14 @@ const BatchConfiguration = () => {
         .single();
 
       if (profile?.dial_code && profile?.phone && profile.phone.length >= 5) {
-        await processPayment(`${profile.dial_code}${profile.phone}`);
+        const fullPhone = `${profile.dial_code}${profile.phone}`;
+        
+        // --- BRANCH LOGIC BASED ON TOTAL ---
+        if (finalTotal === 0) {
+             await handleFreeEnroll(fullPhone);
+        } else {
+             await processPayment(fullPhone);
+        }
       } else {
         setProcessing(false);
         setShowPhoneDialog(true);
@@ -450,11 +472,17 @@ const BatchConfiguration = () => {
       const fullPhoneNumber = `${selectedDialCode}${manualPhone}`;
       setShowPhoneDialog(false);
       
-      // Check if this is a free enrollment
+      // --- BRANCH LOGIC BASED ON TOTAL (Re-check for modal submission) ---
       if (finalTotal === 0) {
-        await handleFreeEnroll(fullPhoneNumber);
+         // Strict check before enrolling
+         if (!isMainCourseOwned && basePrice > 0) {
+             toast.error("Error: Payment required.");
+             setProcessing(false);
+             return;
+         }
+         await handleFreeEnroll(fullPhoneNumber);
       } else {
-        await processPayment(fullPhoneNumber);
+         await processPayment(fullPhoneNumber);
       }
     } catch (error) {
       setProcessing(false);
@@ -526,10 +554,6 @@ const BatchConfiguration = () => {
   }
 
   if (!course) return <div>Course not found</div>;
-
-  const coreSubjects = course.subject 
-    ? course.subject.split(',').map(s => s.trim()).filter(Boolean)
-    : [];
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'TBA';
@@ -815,10 +839,10 @@ const BatchConfiguration = () => {
 
               <button 
                 onClick={handlePayment}
-                disabled={processing || (finalTotal === 0 && isMainCourseOwned && selectedAddonsList.length === 0)}
+                disabled={processing || !hasItemsToEnroll}
                 className="w-full bg-[#1a1f36] text-white border-0 py-3.5 px-4 rounded-md text-[15px] font-semibold cursor-pointer transition-colors hover:bg-black disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center shadow-md"
               >
-                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "Continue to Payment"}
+                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : (finalTotal === 0 ? "Enroll for Free" : "Continue to Payment")}
               </button>
               
               <p className="mt-6 text-[12px] text-[#4f566b] leading-relaxed text-center">
@@ -851,10 +875,10 @@ const BatchConfiguration = () => {
 
             <button 
                 onClick={handlePayment}
-                disabled={processing || (finalTotal === 0 && isMainCourseOwned && selectedAddonsList.length === 0)}
+                disabled={processing || !hasItemsToEnroll}
                 className="bg-[#1a1f36] text-white px-6 h-11 rounded-md text-[14px] font-bold shadow-md active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center min-w-[120px]"
             >
-                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : "PAY NOW"}
+                {processing ? <Loader2 className="w-5 h-5 animate-spin" /> : (finalTotal === 0 ? "ENROLL FREE" : "PAY NOW")}
             </button>
         </div>
       </div>
