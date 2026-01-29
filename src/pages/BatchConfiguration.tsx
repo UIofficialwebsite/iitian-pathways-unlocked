@@ -270,7 +270,7 @@ const BatchConfiguration = () => {
   const finalTotal = effectiveBasePrice + addonsTotal;
 
   // --- Determine if Base Plan should be enrolled ---
-  // Correction: If base plan has no subject and pricing also comes 0 then dont enroll
+  // CORRECTION POINT 4: If base plan has no subject AND pricing is 0, then DO NOT enroll base.
   const shouldEnrollBase = !isMainCourseOwned && (basePrice > 0 || coreSubjects.length > 0);
   
   // Calculate if there are valid items to enroll
@@ -494,6 +494,14 @@ const BatchConfiguration = () => {
   const processPayment = async (phoneNumber: string) => {
     try {
       if (!courseId) throw new Error("Course information is missing");
+
+      // SAFETY: Strictly prevent processing payment if amount is 0 or less
+      // This prevents the Cashfree "invalid amount" error popup
+      if (finalTotal <= 0) {
+          toast.error("Invalid payment amount. Please refresh and try again.");
+          setProcessing(false);
+          return;
+      }
 
       // FIX: Ensure unique addon IDs before sending to backend to prevent DB unique constraint violations
       const rawAddonIds = selectedAddonIds.filter(id => !ownedAddonIds.includes(id));
