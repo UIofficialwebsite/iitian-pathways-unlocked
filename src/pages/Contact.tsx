@@ -1,7 +1,6 @@
 import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageSEO } from "@/utils/seoManager";
 
@@ -17,7 +16,7 @@ const Contact = () => {
     <div className="min-h-screen flex flex-col bg-white font-['Inter',sans-serif]">
       <NavBar />
       
-      {/* Added pt-28 to account for navbar and provide top spacing */}
+      {/* Page Content with top padding for navbar */}
       <main className="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -74,31 +73,29 @@ const Contact = () => {
                 </a>
 
                 <div className="flex flex-col gap-3">
-                  {/* WhatsApp Button */}
+                  {/* WhatsApp Button - Text Only */}
                   <a 
                     href={whatsappLink}
                     target="_blank" 
                     rel="noreferrer"
                   >
                     <Button 
-                      className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium px-6 h-10 text-sm w-full sm:w-auto"
+                      className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium px-8 h-10 text-sm w-full sm:w-auto"
                     >
-                      <MessageCircle className="mr-2 h-4 w-4" />
                       Chat on WhatsApp
                     </Button>
                   </a>
 
-                  {/* Directions Button */}
+                  {/* Directions Button - Text Only */}
                   <a 
-                    href="https://www.google.com/maps/search/New+Delhi,+Delhi,+India" 
+                    href="https://www.google.com/maps/search/?api=1&query=New+Delhi" 
                     target="_blank" 
                     rel="noreferrer"
                   >
                     <Button 
                       variant="outline" 
-                      className="border-[#1d4ed8] text-[#1d4ed8] hover:bg-blue-50 font-medium px-6 h-10 text-sm w-full sm:w-auto"
+                      className="border-[#1d4ed8] text-[#1d4ed8] hover:bg-blue-50 font-medium px-8 h-10 text-sm w-full sm:w-auto"
                     >
-                      <Send className="mr-2 h-4 w-4" />
                       Get Directions
                     </Button>
                   </a>
@@ -109,7 +106,7 @@ const Contact = () => {
             {/* Right Section: Map Panel */}
             <div className="w-full lg:w-2/3 h-[450px] bg-gray-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.0688975472578!3d28.52728034389636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sDelhi!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.0688975472578!3d28.52728034389636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sDelhi!5e0!3m2!1sen!2sin!4v1701234567890!5m2!1sen!2sin"
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
