@@ -1,18 +1,23 @@
 import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
-import { Send } from "lucide-react";
+import { Send, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePageSEO } from "@/utils/seoManager";
 
 const Contact = () => {
   usePageSEO("Contact Us | Unknown IITians", "/contact");
 
+  // WhatsApp Configuration
+  const whatsappNumber = "916297143798";
+  const prefilledMessage = encodeURIComponent("Hello Unknown IITians, I have a query regarding your courses.");
+  const whatsappLink = `https://wa.me/${whatsappNumber}?text=${prefilledMessage}`;
+
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white font-['Inter',sans-serif]">
       <NavBar />
       
-      {/* Added pt-28 to account for navbar and provide top spacing like other pages */}
+      {/* Added pt-28 to account for navbar and provide top spacing */}
       <main className="flex-grow pt-28 pb-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
@@ -29,14 +34,17 @@ const Contact = () => {
               </p>
               <p>
                 Unknown IITians, a dedicated education platform, is here to help students solve their grievances. 
-                We aim to resolve your queries as quickly as possible. You can call on our official Contact No.{" "}
-                <span className="font-semibold text-gray-900">+91 62971 43798</span>. 
-                If the phone is busy, we might be resolving someone else's queries. We request you to contact us 
-                again after 15 minutes so that we can address your query or concern regarding lectures or course material.
+                <span className="block mt-2 font-medium text-gray-900">
+                  Please note: We are currently unavailable on voice calls. All support is provided exclusively via WhatsApp.
+                </span>
               </p>
               <p>
-                In case of any grievance, don't hesitate to get in touch with us on our official contact number{" "}
-                <span className="font-semibold text-gray-900">+91 62971 43798</span>. Or you can write to us at{" "}
+                We aim to resolve your queries as quickly as possible. You can chat with us on our official WhatsApp number{" "}
+                <span className="font-semibold text-gray-900">+91 62971 43798</span>. 
+                If we are busy, we request you to wait for a response; we typically reply within a few hours regarding lectures or course material.
+              </p>
+              <p>
+                In case of any grievance, don't hesitate to get in touch with us on WhatsApp or write to us at{" "}
                 <span className="font-semibold text-gray-900">desk@unknowniitians.com</span>.
               </p>
             </div>
@@ -53,29 +61,42 @@ const Contact = () => {
               </div>
               
               <div className="text-sm md:text-[15px] text-gray-600 leading-relaxed">
-                <p>Unit 2401, 24th Floor,</p>
-                <p>E-Square Supertech, Plot C2,</p>
-                <p>Sector 96, Noida,</p>
-                <p>Uttar Pradesh 201303</p>
+                <p>New Delhi,</p>
+                <p>Delhi, India</p>
               </div>
 
-              <div>
+              <div className="space-y-6">
                 <a 
                   href="mailto:desk@unknowniitians.com" 
-                  className="inline-block text-[#1d4ed8] hover:text-blue-700 font-medium text-sm md:text-[15px] mb-6 transition-colors"
+                  className="inline-block text-[#1d4ed8] hover:text-blue-700 font-medium text-sm md:text-[15px] transition-colors"
                 >
                   desk@unknowniitians.com
                 </a>
 
-                <div>
+                <div className="flex flex-col gap-3">
+                  {/* WhatsApp Button */}
                   <a 
-                    href="https://maps.google.com/maps?q=E-Square+Supertech,+Noida" 
+                    href={whatsappLink}
+                    target="_blank" 
+                    rel="noreferrer"
+                  >
+                    <Button 
+                      className="bg-[#25D366] hover:bg-[#128C7E] text-white font-medium px-6 h-10 text-sm w-full sm:w-auto"
+                    >
+                      <MessageCircle className="mr-2 h-4 w-4" />
+                      Chat on WhatsApp
+                    </Button>
+                  </a>
+
+                  {/* Directions Button */}
+                  <a 
+                    href="https://www.google.com/maps/search/New+Delhi,+Delhi,+India" 
                     target="_blank" 
                     rel="noreferrer"
                   >
                     <Button 
                       variant="outline" 
-                      className="border-[#1d4ed8] text-[#1d4ed8] hover:bg-blue-50 font-medium px-6 h-10 text-sm"
+                      className="border-[#1d4ed8] text-[#1d4ed8] hover:bg-blue-50 font-medium px-6 h-10 text-sm w-full sm:w-auto"
                     >
                       <Send className="mr-2 h-4 w-4" />
                       Get Directions
@@ -88,7 +109,7 @@ const Contact = () => {
             {/* Right Section: Map Panel */}
             <div className="w-full lg:w-2/3 h-[450px] bg-gray-50 rounded-xl overflow-hidden border border-gray-200 shadow-sm">
               <iframe 
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.6664536248366!2d77.3562629761595!3d28.54974868783451!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5f661a5b81b%3A0xc4825925e0160d78!2sSupertech%20e-Square!5e0!3m2!1sen!2sin!4v1709200000000!5m2!1sen!2sin" 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.83923192776!2d77.0688975472578!3d28.52728034389636!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sDelhi!5e0!3m2!1sen!2sin!4v1710000000000!5m2!1sen!2sin" 
                 width="100%" 
                 height="100%" 
                 style={{ border: 0 }} 
