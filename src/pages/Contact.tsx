@@ -1,234 +1,102 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Phone, Mail, MapPin, Clock, Send, MessageSquare } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import React from "react";
 import NavBar from "@/components/NavBar";
 import Footer from "@/components/Footer";
+import { MapPin, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { usePageSEO } from "@/utils/seoManager";
 
-export default function Contact() {
-  const { toast } = useToast();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    subject: "",
-    message: "",
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    toast({
-      title: "Message Sent Successfully",
-      description: "We'll get back to you as soon as possible.",
-    });
-
-    setFormData({ name: "", email: "", phone: "", subject: "", message: "" });
-    setIsSubmitting(false);
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+const Contact = () => {
+  usePageSEO("Contact Us | Unknown IITians", "/contact");
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-white font-['Inter',sans-serif]">
       <NavBar />
       
-      <main className="flex-grow">
-        {/* Hero Section */}
-        <section className="bg-primary/5 py-16 md:py-24">
-          <div className="container mx-auto px-4 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">
-              Get in Touch
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Have questions about your study abroad journey? We're here to help you 
-              navigate your path to global education.
-            </p>
-          </div>
-        </section>
+      <main className="flex-grow pt-24 pb-16 px-6 sm:px-10">
+        <div className="max-w-5xl mx-auto">
+          {/* Header Section */}
+          <header className="mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-6">Contact Us</h1>
+            
+            <div className="space-y-4 text-[15px] leading-relaxed text-gray-600 max-w-4xl">
+              <p>
+                This is the <span className="font-bold text-gray-900">official page of Unknown IITians</span>, 
+                where you can share all your queries, feedback, complaints, or any concern you may have about 
+                our mentorship programs, courses, and resources.
+              </p>
+              <p>
+                Unknown IITians, a dedicated education platform, is here to help students solve their grievances. 
+                We aim to resolve your queries as quickly as possible. You can call on our official Contact No.{" "}
+                <span className="font-bold text-gray-900">+91 62971 43798</span>. 
+                If the phone is busy, we might be resolving someone else's queries. We request you to contact us 
+                again after 15 minutes so that we can address your query or concern regarding lectures or course material.
+              </p>
+              <p>
+                In case of any grievance, don't hesitate to get in touch with us on our official contact number{" "}
+                <span className="font-bold text-gray-900">+91 62971 43798</span>. Or you can write to us at{" "}
+                <span className="font-bold text-gray-900">desk@unknowniitians.com</span>.
+              </p>
+            </div>
+          </header>
 
-        <section className="container mx-auto px-4 py-12 -mt-8">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Contact Information Cards */}
-            <div className="lg:col-span-1 space-y-6">
-              {/* Phone Card */}
-              <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-t-primary">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="p-3 bg-primary/10 rounded-full text-primary">
-                      <Phone className="h-6 w-6" />
-                    </div>
-                    Call Us
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-2">Speak directly with our experts.</p>
-                  <a href="tel:+916297143798" className="text-lg font-semibold hover:text-primary transition-colors">
-                    +91 62971 43798
-                  </a>
-                </CardContent>
-              </Card>
+          {/* Content Grid: Info Left, Map Right */}
+          <div className="flex flex-col md:flex-row gap-10 items-start mt-12">
+            
+            {/* Left Section: Info Panel */}
+            <div className="flex-1 w-full">
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">Unknown IITians</h2>
+              <div className="text-lg font-semibold text-gray-700 mb-5">Headquarters</div>
+              
+              <div className="text-[15px] text-gray-600 mb-6 leading-relaxed max-w-xs">
+                Unit 2401, 24th Floor,<br />
+                E-Square Supertech, Plot C2,<br />
+                Sector 96, Noida,<br />
+                Uttar Pradesh 201303
+              </div>
 
-              {/* Email Card */}
-              <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-t-blue-500">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-100 rounded-full text-blue-600">
-                      <Mail className="h-6 w-6" />
-                    </div>
-                    Email Us
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-2">For general inquiries & support.</p>
-                  <a href="mailto:info@universityinsights.in" className="text-lg font-semibold hover:text-blue-600 transition-colors">
-                    info@universityinsights.in
-                  </a>
-                </CardContent>
-              </Card>
+              <a 
+                href="mailto:desk@unknowniitians.com" 
+                className="block text-[#1d4ed8] hover:text-blue-700 font-medium text-[15px] mb-8 transition-colors"
+              >
+                desk@unknowniitians.com
+              </a>
 
-              {/* Address Card */}
-              <Card className="shadow-lg hover:shadow-xl transition-shadow border-t-4 border-t-indigo-500">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-3">
-                    <div className="p-3 bg-indigo-100 rounded-full text-indigo-600">
-                      <MapPin className="h-6 w-6" />
-                    </div>
-                    Visit Us
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="font-medium text-foreground">University Insights</p>
-                  <p className="text-muted-foreground mt-1">
-                    Unit 2401, 24th Floor, E-Square Supertech,<br />
-                    Plot C2, Sector 96,<br />
-                    Noida, Uttar Pradesh 201303
-                  </p>
-                </CardContent>
-              </Card>
+              <a 
+                href="https://www.google.com/maps/search/?api=1&query=Unknown+IITians+Noida" 
+                target="_blank" 
+                rel="noreferrer"
+              >
+                <Button 
+                  variant="outline" 
+                  className="border-[#1d4ed8] text-[#1d4ed8] hover:bg-blue-50 font-medium px-6 py-2 h-auto text-[15px]"
+                >
+                  <Send className="mr-2 h-4 w-4 rotate-45" />
+                  Get Directions
+                </Button>
+              </a>
             </div>
 
-            {/* Contact Form */}
-            <Card className="lg:col-span-2 shadow-xl border-none ring-1 ring-border/50">
-              <CardHeader>
-                <CardTitle className="text-2xl">Send us a Message</CardTitle>
-                <CardDescription>
-                  Fill out the form below and our team will get back to you within 24 hours.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input 
-                        id="name" 
-                        name="name" 
-                        placeholder="John Doe" 
-                        required 
-                        value={formData.name}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input 
-                        id="phone" 
-                        name="phone" 
-                        type="tel" 
-                        placeholder="+91 98765 43210" 
-                        value={formData.phone}
-                        onChange={handleChange}
-                      />
-                    </div>
-                  </div>
+            {/* Right Section: Map Panel */}
+            <div className="flex-[1.2] w-full h-[400px] border border-gray-200 rounded-lg overflow-hidden bg-gray-50 shadow-sm">
+              <iframe 
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.666453962626!2d77.35987407550186!3d28.54974867571007!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5f6c802271d%3A0xe67c06c544e3a478!2sSupertech%20E%20Square!5e0!3m2!1sen!2sin!4v1709289291932!5m2!1sen!2sin" 
+                width="100%" 
+                height="100%" 
+                style={{ border: 0 }} 
+                allowFullScreen 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Unknown IITians Location"
+              ></iframe>
+            </div>
 
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input 
-                        id="email" 
-                        name="email" 
-                        type="email" 
-                        placeholder="john@example.com" 
-                        required 
-                        value={formData.email}
-                        onChange={handleChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="subject">Subject</Label>
-                      <Select onValueChange={(value) => setFormData({...formData, subject: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a topic" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admissions">Admission Inquiry</SelectItem>
-                          <SelectItem value="counseling">Free Counseling</SelectItem>
-                          <SelectItem value="support">Student Support</SelectItem>
-                          <SelectItem value="partnership">Partnership</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Your Message</Label>
-                    <Textarea 
-                      id="message" 
-                      name="message" 
-                      placeholder="How can we help you?" 
-                      className="min-h-[150px]" 
-                      required 
-                      value={formData.message}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full md:w-auto" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      "Sending..."
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" /> Send Message
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
           </div>
-        </section>
-
-        {/* Map Section */}
-        <section className="w-full h-[400px] bg-muted mt-12">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3504.664478631168!2d77.3562!3d28.5514!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390ce5f7f0c00001%3A0x123456789abcdef!2sSupertech%20E%20Square!5e0!3m2!1sen!2sin!4v1625641234567!5m2!1sen!2sin" 
-            width="100%" 
-            height="100%" 
-            style={{ border: 0 }} 
-            allowFullScreen 
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade"
-            title="University Insights Office Location"
-          ></iframe>
-        </section>
+        </div>
       </main>
 
       <Footer />
     </div>
   );
-}
+};
+
+export default Contact;
