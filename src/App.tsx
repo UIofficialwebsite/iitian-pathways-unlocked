@@ -47,6 +47,7 @@ const Career = lazyWithRetry(() => import("./pages/Career"));
 const CareerOpportunities = lazyWithRetry(() => import("./pages/CareerOpportunities"));
 const JobDetails = lazyWithRetry(() => import("./pages/JobDetails"));
 const About = lazyWithRetry(() => import("./pages/About"));
+const Contact = lazyWithRetry(() => import("./pages/Contact")); // Added Contact Page
 const CourseDetail = lazyWithRetry(() => import("./pages/CourseDetail"));
 const BatchConfiguration = lazyWithRetry(() => import("./pages/BatchConfiguration")); 
 const NotFound = lazyWithRetry(() => import("./pages/NotFound"));
@@ -120,6 +121,7 @@ const App = () => (
                   <Route path="/career/job/:jobId" element={<JobDetails />} />
                   
                   <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} /> {/* Added Contact Route */}
                   
                   {/* DASHBOARD ROUTE */}
                   <Route path="/dashboard/:tab?" element={<Dashboard />} />
