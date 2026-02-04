@@ -13,31 +13,29 @@ interface PYQsTabProps {
 
 const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) => {
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
-  
-  // Create slugs for comparison, but we will accept both formats
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
   const filteredPYQs = pyqs.filter(pyq => {
-    // 1. Basic Check: Must be an IITM BS paper
+    // Ensure we are only looking at IITM BS papers
     if (pyq.exam_type !== 'IITM_BS') return false;
 
-    // 2. Program Check: Match either the Slug (data-science) OR the Display Name (Data Science)
-    // This ensures files appear regardless of how they were saved (with or without dashes)
-    const matchesBranch = (pyq.branch === branchSlug) || (pyq.branch === branch) || (pyq.branch?.toLowerCase() === branch.toLowerCase());
-    const matchesLevel = (pyq.level === levelSlug) || (pyq.level === level) || (pyq.level?.toLowerCase() === level.toLowerCase());
-
-    // 3. REMOVED STRICT MATCHING LOGIC
-    // We strictly check Branch and Level, but we ignore the other filters (Year, Session, Subject)
-    // so that all files for this section appear "normally".
+    const matchesProgram = pyq.branch === branchSlug && pyq.level === levelSlug;
     
-    return matchesBranch && matchesLevel;
+    // Multi-Select Logic
+    const matchesYear = years.length === 0 || (pyq.year && years.includes(pyq.year.toString()));
+    
+    // [UPDATED] Check 'session' (Quiz 1, End Term) instead of 'exam_type'
+    const matchesType = examTypes.length === 0 || (pyq.session && examTypes.includes(pyq.session));
+    
+    const matchesSubject = subjects.length === 0 || (pyq.subject && subjects.includes(pyq.subject));
+    
+    return matchesProgram && matchesYear && matchesType && matchesSubject;
   });
 
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        {/* Pass the slug to the Add Button so new files are consistent, but reading is permissive */}
         <AdminAddButton contentType="pyqs" examType="IITM_BS" branch={branchSlug} level={levelSlug}>
           Add Paper
         </AdminAddButton>
@@ -80,6 +78,7 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
 
                   {/* Tags Block */}
                   <div className="flex flex-wrap gap-2 mb-3">
+                    {/* [UPDATED] Show Session (Quiz 1) instead of generic 'IITM_BS' */}
                     {pyq.session && (
                         <span className="bg-gray-100 text-gray-600 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
                             {pyq.session}
@@ -122,7 +121,7 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
             );
           })
         ) : (
-          <div className="col-span-full py-20 text-center text-slate-400 font-medium italic">No papers found. Try adding one!</div>
+          <div className="col-span-full py-20 text-center text-slate-400 font-medium italic">No papers found. Try adjusting filters.</div>
         )}
       </div>
     </div>
