@@ -1477,6 +1477,10 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
               size: A4;
             }
 
+            body * {
+              visibility: hidden; /* Hide everything by default */
+            }
+
             body {
               background-color: white !important;
               color: #1e293b !important;
@@ -1486,14 +1490,13 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
               print-color-adjust: exact;
             }
 
-            /* HIDE EVERYTHING NOT IN THE PRINT CONTAINER */
-            body > *:not(#syllabus-print-container) {
-              display: none !important;
+            /* --- SHOW ONLY PRINT CONTAINER --- */
+            #syllabus-print-container, 
+            #syllabus-print-container * {
+               visibility: visible;
             }
             
-            /* Ensure the container is visible and reset */
             #syllabus-print-container {
-               display: block !important;
                position: absolute;
                top: 0;
                left: 0;
@@ -1510,6 +1513,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             /* Show print-only elements */
             .print-only-block { display: block !important; }
             .print-only-flex { display: flex !important; }
+            .print-only-table-row { display: table-row !important; }
             
             /* --- HEADER STYLES --- */
             .print-header {
