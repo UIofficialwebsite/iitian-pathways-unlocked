@@ -1,8 +1,8 @@
-import React, { useMemo, useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-// --- Data Definitions (Unchanged) ---
+// --- Data Definitions ---
 export type WeekContent = {
   week: string;
   topics: string;
@@ -21,7 +21,7 @@ export type CourseSyllabus = {
 };
 
 export const SYLLABUS_DATA: CourseSyllabus[] = [
-  // --- QUALIFIER LEVEL (Weeks 1-4 Only) ---
+  // --- QUALIFIER LEVEL ---
   {
     id: "BSMA1001-Q",
     name: "Mathematics for Data Science I",
@@ -1384,13 +1384,6 @@ interface SyllabusTabProps {
 }
 
 const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourseIds }) => {
-  // Use state to store current URL for the print footer
-  const [currentUrl, setCurrentUrl] = useState("");
-
-  useEffect(() => {
-    setCurrentUrl(window.location.href);
-  }, []);
-
   // Filter by Level and Branch
   const filteredCourses = useMemo(() => {
     return SYLLABUS_DATA.filter((course) => {
@@ -1531,28 +1524,13 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             .brand-box {
                 display: flex;
                 align-items: center;
-                gap: 20px;
             }
 
+            /* UPDATED LOGO STYLE */
             .logo-img {
-                height: 52px;
+                height: 60px;
                 width: auto;
-            }
-
-            .brand-divider {
-                width: 1.5px;
-                height: 45px;
-                background: #000;
-            }
-
-            .brand-titles h1 {
-                margin: 0;
-                font-size: 32px;
-                letter-spacing: 1px;
-                font-family: 'Georgia', serif;
-                font-weight: 900;
-                line-height: 1;
-                color: #000;
+                object-fit: contain;
             }
 
             .meta-box {
@@ -1634,22 +1612,22 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
 
             .print-table th {
                 background-color: #f1f5f9;
-                border: 1px solid #e2e8f0;
+                border: 1px solid #000;
                 padding: 8px 12px;
                 text-align: left;
                 text-transform: uppercase;
                 font-size: 9pt;
                 letter-spacing: 0.5px;
-                color: #475569;
+                color: #000;
                 font-weight: 700;
             }
 
             .print-table td {
-                border: 1px solid #e2e8f0;
+                border: 1px solid #000;
                 padding: 8px 12px;
                 line-height: 1.4;
                 vertical-align: top;
-                color: #334155;
+                color: #000;
             }
             
             .col-week {
@@ -1658,25 +1636,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
                 color: #000;
                 text-align: center;
             }
-
-            /* --- FOOTER STYLES --- */
-            .print-footer {
-                margin-top: 40px;
-                padding-top: 15px;
-                border-top: 1px solid #f1f5f9;
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                font-size: 9pt;
-                color: #94a3b8;
-                position: fixed;
-                bottom: 0;
-                width: 100%;
-                background: white;
-            }
-            
-            .footer-left { max-width: 60%; }
-            .path-label { font-weight: 600; color: #64748b; }
           }
         `}
       </style>
@@ -1699,11 +1658,11 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
         <header className="hidden print-only-block print-header">
             <div className="header-top">
                 <div className="brand-box">
-                    <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="logo-img" />
-                    <div className="brand-divider"></div>
-                    <div className="brand-titles">
-                        <h1>UNKNOWN IITIANS</h1>
-                    </div>
+                    <img 
+                      src="https://res.cloudinary.com/dkywjijpv/image/upload/v1769193106/UI_Logo_yiput4.png" 
+                      alt="Logo" 
+                      className="logo-img" 
+                    />
                 </div>
                 <div className="meta-box">
                     <div className="level-badge">{level} Level</div>
@@ -1758,16 +1717,6 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
             </div>
             ))}
         </div>
-
-        {/* PRINT ONLY: Footer */}
-        <footer className="hidden print-only-flex print-footer">
-            <div className="footer-left">
-                <span className="path-label">Generated from:</span> {currentUrl}
-            </div>
-            <div className="footer-right">
-                © UNKNOWN IITIANS • www.unknowniitians.com
-            </div>
-        </footer>
       </div>
     </>
   );
