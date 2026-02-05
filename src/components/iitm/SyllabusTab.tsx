@@ -1418,135 +1418,137 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
       );
   }
 
+  // Helper to determine gradient color based on credits or category
+  const getGradientClass = (credits: number) => {
+    if (credits >= 5) return "from-purple-500 to-indigo-600";
+    if (credits === 4) return "from-teal-500 to-emerald-600";
+    return "from-blue-500 to-cyan-600";
+  };
+
   return (
     <>
       <style>
         {`
-          /* Standard Screen Styles */
+          /* --- ORIGINAL SCREEN STYLES (RESTORED EXACTLY) --- */
           .table-container {
             width: 100%;
             margin-bottom: 30px;
             break-inside: avoid;
-            page-break-inside: avoid;
           }
 
           table {
             width: 100%;
             border-collapse: collapse;
-            font-family: 'Inter', sans-serif;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #333;
           }
 
           .main-header {
-            background-color: #f1f5f9;
-            color: #0f172a;
+            background-color: #A9D0D5;
+            color: #333;
             text-align: center;
-            font-weight: 700;
+            font-weight: bold;
             font-size: 1.1rem;
             padding: 12px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #333;
           }
 
           th, td {
-            border: 1px solid #e2e8f0;
+            border: 1px solid #333;
             padding: 12px;
             text-align: left;
-            color: #334155;
-            font-size: 0.95rem;
+            color: #333;
           }
 
           td:first-child {
             text-align: center;
-            font-weight: 500;
-            color: #64748b;
           }
 
-          .col-small { width: 15%; font-weight: 600; text-align: center; background-color: #f8fafc; }
-          .col-large { width: 85%; text-align: left; font-weight: 600; background-color: #f8fafc; }
+          .col-small { width: 20%; font-weight: bold; text-align: center; }
+          .col-large { width: 80%; text-align: center; }
 
-          /* PRINT STYLES - STRICT FORMAL FORMAT */
+          .label-row {
+            background-color: #ffffff;
+            font-weight: bold;
+          }
+
+          /* --- STRICT PRINT FORMAL STYLES --- */
           @media print {
             @page {
-              margin: 15mm 15mm 15mm 15mm;
+              margin: 15mm;
               size: A4;
             }
 
             body {
               background-color: white !important;
+              color: black !important;
+              font-family: 'Times New Roman', serif;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
 
             /* HIDE EVERYTHING NOT IN THE PRINT CONTAINER */
-            body > *:not(#print-root-container) {
+            body > *:not(#syllabus-print-container) {
               display: none !important;
             }
-
-            /* Make our container visible and reset positioning */
-            #print-root-container {
-              display: block !important;
-              position: relative !important;
-              width: 100% !important;
-              height: auto !important;
-              overflow: visible !important;
-              top: auto !important;
-              left: auto !important;
+            
+            /* Ensure the container is visible and reset */
+            #syllabus-print-container {
+               display: block !important;
+               position: absolute;
+               top: 0;
+               left: 0;
+               width: 100%;
+               margin: 0;
+               padding: 0;
+               background-color: white;
             }
 
-            /* Professional Print Table */
+            /* Hide elements marked as no-print */
+            .no-print { display: none !important; }
+            
+            /* Show print-only elements */
+            .print-only-block { display: block !important; }
+            .print-only-flex { display: flex !important; }
+
+            /* Formal Table Overrides for Print */
             table {
               border: 1px solid #000;
               width: 100%;
               border-collapse: collapse;
-              font-size: 10pt; /* Optimal for A4 */
-              margin-bottom: 20px;
+              margin-bottom: 25px;
+              font-size: 11pt;
             }
 
             .main-header {
-              background-color: #1e3a8a !important; /* Navy Blue Professional */
-              color: white !important;
-              font-family: 'Times New Roman', serif;
-              border: 1px solid #000;
+              background-color: #f3f3f3 !important; /* Formal light gray for print */
+              color: #000 !important;
+              border: 1px solid #000 !important;
               text-transform: uppercase;
-              letter-spacing: 0.05em;
+              font-family: 'Times New Roman', serif;
               padding: 8px;
             }
 
-            .label-row td {
-              background-color: #f3f4f6 !important;
-              font-weight: bold;
-              border-bottom: 2px solid #000;
-              font-family: 'Times New Roman', serif;
+            th, td {
+              border: 1px solid #000 !important;
+              color: #000 !important;
+              padding: 8px;
+            }
+            
+            .label-row {
+               background-color: #f9f9f9 !important;
+               border-bottom: 1px solid #000;
             }
 
-            th, td {
-              border: 1px solid #333; /* Thinner sharp lines */
-              padding: 8px 10px;
-              color: #000;
-            }
-            
-            /* Remove screen specific elements */
-            .no-print { display: none !important; }
-            
-            /* Ensure footer stays at bottom of last page */
+            /* Print Footer fixed at bottom */
             .print-footer {
-                display: flex !important;
                 position: fixed;
                 bottom: 0;
                 width: 100%;
                 text-align: center;
                 border-top: 1px solid #ccc;
-                padding-top: 8px;
-                font-size: 8pt;
-                color: #555;
-            }
-
-            /* Header stays at top of first page */
-            .print-header-section {
-                display: block !important;
-                border-bottom: 2px solid #1e3a8a;
-                margin-bottom: 25px;
-                padding-bottom: 10px;
+                padding-top: 5px;
+                font-size: 9pt;
+                color: #444;
             }
           }
         `}
@@ -1555,40 +1557,46 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
       {/* Action Bar (Screen Only) */}
       <div className="flex justify-end mb-4 no-print gap-2">
         <PDFPrintShare 
-          targetId="print-root-container" 
-          headerId="hidden-print-header" // We use our own header inside the container now
+          targetId="syllabus-print-container" 
+          headerId="hidden-print-header"
           fileName={`IITM_BS_${level}_Syllabus.pdf`}
           shareTitle="IITM BS Syllabus"
           shareText="Check out this comprehensive syllabus for the IITM BS Degree."
         />
       </div>
 
-      {/* MAIN CONTAINER - Acts as normal div on screen, becomes Body on Print */}
-      <div id="print-root-container" className="font-sans bg-white min-h-screen pt-4">
+      {/* MAIN CONTAINER: ID MUST MATCH TARGET_ID ABOVE */}
+      <div id="syllabus-print-container" className="font-sans bg-white min-h-screen pt-4">
         
-        {/* PRINT ONLY: Formal Header */}
-        <div className="hidden print-header-section text-center mb-8">
+        {/* PRINT ONLY: Formal Header (Hidden on Screen) */}
+        <div id="hidden-print-header" className="hidden print-only-block text-center mb-8 border-b-2 border-black pb-4">
             <div className="flex flex-col items-center justify-center">
-                <h1 className="text-3xl font-bold text-[#1e3a8a] tracking-wide uppercase mb-1 font-serif">UNKNOWN IITIANS</h1>
-                <p className="text-sm text-gray-600 font-medium uppercase tracking-widest mb-4">Your Gateway to IITM BS Degree Excellence</p>
+                {/* Logo & Branding */}
+                <div className="flex items-center gap-4 mb-2 justify-center">
+                   <img src="/lovable-uploads/logo_ui_new.png" alt="Logo" className="h-14 w-auto object-contain" />
+                   <div className="h-10 w-[1px] bg-black"></div>
+                   <div>
+                       <h1 className="text-3xl font-bold text-black tracking-wide uppercase font-serif leading-none">UNKNOWN IITIANS</h1>
+                       <p className="text-xs text-gray-600 uppercase tracking-widest mt-1">Excellence in IITM BS Degree Education</p>
+                   </div>
+                </div>
                 
-                <div className="w-full max-w-2xl h-[1px] bg-gray-300 my-2 mx-auto"></div>
-                
-                <div className="mt-2 text-left w-full px-4 flex justify-between items-end">
-                    <div>
-                        <h2 className="text-xl font-bold text-gray-900">Syllabus Document</h2>
-                        <p className="text-sm text-gray-500">Official Curriculum Breakdown</p>
+                {/* Document Details */}
+                <div className="w-full mt-4 flex justify-between items-end px-2">
+                    <div className="text-left">
+                        <h2 className="text-xl font-bold text-black font-serif">Official Syllabus</h2>
+                        <p className="text-sm text-gray-600">Course Curriculum & Topics</p>
                     </div>
                     <div className="text-right">
-                        <p className="text-sm font-bold text-[#1e3a8a]">{level} Level</p>
-                        <p className="text-xs text-gray-500">{branch}</p>
+                        <p className="text-lg font-bold text-black">{level} Level</p>
+                        <p className="text-sm text-gray-600 font-medium">{branch}</p>
                         <p className="text-[10px] text-gray-400 mt-1">Generated: {new Date().toLocaleDateString()}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        {/* Content Section */}
+        {/* Content Section - Uses Screen Styles by default, overridden by @media print */}
         <div className="px-1 md:px-8 space-y-8">
             {coursesToDisplay.map((currentCourse) => (
             <div key={currentCourse.id} className="table-container">
@@ -1596,7 +1604,8 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
                 <thead>
                     <tr>
                     <th colSpan={2} className="main-header">
-                        {currentCourse.name} <span className="text-xs opacity-75 font-normal ml-2">({currentCourse.credits} Credits)</span>
+                        {currentCourse.name} <span className="text-xs font-normal ml-2 no-print">({currentCourse.credits} Credits)</span>
+                        <span className="hidden print-only-block text-xs font-normal ml-2 inline">({currentCourse.credits} Credits)</span>
                     </th>
                     </tr>
                     <tr className="label-row">
@@ -1618,10 +1627,9 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
         </div>
 
         {/* PRINT ONLY: Footer */}
-        <div className="hidden print-footer justify-between items-center px-8 bg-white">
-            <span>© Unknown IITians</span>
+        <div className="hidden print-only-flex print-footer justify-between items-center px-8 bg-white">
+            <span>© Unknown IITians - All Rights Reserved</span>
             <span>www.unknowniitians.com</span>
-            <span>Page <span className="page-number"></span></span>
         </div>
       </div>
     </>
