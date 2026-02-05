@@ -1,5 +1,6 @@
 import React, { useMemo, useEffect, useState } from "react";
-import PDFPrintShare from "@/components/PDFPrintShare";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 // --- Data Definitions (Unchanged) ---
 export type WeekContent = {
@@ -20,7 +21,6 @@ export type CourseSyllabus = {
 };
 
 export const SYLLABUS_DATA: CourseSyllabus[] = [
-  // ... (Data remains exactly the same as previous files)
   // --- QUALIFIER LEVEL (Weeks 1-4 Only) ---
   {
     id: "BSMA1001-Q",
@@ -74,6 +74,7 @@ export const SYLLABUS_DATA: CourseSyllabus[] = [
       { week: "Week 4", topics: "Speaking Skills (Spoken English Preliminaries)" },
     ],
   },
+  // Electronic Systems Qualifier
   {
     id: "MA1101-Q",
     name: "Math for Electronics I",
@@ -1472,7 +1473,7 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
           /* --- STRICT PRINT FORMAL STYLES --- */
           @media print {
             @page {
-              margin: 20mm;
+              margin: 15mm;
               size: A4;
             }
 
@@ -1678,13 +1679,13 @@ const SyllabusTab: React.FC<SyllabusTabProps> = ({ level, branch, selectedCourse
 
       {/* Action Bar (Screen Only) */}
       <div className="flex justify-end mb-4 no-print gap-2">
-        <PDFPrintShare 
-          targetId="syllabus-print-container" 
-          headerId="hidden-print-header"
-          fileName={`IITM_BS_${level}_Syllabus.pdf`}
-          shareTitle="IITM BS Syllabus"
-          shareText="Check out this comprehensive syllabus for the IITM BS Degree."
-        />
+        <Button 
+          onClick={() => window.print()} 
+          className="bg-black hover:bg-gray-800 text-white font-semibold shadow-sm"
+        >
+          <Download className="w-4 h-4 mr-2" />
+          Download Syllabus PDF
+        </Button>
       </div>
 
       {/* MAIN CONTAINER: ID MUST MATCH TARGET_ID ABOVE */}
