@@ -41,7 +41,7 @@ Course ID: ${courseId}
                 {/* Video Embed Area */}
                 <div className="w-full bg-black aspect-video relative">
                     <iframe
-                        src="https://www.youtube.com/embed/gQH0_Rp3Tuw?rel=0&modestbranding=1"
+                        src="https://www.youtube.com/embed/nePZER6PTjQ?rel=0&modestbranding=1"
                         title="Dashboard Walkthrough"
                         frameBorder="0"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
