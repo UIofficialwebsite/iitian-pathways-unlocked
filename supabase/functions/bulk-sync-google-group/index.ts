@@ -7,6 +7,9 @@ const corsHeaders = {
 };
 
 const GOOGLE_GROUP_EMAIL = "alldatastudents@unknowniitians.com";
+const BATCH_SIZE = 50; // Process 50 at a time
+const DELAY_BETWEEN_CALLS_MS = 200; // 200ms between each API call (~5/sec, well under 60/min)
+const DELAY_BETWEEN_BATCHES_MS = 2000; // 2s pause between batches
 
 function base64url(input: Uint8Array): string {
   let str = "";
@@ -61,15 +64,20 @@ async function getAccessToken(serviceAccountEmail: string, privateKey: string, a
 
 async function addMemberToGroup(accessToken: string, memberEmail: string): Promise<{ email: string; status: string }> {
   const url = `https://admin.googleapis.com/admin/directory/v1/groups/${encodeURIComponent(GOOGLE_GROUP_EMAIL)}/members`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ email: memberEmail, role: "MEMBER" }),
-  });
-  await response.json();
-  if (response.ok) return { email: memberEmail, status: "added" };
-  if (response.status === 409) return { email: memberEmail, status: "already_member" };
-  return { email: memberEmail, status: "failed" };
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ email: memberEmail, role: "MEMBER" }),
+    });
+    await response.json();
+    if (response.ok) return { email: memberEmail, status: "added" };
+    if (response.status === 409) return { email: memberEmail, status: "already_member" };
+    if (response.status === 429) return { email: memberEmail, status: "rate_limited" };
+    return { email: memberEmail, status: "failed" };
+  } catch {
+    return { email: memberEmail, status: "error" };
+  }
 }
 
 Deno.serve(async (req) => {
@@ -80,42 +88,89 @@ Deno.serve(async (req) => {
     const PRIVATE_KEY = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY")!;
     const ADMIN_EMAIL = Deno.env.get("GOOGLE_ADMIN_EMAIL")!;
 
+    // Accept optional offset param to resume from a specific point
+    let startOffset = 0;
+    try {
+      const body = await req.json();
+      if (body?.offset) startOffset = parseInt(body.offset, 10) || 0;
+    } catch { /* no body is fine */ }
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch all profiles with emails
-    const { data: profiles, error } = await supabase
+    // Count total profiles
+    const { count } = await supabase
       .from("profiles")
-      .select("email")
+      .select("*", { count: "exact", head: true })
       .not("email", "is", null);
 
-    if (error) throw new Error(`Failed to fetch profiles: ${error.message}`);
+    const totalProfiles = count || 0;
+    console.log(`Total profiles with email: ${totalProfiles}, starting from offset: ${startOffset}`);
 
-    const emails = profiles?.map((p) => p.email).filter(Boolean) || [];
-    console.log(`Found ${emails.length} emails to sync`);
+    let accessToken = await getAccessToken(SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY, ADMIN_EMAIL);
+    let tokenFetchedAt = Date.now();
 
-    const accessToken = await getAccessToken(SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY, ADMIN_EMAIL);
+    const results = { added: 0, already_member: 0, failed: 0, rate_limited: 0, error: 0, processed: 0 };
+    let currentOffset = startOffset;
 
-    const results = { added: 0, already_member: 0, failed: 0, errors: [] as string[] };
-
-    for (const email of emails) {
-      try {
-        const result = await addMemberToGroup(accessToken, email!);
-        results[result.status as keyof typeof results] = (results[result.status as keyof typeof results] as number) + 1;
-        if (result.status === "failed") results.errors.push(email!);
-      } catch (e) {
-        results.failed++;
-        results.errors.push(email!);
+    // Process in paginated batches of BATCH_SIZE
+    while (currentOffset < totalProfiles) {
+      // Refresh token every 45 minutes
+      if (Date.now() - tokenFetchedAt > 45 * 60 * 1000) {
+        console.log("Refreshing access token...");
+        accessToken = await getAccessToken(SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY, ADMIN_EMAIL);
+        tokenFetchedAt = Date.now();
       }
-      // Small delay to avoid rate limiting
-      await new Promise((r) => setTimeout(r, 100));
+
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("email")
+        .not("email", "is", null)
+        .order("created_at", { ascending: true })
+        .range(currentOffset, currentOffset + BATCH_SIZE - 1);
+
+      if (error) {
+        console.error(`Fetch error at offset ${currentOffset}:`, error.message);
+        break;
+      }
+
+      if (!profiles || profiles.length === 0) break;
+
+      console.log(`Processing batch: offset ${currentOffset}, size ${profiles.length}`);
+
+      for (const profile of profiles) {
+        if (!profile.email) continue;
+
+        const result = await addMemberToGroup(accessToken, profile.email);
+        results[result.status as keyof typeof results] = ((results[result.status as keyof typeof results] as number) || 0) + 1;
+        results.processed++;
+
+        // If rate limited, wait longer then retry once
+        if (result.status === "rate_limited") {
+          console.log(`Rate limited at ${profile.email}, waiting 10s...`);
+          await new Promise((r) => setTimeout(r, 10000));
+          const retry = await addMemberToGroup(accessToken, profile.email);
+          if (retry.status !== "rate_limited") {
+            results.rate_limited--;
+            results[retry.status as keyof typeof results] = ((results[retry.status as keyof typeof results] as number) || 0) + 1;
+          }
+        }
+
+        await new Promise((r) => setTimeout(r, DELAY_BETWEEN_CALLS_MS));
+      }
+
+      currentOffset += profiles.length;
+      console.log(`Progress: ${currentOffset}/${totalProfiles} | Added: ${results.added} | Already: ${results.already_member} | Failed: ${results.failed}`);
+
+      // Pause between batches
+      await new Promise((r) => setTimeout(r, DELAY_BETWEEN_BATCHES_MS));
     }
 
-    console.log("Bulk sync results:", JSON.stringify(results));
+    console.log("BULK SYNC COMPLETE:", JSON.stringify(results));
 
-    return new Response(JSON.stringify({ total: emails.length, ...results }), {
+    return new Response(JSON.stringify({ total: totalProfiles, ...results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
