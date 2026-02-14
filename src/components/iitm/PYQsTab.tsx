@@ -30,7 +30,7 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
     // Multi-Select Logic
     const matchesYear = years.length === 0 || (pyq.year && years.includes(pyq.year.toString()));
     
-    // [UPDATED] Check 'session' (Quiz 1, End Term) instead of 'exam_type'
+    // Check 'session' (Quiz 1, End Term) instead of 'exam_type'
     const matchesType = examTypes.length === 0 || (pyq.session && examTypes.includes(pyq.session));
     
     const matchesSubject = subjects.length === 0 || (pyq.subject && subjects.includes(pyq.subject));
@@ -83,7 +83,6 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
 
                   {/* Tags Block */}
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {/* [UPDATED] Show Session (Quiz 1) instead of generic 'IITM_BS' */}
                     {pyq.session && (
                         <span className="bg-gray-100 text-gray-600 text-[10px] font-semibold px-2.5 py-1 rounded-md border border-gray-200 uppercase tracking-wide">
                             {pyq.session}
@@ -106,27 +105,32 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                   </p>
                 </div>
 
-                <div className="flex space-x-3 mt-auto font-sans">
-                  <button 
-                    className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
-                    onClick={() => pyq.file_link && window.open(pyq.file_link, '_blank')}
-                    disabled={!pyq.file_link}
-                  >
-                    View
-                  </button>
-                  
+                <div className="mt-auto font-sans">
                   {user ? (
-                    <button 
-                      className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
-                      onClick={() => handleDownload(pyq.id, 'pyqs', pyq.file_link || undefined)}
-                      disabled={!pyq.file_link}
-                    >
-                       Download
-                    </button>
+                    <div className="flex space-x-3">
+                      <button 
+                        className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
+                        onClick={() => pyq.file_link && window.open(pyq.file_link, '_blank')}
+                        disabled={!pyq.file_link}
+                      >
+                        View
+                      </button>
+                      <button 
+                        className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                        onClick={() => handleDownload(pyq.id, 'pyqs', pyq.file_link || undefined)}
+                        disabled={!pyq.file_link}
+                      >
+                         Download
+                      </button>
+                    </div>
                   ) : (
                     <button 
-                      className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal font-['Inter'] uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
-                      onClick={openLogin}
+                      className="w-full bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal font-['Inter'] uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                      onClick={() => {
+                        // Increment count to track intent, but don't open file
+                        handleDownload(pyq.id, 'pyqs'); 
+                        openLogin();
+                      }}
                     >
                        Login to Download
                     </button>
