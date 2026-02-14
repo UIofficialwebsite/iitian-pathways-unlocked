@@ -8,8 +8,8 @@ const corsHeaders = {
 
 const GOOGLE_GROUP_EMAIL = "alldatastudents@unknowniitians.com";
 // Tuned for large batches + edge runtime timeout (~150s)
-const BATCH_SIZE = 350;
-const DELAY_BETWEEN_CALLS_MS = 300;
+const BATCH_SIZE = 450;
+const DELAY_BETWEEN_CALLS_MS = 100;
 
 function base64url(input: Uint8Array): string {
   let str = "";
