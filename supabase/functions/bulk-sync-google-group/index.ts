@@ -7,8 +7,9 @@ const corsHeaders = {
 };
 
 const GOOGLE_GROUP_EMAIL = "alldatastudents@unknowniitians.com";
-const BATCH_SIZE = 400; // Process 400 per run (safe under 150s timeout with 200ms delay)
-const DELAY_BETWEEN_CALLS_MS = 200;
+// Tuned for large batches + edge runtime timeout (~150s)
+const BATCH_SIZE = 350;
+const DELAY_BETWEEN_CALLS_MS = 300;
 
 function base64url(input: Uint8Array): string {
   let str = "";
@@ -27,7 +28,13 @@ async function importPrivateKey(pem: string): Promise<CryptoKey> {
     .replace(/\\n/g, "")
     .replace(/\s/g, "");
   const binaryDer = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
-  return await crypto.subtle.importKey("pkcs8", binaryDer, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  return await crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
 }
 
 async function createSignedJWT(serviceAccountEmail: string, privateKey: string, adminEmail: string): Promise<string> {
@@ -45,7 +52,11 @@ async function createSignedJWT(serviceAccountEmail: string, privateKey: string, 
   const encodedPayload = base64urlEncodeString(JSON.stringify(payload));
   const signingInput = `${encodedHeader}.${encodedPayload}`;
   const key = await importPrivateKey(privateKey);
-  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(signingInput));
+  const signature = await crypto.subtle.sign(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    new TextEncoder().encode(signingInput),
+  );
   return `${signingInput}.${base64url(new Uint8Array(signature))}`;
 }
 
@@ -61,21 +72,29 @@ async function getAccessToken(serviceAccountEmail: string, privateKey: string, a
   return data.access_token;
 }
 
-async function addMemberToGroup(accessToken: string, memberEmail: string): Promise<{ email: string; status: string; error?: string }> {
+async function addMemberToGroup(
+  accessToken: string,
+  memberEmail: string,
+): Promise<{ email: string; status: "added" | "already_member" | "rate_limited" | "failed"; error?: string }> {
   const url = `https://admin.googleapis.com/admin/directory/v1/groups/${encodeURIComponent(GOOGLE_GROUP_EMAIL)}/members`;
+
   try {
     const response = await fetch(url, {
       method: "POST",
       headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({ email: memberEmail, role: "MEMBER" }),
     });
-    const body = await response.json();
+
+    const body = await response.json().catch(() => null);
+
     if (response.ok) return { email: memberEmail, status: "added" };
     if (response.status === 409) return { email: memberEmail, status: "already_member" };
     if (response.status === 429) return { email: memberEmail, status: "rate_limited" };
+
     return { email: memberEmail, status: "failed", error: body?.error?.message || `HTTP ${response.status}` };
   } catch (err) {
-    return { email: memberEmail, status: "failed", error: err.message };
+    const message = err instanceof Error ? err.message : String(err);
+    return { email: memberEmail, status: "failed", error: message };
   }
 }
 
@@ -89,14 +108,15 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Fetch pending emails from the queue
     const { data: pendingEmails, error: fetchError } = await supabase
       .from("google_group_sync_queue")
       .select("id, email")
       .eq("status", "pending")
+      // Process never-processed first, then oldest processed
+      .order("processed_at", { ascending: true, nullsFirst: true })
       .order("created_at", { ascending: true })
       .limit(BATCH_SIZE);
 
@@ -109,7 +129,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Count remaining
     const { count: totalPending } = await supabase
       .from("google_group_sync_queue")
       .select("*", { count: "exact", head: true })
@@ -118,10 +137,12 @@ Deno.serve(async (req) => {
     console.log(`Processing ${pendingEmails.length} emails. Total pending: ${totalPending}`);
 
     const accessToken = await getAccessToken(SERVICE_ACCOUNT_EMAIL, PRIVATE_KEY, ADMIN_EMAIL);
+
     const results = { added: 0, already_member: 0, failed: 0, rate_limited: 0 };
 
     for (const item of pendingEmails) {
-      const trimmedEmail = item.email.trim();
+      const trimmedEmail = (item.email || "").trim();
+
       if (!trimmedEmail) {
         await supabase
           .from("google_group_sync_queue")
@@ -135,35 +156,47 @@ Deno.serve(async (req) => {
 
       // If rate limited, wait 10s and retry once
       if (result.status === "rate_limited") {
-        console.log(`Rate limited at ${trimmedEmail}, waiting 10s...`);
+        results.rate_limited++;
+        console.log(`Rate limited at ${trimmedEmail}, waiting 10s then retrying once...`);
         await new Promise((r) => setTimeout(r, 10000));
         result = await addMemberToGroup(accessToken, trimmedEmail);
       }
 
-      // Update queue row
+      // If still rate limited, keep as pending so future cron runs retry it
+      const finalStatus = result.status === "rate_limited" ? "pending" : result.status;
+
       await supabase
         .from("google_group_sync_queue")
         .update({
-          status: result.status,
-          error_message: result.error || null,
+          status: finalStatus,
+          error_message:
+            finalStatus === "pending"
+              ? (result.error || "Rate limited; will retry")
+              : (result.error || null),
+          // Set processed_at to push rate-limited items later in the queue ordering
           processed_at: new Date().toISOString(),
         })
         .eq("id", item.id);
 
-      results[result.status as keyof typeof results] = (results[result.status as keyof typeof results] || 0) + 1;
+      if (result.status === "added") results.added++;
+      else if (result.status === "already_member") results.already_member++;
+      else if (result.status === "failed") results.failed++;
 
       await new Promise((r) => setTimeout(r, DELAY_BETWEEN_CALLS_MS));
     }
 
-    const remaining = (totalPending || 0) - pendingEmails.length;
-    console.log(`Batch complete. Added: ${results.added} | Already: ${results.already_member} | Failed: ${results.failed} | Remaining: ${remaining}`);
+    const remaining = Math.max(0, (totalPending || 0) - pendingEmails.length);
+    console.log(
+      `Batch complete. Added: ${results.added} | Already: ${results.already_member} | Failed: ${results.failed} | RateLimited: ${results.rate_limited} | Remaining: ${remaining}`,
+    );
 
     return new Response(JSON.stringify({ processed: pendingEmails.length, remaining, ...results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Bulk sync error:", error.message);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Bulk sync error:", message);
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

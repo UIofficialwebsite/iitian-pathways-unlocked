@@ -535,6 +535,7 @@ export type Database = {
         Row: {
           created_at: string | null
           email: string
+          email_normalized: string
           error_message: string | null
           id: string
           processed_at: string | null
@@ -543,6 +544,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           email: string
+          email_normalized: string
           error_message?: string | null
           id?: string
           processed_at?: string | null
@@ -551,6 +553,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           email?: string
+          email_normalized?: string
           error_message?: string | null
           id?: string
           processed_at?: string | null
