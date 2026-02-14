@@ -2,6 +2,8 @@ import React from "react";
 import { Download } from "lucide-react";
 import AdminAddButton from "@/components/admin/AdminAddButton";
 import { useBackend } from "@/components/BackendIntegratedWrapper";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface PYQsTabProps {
   branch: string;
@@ -13,6 +15,9 @@ interface PYQsTabProps {
 
 const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) => {
   const { handleDownload, downloadCounts, pyqs, contentLoading } = useBackend();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
+  
   const branchSlug = branch.toLowerCase().replace(/\s+/g, '-');
   const levelSlug = level.toLowerCase();
   
@@ -109,13 +114,23 @@ const PYQsTab = ({ branch, level, years, examTypes, subjects }: PYQsTabProps) =>
                   >
                     View
                   </button>
-                  <button 
-                    className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
-                    onClick={() => handleDownload(pyq.id, 'pyqs', pyq.file_link || undefined)}
-                    disabled={!pyq.file_link}
-                  >
-                     Download
-                  </button>
+                  
+                  {user ? (
+                    <button 
+                      className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                      onClick={() => handleDownload(pyq.id, 'pyqs', pyq.file_link || undefined)}
+                      disabled={!pyq.file_link}
+                    >
+                       Download
+                    </button>
+                  ) : (
+                    <button 
+                      className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal font-['Inter'] uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm flex items-center justify-center gap-2"
+                      onClick={openLogin}
+                    >
+                       Login to Download
+                    </button>
+                  )}
                 </div>
               </article>
             );
