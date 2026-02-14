@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,43 +13,45 @@ export const useDownloadHandler = () => {
   useEffect(() => {
     const loadDownloadCounts = async () => {
       try {
-        // Load notes download counts
+        // 1. Load generic notes download counts
         const { data: notesData, error: notesError } = await supabase
           .from('notes')
           .select('id, download_count')
           .eq('is_active', true);
 
-        // Load pyqs download counts  
+        // 2. Load PYQs download counts  
         const { data: pyqsData, error: pyqsError } = await supabase
           .from('pyqs')
           .select('id, download_count')
           .eq('is_active', true);
 
-        if (notesError) {
-          console.error('Error loading notes download counts:', notesError);
-        }
-        
-        if (pyqsError) {
-          console.error('Error loading pyqs download counts:', pyqsError);
-        }
+        // 3. Load IITM Branch Notes download counts (The fix for your specific issue)
+        const { data: iitmNotesData, error: iitmNotesError } = await supabase
+          .from('iitm_branch_notes')
+          .select('id, download_count')
+          .eq('is_active', true);
 
-        // Combine all download counts
+        if (notesError) console.error('Error loading notes download counts:', notesError);
+        if (pyqsError) console.error('Error loading pyqs download counts:', pyqsError);
+        if (iitmNotesError) console.error('Error loading iitm_branch_notes download counts:', iitmNotesError);
+
+        // Combine all download counts into one dictionary
         const combinedCounts: Record<string, number> = {};
         
         if (notesData) {
-          notesData.forEach(note => {
-            combinedCounts[note.id] = note.download_count || 0;
-          });
+          notesData.forEach(note => { combinedCounts[note.id] = note.download_count || 0; });
         }
         
         if (pyqsData) {
-          pyqsData.forEach(pyq => {
-          combinedCounts[pyq.id] = pyq.download_count || 0;
-        });
-      }
+          pyqsData.forEach(pyq => { combinedCounts[pyq.id] = pyq.download_count || 0; });
+        }
 
-      setDownloadCounts(combinedCounts);
-      setIsInitialized(true);
+        if (iitmNotesData) {
+          iitmNotesData.forEach(note => { combinedCounts[note.id] = note.download_count || 0; });
+        }
+
+        setDownloadCounts(combinedCounts);
+        setIsInitialized(true);
       } catch (error) {
         console.error('Error loading download counts:', error);
         setIsInitialized(true);
@@ -60,7 +61,8 @@ export const useDownloadHandler = () => {
     loadDownloadCounts();
   }, []);
 
-  const handleDownload = async (contentId: string, tableName: 'notes' | 'pyqs', fileUrl?: string) => {
+  // Updated to accept 'iitm_branch_notes' as a valid table name
+  const handleDownload = async (contentId: string, tableName: 'notes' | 'pyqs' | 'iitm_branch_notes', fileUrl?: string) => {
     try {
       // Optimistically increment the local count first
       const currentCount = downloadCounts[contentId] || 0;
@@ -71,7 +73,7 @@ export const useDownloadHandler = () => {
 
       // Increment download count in database
       const { error } = await supabase.rpc('increment_download_count', {
-        table_name: tableName,
+        table_name: tableName, // This now passes 'iitm_branch_notes' correctly
         content_id: contentId,
         user_email: user?.email || null
       });
@@ -89,10 +91,8 @@ export const useDownloadHandler = () => {
           variant: "destructive"
         });
       } else {
-        toast({
-          title: "Download Started",
-          description: "File download tracked successfully.",
-        });
+        // Optional: Success toast (can be removed if too noisy)
+        // toast({ title: "Download Started", description: "File download tracked successfully." });
       }
 
       // Open file in new tab if URL provided
