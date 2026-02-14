@@ -1,1 +1,4 @@
 project_id = "qzrvctpwefhmcduariuw"
+
+[functions.add-to-google-group]
+verify_jwt = false
