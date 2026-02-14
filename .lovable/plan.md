@@ -1,198 +1,153 @@
 
-# Visual Enrollment Indicator for Course Cards
 
-## Overview
-Add a visual "Enrolled" indicator to course cards that shows when a user is already fully enrolled in a batch (main course + all add-ons). If add-ons remain for purchase, allow normal enrollment flow. Prevent duplicate purchases of fully purchased batches.
+# Auto-Add New Users to Google Group "alldatastudents"
 
-## Key Logic
-1. **Show "Enrolled" badge**: User owns main course AND all available add-ons (or no add-ons exist)
-2. **Allow normal flow**: User owns main course but add-ons are still available for purchase
-3. **Allow normal flow**: User doesn't own the course at all
-4. **Prevent duplicate purchase**: When fully enrolled, replace buy button with "Let's Study" or "Explore"
-
-## Files to Modify
-
-### 1. `src/components/courses/CourseCard.tsx`
-**Purpose**: Add enrollment check and visual indicator
-
-**Changes**:
-- Add state for enrollment status (`isMainCourseOwned`, `ownedAddonIds`, `isFullyEnrolled`)
-- Add `useAuth` hook to get current user
-- Fetch user's enrollments for this course on mount
-- Calculate if fully enrolled (main + all addons owned)
-- Show "ENROLLED" badge on card when fully enrolled
-- Replace "BUY NOW" button with "EXPLORE" or "LET'S STUDY" when fully enrolled
-- Keep normal buy flow if add-ons are available for purchase
-
-**Visual Indicator**:
-```
-┌────────────────────────────────────┐
-│  [Course Image]        ✓ ENROLLED  │
-│                                    │
-│  Course Title                      │
-│  ...                               │
-│                                    │
-│  [EXPLORE]  [LET'S STUDY]          │
-└────────────────────────────────────┘
-```
-
-### 2. `src/components/dashboard/FreeBatchSection.tsx` (StandardCourseCard)
-**Purpose**: Same enrollment indicator for free batch cards
-
-**Changes**:
-- Add enrollment check logic similar to CourseCard
-- Show "ENROLLED" badge when fully enrolled
-- Replace "Enroll" button with "Explore" when fully enrolled
-- Allow normal flow if add-ons remain
-
-### 3. `src/components/dashboard/RecommendedBatchCard.tsx`
-**Purpose**: Same enrollment indicator for recommended batch cards
-
-**Changes**:
-- Add enrollment check logic
-- Show "ENROLLED" badge when fully enrolled
-- Replace "BUY NOW" with "LET'S STUDY" when fully enrolled
-
-### 4. `src/components/iitm/IITMCourseCard.tsx`
-**Purpose**: Same enrollment indicator for IITM course cards
-
-**Changes**:
-- Add enrollment check logic
-- Show visual indicator for enrolled status
-- Update button behavior when fully enrolled
-
-### 5. `src/components/EnrollButton.tsx`
-**Purpose**: Block enrollment for already fully enrolled courses
-
-**Changes**:
-- Accept new optional prop `isFullyEnrolled`
-- If `isFullyEnrolled` is true, show toast "Already enrolled" and navigate to dashboard instead of processing payment
+## What This Does
+Every time a new user signs up and their email is saved in the `profiles` table, they will be automatically added to a Google Group called `alldatastudents@yourdomain.com`.
 
 ---
 
-## Technical Implementation Details
+## Architecture
 
-### Enrollment Check Query
-```typescript
-const checkEnrollmentStatus = async () => {
-  if (!user || !courseId) return;
-  
-  // Fetch user's enrollments for this course
-  const { data: enrollments } = await supabase
-    .from('enrollments')
-    .select('subject_name, status')
-    .eq('user_id', user.id)
-    .eq('course_id', courseId)
-    .in('status', ['active', 'paid', 'success']);
-  
-  // Fetch all addons for this course
-  const { data: addons } = await supabase
-    .from('course_addons')
-    .select('id, subject_name')
-    .eq('course_id', courseId);
-  
-  if (enrollments && enrollments.length > 0) {
-    // Main course owned = enrollment with null subject_name
-    const mainOwned = enrollments.some(e => !e.subject_name);
-    
-    // Get owned addon names
-    const ownedSubjectNames = enrollments
-      .filter(e => e.subject_name)
-      .map(e => e.subject_name);
-    
-    // Check if all addons are owned
-    const allAddonsOwned = addons 
-      ? addons.every(addon => 
-          ownedSubjectNames.includes(addon.id) || 
-          ownedSubjectNames.includes(addon.subject_name)
-        )
-      : true; // No addons = considered "all owned"
-    
-    return {
-      isMainCourseOwned: mainOwned,
-      isFullyEnrolled: mainOwned && allAddonsOwned,
-      hasRemainingAddons: mainOwned && !allAddonsOwned
-    };
-  }
-  
-  return {
-    isMainCourseOwned: false,
-    isFullyEnrolled: false,
-    hasRemainingAddons: false
-  };
-};
-```
-
-### Visual Indicator Badge
-```tsx
-{isFullyEnrolled && (
-  <div className="absolute top-3 right-3 z-10 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
-    <Check className="w-3 h-3" /> ENROLLED
-  </div>
-)}
-```
-
-### Button Rendering Logic
-```tsx
-const renderBuyButton = () => {
-  // Fully enrolled - show "Let's Study"
-  if (isFullyEnrolled) {
-    return (
-      <button
-        onClick={() => navigate('/dashboard')}
-        className={`${btnClass} bg-green-600 hover:bg-green-700`}
-      >
-        LET'S STUDY
-      </button>
-    );
-  }
-  
-  // Main owned but addons available - show "Upgrade"
-  if (isMainCourseOwned && hasRemainingAddons) {
-    return (
-      <button
-        onClick={() => navigate(`/courses/${course.id}/configure`)}
-        className={btnClass}
-      >
-        UPGRADE
-      </button>
-    );
-  }
-  
-  // Normal enrollment flow (existing logic)
-  // ...existing code...
-};
+```text
+User Signs Up
+    |
+    v
+Supabase creates profile (handle_new_user trigger)
+    |
+    v
+Database Webhook Trigger (on INSERT to profiles)
+    |
+    v
+Supabase Edge Function: "add-to-google-group"
+    |
+    v
+Google Admin SDK (Directory API)
+    |
+    v
+User added to alldatastudents@yourdomain.com
 ```
 
 ---
 
-## Duplicate Purchase Prevention
+## Step-by-Step Setup
 
-The duplicate prevention already exists in multiple places:
-1. **BatchConfiguration.tsx**: Redirects if fully enrolled
-2. **EnrollButton.tsx**: `handleFreeEnroll` catches unique constraint error (23505)
-3. **Database**: Unique constraint on `(user_id, course_id, subject_name)`
+### STEP 1: Create the Google Group
 
-We will enhance this by:
-1. Checking enrollment status before showing payment dialog
-2. Showing "Already enrolled" toast if user clicks enroll on a fully enrolled course
-3. Redirecting to dashboard or course explore page
+1. Go to [Google Admin Console](https://admin.google.com)
+2. Navigate to **Directory > Groups**
+3. Click **Create group**
+4. Set:
+   - Name: `All Data Students`
+   - Group email: `alldatastudents@yourdomain.com`
+   - Access type: Set to **Restricted** or your preference
+   - Who can join: **Only invited users** (since the system will add them)
+5. Click **Create**
 
 ---
 
-## Summary of Changes
+### STEP 2: Create a Google Cloud Service Account
 
-| Component | Enrollment Check | Badge | Button Change | Duplicate Block |
-|-----------|-----------------|-------|---------------|-----------------|
-| CourseCard.tsx | Yes | Yes | Yes | Yes |
-| FreeBatchSection.tsx | Yes | Yes | Yes | Yes |
-| RecommendedBatchCard.tsx | Yes | Yes | Yes | Yes |
-| IITMCourseCard.tsx | Yes | Yes | Yes | Yes |
-| EnrollButton.tsx | - | - | - | Enhanced |
+This is needed so your edge function can call Google APIs on behalf of your domain.
 
-## User Experience Flow
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Select or create a project (can use the same one as your Google Sign-In)
+3. Go to **APIs & Services > Enabled APIs**
+4. Search for and enable: **Admin SDK API**
+5. Go to **APIs & Services > Credentials**
+6. Click **Create Credentials > Service Account**
+   - Name: `supabase-group-manager`
+   - Click **Create and Continue**
+   - Role: skip (not needed here)
+   - Click **Done**
+7. Click on the newly created service account
+8. Go to the **Keys** tab
+9. Click **Add Key > Create New Key > JSON**
+10. **Download the JSON file** -- you will need these values:
+    - `client_email` (e.g., `supabase-group-manager@yourproject.iam.gserviceaccount.com`)
+    - `private_key` (the RSA private key string)
 
-1. **Not enrolled**: Normal buy/enroll button visible
-2. **Partially enrolled** (main only, addons available): "UPGRADE" button, no badge
-3. **Fully enrolled**: Green "ENROLLED" badge + "LET'S STUDY" button
-4. **Click on enrolled course**: Navigate to dashboard or show info toast
+---
+
+### STEP 3: Enable Domain-Wide Delegation
+
+This allows the service account to act as an admin user in your Google Workspace.
+
+1. In Google Cloud Console, go to the service account you created
+2. Click **Edit** (pencil icon)
+3. Expand **Show domain-wide delegation**
+4. Check **Enable Google Workspace Domain-Wide Delegation**
+5. Save
+6. Copy the **Client ID** (numeric, e.g., `1234567890123456`)
+
+Now authorize it in Google Admin:
+
+7. Go to [Google Admin Console](https://admin.google.com)
+8. Navigate to **Security > Access and Data Control > API Controls**
+9. Click **Manage Domain Wide Delegation**
+10. Click **Add new**
+11. Enter:
+    - **Client ID**: The numeric ID from step 6
+    - **OAuth Scopes**: `https://www.googleapis.com/auth/admin.directory.group.member`
+12. Click **Authorize**
+
+---
+
+### STEP 4: Add Secrets to Supabase
+
+You need to add 3 secrets to your Supabase project. Go to your **Supabase Dashboard > Project Settings > Edge Functions > Secrets** and add:
+
+| Secret Name | Value |
+|---|---|
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | The `client_email` from the JSON key file |
+| `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY` | The `private_key` from the JSON key file (the full string including `-----BEGIN PRIVATE KEY-----`) |
+| `GOOGLE_ADMIN_EMAIL` | An admin email in your domain (e.g., `admin@yourdomain.com`) -- the service account will impersonate this user |
+
+---
+
+### STEP 5: Create the Edge Function
+
+I will create a new Supabase Edge Function at `supabase/functions/add-to-google-group/index.ts` that:
+
+1. Receives a webhook payload with the new user's email
+2. Creates a JWT signed with the service account's private key
+3. Exchanges it for a Google access token (impersonating the admin)
+4. Calls the Google Admin Directory API to add the member to the group
+5. Returns success/failure
+
+---
+
+### STEP 6: Create a Database Webhook
+
+After the edge function is deployed, set up a database webhook in Supabase:
+
+1. Go to **Supabase Dashboard > Database > Webhooks**
+2. Click **Create a new hook**
+3. Configure:
+   - Name: `add_new_user_to_google_group`
+   - Table: `profiles`
+   - Events: **INSERT**
+   - Type: **Supabase Edge Function**
+   - Edge Function: `add-to-google-group`
+4. Save
+
+---
+
+## What I Need From You Before Building
+
+1. **Your Google Workspace domain** (e.g., `yourdomain.com`) -- so I can set the group email in the code
+2. **Confirmation that you have completed Steps 1-4** (created the group, service account, delegation, and added the 3 secrets)
+
+Once you confirm, I will build the edge function (Step 5) and you will set up the webhook (Step 6) from the Supabase dashboard.
+
+---
+
+## Summary Checklist
+
+- [ ] Step 1: Create Google Group `alldatastudents@yourdomain.com`
+- [ ] Step 2: Create Service Account + download JSON key
+- [ ] Step 3: Enable domain-wide delegation + authorize scopes in Admin Console
+- [ ] Step 4: Add 3 secrets to Supabase (service account email, private key, admin email)
+- [ ] Step 5: I build the edge function (after your confirmation)
+- [ ] Step 6: You create the database webhook in Supabase dashboard
+
