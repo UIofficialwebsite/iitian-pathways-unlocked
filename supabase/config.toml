@@ -2,3 +2,6 @@ project_id = "qzrvctpwefhmcduariuw"
 
 [functions.add-to-google-group]
 verify_jwt = false
+
+[functions.bulk-sync-google-group]
+verify_jwt = false
