@@ -6,6 +6,8 @@ import { useDownloadHandler } from "@/hooks/useDownloadHandler";
 import { ShareButton } from "@/components/ShareButton";
 import { slugify } from "@/utils/urlHelpers";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useLoginModal } from "@/context/LoginModalContext";
 
 interface BranchNotesAccordionProps {
   loading: boolean;
@@ -22,6 +24,8 @@ const BranchNotesAccordion = ({
 }: BranchNotesAccordionProps) => {
   const { handleDownload, downloadCounts } = useDownloadHandler();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { openLogin } = useLoginModal();
 
   const renderNoteCard = (note: Note) => {
     const dCount = downloadCounts[note.id] || note.download_count || 0;
@@ -66,12 +70,22 @@ const BranchNotesAccordion = ({
           >
             View
           </button>
-          <button 
-            className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
-            onClick={() => handleDownload(note.id, 'notes', note.file_link)}
-          >
-            Get PDF
-          </button>
+          
+          {user ? (
+            <button 
+              className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
+              onClick={() => handleDownload(note.id, 'notes', note.file_link)}
+            >
+              Get PDF
+            </button>
+          ) : (
+            <button 
+              className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal font-['Inter'] uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
+              onClick={openLogin}
+            >
+              Login to Download
+            </button>
+          )}
         </div>
       </article>
     );
