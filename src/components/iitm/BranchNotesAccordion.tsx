@@ -28,7 +28,8 @@ const BranchNotesAccordion = ({
   const { openLogin } = useLoginModal();
 
   const renderNoteCard = (note: Note) => {
-    const dCount = downloadCounts[note.id] || note.download_count || 0;
+    // Falls back to note.download_count (from DB fetch) if local state isn't ready yet
+    const dCount = downloadCounts[note.id] !== undefined ? downloadCounts[note.id] : (note.download_count || 0);
     const displayDownloads = dCount >= 1000 ? `${(dCount / 1000).toFixed(1)}k` : dCount;
 
     return (
@@ -66,15 +67,10 @@ const BranchNotesAccordion = ({
         <div className="mt-auto font-sans">
           {user ? (
             <div className="flex space-x-3">
-              <button 
-                className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
-                onClick={() => note.file_link && window.open(note.file_link, '_blank')}
-              >
-                View
-              </button>
+              {/* Removed View button as per previous request */}
               <button 
                 className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
-                onClick={() => handleDownload(note.id, 'notes', note.file_link)}
+                onClick={() => handleDownload(note.id, 'iitm_branch_notes', note.file_link)}
               >
                 Get PDF
               </button>
@@ -83,8 +79,8 @@ const BranchNotesAccordion = ({
             <button 
               className="w-full bg-[#1E3A8A] text-white h-[38px] text-[11px] font-normal font-['Inter'] uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
               onClick={() => {
-                // Increment count to track intent, but don't open file (no url passed)
-                handleDownload(note.id, 'notes'); 
+                // Track intent (increments count locally & DB) but forces login
+                handleDownload(note.id, 'iitm_branch_notes'); 
                 openLogin();
               }}
             >
