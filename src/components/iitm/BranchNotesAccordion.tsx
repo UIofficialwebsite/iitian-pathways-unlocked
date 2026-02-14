@@ -28,7 +28,7 @@ const BranchNotesAccordion = ({
   const { openLogin } = useLoginModal();
 
   const renderNoteCard = (note: Note) => {
-    // Falls back to note.download_count (from DB fetch) if local state isn't ready yet
+    // Use the fetched download count if available, otherwise fall back to note prop
     const dCount = downloadCounts[note.id] !== undefined ? downloadCounts[note.id] : (note.download_count || 0);
     const displayDownloads = dCount >= 1000 ? `${(dCount / 1000).toFixed(1)}k` : dCount;
 
@@ -67,7 +67,12 @@ const BranchNotesAccordion = ({
         <div className="mt-auto font-sans">
           {user ? (
             <div className="flex space-x-3">
-              {/* Removed View button as per previous request */}
+              <button 
+                className="flex-1 border-[1.5px] border-[#1E3A8A] text-[#1E3A8A] h-[38px] text-[11px] font-bold uppercase rounded-md hover:bg-blue-50 transition-colors"
+                onClick={() => note.file_link && window.open(note.file_link, '_blank')}
+              >
+                View
+              </button>
               <button 
                 className="flex-1 bg-[#1E3A8A] text-white h-[38px] text-[11px] font-bold uppercase rounded-md hover:opacity-90 transition-opacity shadow-sm"
                 onClick={() => handleDownload(note.id, 'iitm_branch_notes', note.file_link)}
