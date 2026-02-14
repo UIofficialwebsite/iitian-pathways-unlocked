@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "Service role full access" ON public.google_group_sync_queue;
