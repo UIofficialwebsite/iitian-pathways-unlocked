@@ -531,6 +531,33 @@ export type Database = {
           },
         ]
       }
+      google_group_sync_queue: {
+        Row: {
+          created_at: string | null
+          email: string
+          error_message: string | null
+          id: string
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          error_message?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          error_message?: string | null
+          id?: string
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       iitm_branch_notes: {
         Row: {
           branch: string
