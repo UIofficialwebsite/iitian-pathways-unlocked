@@ -258,6 +258,7 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
@@ -280,12 +281,19 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Derive current batch summary directly to ensure header stays perfectly synced
+  // Derive current batch summary directly to ensure header stays perfectly synced synchronously
   const currentBatchSummary = useMemo(() => {
     return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
+
+  // Sync temp state when sheet opens
+  useEffect(() => {
+    if (isSheetOpen) {
+      setTempSelectedBatchId(selectedBatchId);
+    }
+  }, [isSheetOpen, selectedBatchId]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -364,17 +372,30 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
-  // INSTANT UPDATE: When you click a row, it instantly changes the main state
   const handleSelectBatch = (batchId: string) => {
-    if (batchId === selectedBatchId) {
+    setTempSelectedBatchId(batchId); 
+  };
+
+  // The Confirm Logic - Bulletproofed
+  const handleConfirmSwitch = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
+    if (!tempSelectedBatchId || tempSelectedBatchId === selectedBatchId) {
       setIsSheetOpen(false);
       return;
     }
+
+    // Instantly save to local storage to eliminate race conditions
+    localStorage.setItem('dashboard_selected_batch', tempSelectedBatchId);
     
-    setSelectedBatchId(batchId); // Immediately updates header
-    setIsSheetOpen(false); // Closes popup immediately
+    // Immediately update parent state to instantly change header
+    setSelectedBatchId(tempSelectedBatchId); 
+    setIsSheetOpen(false);
     
-    const newBatch = enrollments.find(e => e.course_id === batchId);
+    const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
@@ -409,7 +430,7 @@ const EnrolledView = ({
         <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
           {enrollments.length > 1 ? (
              enrollments.map((batch) => {
-              const isSelected = selectedBatchId === batch.course_id;
+              const isSelected = tempSelectedBatchId === batch.course_id;
               
               return (
               <div 
@@ -457,15 +478,14 @@ const EnrolledView = ({
           )}
         </div>
 
-        {/* Kept exactly as requested, simply closes the menu since row clicks are now instant */}
         {enrollments.length > 1 && (
           <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
             <Button 
               type="button"
-              onClick={() => setIsSheetOpen(false)} 
+              onClick={handleConfirmSwitch} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
-              Close Menu
+              Switch Batch
             </Button>
           </SheetFooter>
         )}
@@ -473,10 +493,10 @@ const EnrolledView = ({
     </Sheet>
   );
 
-  // --- SAFE DISPLAY LOGIC ---
-  const isDataLoadedForCurrentSelection = fullCourseData && fullCourseData.id === selectedBatchId;
-  const displayTitle = isDataLoadedForCurrentSelection ? fullCourseData.title : currentBatchSummary?.title;
-  const displayDescription = isDataLoadedForCurrentSelection ? fullCourseData.description : currentBatchSummary?.description;
+  // --- BULLETPROOF SYNCHRONOUS HEADER LOGIC ---
+  // Completely detached from fullCourseData API loading time to prevent delays/blinking
+  const displayTitle = currentBatchSummary?.title || "Loading Batch...";
+  const displayDescription = currentBatchSummary?.description || "";
 
   if (viewMode === 'description') {
     return (
@@ -540,6 +560,7 @@ const EnrolledView = ({
             {loadingDetails ? (
                <div className="flex items-center justify-center h-64">
                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 <span className="ml-3 text-gray-500 font-medium">Fetching details...</span>
                </div>
              ) : fullCourseData ? (
                <div className="w-full px-4 sm:px-6 md:px-8 py-6 space-y-6 sm:space-y-8 pb-24">
@@ -592,6 +613,7 @@ const EnrolledView = ({
                 canSwitchBatch ? "cursor-pointer hover:opacity-90" : ""
               )}
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 if (canSwitchBatch) handleOpenSheet();
               }}
