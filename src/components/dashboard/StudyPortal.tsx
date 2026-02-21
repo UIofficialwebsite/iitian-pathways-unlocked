@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Loader2, 
@@ -244,7 +244,6 @@ const CustomDashboardTabNav = ({
   );
 };
 
-
 // --- View 1: Student IS Enrolled (Complex View) ---
 const EnrolledView = ({ 
   enrollments,
@@ -282,7 +281,7 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Derive current batch summary directly to ensure header stays synced
+  // Derive current batch summary directly to ensure header stays perfectly synced
   const currentBatchSummary = useMemo(() => {
     return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   }, [enrollments, selectedBatchId]);
@@ -373,22 +372,21 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
-  // Instantly apply batch selection to correctly update header logic
   const handleSelectBatch = (batchId: string) => {
-    setTempSelectedBatchId(batchId); // updates UI instantly
+    setTempSelectedBatchId(batchId); 
   };
 
-  const handleConfirmSwitch = () => {
+  const handleConfirmSwitch = (e?: React.MouseEvent) => {
+    if (e) e.preventDefault();
+    
     if (tempSelectedBatchId === selectedBatchId) {
       setIsSheetOpen(false);
       return;
     }
 
+    // This updates the parent state immediately, instantly changing the header
+    setSelectedBatchId(tempSelectedBatchId); 
     setIsSheetOpen(false);
-    setFullCourseData(null);
-    setLoadingDetails(true); 
-    
-    setSelectedBatchId(tempSelectedBatchId); // Commits the change and updates the header
     
     const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
     toast({
@@ -473,10 +471,10 @@ const EnrolledView = ({
           )}
         </div>
 
-        {/* Keeping the Switch Batch confirmation button correctly tied to updates */}
         {enrollments.length > 1 && (
           <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
             <Button 
+              type="button"
               onClick={handleConfirmSwitch} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
@@ -500,6 +498,7 @@ const EnrolledView = ({
         <div className="flex-none z-20">
            <div className="px-4 md:px-6 py-2 border-b border-gray-100 bg-background">
               <Button 
+                type="button"
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setViewMode('main')}
@@ -520,6 +519,7 @@ const EnrolledView = ({
                     
                     {canSwitchBatch && (
                       <Button 
+                        type="button"
                         onClick={() => handleOpenSheet()} 
                         className="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm transition-all shadow-sm h-7 sm:h-8 text-xs sm:text-sm w-full sm:w-auto"
                       >
@@ -648,7 +648,7 @@ const EnrolledView = ({
       <section>
         <div className="flex items-center justify-between mb-3 sm:mb-4">
            <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Access</h2>
-           <Button variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
+           <Button type="button" variant="link" className="text-blue-600 p-0 h-auto text-sm" onClick={() => setViewMode('description')}>
              View Full Details <ArrowRight className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
            </Button>
         </div>
@@ -959,7 +959,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
   const [recommendedCourses, setRecommendedCourses] = useState<Course[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
   
-  // LIFTED STATE: Initialize from localStorage to survive remounts
   const [selectedBatchId, setSelectedBatchId] = useState<string>(() => {
     return localStorage.getItem('dashboard_selected_batch') || '';
   });
@@ -994,6 +993,9 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     }
   }, [groupedEnrollments]);
 
+  // IMPORTANT FIX: Removed `toast` from the dependency array below.
+  // Including it caused an infinite refetch loop when "Switch Batch" triggered a success toast,
+  // which created the "1 second refresh" flicker.
   useEffect(() => {
     if (!user) {
       setDataLoading(false);
@@ -1072,7 +1074,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     };
 
     fetchPortalData();
-  }, [user, profile, toast]); 
+  }, [user, profile]); // <-- FIX IS HERE (removed `toast`)
 
   const isLoading = dataLoading || contentLoading;
 
