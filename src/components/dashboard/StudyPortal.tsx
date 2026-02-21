@@ -29,6 +29,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetFooter,
   SheetDescription,
 } from "@/components/ui/sheet";
 import {
@@ -175,7 +176,6 @@ const EnrollmentListItem = ({
                 className="w-full h-full object-cover object-center"
               />
             ) : (
-              // Plain Yellow Fade - No Icon
               <div className="w-full h-full bg-gradient-to-br from-yellow-50 to-yellow-100" />
             )}
           </div>
@@ -259,6 +259,7 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
+  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
@@ -269,7 +270,6 @@ const EnrolledView = ({
   const [activeTab, setActiveTab] = useState('features');
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // RACE CONDITION FIX: Request ID Counter
   const lastRequestId = useRef(0);
 
   const tabs = [
@@ -282,14 +282,20 @@ const EnrolledView = ({
     { id: 'faqs', label: 'FAQs' },
   ];
 
-  // Derive current batch summary directly
+  // Derive current batch summary directly to ensure header stays synced
   const currentBatchSummary = useMemo(() => {
     return enrollments.find(e => e.course_id === selectedBatchId) || enrollments[0];
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
 
-  // Scroll reset when batch changes
+  // Sync temp state when sheet opens
+  useEffect(() => {
+    if (isSheetOpen) {
+      setTempSelectedBatchId(selectedBatchId);
+    }
+  }, [isSheetOpen, selectedBatchId]);
+
   useEffect(() => {
     if (contentRef.current) {
       contentRef.current.scrollTop = 0;
@@ -299,9 +305,7 @@ const EnrolledView = ({
   useEffect(() => {
     if (!selectedBatchId) return;
 
-    // 1. Increment Request ID
     const currentId = ++lastRequestId.current;
-
     const fetchDetails = async () => {
       setLoadingDetails(true);
       setFullCourseData(null);
@@ -369,24 +373,24 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
+  // Instantly apply batch selection to correctly update header logic
   const handleSelectBatch = (batchId: string) => {
-    if (batchId === selectedBatchId) {
-      setIsSheetOpen(false); // Just close if they click the already active one
+    setTempSelectedBatchId(batchId); // updates UI instantly
+  };
+
+  const handleConfirmSwitch = () => {
+    if (tempSelectedBatchId === selectedBatchId) {
+      setIsSheetOpen(false);
       return;
     }
 
-    // 1. Close the sheet instantly
     setIsSheetOpen(false);
-    
-    // 2. Force reset for UI loading feedback
     setFullCourseData(null);
     setLoadingDetails(true); 
     
-    // 3. Update the actual selected batch
-    setSelectedBatchId(batchId);
+    setSelectedBatchId(tempSelectedBatchId); // Commits the change and updates the header
     
-    // 4. Show success toast
-    const newBatch = enrollments.find(e => e.course_id === batchId);
+    const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
@@ -412,16 +416,16 @@ const EnrolledView = ({
     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
       <SheetContent side="right" className="w-full sm:w-[400px] flex flex-col p-0 sm:p-6 z-[50000] !bg-white !opacity-100">
         <SheetHeader className="p-4 sm:p-0 mb-2 sm:mb-6 border-b sm:border-none">
-          <SheetTitle className="text-lg sm:text-xl font-bold">Select Batch</SheetTitle>
+          <SheetTitle className="text-lg sm:text-xl font-bold">Switch Batch</SheetTitle>
           <SheetDescription className="text-sm text-gray-500">
-             Switch between your enrolled batches to view different course materials.
+             Select a batch to view its subjects and content
           </SheetDescription>
         </SheetHeader>
         
         <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
           {enrollments.length > 1 ? (
              enrollments.map((batch) => {
-              const isSelected = selectedBatchId === batch.course_id;
+              const isSelected = tempSelectedBatchId === batch.course_id;
               
               return (
               <div 
@@ -468,6 +472,18 @@ const EnrolledView = ({
             </div>
           )}
         </div>
+
+        {/* Keeping the Switch Batch confirmation button correctly tied to updates */}
+        {enrollments.length > 1 && (
+          <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
+            <Button 
+              onClick={handleConfirmSwitch} 
+              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
+            >
+              Switch Batch
+            </Button>
+          </SheetFooter>
+        )}
       </SheetContent>
     </Sheet>
   );
@@ -960,22 +976,19 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     }
   }, [selectedBatchId]);
 
-  // Validation (modified)
+  // Validation
   useEffect(() => {
     if (groupedEnrollments.length > 0) {
       setSelectedBatchId(currentId => {
-        // If currentId matches an enrollment, keep it
         if (currentId && groupedEnrollments.some(e => e.course_id === currentId)) {
           return currentId;
         }
-        // If we have a saved ID in local storage that matches, use that
         const saved = localStorage.getItem('dashboard_selected_batch');
         if (saved && groupedEnrollments.some(e => e.course_id === saved)) {
           return saved;
         }
-        // Fallback to first
         const first = groupedEnrollments[0].course_id;
-        localStorage.setItem('dashboard_selected_batch', first); // Update storage
+        localStorage.setItem('dashboard_selected_batch', first); 
         return first;
       });
     }
