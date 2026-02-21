@@ -258,7 +258,6 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
@@ -287,13 +286,6 @@ const EnrolledView = ({
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
-
-  // Sync temp state when sheet opens
-  useEffect(() => {
-    if (isSheetOpen) {
-      setTempSelectedBatchId(selectedBatchId);
-    }
-  }, [isSheetOpen, selectedBatchId]);
 
   useEffect(() => {
     if (contentRef.current) {
@@ -372,23 +364,17 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
+  // INSTANT UPDATE: When you click a row, it instantly changes the main state
   const handleSelectBatch = (batchId: string) => {
-    setTempSelectedBatchId(batchId); 
-  };
-
-  const handleConfirmSwitch = (e?: React.MouseEvent) => {
-    if (e) e.preventDefault();
-    
-    if (tempSelectedBatchId === selectedBatchId) {
+    if (batchId === selectedBatchId) {
       setIsSheetOpen(false);
       return;
     }
-
-    // This updates the parent state immediately, instantly changing the header
-    setSelectedBatchId(tempSelectedBatchId); 
-    setIsSheetOpen(false);
     
-    const newBatch = enrollments.find(e => e.course_id === tempSelectedBatchId);
+    setSelectedBatchId(batchId); // Immediately updates header
+    setIsSheetOpen(false); // Closes popup immediately
+    
+    const newBatch = enrollments.find(e => e.course_id === batchId);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
@@ -423,7 +409,7 @@ const EnrolledView = ({
         <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
           {enrollments.length > 1 ? (
              enrollments.map((batch) => {
-              const isSelected = tempSelectedBatchId === batch.course_id;
+              const isSelected = selectedBatchId === batch.course_id;
               
               return (
               <div 
@@ -471,14 +457,15 @@ const EnrolledView = ({
           )}
         </div>
 
+        {/* Kept exactly as requested, simply closes the menu since row clicks are now instant */}
         {enrollments.length > 1 && (
           <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
             <Button 
               type="button"
-              onClick={handleConfirmSwitch} 
+              onClick={() => setIsSheetOpen(false)} 
               className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
             >
-              Switch Batch
+              Close Menu
             </Button>
           </SheetFooter>
         )}
@@ -993,9 +980,6 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     }
   }, [groupedEnrollments]);
 
-  // IMPORTANT FIX: Removed `toast` from the dependency array below.
-  // Including it caused an infinite refetch loop when "Switch Batch" triggered a success toast,
-  // which created the "1 second refresh" flicker.
   useEffect(() => {
     if (!user) {
       setDataLoading(false);
@@ -1074,7 +1058,7 @@ const StudyPortalContent: React.FC<StudyPortalProps> = ({ profile, onViewChange 
     };
 
     fetchPortalData();
-  }, [user, profile]); // <-- FIX IS HERE (removed `toast`)
+  }, [user, profile]); 
 
   const isLoading = dataLoading || contentLoading;
 
