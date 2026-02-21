@@ -29,7 +29,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
   SheetDescription,
 } from "@/components/ui/sheet";
 import {
@@ -191,8 +190,6 @@ const EnrollmentListItem = ({
               </div>
             </div>
             
-            {/* Description Removed */}
-
             <div className="flex items-center gap-1.5 pt-1">
                <p className="text-xs sm:text-sm text-gray-500 flex items-center gap-1.5">
                 <span>Valid till: {formattedEndDate}</span>
@@ -262,7 +259,6 @@ const EnrolledView = ({
 }) => {
   const { toast } = useToast();
 
-  const [tempSelectedBatchId, setTempSelectedBatchId] = useState<string>(selectedBatchId || (enrollments.length > 0 ? enrollments[0].course_id : ''));
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'main' | 'description'>('main');
   
@@ -292,12 +288,6 @@ const EnrolledView = ({
   }, [enrollments, selectedBatchId]);
 
   const canSwitchBatch = enrollments.length > 1;
-  
-  useEffect(() => {
-    if (isSheetOpen) {
-      setTempSelectedBatchId(selectedBatchId);
-    }
-  }, [isSheetOpen, selectedBatchId]);
 
   // Scroll reset when batch changes
   useEffect(() => {
@@ -379,28 +369,29 @@ const EnrolledView = ({
     setIsSheetOpen(true);
   };
 
-  const handleContinue = useCallback(() => {
-    const newBatchId = tempSelectedBatchId;
-    
-    if (!newBatchId || newBatchId === selectedBatchId) {
-      setIsSheetOpen(false);
+  const handleSelectBatch = (batchId: string) => {
+    if (batchId === selectedBatchId) {
+      setIsSheetOpen(false); // Just close if they click the already active one
       return;
     }
-    
+
+    // 1. Close the sheet instantly
     setIsSheetOpen(false);
     
-    // Force reset for UI feedback
+    // 2. Force reset for UI loading feedback
     setFullCourseData(null);
     setLoadingDetails(true); 
     
-    setSelectedBatchId(newBatchId);
+    // 3. Update the actual selected batch
+    setSelectedBatchId(batchId);
     
-    const newBatch = enrollments.find(e => e.course_id === newBatchId);
+    // 4. Show success toast
+    const newBatch = enrollments.find(e => e.course_id === batchId);
     toast({
       title: "Batch Switched",
       description: `Now viewing: ${newBatch?.title || 'Selected Batch'}`,
     });
-  }, [tempSelectedBatchId, selectedBatchId, enrollments, toast, setSelectedBatchId]);
+  };
 
   const handleDescription = () => {
     setViewMode('description');
@@ -429,13 +420,16 @@ const EnrolledView = ({
         
         <div className="flex-1 overflow-y-auto space-y-3 p-4 sm:p-0 sm:pr-2">
           {enrollments.length > 1 ? (
-             enrollments.map((batch) => (
+             enrollments.map((batch) => {
+              const isSelected = selectedBatchId === batch.course_id;
+              
+              return (
               <div 
                 key={batch.course_id}
-                onClick={() => setTempSelectedBatchId(batch.course_id)}
+                onClick={() => handleSelectBatch(batch.course_id)}
                 className={cn(
                   "p-4 rounded-xl border cursor-pointer transition-all duration-200 relative overflow-hidden",
-                  tempSelectedBatchId === batch.course_id 
+                  isSelected 
                     ? "border-blue-600 bg-blue-50/50 shadow-sm" 
                     : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                 )}
@@ -444,7 +438,7 @@ const EnrolledView = ({
                   <div className="space-y-1">
                     <h4 className={cn(
                       "font-semibold text-sm sm:text-base line-clamp-2",
-                      tempSelectedBatchId === batch.course_id ? "text-blue-700" : "text-gray-900"
+                      isSelected ? "text-blue-700" : "text-gray-900"
                     )}>
                       {batch.title}
                     </h4>
@@ -455,17 +449,17 @@ const EnrolledView = ({
                   
                   <div className={cn(
                     "h-5 w-5 rounded-full border flex items-center justify-center flex-shrink-0 transition-all",
-                    tempSelectedBatchId === batch.course_id 
+                    isSelected 
                       ? "border-blue-600 bg-blue-600" 
                       : "border-gray-300 bg-white"
                   )}>
-                    {tempSelectedBatchId === batch.course_id && (
+                    {isSelected && (
                       <Check className="h-3 w-3 text-white" />
                     )}
                   </div>
                 </div>
               </div>
-            ))
+            )})
           ) : (
             <div className="flex flex-col items-center justify-center h-40 text-center p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                <Book className="h-8 w-8 text-gray-400 mb-2" />
@@ -474,17 +468,6 @@ const EnrolledView = ({
             </div>
           )}
         </div>
-
-        {enrollments.length > 1 && (
-          <SheetFooter className="p-4 sm:p-0 pt-0 sm:pt-4 mt-auto border-t border-gray-100 sm:border-none">
-            <Button 
-              onClick={handleContinue} 
-              className="w-full h-12 text-base bg-blue-600 hover:bg-blue-700 text-white rounded-xl"
-            >
-              Switch to Selected
-            </Button>
-          </SheetFooter>
-        )}
       </SheetContent>
     </Sheet>
   );
@@ -730,8 +713,6 @@ const EnrolledView = ({
     </div>
   );
 };
-
-// ... (Rest of StudyPortalContent and exports remain unchanged)
 
 const NotEnrolledView = ({ 
   profile,
