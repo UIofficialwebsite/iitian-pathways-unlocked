@@ -54,8 +54,9 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
         : 0;
         
     const today = new Date();
-    const endDate = course.end_date ? new Date(course.end_date) : null;
-    const isExpired = endDate && today > endDate;
+    // Use valid_till to determine if the enrollment window has passed
+    const validTillDate = course.valid_till ? new Date(course.valid_till) : null;
+    const isExpired = validTillDate && today > validTillDate;
 
     useEffect(() => {
         const checkAddonsAndPrice = async () => {
@@ -120,27 +121,13 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
     const renderMainButton = () => {
         const btnClasses = "flex-1 text-lg bg-black hover:bg-black/90 text-white h-11 min-w-0 px-4";
         
-        // If course is not live, show disabled enrollment closed state
-        if (!isLive) {
-            return (
-                <Button 
-                    size="lg" 
-                    className="flex-1 text-lg bg-gray-400 text-white h-11 min-w-0 px-4 cursor-not-allowed"
-                    disabled
-                >
-                    <span className="truncate">Enrollment Closed</span>
-                </Button>
-            );
-        }
-        
         // Calculate if the user has everything:
-        // 1. They own the main course.
-        // 2. Either there are no add-ons, OR they own as many add-ons as exist for this course.
         const allAddonsOwned = totalAddonsCount > 0 ? ownedAddons.length >= totalAddonsCount : true;
         const completeEnrollment = isMainCourseOwned && allAddonsOwned;
 
         // 1. COMPLETELY ENROLLED -> Show "Let's Study" (No Icon, No Popup)
-        if ((isFullyEnrolled || completeEnrollment) && !isExpired) {
+        // Allow enrolled students to keep studying even if the valid date has crossed
+        if (isFullyEnrolled || completeEnrollment) {
             return (
                 <Button 
                     size="lg" 
@@ -152,8 +139,21 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 2. Main course owned, but add-ons pending -> Show "Continue Enrollment" (Navigate to config)
-        if (isMainCourseOwned && !allAddonsOwned && !isExpired) {
+        // 2. COURSE EXPIRED -> Show disabled enrollment closed state based on valid_till date
+        if (isExpired) {
+            return (
+                <Button 
+                    size="lg" 
+                    className="flex-1 text-lg bg-gray-400 text-white h-11 min-w-0 px-4 cursor-not-allowed"
+                    disabled
+                >
+                    <span className="truncate">Enrollment Closed</span>
+                </Button>
+            );
+        }
+
+        // 3. Main course owned, but add-ons pending -> Show "Continue Enrollment" (Navigate to config)
+        if (isMainCourseOwned && !allAddonsOwned) {
             return (
                 <Button 
                     size="lg" 
@@ -165,7 +165,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         }
 
-        // 3. Not owned, but has add-ons -> Show "Configure Plan"
+        // 4. Not owned, but has add-ons -> Show "Configure Plan"
         if (hasAddons && !isMainCourseOwned && !customEnrollHandler) {
              return (
                 <Button
@@ -184,7 +184,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
              );
         }
 
-        // 4. Custom Handler (e.g., specific enrollment flow)
+        // 5. Custom Handler (e.g., specific enrollment flow)
         if (customEnrollHandler) {
              return (
                 <Button 
@@ -199,7 +199,7 @@ const EnrollmentCard: React.FC<EnrollmentCardProps> = ({
             );
         } 
         
-        // 5. Default -> Standard Enroll Button
+        // 6. Default -> Standard Enroll Button
         return (
             <EnrollButton
                 courseId={course.id}
