@@ -16,6 +16,7 @@ export interface Course {
   subject: string | null;
   start_date: string | null;
   end_date: string | null;
+  valid_till?: string | null; // Added valid_till property
   course_type: string | null;
   batch_type?: string | null;
   branch: string | null;
@@ -23,7 +24,6 @@ export interface Course {
   enroll_now_link: string | null;
   language: string | null;
   student_status?: string | null;
-  // Add this field to match your SQL table
   parent_course_id?: string | null;
   is_live?: boolean | null;
 }
